@@ -1,7 +1,7 @@
 
 SUBDIRS =
 
-noinst_PROGRAMS = dune_porsol
+noinst_PROGRAMS = 
 
 dune_porsol_SOURCES = dune_porsol.cc
 
