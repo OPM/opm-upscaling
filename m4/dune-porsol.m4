@@ -13,5 +13,6 @@ AC_DEFUN([DUNE_PORSOL_CHECKS])
 # not by dune-porsol itself
 AC_DEFUN([DUNE_PORSOL_CHECK_MODULE],
 [
-  DUNE_CHECK_MODULES([dune-porsol],[porsol/porsol.hh])
+  DUNE_CHECK_MODULES([dune-porsol],
+                     [porsol/mimetic/IncompFlowSolverHybrid.hpp])
 ])
