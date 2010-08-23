@@ -55,7 +55,7 @@
 // #include <dune/grid/alugrid.hh>
 // #endif
 
-#include <dune/solvers/common/SimulatorUtilities.hpp>
+#include <dune/porsol/common/SimulatorUtilities.hpp>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 
 #include <dune/grid/yaspgrid.hh>
@@ -63,15 +63,15 @@
 #include <dune/common/EclipseGridParser.hpp>
 #include <dune/common/EclipseGridInspector.hpp>
 
-#include <dune/solvers/common/fortran.hpp>
-#include <dune/solvers/common/blas_lapack.hpp>
-#include <dune/solvers/common/Matrix.hpp>
-#include <dune/solvers/common/GridInterfaceEuler.hpp>
-#include <dune/solvers/common/ReservoirPropertyCapillary.hpp>
-#include <dune/solvers/common/BoundaryConditions.hpp>
+#include <dune/porsol/common/fortran.hpp>
+#include <dune/porsol/common/blas_lapack.hpp>
+#include <dune/porsol/common/Matrix.hpp>
+#include <dune/porsol/common/GridInterfaceEuler.hpp>
+#include <dune/porsol/common/ReservoirPropertyCapillary.hpp>
+#include <dune/porsol/common/BoundaryConditions.hpp>
 
-#include <dune/solvers/mimetic/MimeticIPEvaluator.hpp>
-#include <dune/solvers/mimetic/IncompFlowSolverHybrid.hpp>
+#include <dune/porsol/mimetic/MimeticIPEvaluator.hpp>
+#include <dune/porsol/mimetic/IncompFlowSolverHybrid.hpp>
 #include <dune/common/param/ParameterGroup.hpp>
 #include <dune/common/StopWatch.hpp>
 

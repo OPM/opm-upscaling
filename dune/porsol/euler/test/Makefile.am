@@ -8,7 +8,6 @@ AM_LDFLAGS  += $(DUNEMPILDFLAGS) $(BOOST_LDFLAGS) $(SUPERLU_LDFLAGS)
 
 LDADD = $(DUNE_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) \
         $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)   \
-        ../../../lib/libdunecornerpoint.la            \
         $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)          \
         $(DUNEMPILIBS) $(SUPERLU_LIBS) 
 

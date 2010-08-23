@@ -41,7 +41,7 @@
 #include <utility>
 
 #include <dune/common/ErrorMacros.hpp>
-#include <dune/solvers/common/linearInterpolation.hpp>
+#include <dune/porsol/common/linearInterpolation.hpp>
 
 namespace Dune {
     namespace utils {

@@ -36,8 +36,8 @@
 #ifndef OPENRS_RESERVOIRPROPERTYCAPILLARYANISOTROPICRELPERM_HEADER
 #define OPENRS_RESERVOIRPROPERTYCAPILLARYANISOTROPICRELPERM_HEADER
 
-#include <dune/solvers/common/RockAnisotropicRelperm.hpp>
-#include <dune/solvers/common/ReservoirPropertyCommon.hpp>
+#include <dune/porsol/common/RockAnisotropicRelperm.hpp>
+#include <dune/porsol/common/ReservoirPropertyCommon.hpp>
 #include <dune/common/array.hh>
 
 namespace Dune

@@ -48,7 +48,7 @@
 #include <dune/common/Average.hpp>
 #include <dune/common/Units.hpp>
 #include <dune/grid/common/Volumes.hpp>
-#include <dune/solvers/euler/CflCalculator.hpp>
+#include <dune/porsol/euler/CflCalculator.hpp>
 #include <dune/common/StopWatch.hpp>
 
 namespace Dune

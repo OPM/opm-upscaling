@@ -40,7 +40,7 @@
 #include <dune/common/Units.hpp>
 #include <dune/grid/CpGrid.hpp>
 #include <dune/grid/sgrid.hh>
-#include <dune/solvers/common/ReservoirPropertyCapillary.hpp>
+#include <dune/porsol/common/ReservoirPropertyCapillary.hpp>
 
 namespace Dune
 {

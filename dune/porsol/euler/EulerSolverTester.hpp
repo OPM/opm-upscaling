@@ -49,11 +49,11 @@
 #include <dune/grid/CpGrid.hpp>
 #include <dune/grid/yaspgrid.hh>
 
-#include <dune/solvers/common/BoundaryConditions.hpp>
-#include <dune/solvers/common/GridInterfaceEuler.hpp>
-#include <dune/solvers/common/ReservoirPropertyCapillary.hpp>
-#include <dune/solvers/common/setupGridAndProps.hpp>
-#include <dune/solvers/common/PeriodicHelpers.hpp>
+#include <dune/porsol/common/BoundaryConditions.hpp>
+#include <dune/porsol/common/GridInterfaceEuler.hpp>
+#include <dune/porsol/common/ReservoirPropertyCapillary.hpp>
+#include <dune/porsol/common/setupGridAndProps.hpp>
+#include <dune/porsol/common/PeriodicHelpers.hpp>
 
 #include "../EulerUpstream.hpp"
 

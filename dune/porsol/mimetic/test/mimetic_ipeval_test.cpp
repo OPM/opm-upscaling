@@ -47,13 +47,13 @@
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/CpGrid.hpp>
 
-#include <dune/solvers/common/fortran.hpp>
-#include <dune/solvers/common/blas_lapack.hpp>
-#include <dune/solvers/common/Matrix.hpp>
-#include <dune/solvers/common/GridInterfaceEuler.hpp>
+#include <dune/porsol/common/fortran.hpp>
+#include <dune/porsol/common/blas_lapack.hpp>
+#include <dune/porsol/common/Matrix.hpp>
+#include <dune/porsol/common/GridInterfaceEuler.hpp>
 
-#include <dune/solvers/mimetic/MimeticIPEvaluator.hpp>
-#include <dune/solvers/mimetic/IncompFlowSolverHybrid.hpp>
+#include <dune/porsol/mimetic/MimeticIPEvaluator.hpp>
+#include <dune/porsol/mimetic/IncompFlowSolverHybrid.hpp>
 
 template <int dim, class Interface>
 void test_evaluator(const Interface& g)

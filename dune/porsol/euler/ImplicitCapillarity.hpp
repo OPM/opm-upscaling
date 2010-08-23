@@ -37,11 +37,11 @@
 #define OPENRS_IMPLICITCAPILLARITY_HEADER
 
 
-#include <dune/solvers/euler/EulerUpstreamResidual.hpp>
+#include <dune/porsol/euler/EulerUpstreamResidual.hpp>
 #include <dune/common/param/ParameterGroup.hpp>
 #include <dune/common/SparseVector.hpp>
-#include <dune/solvers/mimetic/IncompFlowSolverHybrid.hpp>
-#include <dune/solvers/mimetic/MimeticIPEvaluator.hpp>
+#include <dune/porsol/mimetic/IncompFlowSolverHybrid.hpp>
+#include <dune/porsol/mimetic/MimeticIPEvaluator.hpp>
 
 namespace Dune {
 

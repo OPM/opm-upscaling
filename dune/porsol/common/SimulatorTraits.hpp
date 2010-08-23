@@ -36,13 +36,13 @@
 #define OPENRS_SIMULATORTRAITS_HEADER
 
 
-#include <dune/solvers/common/ReservoirPropertyCapillaryAnisotropicRelperm.hpp>
-#include <dune/solvers/mimetic/MimeticIPAnisoRelpermEvaluator.hpp>
-#include <dune/solvers/common/ReservoirPropertyCapillary.hpp>
-#include <dune/solvers/mimetic/MimeticIPEvaluator.hpp>
-#include <dune/solvers/mimetic/IncompFlowSolverHybrid.hpp>
-#include <dune/solvers/euler/EulerUpstream.hpp>
-#include <dune/solvers/euler/ImplicitCapillarity.hpp>
+#include <dune/porsol/common/ReservoirPropertyCapillaryAnisotropicRelperm.hpp>
+#include <dune/porsol/mimetic/MimeticIPAnisoRelpermEvaluator.hpp>
+#include <dune/porsol/common/ReservoirPropertyCapillary.hpp>
+#include <dune/porsol/mimetic/MimeticIPEvaluator.hpp>
+#include <dune/porsol/mimetic/IncompFlowSolverHybrid.hpp>
+#include <dune/porsol/euler/EulerUpstream.hpp>
+#include <dune/porsol/euler/ImplicitCapillarity.hpp>
 
 namespace Dune
 {

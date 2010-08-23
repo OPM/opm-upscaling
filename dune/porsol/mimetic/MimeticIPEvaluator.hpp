@@ -45,9 +45,9 @@
 #include <dune/common/ErrorMacros.hpp>
 #include <dune/common/SparseTable.hpp>
 
-#include <dune/solvers/common/fortran.hpp>
-#include <dune/solvers/common/blas_lapack.hpp>
-#include <dune/solvers/common/Matrix.hpp>
+#include <dune/porsol/common/fortran.hpp>
+#include <dune/porsol/common/blas_lapack.hpp>
+#include <dune/porsol/common/Matrix.hpp>
 
 namespace Dune {
     /// @class MimeticIPEvaluator<GridInterface, RockInterface>

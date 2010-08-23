@@ -34,7 +34,7 @@
 */
 
 #include "../RockJfunc.hpp"
-#include <dune/solvers/common/Matrix.hpp>
+#include <dune/porsol/common/Matrix.hpp>
 #include <dune/common/Units.hpp>
 
 using namespace Dune;

@@ -47,8 +47,8 @@
 #include <dune/common/Units.hpp>
 #include <dune/common/RootFinders.hpp>
 #include <dune/grid/common/Volumes.hpp>
-#include <dune/solvers/common/ReservoirPropertyFixedMobility.hpp>
-#include <dune/solvers/euler/MatchSaturatedVolumeFunctor.hpp>
+#include <dune/porsol/common/ReservoirPropertyFixedMobility.hpp>
+#include <dune/porsol/euler/MatchSaturatedVolumeFunctor.hpp>
 
 namespace Dune
 {

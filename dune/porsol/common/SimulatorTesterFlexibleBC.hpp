@@ -36,7 +36,7 @@
 #ifndef OPENRS_SIMULATORTESTERFLEXIBLEBC_HEADER
 #define OPENRS_SIMULATORTESTERFLEXIBLEBC_HEADER
 
-#include <dune/solvers/common/SimulatorTester.hpp>
+#include <dune/porsol/common/SimulatorTester.hpp>
 
 namespace Dune
 {

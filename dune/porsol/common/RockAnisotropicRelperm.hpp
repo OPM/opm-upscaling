@@ -38,8 +38,8 @@
 
 
 #include <dune/common/fvector.hh>
-#include <dune/solvers/common/NonuniformTableLinear.hpp>
-#include <dune/solvers/common/Matrix.hpp>
+#include <dune/porsol/common/NonuniformTableLinear.hpp>
+#include <dune/porsol/common/Matrix.hpp>
 #include <fstream>
 #include <vector>
 #include <algorithm>

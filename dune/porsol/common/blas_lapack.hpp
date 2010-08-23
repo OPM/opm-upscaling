@@ -37,7 +37,7 @@
 #define OPENRS_BLAS_LAPACK_HEADER
 
 #include <dune/common/ErrorMacros.hpp>
-#include <dune/solvers/common/fortran.hpp>
+#include <dune/porsol/common/fortran.hpp>
 
 #ifdef __cplusplus
 extern "C" {

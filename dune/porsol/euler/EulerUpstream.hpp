@@ -36,7 +36,7 @@ along with OpenRS.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef OPENRS_EULERUPSTREAM_HEADER
 #define OPENRS_EULERUPSTREAM_HEADER
 
-#include <dune/solvers/euler/EulerUpstreamResidual.hpp>
+#include <dune/porsol/euler/EulerUpstreamResidual.hpp>
 
 #include <tr1/unordered_map>
 

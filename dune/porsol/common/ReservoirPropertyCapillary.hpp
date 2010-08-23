@@ -36,8 +36,8 @@
 #ifndef OPENRS_RESERVOIRPROPERTYCAPILLARY_HEADER
 #define OPENRS_RESERVOIRPROPERTYCAPILLARY_HEADER
 
-#include <dune/solvers/common/RockJfunc.hpp>
-#include <dune/solvers/common/ReservoirPropertyCommon.hpp>
+#include <dune/porsol/common/RockJfunc.hpp>
+#include <dune/porsol/common/ReservoirPropertyCommon.hpp>
 #include <dune/common/array.hh>
 
 namespace Dune

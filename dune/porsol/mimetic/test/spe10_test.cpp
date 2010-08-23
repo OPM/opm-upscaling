@@ -49,15 +49,15 @@
 
 #include <dune/grid/CpGrid.hpp>
 
-#include <dune/solvers/common/PeriodicHelpers.hpp>
-#include <dune/solvers/common/BoundaryConditions.hpp>
-#include <dune/solvers/common/GridInterfaceEuler.hpp>
-#include <dune/solvers/common/ReservoirPropertyCapillary.hpp>
-#include <dune/solvers/common/SimulatorUtilities.hpp>
-#include <dune/solvers/common/Matrix.hpp>
+#include <dune/porsol/common/PeriodicHelpers.hpp>
+#include <dune/porsol/common/BoundaryConditions.hpp>
+#include <dune/porsol/common/GridInterfaceEuler.hpp>
+#include <dune/porsol/common/ReservoirPropertyCapillary.hpp>
+#include <dune/porsol/common/SimulatorUtilities.hpp>
+#include <dune/porsol/common/Matrix.hpp>
 
-#include <dune/solvers/mimetic/MimeticIPEvaluator.hpp>
-#include <dune/solvers/mimetic/IncompFlowSolverHybrid.hpp>
+#include <dune/porsol/mimetic/MimeticIPEvaluator.hpp>
+#include <dune/porsol/mimetic/IncompFlowSolverHybrid.hpp>
 
 using namespace Dune;
 

@@ -34,8 +34,8 @@
 */
 
 #include "../PeriodicHelpers.hpp"
-#include <dune/solvers/common/BoundaryConditions.hpp>
-#include <dune/solvers/common/GridInterfaceEuler.hpp>
+#include <dune/porsol/common/BoundaryConditions.hpp>
+#include <dune/porsol/common/GridInterfaceEuler.hpp>
 #include <dune/grid/CpGrid.hpp>
 #include <boost/array.hpp>
 #include <dune/common/param/ParameterGroup.hpp>

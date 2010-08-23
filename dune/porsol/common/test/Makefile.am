@@ -16,8 +16,7 @@ AM_CPPFLAGS += $(DUNEMPICPPFLAGS) $(BOOST_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 AM_LDFLAGS  += $(DUNEMPILDFLAGS) $(BOOST_LDFLAGS) $(SUPERLU_LDFLAGS)
 LDADD = $(DUNE_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB)   \
 	$(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)     \
-	$(SUPERLU_LIBS) $(DUNEMPILIBS) \
-	../../../lib/libdunecornerpoint.la
+	$(SUPERLU_LIBS) $(DUNEMPILIBS)
 
 # Additional quirks for individual programs
 boundaryconditions_test_SOURCES = boundaryconditions_test.cpp

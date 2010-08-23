@@ -39,8 +39,8 @@
 #include <dune/common/ErrorMacros.hpp>
 #include <dune/common/Average.hpp>
 
-#include <dune/solvers/common/Matrix.hpp>
-#include <dune/solvers/common/MatrixInverse.hpp>
+#include <dune/porsol/common/Matrix.hpp>
+#include <dune/porsol/common/MatrixInverse.hpp>
 
 
 namespace Dune {

@@ -70,8 +70,8 @@
 #include <dune/istl/paamg/amg.hh>
 #include <dune/istl/paamg/pinfo.hh>
 
-#include <dune/solvers/common/BoundaryConditions.hpp>
-#include <dune/solvers/common/Matrix.hpp>
+#include <dune/porsol/common/BoundaryConditions.hpp>
+#include <dune/porsol/common/Matrix.hpp>
 
 namespace Dune {
     namespace {

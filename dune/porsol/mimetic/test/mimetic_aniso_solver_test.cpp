@@ -52,15 +52,15 @@
 #include <dune/common/EclipseGridParser.hpp>
 #include <dune/common/EclipseGridInspector.hpp>
 
-#include <dune/solvers/common/fortran.hpp>
-#include <dune/solvers/common/blas_lapack.hpp>
-#include <dune/solvers/common/Matrix.hpp>
-#include <dune/solvers/common/GridInterfaceEuler.hpp>
-#include <dune/solvers/common/ReservoirPropertyCapillaryAnisotropicRelperm.hpp>
-#include <dune/solvers/common/BoundaryConditions.hpp>
+#include <dune/porsol/common/fortran.hpp>
+#include <dune/porsol/common/blas_lapack.hpp>
+#include <dune/porsol/common/Matrix.hpp>
+#include <dune/porsol/common/GridInterfaceEuler.hpp>
+#include <dune/porsol/common/ReservoirPropertyCapillaryAnisotropicRelperm.hpp>
+#include <dune/porsol/common/BoundaryConditions.hpp>
 
-#include <dune/solvers/mimetic/MimeticIPAnisoRelpermEvaluator.hpp>
-#include <dune/solvers/mimetic/IncompFlowSolverHybrid.hpp>
+#include <dune/porsol/mimetic/MimeticIPAnisoRelpermEvaluator.hpp>
+#include <dune/porsol/mimetic/IncompFlowSolverHybrid.hpp>
 #include <dune/common/param/ParameterGroup.hpp>
 
 

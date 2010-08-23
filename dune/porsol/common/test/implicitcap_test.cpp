@@ -43,7 +43,7 @@
 
 #include "../SimulatorTester.hpp"
 #include "../SimulatorTesterFlexibleBC.hpp"
-#include <dune/solvers/common/SimulatorTraits.hpp>
+#include <dune/porsol/common/SimulatorTraits.hpp>
 #include <dune/common/mpihelper.hh>
 
 #ifdef USE_TBB

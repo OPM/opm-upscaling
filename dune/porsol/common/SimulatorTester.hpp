@@ -37,7 +37,7 @@
 #define OPENRS_SIMULATORTESTER_HEADER
 
 
-#include <dune/solvers/common/SimulatorBase.hpp>
+#include <dune/porsol/common/SimulatorBase.hpp>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 
 namespace Dune

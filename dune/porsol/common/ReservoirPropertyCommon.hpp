@@ -38,7 +38,7 @@
 
 #include <dune/common/Units.hpp>
 #include <dune/common/EclipseGridParser.hpp>
-#include <dune/solvers/common/Matrix.hpp>
+#include <dune/porsol/common/Matrix.hpp>
 
 namespace Dune
 {
