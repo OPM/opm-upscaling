@@ -2,13 +2,17 @@
 # $Revision$
 
 check_PROGRAMS = 
-noinst_PROGRAMS = upscaling_test steadystate_test aniso_steadystate_test implicit_steadystate_test aniso_implicit_steadystate_test #upscale_perm upscale_relperm
+noinst_PROGRAMS = \
+        aniso_implicit_steadystate_test \
+        aniso_steadystate_test \
+        implicit_steadystate_test \
+        steadystate_test \
+        upscaling_test
 
 AM_CPPFLAGS += $(DUNEMPICPPFLAGS) $(BOOST_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 AM_LDFLAGS  += $(DUNEMPILDFLAGS) $(BOOST_LDFLAGS) $(SUPERLU_LDFLAGS)
-LDADD = $(DUNE_LIBS) $(DUNEMPILIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) \
+LDADD = $(DUNEMPILIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) \
         $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)   \
-        ../../lib/libdunecornerpoint.la               \
         $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) $(SUPERLU_LIBS)
 
 

@@ -43,8 +43,8 @@
 #include <dune/common/param/ParameterGroup.hpp>
 #include <dune/grid/CpGrid.hpp>
 #include <dune/common/EclipseGridParser.hpp>
-#include <dune/solvers/common/GridInterfaceEuler.hpp>
-#include <dune/solvers/common/BoundaryConditions.hpp>
+#include <dune/porsol/common/GridInterfaceEuler.hpp>
+#include <dune/porsol/common/BoundaryConditions.hpp>
 
 
 namespace Dune

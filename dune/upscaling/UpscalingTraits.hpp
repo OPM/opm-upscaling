@@ -35,7 +35,7 @@
 #ifndef OPENRS_UPSCALINGTRAITS_HEADER
 #define OPENRS_UPSCALINGTRAITS_HEADER
 
-#include <dune/solvers/common/SimulatorTraits.hpp>
+#include <dune/porsol/common/SimulatorTraits.hpp>
 
 namespace Dune
 {

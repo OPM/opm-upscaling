@@ -41,8 +41,8 @@
 #include "config.h"
 #endif
 #include <dune/upscaling/UpscalerBase.hpp>
-#include <dune/solvers/euler/EulerUpstream.hpp>
-#include <dune/solvers/euler/ImplicitCapillarity.hpp>
+#include <dune/porsol/euler/EulerUpstream.hpp>
+#include <dune/porsol/euler/ImplicitCapillarity.hpp>
 #include <boost/array.hpp>
 
 namespace Dune

@@ -3,7 +3,7 @@
 AC_PREREQ(2.50)
 DUNE_AC_INIT # gets module version from dune.module file
 AM_INIT_AUTOMAKE
-AC_CONFIG_SRCDIR([src/dune_upscaling.cc])
+AC_CONFIG_SRCDIR([dune/upscaling/SinglePhaseUpscaler.hpp])
 AM_CONFIG_HEADER([config.h])
 
 
@@ -19,13 +19,13 @@ LIBS="$DUNE_LIBS"
 
 AC_CONFIG_FILES([
   Makefile
-  src/Makefile
+  m4/Makefile
   doc/Makefile
   doc/doxygen/Makefile
   doc/doxygen/Doxyfile
   dune/Makefile
   dune/upscaling/Makefile
-  m4/Makefile
+  dune/upscaling/test/Makefile
   dune-upscaling.pc
 ])
 AC_OUTPUT

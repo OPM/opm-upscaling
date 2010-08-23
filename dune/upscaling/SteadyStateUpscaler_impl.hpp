@@ -38,9 +38,9 @@
 
 
 #include <boost/lexical_cast.hpp>
-#include <dune/solvers/common/MatrixInverse.hpp>
-#include <dune/solvers/common/SimulatorUtilities.hpp>
-#include <dune/solvers/common/ReservoirPropertyFixedMobility.hpp>
+#include <dune/porsol/common/MatrixInverse.hpp>
+#include <dune/porsol/common/SimulatorUtilities.hpp>
+#include <dune/porsol/common/ReservoirPropertyFixedMobility.hpp>
 
 #include <algorithm>
 

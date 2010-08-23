@@ -13,5 +13,6 @@ AC_DEFUN([DUNE_UPSCALING_CHECKS])
 # not by dune-upscaling itself
 AC_DEFUN([DUNE_UPSCALING_CHECK_MODULE],
 [
-  DUNE_CHECK_MODULES([dune-upscaling],[upscaling/upscaling.hh])
+  DUNE_CHECK_MODULES([dune-upscaling],
+                     [upscaling/SinglePhaseUpscaler.hpp])
 ])

@@ -35,9 +35,9 @@
 #ifndef OPENRS_UPSCALERBASE_IMPL_HEADER
 #define OPENRS_UPSCALERBASE_IMPL_HEADER
 
-#include <dune/solvers/common/setupGridAndProps.hpp>
-#include <dune/solvers/common/setupBoundaryConditions.hpp>
-#include <dune/solvers/common/ReservoirPropertyTracerFluid.hpp>
+#include <dune/porsol/common/setupGridAndProps.hpp>
+#include <dune/porsol/common/setupBoundaryConditions.hpp>
+#include <dune/porsol/common/ReservoirPropertyTracerFluid.hpp>
 
 namespace Dune
 {
