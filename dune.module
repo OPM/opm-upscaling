@@ -1,0 +1,10 @@
+################################
+# Dune module information file #
+################################
+
+#Name of the module
+Module: dune-upscaling
+Version: 0.1
+Maintainer: atgeirr@sintef.no
+#depending on 
+Depends: dune-common dune-grid dune-istl dune-cornerpoint dune-porsol
