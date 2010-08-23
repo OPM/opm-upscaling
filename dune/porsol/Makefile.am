@@ -1,4 +1,5 @@
 porsolincludedir = $(includedir)/dune/porsol
-porsolinclude_HEADERS = porsol.hh
+
+SUBDIRS = common euler mimetic
 
 include $(top_srcdir)/am/global-rules

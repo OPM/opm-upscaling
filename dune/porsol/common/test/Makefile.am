@@ -2,7 +2,14 @@
 # $Revision$
 
 check_PROGRAMS = boundaryconditions_test nonuniformtablelinear_test
-noinst_PROGRAMS = gie_test simulator_test periodic_test aniso_simulator_test implicitcap_test aniso_implicitcap_test rockjfunc_test
+noinst_PROGRAMS = \
+        aniso_implicitcap_test \
+        aniso_simulator_test \
+        gie_test \
+        implicitcap_test \
+        periodic_test \
+        rockjfunc_test \
+        simulator_test
 
 # Common flags
 AM_CPPFLAGS += $(DUNEMPICPPFLAGS) $(BOOST_CPPFLAGS) $(SUPERLU_CPPFLAGS)
