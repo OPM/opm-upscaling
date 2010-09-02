@@ -137,15 +137,23 @@ namespace Dune
     private:
 	void readStatoilFormat(std::istream& is)
 	{
+            /* Skip lines at the top of the file starting with '#' or '--' */
             char c = is.peek();
-            while (c == '-' && is) {
-                is.get(c);
-                if (c == '-') {
+            while ((c == '-' || c == '#') && is) {
+                if (c == '#') {
                     std::string commentline;
                     std::getline(is, commentline);
                     c = is.peek();
-                } else {
-                    is.putback(c);
+                }
+                else { /* Check if the initial '-' was first byte of the sequence '--' */
+                    is.get(c);
+                    if (c == '-') {
+                        std::string commentline;
+                        std::getline(is, commentline);
+                        c = is.peek();
+                    } else {
+                        is.putback(c);
+                    }
                 }
             }
             if (!is) {
