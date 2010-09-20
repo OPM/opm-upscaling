@@ -62,9 +62,10 @@ namespace Dune {
         template <class ActualMobType>
         void phaseMobility(int phase, int cell_index, double /*saturation*/, ActualMobType& mobility) const
         {
-            if (phase == 0) {
+            if (phase == 0)
                 mobility = mobs_[cell_index].mob;
-            }
+            else
+                zero(mobility);
         }
 
         template<class Vector>
