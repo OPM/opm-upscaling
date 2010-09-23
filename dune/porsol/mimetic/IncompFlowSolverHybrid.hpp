@@ -51,6 +51,8 @@
 #include <tr1/unordered_map>
 
 #include <boost/bind.hpp>
+#include <boost/scoped_ptr.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -638,16 +640,19 @@ namespace Dune {
                    const std::vector<double>& src,
                    double residual_tolerance = 1e-8,
                    int linsolver_verbosity = 1,
-                   int linsolver_type = 1)
+                   int linsolver_type = 1,
+                   bool same_matrix = false)
         {
             assembleDynamic(r, sat, bc, src);
-            // printSystem("linsys_mimetic");
+//             static int count = 0;
+//             ++count;
+//             printSystem(std::string("linsys_mimetic-") + boost::lexical_cast<std::string>(count));
             switch (linsolver_type) {
             case 0: // ILU0 preconditioned BiCGStab
                 solveLinearSystem(residual_tolerance, linsolver_verbosity);
                 break;
             case 1: // AMG
-                solveLinearSystemAMG(residual_tolerance, linsolver_verbosity);
+                solveLinearSystemAMG(residual_tolerance, linsolver_verbosity, same_matrix);
                 break;
             }
             computePressureAndFluxes(r, sat);
@@ -1369,66 +1374,76 @@ namespace Dune {
 
 
 
-        // ----------------------------------------------------------------
-        void solveLinearSystemAMG(double residual_tolerance, int verbosity_level)
-        // ----------------------------------------------------------------
-        {
-            // Adapted from upscaling.cc by Arne Rekdal, 2009
-            Scalar residTol = residual_tolerance;
+        // ------------------ AMG typedefs --------------------
 
-            // Representation types for linear system.
-            typedef BCRSMatrix <MatrixBlockType>        Matrix;
-            typedef BlockVector<VectorBlockType>        Vector;
-            typedef MatrixAdapter<Matrix,Vector,Vector> Operator;
+        // Representation types for linear system.
+        typedef BCRSMatrix <MatrixBlockType>        Matrix;
+        typedef BlockVector<VectorBlockType>        Vector;
+        typedef MatrixAdapter<Matrix,Vector,Vector> Operator;
 
-            // AMG specific types.
-            // Old:   FIRST_DIAGONAL 1, SYMMETRIC 1, SMOOTHER_ILU 1, ANISOTROPIC_3D 0
-            // SPE10: FIRST_DIAGONAL 0, SYMMETRIC 1, SMOOTHER_ILU 0, ANISOTROPIC_3D 1
+        // AMG specific types.
+        // Old:   FIRST_DIAGONAL 1, SYMMETRIC 1, SMOOTHER_ILU 1, ANISOTROPIC_3D 0
+        // SPE10: FIRST_DIAGONAL 0, SYMMETRIC 1, SMOOTHER_ILU 0, ANISOTROPIC_3D 1
 #define FIRST_DIAGONAL 1
 #define SYMMETRIC 1
 #define SMOOTHER_ILU 1
 #define ANISOTROPIC_3D 0
 
 #if FIRST_DIAGONAL
-            typedef Amg::FirstDiagonal CouplingMetric;
+        typedef Amg::FirstDiagonal CouplingMetric;
 #else
-            typedef Amg::RowSum        CouplingMetric;
+        typedef Amg::RowSum        CouplingMetric;
 #endif
 
 #if SYMMETRIC
-            typedef Amg::SymmetricCriterion<Matrix,CouplingMetric>   CriterionBase;
+        typedef Amg::SymmetricCriterion<Matrix,CouplingMetric>   CriterionBase;
 #else
-            typedef Amg::UnSymmetricCriterion<Matrix,CouplingMetric> CriterionBase;
+        typedef Amg::UnSymmetricCriterion<Matrix,CouplingMetric> CriterionBase;
 #endif
 
 #if SMOOTHER_ILU
-            typedef SeqILU0<Matrix,Vector,Vector>        Smoother;
+        typedef SeqILU0<Matrix,Vector,Vector>        Smoother;
 #else
-            typedef SeqSSOR<Matrix,Vector,Vector>        Smoother;
+        typedef SeqSSOR<Matrix,Vector,Vector>        Smoother;
 #endif
-            typedef Amg::CoarsenCriterion<CriterionBase> Criterion;
-            typedef Amg::AMG<Operator,Vector,Smoother>   Precond;
+        typedef Amg::CoarsenCriterion<CriterionBase> Criterion;
+        typedef Amg::AMG<Operator,Vector,Smoother>   Precond;
 
-            // Regularize the matrix (only for pure Neumann problems...)
-            if (do_regularization_) {
-                S_[0][0] *= 2;
-            }
-            Operator opS(S_);
 
-            // Construct preconditioner.
-            double relax = 1;
-            typename Precond::SmootherArgs smootherArgs;
-            smootherArgs.relaxationFactor = relax;
+        // --------- storing the AMG operator and preconditioner --------
+        boost::scoped_ptr<Operator> opS_;
+        boost::scoped_ptr<Precond> precond_;
 
-            Criterion criterion;
-            criterion.setDebugLevel(verbosity_level);
+
+        // ----------------------------------------------------------------
+        void solveLinearSystemAMG(double residual_tolerance, int verbosity_level, bool same_matrix)
+        // ----------------------------------------------------------------
+        {
+            // Adapted from upscaling.cc by Arne Rekdal, 2009
+            Scalar residTol = residual_tolerance;
+
+            if (!same_matrix) {
+                // Regularize the matrix (only for pure Neumann problems...)
+                if (do_regularization_) {
+                    S_[0][0] *= 2;
+                }
+                opS_.reset(new Operator(S_));
+                // Construct preconditioner.
+                double relax = 1;
+                typename Precond::SmootherArgs smootherArgs;
+                smootherArgs.relaxationFactor = relax;
+
+                Criterion criterion;
+                criterion.setDebugLevel(verbosity_level);
 #if ANISOTROPIC_3D
-            criterion.setDefaultValuesAnisotropic(3, 2);
+                criterion.setDefaultValuesAnisotropic(3, 2);
 #endif
-            Precond precond(opS, criterion, smootherArgs);
+                precond_.reset(new Precond(*opS_, criterion, smootherArgs));
+            }
+
 
             // Construct solver for system of linear equations.
-            CGSolver<Vector> linsolve(opS, precond, residTol, S_.N(), verbosity_level);
+            CGSolver<Vector> linsolve(*opS_, *precond_, residTol, S_.N(), verbosity_level);
 
             InverseOperatorResult result;
             soln_ = 0.0;
