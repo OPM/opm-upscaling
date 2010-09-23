@@ -296,6 +296,13 @@ real	0m25.272s
 user	0m24.638s
 sys	0m0.584s
 
+[again, Sep. 22 2010 - before trying to skip remaking the preconditioner]
+
+real	0m25.374s
+user	0m24.680s
+sys	0m0.615s
+
+
 -------------------8<------------------------------8<-------------------
 
 [Again, 2010-05-31 -- Five runs.  Different computer (Ubuntu Linux 10.04)]
@@ -445,3 +452,18 @@ sys	0m0.334s
 real	0m36.793s
 user	0m35.756s
 sys	0m0.655s
+
+
+[again Sep. 23 2010, after only creating the preconditioner once]
+155.314828185149 -0.0871904408128188 0.165175432424436 
+-0.0871902637044509 158.392113699679 0.00515218826296771 
+0.165214873352535 0.00515424122176092 29.0905550657203 
+
+real	0m27.099s
+user	0m26.587s
+sys	0m0.473s
+
+real	0m27.263s
+user	0m26.707s
+sys	0m0.471s
+
