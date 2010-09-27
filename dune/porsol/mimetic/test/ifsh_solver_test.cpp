@@ -98,6 +98,8 @@ void test_flowsolver(const GI& g, const RI& r)
 
     solver.solve(r, sat, flow_bc, src, 5e-9, 3, 0);
 
+    /*
+
     typedef typename FlowSolver::SolutionType FlowSolution;
     FlowSolution soln = solver.getSolution();
 
@@ -114,6 +116,7 @@ void test_flowsolver(const GI& g, const RI& r)
     vtkwriter.addCellData(cell_pressure, "pressure");
     vtkwriter.write("testsolution-" + boost::lexical_cast<std::string>(0),
                     Dune::VTKOptions::ascii);
+    */
 }
 
 

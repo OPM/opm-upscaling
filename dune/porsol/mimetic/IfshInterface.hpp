@@ -39,6 +39,7 @@
 #include "../libmimetic/LibMimetic.hpp"
 #include <dune/common/ErrorMacros.hpp>
 #include <dune/common/SparseTable.hpp>
+#include <dune/porsol/common/LinearSolverISTL.hpp>
 
 
 namespace Dune
@@ -97,6 +98,10 @@ namespace Dune
             // Initialize ifsh
             ifsh_.init(g.grid(), perm);
         }
+
+
+
+
 
         /// @brief
         ///    Construct and solve system of linear equations for the
@@ -172,21 +177,42 @@ namespace Dune
                    int linsolver_type = 1,
                    bool same_matrix = false)
         {
-            //ifsh_.assemble();
-//             assembleDynamic(r, sat, bc, src);
-// //             static int count = 0;
-// //             ++count;
-// //             printSystem(std::string("linsys_mimetic-") + boost::lexical_cast<std::string>(count));
-//             switch (linsolver_type) {
-//             case 0: // ILU0 preconditioned BiCGStab
-//                 solveLinearSystem(residual_tolerance, linsolver_verbosity);
-//                 break;
-//             case 1: // AMG
-//                 solveLinearSystemAMG(residual_tolerance, linsolver_verbosity, same_matrix);
-//                 break;
-//             }
-//             computePressureAndFluxes(r, sat);
+            if (linsolver_type != 1) {
+                MESSAGE("Requested linear solver type " << linsolver_type << ", but we only have AMG so far.");
+            }
+            if (same_matrix) {
+                MESSAGE("Requested reuse of preconditioner, not implemented so far.");
+            }
+
+            int num_cells = sat.size();
+            std::vector<double> totmob(num_cells, 1.0);
+            for (int i = 0; i < num_cells; ++i) {
+                totmob[i] = r.totalMobility(i, sat[i]);
+            }
+            std::vector<double> omega(num_cells, 0.0);  // No gravity yet.
+            ifsh_.assemble(src, totmob, omega);
+
+            // TODO: Handle all-Neumann case.
+
+//             static int count = 0;
+//             ++count;
+//             printSystem(std::string("linsys_mimetic-") + boost::lexical_cast<std::string>(count));
+
+            Ifsh::LinearSystem s;
+            ifsh_.linearSystem(s);
+            LinearSolverResults res = linsolver_.solve(s.n, s.nnz, s.ia, s.ja, s.sa, s.b, s.x,
+                                                       residual_tolerance, linsolver_verbosity);
+            if (!res.converged) {
+                THROW("Linear solver failed to converge in " << res.iterations << " iterations.\n"
+                      << "Residual reduction achieved is " << res.reduction << '\n');
+            }
+            std::vector<double> cpress, hfflux;
+            ifsh_.computePressuresAndFluxes(src, cpress, hfflux);
         }
+
+
+
+
 
         /// @brief
         ///    Type representing the solution to a given flow problem.
@@ -253,6 +279,10 @@ namespace Dune
             }
         };
 
+
+
+
+
         /// @brief
         ///    Type representing the solution to the problem defined
         ///    by the parameters to @code solve() @endcode.  Always a
@@ -262,6 +292,10 @@ namespace Dune
         ///    cell @code *c @endcode and outward-pointing flux across
         ///    interface @code *f @endcode may be recovered.
         typedef const FlowSolution& SolutionType;
+
+
+
+
 
         /// @brief
         ///    Recover the solution to the problem defined by the
@@ -276,8 +310,13 @@ namespace Dune
             return flow_solution_;
         }
 
+
+
+
+
     private:
         Ifsh ifsh_;
+        LinearSolverISTL linsolver_;
         FlowSolution flow_solution_;
 
     };
