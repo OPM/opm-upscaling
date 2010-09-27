@@ -393,6 +393,11 @@ namespace Dune
 	    return FlowConds::operator[](i);
 	}
 
+	const FlowBC& flowCond(int i) const
+	{
+	    return FlowConds::operator[](i);
+	}
+
         template <class BoundaryFace>
 	const FlowBC& flowCond(const BoundaryFace& bf) const
 	{
@@ -401,6 +406,11 @@ namespace Dune
 	}
 
 	SatBC& satCond(int i)
+	{
+	    return SatConds::operator[](i);
+	}
+
+	const SatBC& satCond(int i) const
 	{
 	    return SatConds::operator[](i);
 	}

@@ -2,7 +2,8 @@
 # $Revision$
 
 check_PROGRAMS =
-noinst_PROGRAMS = mimetic_ipeval_test \
+noinst_PROGRAMS = ifsh_solver_test \
+                  mimetic_ipeval_test \
                   mimetic_solver_test \
                   mimetic_aniso_solver_test \
                   mimetic_periodic_test \
@@ -18,6 +19,9 @@ LDADD = $(DUNE_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB)   \
         $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
 
 # Note: Need to fill _SOURCES because default is "<base>.c"
+ifsh_solver_test_SOURCES = ifsh_solver_test.cpp
+ifsh_solver_test_LDADD = ../../libmimetic/libmimetic.la
+
 mimetic_ipeval_test_SOURCES = mimetic_ipeval_test.cpp
 
 mimetic_solver_test_SOURCES = mimetic_solver_test.cpp
