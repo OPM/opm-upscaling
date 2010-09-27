@@ -56,7 +56,8 @@ namespace Dune
           print_inoutflows_(false),
 	  simulation_steps_(10),
 	  stepsize_(0.1),
-	  relperm_threshold_(1.0e-4),
+	  relperm_threshold_(1.0e-8),
+          maximum_mobility_contrast_(1.0e9),
           sat_change_threshold_(0.0)
     {
     }
@@ -74,6 +75,7 @@ namespace Dune
 	stepsize_ = Dune::unit::convert::from(param.getDefault("stepsize", stepsize_),
 					      Dune::unit::day);
 	relperm_threshold_ = param.getDefault("relperm_threshold", relperm_threshold_);
+        maximum_mobility_contrast_ = param.getDefault("maximum_mobility_contrast", maximum_mobility_contrast_);
         sat_change_threshold_ = param.getDefault("sat_change_threshold", sat_change_threshold_);
 
 	transport_solver_.init(param);
@@ -90,6 +92,20 @@ namespace Dune
 
 
     namespace {
+        double maxMobility(double m1, double m2)
+        {
+            returm std::max(m1, m2);
+        }
+        // The matrix variant expects diagonal mobilities.
+        template <class SomeMatrixType>
+        double maxMobility(double m1, SomeMatrixType& m2)
+        {
+            double m = m1;
+            for (int i = 0; i < std::min(m2.numRows(), m2.numCols()); ++i) {
+                m = std::max(m, m(i,i));
+            }
+            return m;
+        }
         void thresholdMobility(double& m, double threshold)
         {
             m = std::max(m, threshold);
@@ -206,11 +222,27 @@ namespace Dune
         }
 
         // Compute phase mobilities.
+        // First: compute maximal mobilities.
         typedef typename Super::ResProp::Mobility Mob;
+        Mob ml
+        double m1max = 0;
+        double m2max = 0;
+        for (int c = 0; c < num_cells; ++c) {
+            this->res_prop_.phaseMobility(0, c, saturation[c], m.mob);
+            m1max = maxMobility(m1max, m.mob);
+            this->res_prop_.phaseMobility(1, c, saturation[c], m.mob);
+            m2max = maxMobility(m2max, m.mob);
+        }
+        // Second: set thresholds.
+        const double mob1_abs_thres = relperm_threshold_ / this->res_prop_.viscosityFirstPhase();
+        const double mob1_rel_thres = m1max / maximum_mobility_contrast_;
+        const double mob1_threshold = std::max(mob1_abs_thres, mob1_rel_thres);
+        const double mob2_abs_thres = relperm_threshold_ / this->res_prop_.viscositySecondPhase();
+        const double mob2_rel_thres = m2max / maximum_mobility_contrast_;
+        const double mob2_threshold = std::max(mob2_abs_thres, mob2_rel_thres);
+        // Third: extract and threshold.
         std::vector<Mob> mob1(num_cells);
         std::vector<Mob> mob2(num_cells);
-        const double mob1_threshold = relperm_threshold_ / this->res_prop_.viscosityFirstPhase();
-        const double mob2_threshold = relperm_threshold_ / this->res_prop_.viscositySecondPhase();
         for (int c = 0; c < num_cells; ++c) {
             this->res_prop_.phaseMobility(0, c, saturation[c], mob1[c].mob);
             thresholdMobility(mob1[c].mob, mob1_threshold);
