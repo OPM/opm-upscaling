@@ -5,7 +5,7 @@
 // Created: Fri Aug 28 14:07:51 2009
 //
 // Author(s): Atgeirr F Rasmussen <atgeirr@sintef.no>
-//            Bård Skaflestad     <bard.skaflestad@sintef.no>
+//            Brd Skaflestad     <bard.skaflestad@sintef.no>
 //
 // $Date$
 //
@@ -94,7 +94,7 @@ namespace Dune
     namespace {
         double maxMobility(double m1, double m2)
         {
-            returm std::max(m1, m2);
+            return std::max(m1, m2);
         }
         // The matrix variant expects diagonal mobilities.
         template <class SomeMatrixType>
@@ -102,7 +102,7 @@ namespace Dune
         {
             double m = m1;
             for (int i = 0; i < std::min(m2.numRows(), m2.numCols()); ++i) {
-                m = std::max(m, m(i,i));
+                m = std::max(m, m2(i,i));
             }
             return m;
         }
@@ -224,7 +224,7 @@ namespace Dune
         // Compute phase mobilities.
         // First: compute maximal mobilities.
         typedef typename Super::ResProp::Mobility Mob;
-        Mob ml
+        Mob m;
         double m1max = 0;
         double m2max = 0;
         for (int c = 0; c < num_cells; ++c) {

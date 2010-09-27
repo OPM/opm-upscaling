@@ -101,14 +101,27 @@ namespace Dune
     {
         const int num_rows = K.numRows();
         const int num_cols = K.numCols();
+	
+        /* We write tensor output in Voigt notation, 
+           (but we also output the remainding three terms)
+           http://en.wikipedia.org/wiki/Voigt_notation
+        */
+        
+        os << pdrop << '\t';
+        os << sat << '\t';
+        os << K(0,0) << '\t'; /* xx */
+        os << K(1,1) << '\t'; /* yy */
+        os << K(2,2) << '\t'; /* zz */
+        os << K(1,2) << '\t'; /* yz */
+        os << K(0,2) << '\t'; /* xz */
+        os << K(0,1) << '\t'; /* xy */
+        os << K(2,1) << '\t'; /* zy */
+        os << K(2,0) << '\t'; /* zx */
+        os << K(1,2);         /* yz */
+        
 
-        os << sat << ' ';
-        for (int i = 0; i < num_rows; ++i) {
-            for (int j = 0; j < num_cols; ++j) {
-                os << K(i,j) << ' ';
-            }
-        }
-        os << pdrop << std::endl;
+	os << std::endl;
+
     }
 
 
@@ -174,17 +187,21 @@ namespace Dune
             std::cout << "Upscaled K in millidarcy:\n" << upscaled_K_copy << std::endl;
             std::cout << "Upscaled porosity: " << upscaler.upscalePorosity() << std::endl;
 
-#if WRITE_RELPERM_TO_FILE
             // Create output streams for upscaled relative permeabilities
             std::string kr_filename = param.getDefault<std::string>("kr_filename", "upscaled_relperm");
-            std::string krw_filename = kr_filename + "_wat";
+            std::string krw_filename = kr_filename + "_water";
             std::string kro_filename = kr_filename + "_oil";
             std::ofstream krw_out(krw_filename.c_str());
             std::ofstream kro_out(kro_filename.c_str());
+            krw_out << "# Result from steady state upscaling" << std::endl;
+            krw_out << "# Pressuredrop  Sw  Krxx  Kryy  Krzz" << std::endl;
+            kro_out << "# Result from steady state upscaling" << std::endl;
+            kro_out << "# Pressuredrop  Sw  Krxx  Kryy  Krzz" << std::endl;
+
 
             krw_out.precision(15);  krw_out.setf(std::ios::scientific | std::ios::showpoint);
             kro_out.precision(15);  kro_out.setf(std::ios::scientific | std::ios::showpoint);
-#endif
+	    //#endif
 
             // Then, compute some upscaled relative permeabilities.
             int num_cells = upscaler.grid().size(0);
@@ -207,10 +224,10 @@ namespace Dune
                     // Changing initial saturations for next pressure drop to equal the steady state of the last
                     init_sat = upscaler.lastSaturationState();
 
-#if WRITE_RELPERM_TO_FILE
+		    
                     writeRelPerm(krw_out, lambda.first , usat, pdrop);
                     writeRelPerm(kro_out, lambda.second, usat, pdrop);
-#endif
+		    
                 }
             }
         }
