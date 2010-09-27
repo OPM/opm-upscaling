@@ -99,13 +99,20 @@ namespace Dune
     template<class Ostream, class Tensor>
     void writeRelPerm(Ostream& os, const Tensor& K, double sat, double pdrop)
     {
-        const int num_rows = K.numRows();
-        const int num_cols = K.numCols();
+        /* const int num_rows = K.numRows(); */
+        /* const int num_cols = K.numCols(); */
 	
         /* We write tensor output in Voigt notation, 
            (but we also output the remainding three terms)
            http://en.wikipedia.org/wiki/Voigt_notation
         */
+
+	/*
+	  TODO:
+	  If fixed boundary condition, only output diagonal elements
+	  If linear or periodic bc's, output all 9 elements (even though 6 is strictly necessary for periodic bc's)
+	  Use the Tensor class to order output into Voigt notation, so that it works for more than 3x3 matrices
+	*/
         
         os << pdrop << '\t';
         os << sat << '\t';
