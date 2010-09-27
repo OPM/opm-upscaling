@@ -115,6 +115,7 @@ namespace Dune
 	int simulation_steps_;
 	double stepsize_;
         double relperm_threshold_;
+        double maximum_mobility_contrast_;
         double sat_change_threshold_;
 	TransportSolver transport_solver_;
     };
