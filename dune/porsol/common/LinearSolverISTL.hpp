@@ -106,6 +106,18 @@ namespace Dune
             Vector x(size);
             x = 0.0;
 
+            {
+                // Save system
+                writeMatrixToMatlab(A, "ifshmat");
+                std::string rhsfile("ifshrhs");
+                std::ofstream rhsf(rhsfile.c_str());
+                rhsf.precision(15);
+                rhsf.setf(std::ios::scientific | std::ios::showpos);
+                std::copy(b.begin(), b.end(),
+                          std::ostream_iterator<VectorBlockType>(rhsf, "\n"));
+            }
+
+
             // Solve with AMG solver.
 #define FIRST_DIAGONAL 1
 #define SYMMETRIC 1

@@ -644,9 +644,9 @@ namespace Dune {
                    bool same_matrix = false)
         {
             assembleDynamic(r, sat, bc, src);
-//             static int count = 0;
-//             ++count;
-//             printSystem(std::string("linsys_mimetic-") + boost::lexical_cast<std::string>(count));
+            static int count = 0;
+            ++count;
+            printSystem(std::string("linsys_mimetic-") + boost::lexical_cast<std::string>(count));
             switch (linsolver_type) {
             case 0: // ILU0 preconditioned BiCGStab
                 solveLinearSystem(residual_tolerance, linsolver_verbosity);

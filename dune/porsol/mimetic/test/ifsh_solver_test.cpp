@@ -65,6 +65,9 @@
 #include <dune/common/param/ParameterGroup.hpp>
 #include <dune/porsol/common/setupGridAndProps.hpp>
 
+#include <dune/porsol/mimetic/MimeticIPEvaluator.hpp>
+#include <dune/porsol/mimetic/IncompFlowSolverHybrid.hpp>
+
 
 
 template<int dim, class GI, class RI>
@@ -74,6 +77,8 @@ void test_flowsolver(const GI& g, const RI& r)
     typedef typename CI::FaceIterator                   FI;
     typedef Dune::BasicBoundaryConditions<true, false>  FBC;
     typedef Dune::IfshInterface<GI, RI, FBC> FlowSolver;
+    //typedef Dune::IncompFlowSolverHybrid<GI, RI, FBC,
+    //                                   Dune::MimeticIPEvaluator> FlowSolver;
 
     FlowSolver solver;
 
@@ -96,7 +101,7 @@ void test_flowsolver(const GI& g, const RI& r)
         src.back() = -1.0;
     }
 
-    solver.solve(r, sat, flow_bc, src, 5e-9, 3, 0);
+    solver.solve(r, sat, flow_bc, src, 5e-9, 3, 1);
 
     /*
 

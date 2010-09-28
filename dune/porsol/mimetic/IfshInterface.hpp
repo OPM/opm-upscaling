@@ -234,8 +234,6 @@ namespace Dune
             ///    Convenience alias for the cell's face iterator.
             typedef typename CI           ::FaceIterator FI;
 
-            friend class IncompFlowSolverHybrid;
-
             /// @brief
             ///    Retrieve the current cell pressure in a given cell.
             ///
