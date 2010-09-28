@@ -206,8 +206,12 @@ namespace Dune
                 THROW("Linear solver failed to converge in " << res.iterations << " iterations.\n"
                       << "Residual reduction achieved is " << res.reduction << '\n');
             }
-            std::vector<double> cpress, hfflux;
-            ifsh_.computePressuresAndFluxes(src, cpress, hfflux);
+            flow_solution_.clear();
+            std::vector<double> hfflux;
+            ifsh_.computePressuresAndFluxes(src, flow_solution_.pressure_, hfflux);
+            const std::vector<int>& ncf = ifsh_.numCellFaces();
+            flow_solution_.outflux_.assign(hfflux.begin(), hfflux.end(),
+                                           ncf.begin(), ncf.end());
         }
 
 
@@ -218,6 +222,8 @@ namespace Dune
         ///    Type representing the solution to a given flow problem.
         class FlowSolution {
         public:
+            friend class IfshInterface;
+
             /// @brief
             ///    The element type of the matrix representation of
             ///    the mimetic inner product.  Assumed to be a
@@ -245,7 +251,7 @@ namespace Dune
             ///    Current cell pressure in cell @code *c @endcode.
             Scalar pressure(const CI& c) const
             {
-                return pressure_[cellno_[c->index()]];
+                return pressure_[c->index()];
             }
 
             /// @brief
@@ -260,19 +266,15 @@ namespace Dune
             ///    Current outward flux across face @code *f @endcode.
             Scalar outflux (const FI& f) const
             {
-                return outflux_[cellno_[f->cellIndex()]][f->localIndex()];
+                return outflux_[f->cellIndex()][f->localIndex()];
             }
         private:
-            std::vector< int  > cellno_;
-            SparseTable< int  > cellFaces_;
             std::vector<Scalar> pressure_;
             SparseTable<Scalar> outflux_;
 
-            void clear() {
-                std::vector<int>().swap(cellno_);
-                cellFaces_.clear();
-
-                std::vector<Scalar>().swap(pressure_);
+            void clear()
+            {
+                pressure_.clear();
                 outflux_.clear();
             }
         };
