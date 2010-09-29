@@ -207,10 +207,12 @@ namespace Dune
                       << "Residual reduction achieved is " << res.reduction << '\n');
             }
             flow_solution_.clear();
-            std::vector<double> hfflux;
-            ifsh_.computePressuresAndFluxes(src, flow_solution_.pressure_, hfflux);
+            std::vector<double> face_flux;
+            ifsh_.computePressuresAndFluxes(flow_solution_.pressure_, face_flux);
+            std::vector<double> cell_flux;
+            ifsh_.faceFluxToCellFlux(face_flux, cell_flux);
             const std::vector<int>& ncf = ifsh_.numCellFaces();
-            flow_solution_.outflux_.assign(hfflux.begin(), hfflux.end(),
+            flow_solution_.outflux_.assign(cell_flux.begin(), cell_flux.end(),
                                            ncf.begin(), ncf.end());
         }
 
