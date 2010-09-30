@@ -67,36 +67,12 @@
 #include <dune/porsol/common/GridInterfaceEuler.hpp>
 #include <dune/porsol/common/ReservoirPropertyCapillary.hpp>
 #include <dune/porsol/common/BoundaryConditions.hpp>
+#include <dune/porsol/common/setupGridAndProps.hpp>
 
 #include <dune/porsol/mimetic/MimeticIPEvaluator.hpp>
 #include <dune/porsol/mimetic/IncompFlowSolverHybrid.hpp>
 #include <dune/common/param/ParameterGroup.hpp>
 
-
-void build_grid(const Dune::EclipseGridParser& parser,
-                const double z_tol, Dune::CpGrid& grid,
-                boost::array<int,3>& cartDims)
-{
-    Dune::EclipseGridInspector insp(parser);
-
-    grdecl g;
-    cartDims[0] = g.dims[0] = insp.gridSize()[0];
-    cartDims[1] = g.dims[1] = insp.gridSize()[1];
-    cartDims[2] = g.dims[2] = insp.gridSize()[2];
-
-    g.coord = &parser.getFloatingPointValue("COORD")[0];
-    g.zcorn = &parser.getFloatingPointValue("ZCORN")[0];
-
-    if (parser.hasField("ACTNUM")) {
-        g.actnum = &parser.getIntegerValue("ACTNUM")[0];
-        grid.processEclipseFormat(g, z_tol, false, false);
-    } else {
-        std::vector<int> dflt_actnum(g.dims[0] * g.dims[1] * g.dims[2], 1);
-
-        g.actnum = &dflt_actnum[0];
-        grid.processEclipseFormat(g, z_tol, false, false);
-    }
-}
 
 
 #if USE_ALUGRID
@@ -108,18 +84,6 @@ make_gmsh(const std::string& msh_file)
 }
 #endif
 
-
-template<int dim, class RI>
-void assign_permeability(RI& r, int nc, double k)
-{
-    typedef typename RI::SharedPermTensor Tensor;
-    for (int c = 0; c < nc; ++c) {
-        Tensor K = r.permeabilityModifiable(c);
-        for (int i = 0; i < dim; ++i) {
-            K(i,i) = k;
-        }
-    }
-}
 
 
 template<int dim, class GI, class RI>
@@ -137,27 +101,23 @@ void test_flowsolver(const GI& g, const RI& r)
     FBC flow_bc(7);
 
 #if !USE_ALUGRID
-    //flow_bc.flowCond(1) = BC(BC::Dirichlet, 1.0*Dune::unit::barsa);
-    //flow_bc.flowCond(2) = BC(BC::Dirichlet, 0.0*Dune::unit::barsa);
     flow_bc.flowCond(5) = BC(BC::Dirichlet, 100.0*Dune::unit::barsa);
+    flow_bc.flowCond(6) = BC(BC::Dirichlet, 0.0*Dune::unit::barsa);
 #endif
 
-    typename CI::Vector gravity;
-    gravity[0] = gravity[1] = 0.0;
-    gravity[2] = Dune::unit::gravity;
+    typename CI::Vector gravity(0.0);
+    // gravity[2] = Dune::unit::gravity;
 
     solver.init(g, r, gravity, flow_bc);
 
     std::vector<double> src(g.numberOfCells(), 0.0);
     std::vector<double> sat(g.numberOfCells(), 0.0);
-#if 1
-    if (g.numberOfCells() > 1) {
-        src[0]     = 1.0;
-        src.back() = -1.0;
-    }
-#endif
+//     if (g.numberOfCells() > 1) {
+//         src[0]     = 1.0;
+//         src.back() = -1.0;
+//     }
 
-    solver.solve(r, sat, flow_bc, src, 5e-9, 3, 0);
+    solver.solve(r, sat, flow_bc, src, 5e-9, 3, 1);
 
 #if 1
     typedef typename FlowSolver::SolutionType FlowSolution;
@@ -208,20 +168,13 @@ int main(int argc, char** argv)
 
     // Make a grid
 #if !USE_ALUGRID
+    // Make a grid and props.
     Dune::CpGrid grid;
-
-    Dune::EclipseGridParser parser(param.get<std::string>("filename"));
-    double z_tol = param.getDefault<double>("z_tolerance", 0.0);
-    boost::array<int,3> cartDims;
-    build_grid(parser, z_tol, grid, cartDims);
+    ReservoirPropertyCapillary<3> res_prop;
+    setupGridAndProps(param, grid, res_prop);
 
     // Make the grid interface
     Dune::GridInterfaceEuler<Dune::CpGrid> g(grid);
-
-    // Reservoir properties.
-    ReservoirPropertyCapillary<3> res_prop;
-    res_prop.init(parser, grid.globalCell());
-    assign_permeability<3>(res_prop, g.numberOfCells(), 0.1*Dune::unit::darcy);
 #else
     typedef Dune::ALUSimplexGrid<3,3> GType;
     Dune::shared_ptr<GType> pgrid = make_gmsh<GType>(param.get<std::string>("filename"));

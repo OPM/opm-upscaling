@@ -52,6 +52,15 @@ namespace Dune
     class IfshInterface
     {
     public:
+
+        /// @brief
+        ///    Default constructor. Does nothing.
+        IfshInterface()
+            : pgrid_(0)
+        {
+        }
+
+
         /// @brief
         ///    All-in-one initialization routine.  Enumerates all grid
         ///    connections, allocates sufficient space, defines the
@@ -84,19 +93,17 @@ namespace Dune
                   const Point&              grav,
                   const BCInterface&        bc)
         {
-            if (grav.two_norm() != 0.0) {
-                THROW("No gravity yet!");
-            }
+            pgrid_ = &g;
             // Extract perm tensors.
             const double* perm = &(r.permeability(0)(0,0));
             // Check that we only have noflow boundary conditions.
             for (int i = 0; i < bc.size(); ++i) {
-                if (!bc.flowCond(i).isNeumann() || bc.flowCond(i).outflux() != 0.0) {
-                    THROW("We only handle noflow bcs at the moment.");
+                if (bc.flowCond(i).isPeriodic()) {
+                    THROW("Periodic BCs are not handled yet by ifsh.");
                 }
             }
             // Initialize ifsh
-            ifsh_.init(g.grid(), perm);
+            ifsh_.init(g.grid(), perm, &grav[0]);
         }
 
 
@@ -186,13 +193,38 @@ namespace Dune
 
             int num_cells = sat.size();
             std::vector<double> totmob(num_cells, 1.0);
-            for (int i = 0; i < num_cells; ++i) {
-                totmob[i] = r.totalMobility(i, sat[i]);
+            std::vector<double> omega(num_cells, 0.0);
+            for (int cell = 0; cell < num_cells; ++cell) {
+                totmob[cell] = r.totalMobility(cell, sat[cell]);
+                double f_w = r.fractionalFlow(cell, sat[cell]);
+                omega[cell] = r.densityFirstPhase()*f_w + r.densitySecondPhase()*(1.0 - f_w);
             }
-            std::vector<double> omega(num_cells, 0.0);  // No gravity yet.
-            ifsh_.assemble(src, totmob, omega);
+            int num_faces = pgrid_->numberOfFaces();
+            std::vector<Ifsh::FlowBCTypes> bctypes(num_faces, Ifsh::FBC_UNSET);
+            std::vector<double> bcvalues(num_faces, 0.0);
+            typedef typename GridInterface::CellIterator CI;
+            typedef typename CI::FaceIterator FI;
+            for (CI c = pgrid_->cellbegin(); c != pgrid_->cellend(); ++c) {
+                for (FI f = c->facebegin(); f != c-> faceend(); ++f) {
+                    if (f->boundary()) {
+                        int face = f->index();
+                        int bid = f->boundaryId();
+                        FlowBC face_bc = bc.flowCond(bid);
+                        if (face_bc.isDirichlet()) {
+                            bctypes[face] = Ifsh::FBC_PRESSURE;
+                            bcvalues[face] = face_bc.pressure();
+                        } else if (face_bc.isNeumann()) {
+                            bctypes[face] = Ifsh::FBC_FLUX;
+                            bcvalues[face] = face_bc.outflux(); // TODO: may have to switch sign here depending on orientation.
+                        } else {
+                            THROW("Unhandled boundary condition type.");
+                        }
+                    }
+                }
+            }
 
-            // TODO: Handle all-Neumann case.
+            // Assemble system matrix and rhs.
+            ifsh_.assemble(src, totmob, omega, bctypes, bcvalues);
 
 //             static int count = 0;
 //             ++count;
@@ -317,10 +349,10 @@ namespace Dune
 
 
     private:
+        const GridInterface* pgrid_;
         Ifsh ifsh_;
         LinearSolverISTL linsolver_;
         FlowSolution flow_solution_;
-
     };
 
 

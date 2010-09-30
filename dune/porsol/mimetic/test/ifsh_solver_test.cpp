@@ -85,21 +85,20 @@ void test_flowsolver(const GI& g, const RI& r)
     typedef Dune::FlowBC BC;
     FBC flow_bc(7);
 
-    //flow_bc.flowCond(1) = BC(BC::Dirichlet, 1.0*Dune::unit::barsa);
-    //flow_bc.flowCond(2) = BC(BC::Dirichlet, 0.0*Dune::unit::barsa);
-    //flow_bc.flowCond(5) = BC(BC::Dirichlet, 100.0*Dune::unit::barsa);
+    flow_bc.flowCond(5) = BC(BC::Dirichlet, 100.0*Dune::unit::barsa);
+    flow_bc.flowCond(6) = BC(BC::Dirichlet, 0.0*Dune::unit::barsa);
 
     typename CI::Vector gravity(0.0);
-    // gravity[2] = Dune::unit::gravity;
+//     gravity[2] = Dune::unit::gravity;
 
     solver.init(g, r, gravity, flow_bc);
 
     std::vector<double> src(g.numberOfCells(), 0.0);
     std::vector<double> sat(g.numberOfCells(), 0.0);
-    if (g.numberOfCells() > 1) {
-        src[0]     = 1.0;
-        src.back() = -1.0;
-    }
+//     if (g.numberOfCells() > 1) {
+//         src[0]     = 1.0;
+//         src.back() = -1.0;
+//     }
 
     solver.solve(r, sat, flow_bc, src, 5e-9, 3, 1);
 
