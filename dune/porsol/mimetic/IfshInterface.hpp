@@ -202,26 +202,39 @@ namespace Dune
             int num_faces = pgrid_->numberOfFaces();
             std::vector<Ifsh::FlowBCTypes> bctypes(num_faces, Ifsh::FBC_UNSET);
             std::vector<double> bcvalues(num_faces, 0.0);
-            typedef typename GridInterface::CellIterator CI;
-            typedef typename CI::FaceIterator FI;
-            for (CI c = pgrid_->cellbegin(); c != pgrid_->cellend(); ++c) {
-                for (FI f = c->facebegin(); f != c-> faceend(); ++f) {
-                    if (f->boundary()) {
-                        int face = f->index();
-                        int bid = f->boundaryId();
-                        FlowBC face_bc = bc.flowCond(bid);
-                        if (face_bc.isDirichlet()) {
-                            bctypes[face] = Ifsh::FBC_PRESSURE;
-                            bcvalues[face] = face_bc.pressure();
-                        } else if (face_bc.isNeumann()) {
-                            bctypes[face] = Ifsh::FBC_FLUX;
-                            bcvalues[face] = face_bc.outflux(); // TODO: may have to switch sign here depending on orientation.
-                        } else {
-                            THROW("Unhandled boundary condition type.");
-                        }
-                    }
+            for (int face = 0; face < num_faces; ++face) {
+                int bid = pgrid_->grid().boundaryId(face);
+                FlowBC face_bc = bc.flowCond(bid);
+                if (face_bc.isDirichlet()) {
+                    bctypes[face] = Ifsh::FBC_PRESSURE;
+                    bcvalues[face] = face_bc.pressure();
+                } else if (face_bc.isNeumann()) {
+                    bctypes[face] = Ifsh::FBC_FLUX;
+                    bcvalues[face] = face_bc.outflux(); // TODO: may have to switch sign here depending on orientation.
+                } else {
+                    THROW("Unhandled boundary condition type.");
                 }
             }
+//             typedef typename GridInterface::CellIterator CI;
+//             typedef typename CI::FaceIterator FI;
+//             for (CI c = pgrid_->cellbegin(); c != pgrid_->cellend(); ++c) {
+//                 for (FI f = c->facebegin(); f != c-> faceend(); ++f) {
+//                     if (f->boundary()) {
+//                         int face = f->index();
+//                         int bid = f->boundaryId();
+//                         FlowBC face_bc = bc.flowCond(bid);
+//                         if (face_bc.isDirichlet()) {
+//                             bctypes[face] = Ifsh::FBC_PRESSURE;
+//                             bcvalues[face] = face_bc.pressure();
+//                         } else if (face_bc.isNeumann()) {
+//                             bctypes[face] = Ifsh::FBC_FLUX;
+//                             bcvalues[face] = face_bc.outflux(); // TODO: may have to switch sign here depending on orientation.
+//                         } else {
+//                             THROW("Unhandled boundary condition type.");
+//                         }
+//                     }
+//                 }
+//             }
 
             // Assemble system matrix and rhs.
             ifsh_.assemble(src, totmob, omega, bctypes, bcvalues);
