@@ -36,7 +36,7 @@
 #ifndef OPENRS_IFSHINTERFACE_HEADER
 #define OPENRS_IFSHINTERFACE_HEADER
 
-#include "../libmimetic/LibMimetic.hpp"
+#include "../libmimetic/HybridPressureSolver.hpp"
 #include <dune/common/ErrorMacros.hpp>
 #include <dune/common/SparseTable.hpp>
 #include <dune/porsol/common/LinearSolverISTL.hpp>
@@ -200,16 +200,16 @@ namespace Dune
                 omega[cell] = r.densityFirstPhase()*f_w + r.densitySecondPhase()*(1.0 - f_w);
             }
             int num_faces = pgrid_->numberOfFaces();
-            std::vector<Ifsh::FlowBCTypes> bctypes(num_faces, Ifsh::FBC_UNSET);
+            std::vector<HybridPressureSolver::FlowBCTypes> bctypes(num_faces, HybridPressureSolver::FBC_UNSET);
             std::vector<double> bcvalues(num_faces, 0.0);
             for (int face = 0; face < num_faces; ++face) {
                 int bid = pgrid_->grid().boundaryId(face);
                 FlowBC face_bc = bc.flowCond(bid);
                 if (face_bc.isDirichlet()) {
-                    bctypes[face] = Ifsh::FBC_PRESSURE;
+                    bctypes[face] = HybridPressureSolver::FBC_PRESSURE;
                     bcvalues[face] = face_bc.pressure();
                 } else if (face_bc.isNeumann()) {
-                    bctypes[face] = Ifsh::FBC_FLUX;
+                    bctypes[face] = HybridPressureSolver::FBC_FLUX;
                     bcvalues[face] = face_bc.outflux(); // TODO: may have to switch sign here depending on orientation.
                 } else {
                     THROW("Unhandled boundary condition type.");
@@ -224,10 +224,10 @@ namespace Dune
 //                         int bid = f->boundaryId();
 //                         FlowBC face_bc = bc.flowCond(bid);
 //                         if (face_bc.isDirichlet()) {
-//                             bctypes[face] = Ifsh::FBC_PRESSURE;
+//                             bctypes[face] = HybridPressureSolver::FBC_PRESSURE;
 //                             bcvalues[face] = face_bc.pressure();
 //                         } else if (face_bc.isNeumann()) {
-//                             bctypes[face] = Ifsh::FBC_FLUX;
+//                             bctypes[face] = HybridPressureSolver::FBC_FLUX;
 //                             bcvalues[face] = face_bc.outflux(); // TODO: may have to switch sign here depending on orientation.
 //                         } else {
 //                             THROW("Unhandled boundary condition type.");
@@ -243,7 +243,7 @@ namespace Dune
 //             ++count;
 //             printSystem(std::string("linsys_mimetic-") + boost::lexical_cast<std::string>(count));
 
-            Ifsh::LinearSystem s;
+            HybridPressureSolver::LinearSystem s;
             ifsh_.linearSystem(s);
             LinearSolverResults res = linsolver_.solve(s.n, s.nnz, s.ia, s.ja, s.sa, s.b, s.x,
                                                        residual_tolerance, linsolver_verbosity);
@@ -363,7 +363,7 @@ namespace Dune
 
     private:
         const GridInterface* pgrid_;
-        Ifsh ifsh_;
+        HybridPressureSolver ifsh_;
         LinearSolverISTL linsolver_;
         FlowSolution flow_solution_;
     };
