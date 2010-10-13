@@ -20,7 +20,7 @@ LDADD = $(DUNE_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB)   \
 
 # Note: Need to fill _SOURCES because default is "<base>.c"
 ifsh_solver_test_SOURCES = ifsh_solver_test.cpp
-ifsh_solver_test_LDADD = ../../libmimetic/libmimetic.la
+ifsh_solver_test_LDADD = ../../opmpressure/libopmpressure.la
 
 mimetic_ipeval_test_SOURCES = mimetic_ipeval_test.cpp
 
