@@ -1,5 +1,5 @@
 porsolincludedir = $(includedir)/dune/porsol
 
-SUBDIRS = common euler libmimetic mimetic
+SUBDIRS = opmpressure common euler mimetic
 
 include $(top_srcdir)/am/global-rules
