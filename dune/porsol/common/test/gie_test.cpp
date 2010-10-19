@@ -44,11 +44,7 @@
 #include <dune/common/array.hh>
 #include <dune/grid/yaspgrid.hh>
 
-#define STD_ARRAY_LACKS_FILL
-#ifdef STD_ARRAY_LACKS_FILL
-#else
 #include <dune/grid/sgrid.hh>
-#endif
 
 #include <dune/grid/CpGrid.hpp>
 
@@ -136,8 +132,6 @@ void check_yasp(bool p0 = false) {
 template <int dim, int refinement>
 void check_sgrid()
 {
-#ifdef STD_ARRAY_LACKS_FILL
-#else
     typedef Dune::FieldVector<int,dim> iTupel;
     typedef Dune::FieldVector<double,dim> fTupel;
 
@@ -154,7 +148,6 @@ void check_sgrid()
     // Test the interface
     Dune::GridInterfaceEuler<Dune::SGrid<dim, dim, double> > gie(grid);
     test_interface(gie);
-#endif
 }
 
 
