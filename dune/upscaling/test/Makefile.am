@@ -7,7 +7,8 @@ noinst_PROGRAMS = \
         aniso_steadystate_test \
         implicit_steadystate_test \
         steadystate_test \
-        upscaling_test
+        upscaling_test \
+	cpchop
 
 AM_CPPFLAGS += $(DUNEMPICPPFLAGS) $(BOOST_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 AM_LDFLAGS  += $(DUNEMPILDFLAGS) $(BOOST_LDFLAGS) $(SUPERLU_LDFLAGS)
@@ -25,6 +26,8 @@ aniso_steadystate_test_SOURCES = aniso_steadystate_test.cpp
 implicit_steadystate_test_SOURCES = implicit_steadystate_test.cpp
 
 aniso_implicit_steadystate_test_SOURCES = aniso_implicit_steadystate_test.cpp
+
+cpchop_SOURCES = cpchop.cpp
 
 #upscale_perm_SOURCES = upscale_perm.C
 
