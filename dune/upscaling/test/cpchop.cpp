@@ -202,6 +202,8 @@ int main(int argc, char** argv)
 
     outputFilteredInt(out, parser, new_to_old_cell, "ACTNUM");
     outputFilteredDouble(out, parser, new_to_old_cell, "PERMX");
+    outputFilteredDouble(out, parser, new_to_old_cell, "PERMY");
+    outputFilteredDouble(out, parser, new_to_old_cell, "PERMY");
     outputFilteredDouble(out, parser, new_to_old_cell, "PORO");
     outputFilteredInt(out, parser, new_to_old_cell, "SATNUM");
 }
