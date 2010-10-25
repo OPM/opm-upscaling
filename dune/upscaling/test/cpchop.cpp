@@ -37,6 +37,7 @@ int main(int argc, char** argv)
     double zmin = param.getDefault("zmin", -1e100);
     double zmax = param.getDefault("zmax", 1e100);
     ch.chop(imin, imax, jmin, jmax, zmin, zmax);
-    std::string filebase = param.get<std::string>("filebase");
+    std::string filebase = param.getDefault<std::string>("filebase", "subsample");
+    std::string outnam = filebase + ".grdecl";
     ch.writeGrdecl(filebase);
 }
