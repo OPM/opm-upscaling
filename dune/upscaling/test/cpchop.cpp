@@ -113,22 +113,30 @@ int main(int argc, char** argv)
         }
     }
 
-    // Get the z limits.
+    // Get the z limits, check if they must be changed to make a shoe-box.
+    // This means that zmin must be greater than or equal to the highest
+    // coordinate of the bottom surface, while zmax must be less than or
+    // equal to the lowest coordinate of the top surface.
     double zmin = param.getDefault("zmin", -1e100);
     double zmax = param.getDefault("zmax", 1e100);
-
-    // We must find the maximum and minimum k value for the given z limits.
-    // First, find the first layer with a z-coordinate strictly above zmin.
-    const std::vector<double>& ZCORN = parser.getFloatingPointValue("ZCORN");
     int layersz = 8*dims[0]*dims[1];
+    const std::vector<double>& ZCORN = parser.getFloatingPointValue("ZCORN");
     int num_zcorn = ZCORN.size();
     if (num_zcorn != layersz*dims[2]) {
         std::cerr << "Error! ZCORN size (" << ZCORN.size() << ") not consistent with SPECGRID\n";
         return EXIT_FAILURE;
     }
+    double botmax = *std::max_element(ZCORN.begin(), ZCORN.begin() + layersz/2);
+    double topmin = *std::min_element(ZCORN.begin() + dims[2]*layersz - layersz/2,
+                                 ZCORN.begin() + dims[2]*layersz);
+    zmin = std::max(zmin, botmax);
+    zmax = std::min(zmax, topmin);
+
+    // We must find the maximum and minimum k value for the given z limits.
+    // First, find the first layer with a z-coordinate strictly above zmin.
     int kmin = -1;
     for (int k = 0; k < dims[2]; ++k) {
-        double layer_max = *max_element(ZCORN.begin() + k*layersz, ZCORN.begin() + (k + 1)*layersz);
+        double layer_max = *std::max_element(ZCORN.begin() + k*layersz, ZCORN.begin() + (k + 1)*layersz);
         if (layer_max > zmin) {
             kmin = k;
             break;
@@ -137,7 +145,7 @@ int main(int argc, char** argv)
     // Then, find the last layer with a z-coordinate strictly below zmax.
     int kmax = -1;
     for (int k = dims[2]; k > 0; --k) {
-        double layer_min = *min_element(ZCORN.begin() + (k - 1)*layersz, ZCORN.begin() + k*layersz);
+        double layer_min = *std::min_element(ZCORN.begin() + (k - 1)*layersz, ZCORN.begin() + k*layersz);
         if (layer_min < zmax) {
             kmax = k;
             break;
