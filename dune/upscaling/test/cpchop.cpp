@@ -51,7 +51,7 @@ int main(int argc, char** argv)
     // Note that end is included in interval for uniform_int.
     boost::uniform_int<> disti(imin, imax - ilen);
     boost::uniform_int<> distj(jmin, jmax - jlen);
-    boost::uniform_real<> distz(zmin, zmax - zlen);
+    boost::uniform_real<> distz(zmin, std::max(zmax - zlen, zmin));
     boost::variate_generator<boost::mt19937&, boost::uniform_int<> > ri(gen, disti);
     boost::variate_generator<boost::mt19937&, boost::uniform_int<> > rj(gen, distj);
     boost::variate_generator<boost::mt19937&, boost::uniform_real<> > rz(gen, distz);
