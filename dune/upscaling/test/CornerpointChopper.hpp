@@ -202,7 +202,7 @@ namespace Dune
             outputFilteredInt(out, parser_, new_to_old_cell_, "ACTNUM");
             outputFilteredDouble(out, parser_, new_to_old_cell_, "PERMX");
             outputFilteredDouble(out, parser_, new_to_old_cell_, "PERMY");
-            outputFilteredDouble(out, parser_, new_to_old_cell_, "PERMY");
+            outputFilteredDouble(out, parser_, new_to_old_cell_, "PERMZ");
             outputFilteredDouble(out, parser_, new_to_old_cell_, "PORO");
             outputFilteredInt(out, parser_, new_to_old_cell_, "SATNUM");
         }
