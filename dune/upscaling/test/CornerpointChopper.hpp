@@ -38,6 +38,12 @@ namespace Dune
             : parser_(file)
         {
             const int* dims = &parser_.getSPECGRID().dimensions[0];
+
+            int layersz = 8*dims[0]*dims[1];
+            const std::vector<double>& ZCORN = parser_.getFloatingPointValue("ZCORN");
+            botmax_ = *std::max_element(ZCORN.begin(), ZCORN.begin() + layersz/2);
+            topmin_ = *std::min_element(ZCORN.begin() + dims[2]*layersz - layersz/2,
+                                        ZCORN.begin() + dims[2]*layersz);
             std::cout << "Parsed grdecl file with dimensions (" << dims[0] << ", " << dims[1] << ", " << dims[2] << ")" << std::endl;
         }
 
@@ -47,6 +53,22 @@ namespace Dune
         const int* dimensions() const
         {
             return &parser_.getSPECGRID().dimensions[0];
+        }
+
+
+
+
+        const int* newDimensions() const
+        {
+            return new_dims_;
+        }
+
+
+
+
+        const std::pair<double, double> zLimits() const
+        {
+            return std::make_pair(botmax_, topmin_);
         }
 
 
@@ -86,11 +108,9 @@ namespace Dune
                 std::cerr << "Error! ZCORN size (" << ZCORN.size() << ") not consistent with SPECGRID\n";
                 throw std::runtime_error("Inconsistent ZCORN and SPECGRID.");
             }
-            double botmax = *std::max_element(ZCORN.begin(), ZCORN.begin() + layersz/2);
-            double topmin = *std::min_element(ZCORN.begin() + dims[2]*layersz - layersz/2,
-                                              ZCORN.begin() + dims[2]*layersz);
-            zmin = std::max(zmin, botmax);
-            zmax = std::min(zmax, topmin);
+
+            zmin = std::max(zmin, botmax_);
+            zmax = std::min(zmax, topmin_);
             if (zmin >= zmax) {
                 std::cerr << "Error: zmin >= zmax (zmin = " << zmin << ", zmax = " << zmax << ")\n";
                 throw std::runtime_error("zmin >= zmax");
@@ -189,6 +209,8 @@ namespace Dune
 
     private:
         EclipseGridParser parser_;
+        double botmax_;
+        double topmin_;
         std::vector<double> new_COORD_;
         std::vector<double> new_ZCORN_;
         int new_dims_[3];
