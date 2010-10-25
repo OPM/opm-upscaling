@@ -131,6 +131,11 @@ int main(int argc, char** argv)
                                  ZCORN.begin() + dims[2]*layersz);
     zmin = std::max(zmin, botmax);
     zmax = std::min(zmax, topmin);
+    if (zmin >= zmax) {
+        std::cerr << "Error: zmin >= zmax (zmin = " << zmin << ", zmax = " << zmax << ")\n";
+        return EXIT_FAILURE;
+    }
+    std::cout << "zmin = " << zmin << ", zmax = " << zmax << std::endl;
 
     // We must find the maximum and minimum k value for the given z limits.
     // First, find the first layer with a z-coordinate strictly above zmin.
