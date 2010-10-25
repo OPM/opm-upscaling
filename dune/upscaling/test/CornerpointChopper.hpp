@@ -180,7 +180,7 @@ namespace Dune
 
         EclipseGridParser subparser()
         {
-            EclipseGridParser sp(parser_);
+            EclipseGridParser sp;
             boost::shared_ptr<SPECGRID> sg(new SPECGRID);
             for (int dd = 0; dd < 3; ++dd) {
                 sg->dimensions[dd] = new_dims_[dd];
