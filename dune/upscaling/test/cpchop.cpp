@@ -68,5 +68,6 @@ int main(int argc, char** argv)
         }
         outname += ".grdecl";
         ch.writeGrdecl(outname);
+        // Dune::EclipseGridParser subparser = ch.subparser();
     }
 }

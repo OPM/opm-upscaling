@@ -37,14 +37,17 @@ namespace Dune
         CornerPointChopper(const std::string& file)
             : parser_(file)
         {
-            const int* dims = &parser_.getSPECGRID().dimensions[0];
+            for (int dd = 0; dd < 3; ++dd) {
+                dims_[dd] = parser_.getSPECGRID().dimensions[dd];
+            }
 
-            int layersz = 8*dims[0]*dims[1];
+            int layersz = 8*dims_[0]*dims_[1];
             const std::vector<double>& ZCORN = parser_.getFloatingPointValue("ZCORN");
             botmax_ = *std::max_element(ZCORN.begin(), ZCORN.begin() + layersz/2);
-            topmin_ = *std::min_element(ZCORN.begin() + dims[2]*layersz - layersz/2,
-                                        ZCORN.begin() + dims[2]*layersz);
-            std::cout << "Parsed grdecl file with dimensions (" << dims[0] << ", " << dims[1] << ", " << dims[2] << ")" << std::endl;
+            topmin_ = *std::min_element(ZCORN.begin() + dims_[2]*layersz - layersz/2,
+                                        ZCORN.begin() + dims_[2]*layersz);
+            std::cout << "Parsed grdecl file with dimensions ("
+                      << dims_[0] << ", " << dims_[1] << ", " << dims_[2] << ")" << std::endl;
         }
 
 
@@ -52,7 +55,7 @@ namespace Dune
 
         const int* dimensions() const
         {
-            return &parser_.getSPECGRID().dimensions[0];
+            return dims_;
         }
 
 
@@ -76,14 +79,13 @@ namespace Dune
 
         void chop(int imin, int imax, int jmin, int jmax, double zmin, double zmax)
         {
-            const int* dims = dimensions();
             new_dims_[0] = imax - imin;
             new_dims_[1] = jmax - jmin;
 
             // Filter the coord field
             const std::vector<double>& COORD = parser_.getFloatingPointValue("COORD");
             int num_coord = COORD.size();
-            if (num_coord != 6*(dims[0] + 1)*(dims[1] + 1)) {
+            if (num_coord != 6*(dims_[0] + 1)*(dims_[1] + 1)) {
                 std::cerr << "Error! COORD size (" << COORD.size() << ") not consistent with SPECGRID\n";
                 throw std::runtime_error("Inconsistent COORD and SPECGRID.");
             }
@@ -91,7 +93,7 @@ namespace Dune
             new_COORD_.resize(num_new_coord, 1e100);
             for (int j = jmin; j < jmax + 1; ++j) {
                 for (int i = imin; i < imax + 1; ++i) {
-                    int pos = (dims[0] + 1)*j + i;
+                    int pos = (dims_[0] + 1)*j + i;
                     int new_pos = (new_dims_[0] + 1)*(j-jmin) + (i-imin);
                     std::copy(COORD.begin() + 6*pos, COORD.begin() + 6*(pos + 1), new_COORD_.begin() + 6*new_pos);
                 }
@@ -101,10 +103,10 @@ namespace Dune
             // This means that zmin must be greater than or equal to the highest
             // coordinate of the bottom surface, while zmax must be less than or
             // equal to the lowest coordinate of the top surface.
-            int layersz = 8*dims[0]*dims[1];
+            int layersz = 8*dims_[0]*dims_[1];
             const std::vector<double>& ZCORN = parser_.getFloatingPointValue("ZCORN");
             int num_zcorn = ZCORN.size();
-            if (num_zcorn != layersz*dims[2]) {
+            if (num_zcorn != layersz*dims_[2]) {
                 std::cerr << "Error! ZCORN size (" << ZCORN.size() << ") not consistent with SPECGRID\n";
                 throw std::runtime_error("Inconsistent ZCORN and SPECGRID.");
             }
@@ -120,7 +122,7 @@ namespace Dune
             // We must find the maximum and minimum k value for the given z limits.
             // First, find the first layer with a z-coordinate strictly above zmin.
             int kmin = -1;
-            for (int k = 0; k < dims[2]; ++k) {
+            for (int k = 0; k < dims_[2]; ++k) {
                 double layer_max = *std::max_element(ZCORN.begin() + k*layersz, ZCORN.begin() + (k + 1)*layersz);
                 if (layer_max > zmin) {
                     kmin = k;
@@ -129,7 +131,7 @@ namespace Dune
             }
             // Then, find the last layer with a z-coordinate strictly below zmax.
             int kmax = -1;
-            for (int k = dims[2]; k > 0; --k) {
+            for (int k = dims_[2]; k > 0; --k) {
                 double layer_min = *std::min_element(ZCORN.begin() + (k - 1)*layersz, ZCORN.begin() + k*layersz);
                 if (layer_min < zmax) {
                     kmax = k;
@@ -142,12 +144,12 @@ namespace Dune
             new_ZCORN_.resize(8*new_dims_[0]*new_dims_[1]*new_dims_[2], 1e100);
             new_to_old_cell_.resize(new_dims_[0]*new_dims_[1]*new_dims_[2], -1);
             int cellcount = 0;
-            int delta[3] = { 1, 2*dims[0], 4*dims[0]*dims[1] };
+            int delta[3] = { 1, 2*dims_[0], 4*dims_[0]*dims_[1] };
             int new_delta[3] = { 1, 2*new_dims_[0], 4*new_dims_[0]*new_dims_[1] };
             for (int k = kmin; k < kmax; ++k) {
                 for (int j = jmin; j < jmax; ++j) {
                     for (int i = imin; i < imax; ++i) {
-                        new_to_old_cell_[cellcount++] = dims[0]*dims[1]*k + dims[0]*j + i;
+                        new_to_old_cell_[cellcount++] = dims_[0]*dims_[1]*k + dims_[0]*j + i;
                         int old_ix = 2*(i*delta[0] + j*delta[1] + k*delta[2]);
                         int new_ix = 2*((i-imin)*new_delta[0] + (j-jmin)*new_delta[1] + (k-kmin)*new_delta[2]);
                         int old_indices[8] = { old_ix, old_ix + delta[0],
@@ -164,6 +166,35 @@ namespace Dune
                     }
                 }
             }
+            
+            filterIntegerField("ACTNUM", new_ACTNUM_);
+            filterDoubleField("PORO", new_PORO_);
+            filterDoubleField("PERMX", new_PERMX_);
+            filterDoubleField("PERMY", new_PERMY_);
+            filterDoubleField("PERMZ", new_PERMZ_);
+            filterIntegerField("SATNUM", new_SATNUM_);
+        }
+
+
+
+
+        EclipseGridParser subparser()
+        {
+            EclipseGridParser sp(parser_);
+            boost::shared_ptr<SPECGRID> sg(new SPECGRID);
+            for (int dd = 0; dd < 3; ++dd) {
+                sg->dimensions[dd] = new_dims_[dd];
+            }
+            sp.setSpecialField("SPECGRID", sg);
+            sp.setFloatingPointField("COORD", new_COORD_);
+            sp.setFloatingPointField("ZCORN", new_ZCORN_);
+            sp.setIntegerField("ACTNUM", new_ACTNUM_);
+            sp.setFloatingPointField("PORO", new_PORO_);
+            sp.setFloatingPointField("PERMX", new_PERMX_);
+            sp.setFloatingPointField("PERMY", new_PERMY_);
+            sp.setFloatingPointField("PERMZ", new_PERMZ_);
+            sp.setIntegerField("SATNUM", new_SATNUM_);
+            return sp;
         }
 
 
@@ -199,12 +230,12 @@ namespace Dune
             }
             out << "/\n\n";
 
-            outputFilteredInt(out, parser_, new_to_old_cell_, "ACTNUM");
-            outputFilteredDouble(out, parser_, new_to_old_cell_, "PERMX");
-            outputFilteredDouble(out, parser_, new_to_old_cell_, "PERMY");
-            outputFilteredDouble(out, parser_, new_to_old_cell_, "PERMZ");
-            outputFilteredDouble(out, parser_, new_to_old_cell_, "PORO");
-            outputFilteredInt(out, parser_, new_to_old_cell_, "SATNUM");
+            outputField(out, new_ACTNUM_, "ACTNUM");
+            outputField(out, new_PORO_, "PORO");
+            outputField(out, new_PERMX_, "PERMX");
+            outputField(out, new_PERMY_, "PERMY");
+            outputField(out, new_PERMZ_, "PERMZ");
+            outputField(out, new_SATNUM_, "SATNUM");
         }
 
     private:
@@ -213,22 +244,29 @@ namespace Dune
         double topmin_;
         std::vector<double> new_COORD_;
         std::vector<double> new_ZCORN_;
+        std::vector<int> new_ACTNUM_;
+        std::vector<double> new_PORO_;
+        std::vector<double> new_PERMX_;
+        std::vector<double> new_PERMY_;
+        std::vector<double> new_PERMZ_;
+        std::vector<int> new_SATNUM_;
+        int dims_[3];
         int new_dims_[3];
         std::vector<int> new_to_old_cell_;
 
 
         template <typename T>
-        static void outputFilteredImpl(std::ostream& os,
-                                       const std::vector<int>& nto,
-                                       const std::vector<T>& field,
-                                       const std::string& keyword)
+        void outputField(std::ostream& os,
+                         const std::vector<T>& field,
+                         const std::string& keyword)
         {
+            if (field.empty()) return;
             os << keyword << '\n';
-            int sz = nto.size();
+            int sz = field.size();
             T last = std::numeric_limits<T>::max();
             int repeats = 0;
             for (int i = 0; i < sz; ++i) {
-                T val = field[nto[i]];
+                T val = field[i];
                 if (val == last) {
                     ++repeats;
                 } else {
@@ -249,25 +287,31 @@ namespace Dune
             os << "/\n\n";
         }
 
-        static void outputFilteredInt(std::ostream& os,
-                                      const EclipseGridParser& parser,
-                                      const std::vector<int>& nto,
-                                      const std::string& keyword)
+
+        template <typename T>
+        void filterField(const std::vector<T>& field,
+                                std::vector<T>& output_field)
         {
-            if (parser.hasField(keyword)) {
-                const std::vector<int>& field = parser.getIntegerValue(keyword);
-                outputFilteredImpl(os, nto, field, keyword);
+            int sz = new_to_old_cell_.size();
+            output_field.resize(sz);
+            for (int i = 0; i < sz; ++i) {
+                output_field[i] = field[new_to_old_cell_[i]];
             }
         }
 
-        static void outputFilteredDouble(std::ostream& os,
-                                         const EclipseGridParser& parser,
-                                         const std::vector<int>& nto,
-                                         const std::string& keyword)
+        void filterDoubleField(const std::string& keyword, std::vector<double>& output_field)
         {
-            if (parser.hasField(keyword)) {
-                const std::vector<double>& field = parser.getFloatingPointValue(keyword);
-                outputFilteredImpl(os, nto, field, keyword);
+            if (parser_.hasField(keyword)) {
+                const std::vector<double>& field = parser_.getFloatingPointValue(keyword);
+                filterField(field, output_field);
+            }
+        }
+
+        void filterIntegerField(const std::string& keyword, std::vector<int>& output_field)
+        {
+            if (parser_.hasField(keyword)) {
+                const std::vector<int>& field = parser_.getIntegerValue(keyword);
+                filterField(field, output_field);
             }
         }
 
