@@ -90,18 +90,26 @@ int main(int argc, char** argv)
 	Dune::SinglePhaseUpscaler upscaler;
 	upscaler.init(subparser, Dune::SinglePhaseUpscaler::Fixed, 1e-9);
 
-	//Dune::SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
-	//std::cout << "upscaling done, doing porosity " << std::endl;
-	porosities.push_back(upscaler.upscalePorosity());
-	//upscaled_K *= (1.0/(Dune::prefix::milli*Dune::unit::darcy));
-	//std::cout << sample << '\t' << porosity << std::endl; // << '\t' << upscaled_K(0,0) << std::endl;
-    }
+	Dune::SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
+        upscaled_K *= (1.0/(Dune::prefix::milli*Dune::unit::darcy));
 
+
+	porosities.push_back(upscaler.upscalePorosity());
+        permxs.push_back(upscaled_K(0,0));
+        permys.push_back(upscaled_K(1,1));
+        permzs.push_back(upscaled_K(2,2));
+
+    }
+    
     // Output results
     // (TODO: Redirect to user-supplied filename)
     
     for (int sample = 1; sample <= subsamples; ++sample) {
-        std::cout << sample << '\t' << porosities[sample-1] << std::endl;
+        std::cout << sample << '\t' << porosities[sample-1] << 
+            permxs[sample-1] << '\t' <<
+            permys[sample-1] << '\t' <<
+            permzs[sample-1] << '\t' <<
+            std::endl;
     }
     
 }
