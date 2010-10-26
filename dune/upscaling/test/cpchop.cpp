@@ -45,7 +45,11 @@ int main(int argc, char** argv)
     int ilen = param.getDefault("ilen", imax - imin);
     int jlen = param.getDefault("jlen", jmax - jmin);
     double zlen = param.getDefault("zlen", zmax - zmin);
-    std::string filebase = param.getDefault<std::string>("filebase", "subsample");
+    std::string filebase = param.getDefault<std::string>("filebase", "");
+
+
+
+
     // Random number generator from boost.
     boost::mt19937 gen;
     // Note that end is included in interval for uniform_int.
@@ -61,7 +65,8 @@ int main(int argc, char** argv)
         double zstart = rz();
         ch.chop(istart, istart + ilen, jstart, jstart + jlen, zstart, zstart + zlen);
         std::string outname = filebase;
-        if (subsamples > 1) {
+        // Output to file if a filebase is supplied.
+        if (outname != "") {
             std::ostringstream oss;
             oss << 'R' << std::setw(4) << std::setfill('0') << sample;
             outname += oss.str();
