@@ -19,6 +19,7 @@
 
 
 #include "CornerpointChopper.hpp"
+
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int.hpp>
 #include <boost/random/uniform_real.hpp>
@@ -59,7 +60,7 @@ int main(int argc, char** argv)
     boost::variate_generator<boost::mt19937&, boost::uniform_int<> > ri(gen, disti);
     boost::variate_generator<boost::mt19937&, boost::uniform_int<> > rj(gen, distj);
     boost::variate_generator<boost::mt19937&, boost::uniform_real<> > rz(gen, distz);
-    for (int sample = 0; sample < subsamples; ++sample) {
+    for (int sample = 1; sample <= subsamples; ++sample) {
         int istart = ri();
         int jstart = rj();
         double zstart = rz();
@@ -70,9 +71,9 @@ int main(int argc, char** argv)
             std::ostringstream oss;
             oss << 'R' << std::setw(4) << std::setfill('0') << sample;
             outname += oss.str();
+            outname += ".grdecl";
+            ch.writeGrdecl(outname);
         }
-        outname += ".grdecl";
-        ch.writeGrdecl(outname);
         // Dune::EclipseGridParser subparser = ch.subparser();
     }
 }
