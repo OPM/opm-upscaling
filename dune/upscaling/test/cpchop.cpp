@@ -88,7 +88,7 @@ int main(int argc, char** argv)
         Dune::EclipseGridParser subparser = ch.subparser();
 
 	Dune::SinglePhaseUpscaler upscaler;
-	upscaler.init(subparser, Dune::SinglePhaseUpscaler::Fixed, 1e-9);
+	upscaler.init(subparser, Dune::SinglePhaseUpscaler::Fixed, 0.0);
 
 	Dune::SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
         upscaled_K *= (1.0/(Dune::prefix::milli*Dune::unit::darcy));
@@ -105,7 +105,7 @@ int main(int argc, char** argv)
     // (TODO: Redirect to user-supplied filename)
     
     for (int sample = 1; sample <= subsamples; ++sample) {
-        std::cout << sample << '\t' << porosities[sample-1] << 
+        std::cout << sample << '\t' << porosities[sample-1] << '\t' <<
             permxs[sample-1] << '\t' <<
             permys[sample-1] << '\t' <<
             permzs[sample-1] << '\t' <<

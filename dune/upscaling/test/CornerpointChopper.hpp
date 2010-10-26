@@ -188,12 +188,12 @@ namespace Dune
             sp.setSpecialField("SPECGRID", sg);
             sp.setFloatingPointField("COORD", new_COORD_);
             sp.setFloatingPointField("ZCORN", new_ZCORN_);
-            sp.setIntegerField("ACTNUM", new_ACTNUM_);
-            sp.setFloatingPointField("PORO", new_PORO_);
-            sp.setFloatingPointField("PERMX", new_PERMX_);
-            sp.setFloatingPointField("PERMY", new_PERMY_);
-            sp.setFloatingPointField("PERMZ", new_PERMZ_);
-            sp.setIntegerField("SATNUM", new_SATNUM_);
+            if (!new_ACTNUM_.empty()) sp.setIntegerField("ACTNUM", new_ACTNUM_);
+            if (!new_PORO_.empty()) sp.setFloatingPointField("PORO", new_PORO_);
+            if (!new_PERMX_.empty()) sp.setFloatingPointField("PERMX", new_PERMX_);
+            if (!new_PERMY_.empty()) sp.setFloatingPointField("PERMY", new_PERMY_);
+            if (!new_PERMZ_.empty()) sp.setFloatingPointField("PERMZ", new_PERMZ_);
+            if (!new_SATNUM_.empty()) sp.setIntegerField("SATNUM", new_SATNUM_);
             return sp;
         }
 
