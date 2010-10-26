@@ -19,6 +19,9 @@
 
 
 #include "CornerpointChopper.hpp"
+#include "dune/upscaling/SinglePhaseUpscaler.hpp"
+#include <dune/porsol/common/setupBoundaryConditions.hpp>
+#include <dune/common/Units.hpp>
 
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int.hpp>
@@ -60,6 +63,13 @@ int main(int argc, char** argv)
     boost::variate_generator<boost::mt19937&, boost::uniform_int<> > ri(gen, disti);
     boost::variate_generator<boost::mt19937&, boost::uniform_int<> > rj(gen, distj);
     boost::variate_generator<boost::mt19937&, boost::uniform_real<> > rz(gen, distz);
+
+    // Storage for results
+    std::vector<double> porosities;
+    std::vector<double> permxs;
+    std::vector<double> permys;
+    std::vector<double> permzs;
+
     for (int sample = 1; sample <= subsamples; ++sample) {
         int istart = ri();
         int jstart = rj();
@@ -74,6 +84,24 @@ int main(int argc, char** argv)
             outname += ".grdecl";
             ch.writeGrdecl(outname);
         }
-        // Dune::EclipseGridParser subparser = ch.subparser();
+
+        Dune::EclipseGridParser subparser = ch.subparser();
+
+	Dune::SinglePhaseUpscaler upscaler;
+	upscaler.init(subparser, Dune::SinglePhaseUpscaler::Fixed, 1e-9);
+
+	//Dune::SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
+	//std::cout << "upscaling done, doing porosity " << std::endl;
+	porosities.push_back(upscaler.upscalePorosity());
+	//upscaled_K *= (1.0/(Dune::prefix::milli*Dune::unit::darcy));
+	//std::cout << sample << '\t' << porosity << std::endl; // << '\t' << upscaled_K(0,0) << std::endl;
     }
+
+    // Output results
+    // (TODO: Redirect to user-supplied filename)
+    
+    for (int sample = 1; sample <= subsamples; ++sample) {
+        std::cout << sample << '\t' << porosities[sample-1] << std::endl;
+    }
+    
 }
