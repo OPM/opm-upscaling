@@ -65,6 +65,10 @@ int main(int argc, char** argv)
 
     // Random number generator from boost.
     boost::mt19937 gen;
+    
+    // Seed the random number generators with the current time
+    gen.seed(time(NULL));
+
     // Note that end is included in interval for uniform_int.
     boost::uniform_int<> disti(imin, imax - ilen);
     boost::uniform_int<> distj(jmin, jmax - jlen);
@@ -72,7 +76,7 @@ int main(int argc, char** argv)
     boost::variate_generator<boost::mt19937&, boost::uniform_int<> > ri(gen, disti);
     boost::variate_generator<boost::mt19937&, boost::uniform_int<> > rj(gen, distj);
     boost::variate_generator<boost::mt19937&, boost::uniform_real<> > rz(gen, distz);
-
+    
     // Storage for results
     std::vector<double> porosities;
     std::vector<double> permxs;
