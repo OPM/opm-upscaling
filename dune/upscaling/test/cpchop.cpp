@@ -27,7 +27,14 @@
 #include <boost/random/uniform_int.hpp>
 #include <boost/random/uniform_real.hpp>
 #include <boost/random/variate_generator.hpp>
+
+#include <ios>
 #include <iomanip>
+#include <sys/utsname.h>
+#include <ctime>
+#include <sstream>
+#include <fstream>
+#include <iostream>
 
 
 int main(int argc, char** argv)
@@ -49,8 +56,10 @@ int main(int argc, char** argv)
     int ilen = param.getDefault("ilen", imax - imin);
     int jlen = param.getDefault("jlen", jmax - jmin);
     double zlen = param.getDefault("zlen", zmax - zmin);
+    
+    int outputprecision = param.getDefault("outputprecision", 8);
     std::string filebase = param.getDefault<std::string>("filebase", "");
-
+    std::string resultfile = param.getDefault<std::string>("resultfile", "");
 
 
 
@@ -75,14 +84,15 @@ int main(int argc, char** argv)
         int jstart = rj();
         double zstart = rz();
         ch.chop(istart, istart + ilen, jstart, jstart + jlen, zstart, zstart + zlen);
-        std::string outname = filebase;
-        // Output to file if a filebase is supplied.
-        if (outname != "") {
+        std::string subsampledgrdecl = filebase;
+
+        // Output grdecl-data to file if a filebase is supplied.
+        if (filebase != "") {
             std::ostringstream oss;
             oss << 'R' << std::setw(4) << std::setfill('0') << sample;
-            outname += oss.str();
-            outname += ".grdecl";
-            ch.writeGrdecl(outname);
+            subsampledgrdecl += oss.str();
+            subsampledgrdecl += ".grdecl";
+            ch.writeGrdecl(subsampledgrdecl);
         }
 
         Dune::EclipseGridParser subparser = ch.subparser();
@@ -101,15 +111,47 @@ int main(int argc, char** argv)
 
     }
     
-    // Output results
-    // (TODO: Redirect to user-supplied filename)
+    // Make stream of output data, to be outputted to screen and optionally to file
+    std::stringstream outputtmp;
     
+    outputtmp << "################################################################################################" << std::endl;
+    outputtmp << "# Results from property analysis on subsamples" << std::endl;
+    outputtmp << "#" << std::endl;
+    time_t now = time(NULL);
+    outputtmp << "# Finished: " << asctime(localtime(&now));
+    
+    utsname hostname;   uname(&hostname);
+    outputtmp << "# Hostname: " << hostname.nodename << std::endl;
+    outputtmp << "#" << std::endl;
+    outputtmp << "# Options used:" << std::endl;
+    outputtmp << "#     gridfilename: " << gridfilename << std::endl;
+    outputtmp << "#   i; min,len,max: " << imin << " " << ilen << " " << imax << std::endl;
+    outputtmp << "#   j; min,len,max: " << jmin << " " << jlen << " " << jmax << std::endl;
+    outputtmp << "#   z; min,len,max: " << zmin << " " << zlen << " " << zmax << std::endl;
+    outputtmp << "#       subsamples: " << subsamples << std::endl;
+    outputtmp << "################################################################################################" << std::endl;
+    outputtmp << "# id          porosity                 permx                   permy                   permz" << std::endl;
+
+    const int fieldwidth = outputprecision + 8;
     for (int sample = 1; sample <= subsamples; ++sample) {
-        std::cout << sample << '\t' << porosities[sample-1] << '\t' <<
-            permxs[sample-1] << '\t' <<
-            permys[sample-1] << '\t' <<
-            permzs[sample-1] << '\t' <<
+        outputtmp << sample << '\t' <<
+            std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << porosities[sample-1] << '\t' <<
+            std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permxs[sample-1] << '\t' <<
+            std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permys[sample-1] << '\t' <<
+            std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permzs[sample-1] << '\t' <<
             std::endl;
     }
+
+    if (resultfile != "") {
+        std::cout << "Writing results to " << resultfile << std::endl;
+        std::ofstream outfile;
+        outfile.open(resultfile.c_str(), std::ios::out | std::ios::trunc);
+        outfile << outputtmp.str();
+        outfile.close();      
+    }
+
+
+
+    std::cout << outputtmp.str();
     
 }
