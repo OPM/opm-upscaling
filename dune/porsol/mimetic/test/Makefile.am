@@ -9,6 +9,7 @@ noinst_PROGRAMS = ifsh_solver_test \
                   mimetic_periodic_test \
 		  istl_test \
 		  spe10_test \
+		  tpfa_solver_test \
 		  known_answer_test
 
 AM_CPPFLAGS += $(DUNEMPICPPFLAGS) $(BOOST_CPPFLAGS) $(ALUGRID_CPPFLAGS) $(SUPERLU_CPPFLAGS)
@@ -35,6 +36,9 @@ mimetic_periodic_test_SOURCES = mimetic_periodic_test.cpp
 istl_test_SOURCES = istl_test.cpp
 
 spe10_test_SOURCES = spe10_test.cpp
+
+tpfa_solver_test_SOURCES = tpfa_solver_test.cpp
+tpfa_solver_test_LDADD = $(LDADD) ../../opmpressure/libopmpressure.la
 
 known_answer_test_SOURCES = known_answer_test.cpp
 
