@@ -61,7 +61,10 @@ int main(int argc, char** argv)
     std::string filebase = param.getDefault<std::string>("filebase", "");
     std::string resultfile = param.getDefault<std::string>("resultfile", "");
 
-
+    double z_tolerance = param.getDefault("z_tolerance", 0.0);
+    double residual_tolerance = param.getDefault("residual_tolerance", 1e-8);
+    double linsolver_verbosity = param.getDefault("linsolver_verbosity", 0);
+    double linsolver_type = param.getDefault("linsolver_type", 1);
 
     // Random number generator from boost.
     boost::mt19937 gen;
@@ -102,7 +105,8 @@ int main(int argc, char** argv)
         Dune::EclipseGridParser subparser = ch.subparser();
 
 	Dune::SinglePhaseUpscaler upscaler;
-	upscaler.init(subparser, Dune::SinglePhaseUpscaler::Fixed, 0.0);
+	upscaler.init(subparser, Dune::SinglePhaseUpscaler::Fixed, 0.0, z_tolerance,
+                      residual_tolerance, linsolver_verbosity, linsolver_type, false);
 
 	Dune::SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
         upscaled_K *= (1.0/(Dune::prefix::milli*Dune::unit::darcy));
