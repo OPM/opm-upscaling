@@ -56,7 +56,8 @@ int main(int argc, char** argv)
     int ilen = param.getDefault("ilen", imax - imin);
     int jlen = param.getDefault("jlen", jmax - jmin);
     double zlen = param.getDefault("zlen", zmax - zmin);
-    
+    bool upscale = param.getDefault("upscale", true);
+
     int outputprecision = param.getDefault("outputprecision", 8);
     std::string filebase = param.getDefault<std::string>("filebase", "");
     std::string resultfile = param.getDefault<std::string>("resultfile", "");
@@ -102,64 +103,68 @@ int main(int argc, char** argv)
             ch.writeGrdecl(subsampledgrdecl);
         }
 
-        Dune::EclipseGridParser subparser = ch.subparser();
-
-	Dune::SinglePhaseUpscaler upscaler;
-	upscaler.init(subparser, Dune::SinglePhaseUpscaler::Fixed, 0.0, z_tolerance,
-                      residual_tolerance, linsolver_verbosity, linsolver_type, false);
-
-	Dune::SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
-        upscaled_K *= (1.0/(Dune::prefix::milli*Dune::unit::darcy));
-
-
-	porosities.push_back(upscaler.upscalePorosity());
-        permxs.push_back(upscaled_K(0,0));
-        permys.push_back(upscaled_K(1,1));
-        permzs.push_back(upscaled_K(2,2));
-
+        if (upscale) {
+            Dune::EclipseGridParser subparser = ch.subparser();
+            
+            Dune::SinglePhaseUpscaler upscaler;
+            upscaler.init(subparser, Dune::SinglePhaseUpscaler::Fixed, 0.0, z_tolerance,
+                          residual_tolerance, linsolver_verbosity, linsolver_type, false);
+            
+            Dune::SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
+            upscaled_K *= (1.0/(Dune::prefix::milli*Dune::unit::darcy));
+            
+            
+            porosities.push_back(upscaler.upscalePorosity());
+            permxs.push_back(upscaled_K(0,0));
+            permys.push_back(upscaled_K(1,1));
+            permzs.push_back(upscaled_K(2,2));
+        
+        }   
     }
-    
-    // Make stream of output data, to be outputted to screen and optionally to file
-    std::stringstream outputtmp;
-    
-    outputtmp << "################################################################################################" << std::endl;
-    outputtmp << "# Results from property analysis on subsamples" << std::endl;
-    outputtmp << "#" << std::endl;
-    time_t now = time(NULL);
-    outputtmp << "# Finished: " << asctime(localtime(&now));
-    
-    utsname hostname;   uname(&hostname);
-    outputtmp << "# Hostname: " << hostname.nodename << std::endl;
-    outputtmp << "#" << std::endl;
-    outputtmp << "# Options used:" << std::endl;
-    outputtmp << "#     gridfilename: " << gridfilename << std::endl;
-    outputtmp << "#   i; min,len,max: " << imin << " " << ilen << " " << imax << std::endl;
-    outputtmp << "#   j; min,len,max: " << jmin << " " << jlen << " " << jmax << std::endl;
-    outputtmp << "#   z; min,len,max: " << zmin << " " << zlen << " " << zmax << std::endl;
-    outputtmp << "#       subsamples: " << subsamples << std::endl;
-    outputtmp << "################################################################################################" << std::endl;
-    outputtmp << "# id          porosity                 permx                   permy                   permz" << std::endl;
-
-    const int fieldwidth = outputprecision + 8;
-    for (int sample = 1; sample <= subsamples; ++sample) {
-        outputtmp << sample << '\t' <<
-            std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << porosities[sample-1] << '\t' <<
-            std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permxs[sample-1] << '\t' <<
-            std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permys[sample-1] << '\t' <<
-            std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permzs[sample-1] << '\t' <<
-            std::endl;
+     
+    if (upscale) {
+        
+        // Make stream of output data, to be outputted to screen and optionally to file
+        std::stringstream outputtmp;
+        
+        outputtmp << "################################################################################################" << std::endl;
+        outputtmp << "# Results from property analysis on subsamples" << std::endl;
+        outputtmp << "#" << std::endl;
+        time_t now = time(NULL);
+        outputtmp << "# Finished: " << asctime(localtime(&now));
+        
+        utsname hostname;   uname(&hostname);
+        outputtmp << "# Hostname: " << hostname.nodename << std::endl;
+        outputtmp << "#" << std::endl;
+        outputtmp << "# Options used:" << std::endl;
+        outputtmp << "#     gridfilename: " << gridfilename << std::endl;
+        outputtmp << "#   i; min,len,max: " << imin << " " << ilen << " " << imax << std::endl;
+        outputtmp << "#   j; min,len,max: " << jmin << " " << jlen << " " << jmax << std::endl;
+        outputtmp << "#   z; min,len,max: " << zmin << " " << zlen << " " << zmax << std::endl;
+        outputtmp << "#       subsamples: " << subsamples << std::endl;
+        outputtmp << "################################################################################################" << std::endl;
+        outputtmp << "# id          porosity                 permx                   permy                   permz" << std::endl;
+        
+        const int fieldwidth = outputprecision + 8;
+        for (int sample = 1; sample <= subsamples; ++sample) {
+            outputtmp << sample << '\t' <<
+                std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << porosities[sample-1] << '\t' <<
+                std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permxs[sample-1] << '\t' <<
+                std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permys[sample-1] << '\t' <<
+                std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permzs[sample-1] << '\t' <<
+                std::endl;
+        }
+        
+        if (resultfile != "") {
+            std::cout << "Writing results to " << resultfile << std::endl;
+            std::ofstream outfile;
+            outfile.open(resultfile.c_str(), std::ios::out | std::ios::trunc);
+            outfile << outputtmp.str();
+            outfile.close();      
+        }
+        
+        
+        
+        std::cout << outputtmp.str();
     }
-
-    if (resultfile != "") {
-        std::cout << "Writing results to " << resultfile << std::endl;
-        std::ofstream outfile;
-        outfile.open(resultfile.c_str(), std::ios::out | std::ios::trunc);
-        outfile << outputtmp.str();
-        outfile.close();      
-    }
-
-
-
-    std::cout << outputtmp.str();
-    
 }
