@@ -57,6 +57,7 @@ int main(int argc, char** argv)
     int jlen = param.getDefault("jlen", jmax - jmin);
     double zlen = param.getDefault("zlen", zmax - zmin);
     bool upscale = param.getDefault("upscale", true);
+    boost::mt19937::result_type userseed = param.getDefault("seed", 0);
 
     int outputprecision = param.getDefault("outputprecision", 8);
     std::string filebase = param.getDefault<std::string>("filebase", "");
@@ -70,8 +71,15 @@ int main(int argc, char** argv)
     // Random number generator from boost.
     boost::mt19937 gen;
     
-    // Seed the random number generators with the current time
-    gen.seed(time(NULL));
+    // Seed the random number generators with the current time, unless specified on command line
+    // Warning: Current code does not allow 0 for the seed!!
+    if (userseed == 0) {
+        gen.seed(time(NULL));
+    }
+    else {
+        gen.seed(userseed);
+    }
+        
 
     // Note that end is included in interval for uniform_int.
     boost::uniform_int<> disti(imin, imax - ilen);
