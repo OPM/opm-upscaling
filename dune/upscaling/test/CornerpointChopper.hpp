@@ -117,7 +117,7 @@ namespace Dune
                 std::cerr << "Error: zmin >= zmax (zmin = " << zmin << ", zmax = " << zmax << ")\n";
                 throw std::runtime_error("zmin >= zmax");
             }
-            std::cout << "zmin = " << zmin << ", zmax = " << zmax << std::endl;
+            std::cout << "Chopping subsample,  i: (" << imin << "--" << imax << ")  j: (" << jmin << "--" << jmax << ")   z: (" << zmin << "--" << zmax << ")" <<  std::endl;
 
             // We must find the maximum and minimum k value for the given z limits.
             // First, find the first layer with a z-coordinate strictly above zmin.
