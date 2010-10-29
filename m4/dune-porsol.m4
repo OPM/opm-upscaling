@@ -32,5 +32,6 @@ AC_DEFUN([DUNE_PORSOL_CHECKS],
 AC_DEFUN([DUNE_PORSOL_CHECK_MODULE],
 [
   DUNE_CHECK_MODULES([dune-porsol],
-                     [porsol/mimetic/IncompFlowSolverHybrid.hpp])
+                     [porsol/mimetic/IncompFlowSolverHybrid.hpp],
+                     [int i;])
 ])

@@ -40,7 +40,8 @@
 #include <dune/common/ErrorMacros.hpp>
 #include <dune/common/SparseTable.hpp>
 #include <dune/porsol/common/LinearSolverISTL.hpp>
-
+#include <boost/array.hpp>
+#include <boost/static_assert.hpp>
 
 namespace Dune
 {
@@ -175,7 +176,7 @@ namespace Dune
         ///    Type 0 selects a BiCGStab solver, type 1 selects AMG/CG.
         ///
         template<class FluidInterface>
-        void solve(const FluidInterface&      r  ,
+        void solve(const FluidInterface&      fl  ,
                    const std::vector<double>& sat,
                    const BCInterface&         bc ,
                    const std::vector<double>& src,
@@ -194,10 +195,15 @@ namespace Dune
             int num_cells = sat.size();
             std::vector<double> totmob(num_cells, 1.0);
             std::vector<double> omega(num_cells, 0.0);
+            boost::array<double, FluidInterface::NumberOfPhases> mob ;
+            boost::array<double, FluidInterface::NumberOfPhases> rho ;
+            BOOST_STATIC_ASSERT(FluidInterface::NumberOfPhases == 2);
             for (int cell = 0; cell < num_cells; ++cell) {
-                totmob[cell] = r.totalMobility(cell, sat[cell]);
-                double f_w = r.fractionalFlow(cell, sat[cell]);
-                omega[cell] = r.densityFirstPhase()*f_w + r.densitySecondPhase()*(1.0 - f_w);
+                fl.phaseMobilities(cell, sat[cell], mob);
+                fl.phaseDensities (cell, rho);
+                totmob[cell] = mob[0] + mob[1];
+                double f_w = mob[0]/(mob[0] + mob[1]);
+                omega[cell] = rho[0]*f_w + rho[1]*(1.0 - f_w);
             }
             int num_faces = pgrid_->numberOfFaces();
             std::vector<HybridPressureSolver::FlowBCTypes> bctypes(num_faces, HybridPressureSolver::FBC_UNSET);
@@ -327,6 +333,91 @@ namespace Dune
         };
 
 
+    private:
+        /// A helper class for postProcessFluxes.
+        class FaceFluxes
+        {
+        public:
+            FaceFluxes(int sz)
+                : fluxes_(sz, 0.0), visited_(sz, 0), max_modification_(0.0)
+            {
+            }
+            void put(double flux, int f_ix) {
+                ASSERT(visited_[f_ix] == 0 || visited_[f_ix] == 1);
+                double sign = visited_[f_ix] ? -1.0 : 1.0;
+                fluxes_[f_ix] += sign*flux;
+                ++visited_[f_ix];
+            }
+            void get(double& flux, int f_ix) {
+                ASSERT(visited_[f_ix] == 0 || visited_[f_ix] == 1);
+                double sign = visited_[f_ix] ? -1.0 : 1.0;
+                double new_flux = 0.5*sign*fluxes_[f_ix];
+                double diff = std::fabs(flux - new_flux);
+                max_modification_ = std::max(max_modification_, diff);
+                flux = new_flux;
+                ++visited_[f_ix];
+            }
+            void resetVisited()
+            {
+                std::fill(visited_.begin(), visited_.end(), 0);
+            }
+
+            double maxMod() const
+            {
+                return max_modification_;
+            }
+        private:
+            std::vector<double> fluxes_;
+            std::vector<int> visited_;
+            double max_modification_;
+
+        };
+
+    public:
+        /// @brief
+        ///    Postprocess the solution fluxes.
+        ///    This method modifies the solution object so that
+        ///    out-fluxes of twin faces (that is, the two faces on a
+        ///    cell-cell intersection) will be made antisymmetric.
+        ///
+        /// @return
+        ///    The maximum modification made to the fluxes.
+        double postProcessFluxes()
+        {
+            typedef typename GridInterface::CellIterator CI;
+            typedef typename CI           ::FaceIterator FI;
+            SparseTable<double>& cflux = flow_solution_.outflux_;
+
+            FaceFluxes face_fluxes(pgrid_->numberOfFaces());
+            // First pass: compute projected fluxes.
+            for (CI c = pgrid_->cellbegin(); c != pgrid_->cellend(); ++c) {
+                const int cell_index = c->index();
+                for (FI f = c->facebegin(); f != c->faceend(); ++f) {
+                    int f_ix = f->index();
+                    double flux = cflux[cell_index][f->localIndex()];
+                    if (f->boundary()) {
+                        continue;
+                    } else {
+                        face_fluxes.put(flux, f_ix);
+                    }
+                }
+            }
+            face_fluxes.resetVisited();
+            // Second pass: set all fluxes to the projected ones.
+            for (CI c = pgrid_->cellbegin(); c != pgrid_->cellend(); ++c) {
+                const int cell_index = c->index();
+                for (FI f = c->facebegin(); f != c->faceend(); ++f) {
+                    int f_ix = f->index();
+                    double& flux = cflux[cell_index][f->localIndex()];
+                    if (f->boundary()) {
+                        continue;
+                    } else {
+                        face_fluxes.get(flux, f_ix);
+                    }
+                }
+            }
+            return face_fluxes.maxMod();
+        }
 
 
 

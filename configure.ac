@@ -32,6 +32,7 @@ AC_CONFIG_FILES([
   dune/porsol/opmpressure/Makefile
   dune/porsol/mimetic/Makefile
   dune/porsol/mimetic/test/Makefile
+  lib/Makefile
   examples/Makefile
   dune-porsol.pc
 ])
