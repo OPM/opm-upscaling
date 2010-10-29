@@ -6,6 +6,7 @@ noinst_PROGRAMS = \
         aniso_implicit_steadystate_test \
         aniso_steadystate_test \
         implicit_steadystate_test \
+        opmpressure_test \
         steadystate_test \
         upscaling_test \
 	cpchop
@@ -18,6 +19,8 @@ LDADD = $(DUNEMPILIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) \
 
 
 upscaling_test_SOURCES = upscaling_test.cpp
+
+opmpressure_test_SOURCES = opmpressure_test.cpp
 
 steadystate_test_SOURCES = steadystate_test.cpp
 
