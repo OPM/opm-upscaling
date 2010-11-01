@@ -3,12 +3,12 @@
 
 SUBDIRS = test
 
-commondir = $(includedir)/dune/solvers/common
+commondir = $(includedir)/dune/porsol/common
 common_HEADERS = blas_lapack.hpp BoundaryConditions.hpp fortran.hpp \
                  GridInterfaceEuler.hpp linearInterpolation.hpp Matrix.hpp \
                  MatrixInverse.hpp NonuniformTableLinear.hpp PeriodicHelpers.hpp \
                  ReservoirPropertyCapillary.hpp setupBoundaryConditions.hpp \
-                 setupGridAndProps.hpp SimulatorBase.hpp SimulatorTester.hpp \
+                 setupGridAndProps.hpp SimulatorBase.hpp \
 		 SimulatorUtilities.hpp SintefLegacyGridInterface.hpp
 
 noinst_LTLIBRARIES = libduneporsolcommon.la

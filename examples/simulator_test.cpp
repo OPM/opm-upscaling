@@ -1,8 +1,8 @@
 //===========================================================================
 //
-// File: aniso_simulator_test.cpp
+// File: simulator_test.cpp
 //
-// Created: Wed Oct 28 15:10:02 2009
+// Created: Fri Aug  7 10:08:17 2009
 //
 // Author(s): Atgeirr F Rasmussen <atgeirr@sintef.no>
 //            Bård Skaflestad     <bard.skaflestad@sintef.no>
@@ -41,8 +41,8 @@
 #include "config.h"
 #endif // HAVE_CONFIG_H
 
-#include "../SimulatorTester.hpp"
-#include "../SimulatorTesterFlexibleBC.hpp"
+#include "SimulatorTester.hpp"
+#include "SimulatorTesterFlexibleBC.hpp"
 #include <dune/porsol/common/SimulatorTraits.hpp>
 #include <dune/common/mpihelper.hh>
 
@@ -52,7 +52,7 @@
 
 using namespace Dune;
 
-typedef SimulatorTraits<Anisotropic, Explicit> SimTraits;
+typedef SimulatorTraits<Isotropic, Explicit> SimTraits;
 typedef SimulatorTesterFlexibleBC<SimTraits> Simulator;
 
 int main(int argc, char** argv)

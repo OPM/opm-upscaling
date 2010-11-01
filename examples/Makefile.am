@@ -10,7 +10,11 @@ noinst_PROGRAMS = grdecl_to_legacy_test \
                   mimetic_periodic_test \
 		  spe10_test \
 		  tpfa_solver_test \
-		  known_answer_test
+		  known_answer_test \
+                  aniso_implicitcap_test \
+                  implicitcap_test \
+                  aniso_simulator_test \
+                  simulator_test
 
 grdecl_to_legacy_test_SOURCES = grdecl_to_legacy_test.cpp
 
@@ -33,6 +37,17 @@ tpfa_solver_test_SOURCES = tpfa_solver_test.cpp
 tpfa_solver_test_LDADD = $(LDADD) ../lib/libduneporsol.la
 
 known_answer_test_SOURCES = known_answer_test.cpp
+
+simulator_test_SOURCES = simulator_test.cpp
+#simulator_test_LDADD   = $(LDADD) -ltbb
+
+aniso_simulator_test_SOURCES = aniso_simulator_test.cpp
+
+implicitcap_test_SOURCES = implicitcap_test.cpp
+
+aniso_implicitcap_test_SOURCES = aniso_implicitcap_test.cpp
+
+
 
 TESTS = $(check_PROGRAMS)
 
