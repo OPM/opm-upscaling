@@ -36,7 +36,7 @@
 #define OPM_LINEARSOLVERISTL_HEADER
 
 
-#include <dune/common/param/ParameterGroup.hpp>
+#include <dune/porsol/common/AbstractLinearSolver.hpp>
 
 // TODO: clean up includes.
 #include <dune/istl/bvector.hh>
@@ -57,115 +57,16 @@
 namespace Dune
 {
 
-    struct LinearSolverResults
-    {
-        bool converged;
-        int iterations;
-        double reduction;
-    };
-
-
-    class LinearSolverISTL
+    class LinearSolverISTL : public AbstractLinearSolver
     {
     public:
-        virtual ~LinearSolverISTL()
-        {
-        }
-        virtual void init(const parameter::ParameterGroup& param)
-        {
-        }
+        virtual ~LinearSolverISTL();
+        virtual void init(const parameter::ParameterGroup& param);
         virtual LinearSolverResults solve(int size, int nonzeros,
                                           const int* ia, const int* ja, const double* sa,
                                           const double* rhs, double* solution,
                                           double relative_residual_tolerance,
-                                          int verbosity_level)
-        {
-            // Build ISTL structures from input.
-            typedef FieldVector<double, 1   > VectorBlockType;
-            typedef FieldMatrix<double, 1, 1> MatrixBlockType;
-            typedef BCRSMatrix <MatrixBlockType>        Matrix;
-            typedef BlockVector<VectorBlockType>        Vector;
-            typedef MatrixAdapter<Matrix,Vector,Vector> Operator;
-            // System matrix
-            Matrix A(size, size, nonzeros, Matrix::row_wise);
-            for (Matrix::CreateIterator row = A.createbegin(); row != A.createend(); ++row) {
-                int ri = row.index();
-                for (int i = ia[ri]; i < ia[ri + 1]; ++i) {
-                    row.insert(ja[i]);
-                }
-            }
-            for (int ri = 0; ri < size; ++ri) {
-                for (int i = ia[ri]; i < ia[ri + 1]; ++i) {
-                    A[ri][ja[i]] = sa[i];
-                }
-            }
-            // System RHS
-            Vector b(size);
-            std::copy(rhs, rhs + size, b.begin());
-            // System solution
-            Vector x(size);
-            x = 0.0;
-
-            {
-                // Save system
-                writeMatrixToMatlab(A, "ifshmat");
-                std::string rhsfile("ifshrhs");
-                std::ofstream rhsf(rhsfile.c_str());
-                rhsf.precision(15);
-                rhsf.setf(std::ios::scientific | std::ios::showpos);
-                std::copy(b.begin(), b.end(),
-                          std::ostream_iterator<VectorBlockType>(rhsf, "\n"));
-            }
-
-
-            // Solve with AMG solver.
-#define FIRST_DIAGONAL 1
-#define SYMMETRIC 1
-#define SMOOTHER_ILU 1
-#define ANISOTROPIC_3D 0
-
-#if FIRST_DIAGONAL
-            typedef Amg::FirstDiagonal CouplingMetric;
-#else
-            typedef Amg::RowSum        CouplingMetric;
-#endif
-
-#if SYMMETRIC
-            typedef Amg::SymmetricCriterion<Matrix,CouplingMetric>   CriterionBase;
-#else
-            typedef Amg::UnSymmetricCriterion<Matrix,CouplingMetric> CriterionBase;
-#endif
-
-#if SMOOTHER_ILU
-            typedef SeqILU0<Matrix,Vector,Vector>        Smoother;
-#else
-            typedef SeqSSOR<Matrix,Vector,Vector>        Smoother;
-#endif
-            typedef Amg::CoarsenCriterion<CriterionBase> Criterion;
-            typedef Amg::AMG<Operator,Vector,Smoother>   Precond;
-
-            Operator opA(A);
-            // Construct preconditioner.
-            double relax = 1;
-            Precond::SmootherArgs smootherArgs;
-            smootherArgs.relaxationFactor = relax;
-
-            Criterion criterion;
-            criterion.setDebugLevel(verbosity_level);
-#if ANISOTROPIC_3D
-            criterion.setDefaultValuesAnisotropic(3, 2);
-#endif
-            Precond precond(opA, criterion, smootherArgs);
-            CGSolver<Vector> linsolve(opA, precond, relative_residual_tolerance, size, verbosity_level);
-            InverseOperatorResult result;
-            linsolve.apply(x, b, result);
-            std::copy(x.begin(), x.end(), solution);
-            LinearSolverResults res;
-            res.converged = result.converged;
-            res.iterations = result.iterations;
-            res.reduction = result.reduction;
-            return res;
-        }
+                                          int verbosity_level);
     };
 
 
