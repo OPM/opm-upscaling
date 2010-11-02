@@ -131,8 +131,10 @@ namespace Dune
         switch (linsolver_type_) {
         case CG_ILU0:
             res = solveCG_ILU0(A, x, b, linsolver_residual_tolerance_, linsolver_verbosity_);
+            break;
         case CG_AMG:
             res = solveCG_AMG(A, x, b, linsolver_residual_tolerance_, linsolver_verbosity_);
+            break;
         default:
             std::cerr << "Unknown linsolver_type: " << int(linsolver_type_) << '\n';
             throw std::runtime_error("Unknown linsolver_type");
