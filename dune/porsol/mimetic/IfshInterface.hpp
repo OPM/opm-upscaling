@@ -176,7 +176,7 @@ namespace Dune
         ///    Type 0 selects a BiCGStab solver, type 1 selects AMG/CG.
         ///
         template<class FluidInterface>
-        void solve(const FluidInterface&      fl  ,
+        void solve(const FluidInterface&      fl ,
                    const std::vector<double>& sat,
                    const BCInterface&         bc ,
                    const std::vector<double>& src,
@@ -185,13 +185,11 @@ namespace Dune
                    int linsolver_type = 1,
                    bool same_matrix = false)
         {
-            if (linsolver_type != 1) {
-                MESSAGE("Requested linear solver type " << linsolver_type << ", but we only have AMG so far.");
-            }
             if (same_matrix) {
                 MESSAGE("Requested reuse of preconditioner, not implemented so far.");
             }
 
+            // Build totmob and omega.
             int num_cells = sat.size();
             std::vector<double> totmob(num_cells, 1.0);
             std::vector<double> omega(num_cells, 0.0);
@@ -205,6 +203,8 @@ namespace Dune
                 double f_w = mob[0]/(mob[0] + mob[1]);
                 omega[cell] = rho[0]*f_w + rho[1]*(1.0 - f_w);
             }
+
+            // Build bctypes and bcvalues.
             int num_faces = pgrid_->numberOfFaces();
             std::vector<HybridPressureSolver::FlowBCTypes> bctypes(num_faces, HybridPressureSolver::FBC_UNSET);
             std::vector<double> bcvalues(num_faces, 0.0);
@@ -217,42 +217,26 @@ namespace Dune
                 } else if (face_bc.isNeumann()) {
                     bctypes[face] = HybridPressureSolver::FBC_FLUX;
                     bcvalues[face] = face_bc.outflux(); // TODO: may have to switch sign here depending on orientation.
+                    if (bcvalues[face] != 0.0) {
+                        THROW("Nonzero Neumann conditions not yet properly implemented (signs must be fixed)");
+                    }
                 } else {
                     THROW("Unhandled boundary condition type.");
                 }
             }
-//             typedef typename GridInterface::CellIterator CI;
-//             typedef typename CI::FaceIterator FI;
-//             for (CI c = pgrid_->cellbegin(); c != pgrid_->cellend(); ++c) {
-//                 for (FI f = c->facebegin(); f != c-> faceend(); ++f) {
-//                     if (f->boundary()) {
-//                         int face = f->index();
-//                         int bid = f->boundaryId();
-//                         FlowBC face_bc = bc.flowCond(bid);
-//                         if (face_bc.isDirichlet()) {
-//                             bctypes[face] = HybridPressureSolver::FBC_PRESSURE;
-//                             bcvalues[face] = face_bc.pressure();
-//                         } else if (face_bc.isNeumann()) {
-//                             bctypes[face] = HybridPressureSolver::FBC_FLUX;
-//                             bcvalues[face] = face_bc.outflux(); // TODO: may have to switch sign here depending on orientation.
-//                         } else {
-//                             THROW("Unhandled boundary condition type.");
-//                         }
-//                     }
-//                 }
-//             }
 
             // Assemble system matrix and rhs.
             ifsh_.assemble(src, totmob, omega, bctypes, bcvalues);
 
-//             static int count = 0;
-//             ++count;
-//             printSystem(std::string("linsys_mimetic-") + boost::lexical_cast<std::string>(count));
-
+            // Solve system.
             HybridPressureSolver::LinearSystem s;
             ifsh_.linearSystem(s);
-            LinearSolverResults res = linsolver_.solve(s.n, s.nnz, s.ia, s.ja, s.sa, s.b, s.x,
-                                                       residual_tolerance, linsolver_verbosity);
+            parameter::ParameterGroup params;
+            params.insertParameter("linsolver_tolerance", boost::lexical_cast<std::string>(residual_tolerance));
+            params.insertParameter("linsolver_verbosity", boost::lexical_cast<std::string>(linsolver_verbosity));
+            params.insertParameter("linsolver_type", boost::lexical_cast<std::string>(linsolver_type));
+            linsolver_.init(params);
+            LinearSolverISTL::LinearSolverResults res = linsolver_.solve(s.n, s.nnz, s.ia, s.ja, s.sa, s.b, s.x);
             if (!res.converged) {
                 THROW("Linear solver failed to converge in " << res.iterations << " iterations.\n"
                       << "Residual reduction achieved is " << res.reduction << '\n');

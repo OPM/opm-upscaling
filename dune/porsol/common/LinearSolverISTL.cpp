@@ -29,42 +29,75 @@
 #include <dune/istl/bcrsmatrix.hh>
 #include <dune/istl/operators.hh>
 #include <dune/istl/io.hh>
-
-#include <dune/istl/overlappingschwarz.hh>
-#include <dune/istl/schwarz.hh>
 #include <dune/istl/preconditioners.hh>
 #include <dune/istl/solvers.hh>
-#include <dune/istl/owneroverlapcopy.hh>
 #include <dune/istl/paamg/amg.hh>
-#include <dune/istl/paamg/pinfo.hh>
+
+#include <stdexcept>
 
 
 namespace Dune
 {
 
+    namespace {
+        typedef FieldVector<double, 1   > VectorBlockType;
+        typedef FieldMatrix<double, 1, 1> MatrixBlockType;
+        typedef BCRSMatrix <MatrixBlockType>        Mat;
+        typedef BlockVector<VectorBlockType>        Vector;
+        typedef MatrixAdapter<Mat,Vector,Vector> Operator;
+
+        LinearSolverISTL::LinearSolverResults
+        solveCG_ILU0(const Mat& A, Vector& x, Vector& b, double tolerance, int verbosity);
+
+        LinearSolverISTL::LinearSolverResults
+        solveCG_AMG(const Mat& A, Vector& x, Vector& b, double tolerance, int verbosity);
+
+    } // anonymous namespace
+
+
+
+
+    LinearSolverISTL::LinearSolverISTL()
+        : linsolver_residual_tolerance_(1e-8),
+          linsolver_verbosity_(0),
+          linsolver_type_(CG_AMG),
+          linsolver_save_system_(false)
+    {
+    }
+
+
+
+
     LinearSolverISTL::~LinearSolverISTL()
     {
     }
 
+
+
+
     void LinearSolverISTL::init(const parameter::ParameterGroup& param)
     {
+        linsolver_residual_tolerance_ = param.getDefault("linsolver_residual_tolerance", linsolver_residual_tolerance_);
+        linsolver_verbosity_ = param.getDefault("linsolver_verbosity", linsolver_verbosity_);
+        linsolver_type_ = LinsolverType(param.getDefault("linsolver_type", int(linsolver_type_)));
+        linsolver_save_system_ = param.getDefault("linsolver_save_system", linsolver_save_system_);
+        if (linsolver_save_system_) {
+            linsolver_save_filename_ = param.getDefault("linsolver_save_filename", std::string("linsys"));
+        }
     }
 
-    LinearSolverResults LinearSolverISTL::solve(int size, int nonzeros,
-                                                const int* ia, const int* ja, const double* sa,
-                                                const double* rhs, double* solution,
-                                                double relative_residual_tolerance,
-                                                int verbosity_level)
+
+
+
+    LinearSolverISTL::LinearSolverResults
+    LinearSolverISTL::solve(int size, int nonzeros,
+                            const int* ia, const int* ja, const double* sa,
+                            const double* rhs, double* solution)
     {
         // Build ISTL structures from input.
-        typedef FieldVector<double, 1   > VectorBlockType;
-        typedef FieldMatrix<double, 1, 1> MatrixBlockType;
-        typedef BCRSMatrix <MatrixBlockType>        Matrix;
-        typedef BlockVector<VectorBlockType>        Vector;
-        typedef MatrixAdapter<Matrix,Vector,Vector> Operator;
         // System matrix
-        Matrix A(size, size, nonzeros, Matrix::row_wise);
-        for (Matrix::CreateIterator row = A.createbegin(); row != A.createend(); ++row) {
+        Mat A(size, size, nonzeros, Mat::row_wise);
+        for (Mat::CreateIterator row = A.createbegin(); row != A.createend(); ++row) {
             int ri = row.index();
             for (int i = ia[ri]; i < ia[ri + 1]; ++i) {
                 row.insert(ja[i]);
@@ -82,10 +115,11 @@ namespace Dune
         Vector x(size);
         x = 0.0;
 
+        if (linsolver_save_system_)
         {
-            // Save system
-            writeMatrixToMatlab(A, "ifshmat");
-            std::string rhsfile("ifshrhs");
+            // Save system to files.
+            writeMatrixToMatlab(A, linsolver_save_filename_ + "-mat");
+            std::string rhsfile(linsolver_save_filename_ + "-rhs");
             std::ofstream rhsf(rhsfile.c_str());
             rhsf.precision(15);
             rhsf.setf(std::ios::scientific | std::ios::showpos);
@@ -93,7 +127,53 @@ namespace Dune
                       std::ostream_iterator<VectorBlockType>(rhsf, "\n"));
         }
 
+        LinearSolverResults res;
+        switch (linsolver_type_) {
+        case CG_ILU0:
+            res = solveCG_ILU0(A, x, b, linsolver_residual_tolerance_, linsolver_verbosity_);
+        case CG_AMG:
+            res = solveCG_AMG(A, x, b, linsolver_residual_tolerance_, linsolver_verbosity_);
+        default:
+            std::cerr << "Unknown linsolver_type: " << int(linsolver_type_) << '\n';
+            throw std::runtime_error("Unknown linsolver_type");
+        }
+        std::copy(x.begin(), x.end(), solution);
+        return res;
+    }
 
+
+    namespace
+    {
+
+    LinearSolverISTL::LinearSolverResults
+    solveCG_ILU0(const Mat& A, Vector& x, Vector& b, double tolerance, int verbosity)
+    {
+        Operator opA(A);
+
+        // Construct preconditioner.
+        SeqILU0<Mat,Vector,Vector> precond(A, 1.0);
+
+        // Construct linear solver.
+        CGSolver<Vector> linsolve(opA, precond, tolerance, A.N(), verbosity);
+
+        // Solve system.
+        InverseOperatorResult result;
+        linsolve.apply(x, b, result);
+
+        // Output results.
+        LinearSolverISTL::LinearSolverResults res;
+        res.converged = result.converged;
+        res.iterations = result.iterations;
+        res.reduction = result.reduction;
+        return res;
+    }
+
+
+
+
+    LinearSolverISTL::LinearSolverResults
+    solveCG_AMG(const Mat& A, Vector& x, Vector& b, double tolerance, int verbosity)
+    {
         // Solve with AMG solver.
 #define FIRST_DIAGONAL 1
 #define SYMMETRIC 1
@@ -107,41 +187,48 @@ namespace Dune
 #endif
 
 #if SYMMETRIC
-        typedef Amg::SymmetricCriterion<Matrix,CouplingMetric>   CriterionBase;
+        typedef Amg::SymmetricCriterion<Mat,CouplingMetric>   CriterionBase;
 #else
-        typedef Amg::UnSymmetricCriterion<Matrix,CouplingMetric> CriterionBase;
+        typedef Amg::UnSymmetricCriterion<Mat,CouplingMetric> CriterionBase;
 #endif
 
 #if SMOOTHER_ILU
-        typedef SeqILU0<Matrix,Vector,Vector>        Smoother;
+        typedef SeqILU0<Mat,Vector,Vector>        Smoother;
 #else
-        typedef SeqSSOR<Matrix,Vector,Vector>        Smoother;
+        typedef SeqSSOR<Mat,Vector,Vector>        Smoother;
 #endif
         typedef Amg::CoarsenCriterion<CriterionBase> Criterion;
         typedef Amg::AMG<Operator,Vector,Smoother>   Precond;
 
         Operator opA(A);
+
         // Construct preconditioner.
         double relax = 1;
         Precond::SmootherArgs smootherArgs;
         smootherArgs.relaxationFactor = relax;
-
         Criterion criterion;
-        criterion.setDebugLevel(verbosity_level);
+        criterion.setDebugLevel(verbosity);
 #if ANISOTROPIC_3D
         criterion.setDefaultValuesAnisotropic(3, 2);
 #endif
         Precond precond(opA, criterion, smootherArgs);
-        CGSolver<Vector> linsolve(opA, precond, relative_residual_tolerance, size, verbosity_level);
+
+        // Construct linear solver.
+        CGSolver<Vector> linsolve(opA, precond, tolerance, A.N(), verbosity);
+
+        // Solve system.
         InverseOperatorResult result;
         linsolve.apply(x, b, result);
-        std::copy(x.begin(), x.end(), solution);
-        LinearSolverResults res;
+
+        // Output results.
+        LinearSolverISTL::LinearSolverResults res;
         res.converged = result.converged;
         res.iterations = result.iterations;
         res.reduction = result.reduction;
         return res;
     }
+
+    } // anonymous namespace
 
 
 } // namespace Dune

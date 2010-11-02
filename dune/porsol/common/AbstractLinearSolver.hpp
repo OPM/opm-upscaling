@@ -27,13 +27,6 @@
 namespace Dune
 {
 
-    struct LinearSolverResults
-    {
-        bool converged;
-        int iterations;
-        double reduction;
-    };
-
 
     class AbstractLinearSolver
     {
@@ -41,12 +34,20 @@ namespace Dune
         virtual ~AbstractLinearSolver()
         {
         }
+
         virtual void init(const parameter::ParameterGroup& param) = 0;
+
+        struct LinearSolverResults
+        {
+            bool converged;
+            int iterations;
+            double reduction;
+        };
+
         virtual LinearSolverResults solve(int size, int nonzeros,
                                           const int* ia, const int* ja, const double* sa,
-                                          const double* rhs, double* solution,
-                                          double relative_residual_tolerance,
-                                          int verbosity_level) = 0;
+                                          const double* rhs, double* solution) = 0;
+
     };
 
 

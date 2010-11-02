@@ -38,21 +38,6 @@
 
 #include <dune/porsol/common/AbstractLinearSolver.hpp>
 
-// TODO: clean up includes.
-#include <dune/istl/bvector.hh>
-#include <dune/istl/bcrsmatrix.hh>
-#include <dune/istl/operators.hh>
-#include <dune/istl/io.hh>
-
-#include <dune/istl/overlappingschwarz.hh>
-#include <dune/istl/schwarz.hh>
-#include <dune/istl/preconditioners.hh>
-#include <dune/istl/solvers.hh>
-#include <dune/istl/owneroverlapcopy.hh>
-#include <dune/istl/paamg/amg.hh>
-#include <dune/istl/paamg/pinfo.hh>
-
-
 
 namespace Dune
 {
@@ -60,13 +45,19 @@ namespace Dune
     class LinearSolverISTL : public AbstractLinearSolver
     {
     public:
+        LinearSolverISTL();
         virtual ~LinearSolverISTL();
         virtual void init(const parameter::ParameterGroup& param);
         virtual LinearSolverResults solve(int size, int nonzeros,
                                           const int* ia, const int* ja, const double* sa,
-                                          const double* rhs, double* solution,
-                                          double relative_residual_tolerance,
-                                          int verbosity_level);
+                                          const double* rhs, double* solution);
+    private:
+        double linsolver_residual_tolerance_;
+        int linsolver_verbosity_;
+        enum LinsolverType { CG_ILU0 = 0, CG_AMG = 1 };
+        LinsolverType linsolver_type_;
+        bool linsolver_save_system_;
+        std::string linsolver_save_filename_;
     };
 
 
