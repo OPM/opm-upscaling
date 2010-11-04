@@ -27,6 +27,7 @@ AC_CONFIG_FILES([
   dune/upscaling/Makefile
   dune/upscaling/test/Makefile
   dune-upscaling.pc
+  examples/Makefile
 ])
 AC_OUTPUT
 # finally print the summary information
