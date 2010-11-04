@@ -2,10 +2,10 @@
 # $Revision$
 
 check_PROGRAMS = 
-noinst_PROGRAMS = upscale_perm 
-#                  upscale_relperm \
-#                  upscale_avg 
-#                  upscale_cond_
+noinst_PROGRAMS = upscale_perm \
+                  upscale_relperm \
+                  upscale_avg  \
+                  upscale_cond
 
 upscale_perm_SOURCES = upscale_perm.cpp
 

@@ -64,11 +64,9 @@
 #include <mpi.h>
 #endif
 
-#include <dune/grid/common/EclipseGridParser.hpp>
 #include <dune/common/MonotCubicInterpolator.hpp>
 #include <dune/upscaling/SinglePhaseUpscaler.hpp>
-#include <dune/common/Units.hpp>
-
+ 
 using namespace Dune;
 using namespace std;
 
@@ -296,8 +294,8 @@ int main(int varnum, char** vararg)
 
    // Check that boundary conditions are valid , and make booleans 
    // for boundary conditions. This allows more readable code later.
-   bool isFixed, isLinear, isPeriodic;
-   SinglePhaseUpscaler::BoundaryConditionType boundaryCondition; 
+   bool isFixed = false, isLinear = false, isPeriodic = false;
+   SinglePhaseUpscaler::BoundaryConditionType boundaryCondition = SinglePhaseUpscaler::Fixed ; 
 
    int tensorElementCount; // Number of independent elements in resulting tensor
    if (options["bc"].substr(0,1) == "f") {

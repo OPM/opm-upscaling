@@ -74,20 +74,13 @@ typedef unsigned int uint;
 #include <mpi.h>
 #endif
 
-//#include "upscale.h"
-//#include "CellStructure.h"
-#include <dune/grid/common/EclipseGridParser.hpp>
 #include <dune/common/MonotCubicInterpolator.hpp>
 #include <dune/upscaling/SinglePhaseUpscaler.hpp>
-#include <dune/common/Units.hpp>
 
 using namespace Dune;
 using namespace std;
 
-/**
-   Explains how to use the file. Shows possible option parameters.
 
- */
 void usage()
 {
     cout << "Usage: upscale_relperm <options> <eclipsefile> stoneA.txt stoneB.txt ..." << endl << 
@@ -185,7 +178,7 @@ int main(int varnum, char** vararg)
 {
    // Variables used for timing/profiling:
    clock_t start, finish;
-   double timeused = 0.0, timeused_tesselation = 0.0, timeused_upscale_acc = 0.0;
+   double timeused = 0.0, timeused_tesselation = 0.0;
    double timeused_upscale_wallclock = 0.0;
 
    /******************************************************************************
@@ -194,8 +187,8 @@ int main(int varnum, char** vararg)
     */
 
    int mpi_rank = 0;
-   int mpi_nodecount = 1;
 #ifdef USEMPI
+   int mpi_nodecount = 1;
    MPI_Init(&varnum, &vararg);
    MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
    MPI_Comm_size(MPI_COMM_WORLD, &mpi_nodecount);
@@ -863,7 +856,6 @@ int main(int varnum, char** vararg)
 
    MonotCubicInterpolator WaterSaturationVsCapPressure;
    
-   int saturationpoints = 0; // for counting
    double largestSaturationInterval = Swor-Swir;
    
    double Ptestvalue = Pcmax;
@@ -1223,7 +1215,6 @@ int main(int varnum, char** vararg)
    clock_t finish_upscale_wallclock = clock();
    timeused_upscale_wallclock = (double(finish_upscale_wallclock)-double(start_upscale_wallclock))/CLOCKS_PER_SEC;
 
-   double timeused_upscale_total = timeused_upscale_wallclock;
 #ifdef USEMPI   
    /* Step 8b: Transfer all computed data to master node.
       Master node should post a receive for all values missing,
