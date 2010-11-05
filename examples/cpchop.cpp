@@ -18,8 +18,8 @@
 */
 
 
-#include "CornerpointChopper.hpp"
-#include "dune/upscaling/SinglePhaseUpscaler.hpp"
+#include <dune/common/CornerpointChopper.hpp>
+#include <dune/upscaling/SinglePhaseUpscaler.hpp>
 #include <dune/porsol/common/setupBoundaryConditions.hpp>
 #include <dune/common/Units.hpp>
 
