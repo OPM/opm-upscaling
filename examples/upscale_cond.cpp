@@ -472,7 +472,7 @@ int main(int varnum, char** vararg)
         zero and less than minPerm.
       - Check maximum number of SATNUM values (can be number of rock types present)
    */
-   for (uint i = 0; i < satnums.size(); ++i) {
+   for (size_t i = 0; i < satnums.size(); ++i) {
        if (satnums[i] < 0 || satnums[i] > 1000) { 
            if (isMaster) cerr << "satnums[" << i << "] = " << satnums[i] << ", not sane, quitting." << endl;
            usageandexit();
@@ -519,7 +519,7 @@ int main(int varnum, char** vararg)
    const std::vector<int>& ecl_idx = upscaler.grid().globalCell();
    CpGrid::Codim<0>::LeafIterator c = upscaler.grid().leafbegin<0>();
    for (; c != upscaler.grid().leafend<0>(); ++c) {
-       uint cell_idx = ecl_idx[c->index()];
+       size_t cell_idx = ecl_idx[c->index()];
        if (satnums[cell_idx] > 0) { // Satnum zero is "no rock"
            cellVolumes[cell_idx] = c->geometry().volume();
            cellPoreVolumes[cell_idx] = cellVolumes[cell_idx] * poros[cell_idx];
@@ -598,7 +598,7 @@ int main(int varnum, char** vararg)
       rock basis, the rock types that are not set explicitly, will be
       given the general value.
    */
-   for (uint i = 1; i <= (uint)maxSatnum; ++i) {
+   for (size_t i = 1; i <= (size_t)maxSatnum; ++i) {
 
        stringstream rocktypestring;
        rocktypestring << i; // integer to string conversion.
@@ -703,8 +703,8 @@ int main(int varnum, char** vararg)
        double waterVolume = 0.0;
        CpGrid::Codim<0>::LeafIterator c = upscaler.grid().leafbegin<0>();
        for (; c != upscaler.grid().leafend<0>(); ++c) {
-           uint cell_idx = ecl_idx[c->index()];
-           //           for (uint cell_idx = 0; cell_idx < satnums.size(); ++cell_idx) {
+           size_t cell_idx = ecl_idx[c->index()];
+           //           for (size_t cell_idx = 0; cell_idx < satnums.size(); ++cell_idx) {
            //if (LFgrid.getCellIndex(cell_idx) != EMPTY) {
            double waterSaturationCell = 0.0;
            if (satnums[cell_idx] > 0) { // handle "no rock" cells with satnum zero
@@ -832,8 +832,8 @@ int main(int varnum, char** vararg)
 
            CpGrid::Codim<0>::LeafIterator c = upscaler.grid().leafbegin<0>();
            for (; c != upscaler.grid().leafend<0>(); ++c) {
-               uint cell_idx = ecl_idx[c->index()];
-               //               for (uint cell_idx = 0; cell_idx < satnums.size(); ++cell_idx) {
+               size_t cell_idx = ecl_idx[c->index()];
+               //               for (size_t cell_idx = 0; cell_idx < satnums.size(); ++cell_idx) {
                //  if (LFgrid.getCellIndex(cell_idx) != EMPTY) {
                double resistivityCell = resistivityCutoff;
                if (satnums[cell_idx] > 0) { // SATNUM  index == 0 is legal, means "not rock"
@@ -1046,7 +1046,7 @@ int main(int varnum, char** vararg)
        outputtmp << "#      cementationExponent: " << options["cementationExponent"] << endl;
        outputtmp << "#       saturationExponent: " << options["saturationExponent"] << endl;
        outputtmp << "# Archie options pr. rocktype:" << endl;
-       for (uint i = 1; i <= (uint)maxSatnum; ++i) {
+       for (size_t i = 1; i <= (size_t)maxSatnum; ++i) {
            stringstream rocktypestring;
            rocktypestring << i; // integer to string conversion.
            double cemoptionvalue = atof(options["rock" + rocktypestring.str() + "cemexp"].c_str());
@@ -1111,7 +1111,7 @@ int main(int varnum, char** vararg)
            // Find min and max for saturation values
            double xmin = DBL_MAX;
            double xmax = -DBL_MAX;
-           for (uint i = 0; i < Satvalues.size(); ++i) {
+           for (size_t i = 0; i < Satvalues.size(); ++i) {
                if (Satvalues[i] < xmin) {
                    xmin = Satvalues[i];
                }
@@ -1148,7 +1148,7 @@ int main(int varnum, char** vararg)
        
 
        /* Output computed resistivity data */
-       for (uint i=0; i < Satvalues.size(); ++i) {
+       for (size_t i=0; i < Satvalues.size(); ++i) {
            // Note: The Interpolator-object's values contain the log10 of the real values.
            outputtmp << std::showpoint << std::setw(14) << Pvalues[i];
            outputtmp << std::showpoint << std::setw(14) << Satvalues[i];   

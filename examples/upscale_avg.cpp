@@ -239,9 +239,9 @@ int main(int varnum, char** vararg) {
     const std::vector<int>& ecl_idx = upscaler.grid().globalCell();
     CpGrid::Codim<0>::LeafIterator c = upscaler.grid().leafbegin<0>();
     for (; c != upscaler.grid().leafend<0>(); ++c) {
-      uint cell_idx = ecl_idx[c->index()];
+      size_t cell_idx = ecl_idx[c->index()];
       
-      //for (uint cell_idx = 0; cell_idx < num_eclipse_cells; ++cell_idx) {
+      //for (size_t cell_idx = 0; cell_idx < num_eclipse_cells; ++cell_idx) {
         if (!use_actnum){
           cellVolumes[cell_idx] = c->geometry().volume();
         }
@@ -270,7 +270,7 @@ int main(int varnum, char** vararg) {
         
         int zeroporocells = 0;
         int negativeporocells = 0;
-        for (uint cell_idx = 0; cell_idx < (uint)num_eclipse_cells; ++cell_idx) {
+        for (size_t cell_idx = 0; cell_idx < (size_t)num_eclipse_cells; ++cell_idx) {
             if  (poros[cell_idx] == 0) {
                 ++zeroporocells;
             }
@@ -295,7 +295,7 @@ int main(int varnum, char** vararg) {
     if (doperm) {
         int zeropermcells = 0;
         int negativepermcells = 0;
-        for (uint cell_idx = 0; cell_idx < (uint)num_eclipse_cells; ++cell_idx) {
+        for (size_t cell_idx = 0; cell_idx < (size_t)num_eclipse_cells; ++cell_idx) {
             if (cellVolumes[cell_idx] > emptycellvolumecutoff) {
                 permxsum += permxs[cell_idx];
                 volpermxsum += permxs[cell_idx] * cellVolumes[cell_idx];
@@ -378,7 +378,7 @@ int main(int varnum, char** vararg) {
         int maxsatnumvalue = 0;
         // Check that SATNUM are set sensibly, that is > 0 and < 1000, and find number
         // of unique satnums present ( = number of rocktypes)
-        for (uint i = 0; i < (uint)satnums.size(); ++i) {
+        for (size_t i = 0; i < (size_t)satnums.size(); ++i) {
             if (satnums[i] > maxsatnumvalue) {
                 maxsatnumvalue = satnums[i];
             }
@@ -416,7 +416,7 @@ int main(int varnum, char** vararg) {
         activecellcount_rocktype.resize(maxsatnumvalue+1, 0);
 
         // Now loop over cells to collect statistics pr. rocktype
-        for (uint cell_idx = 0; cell_idx < (uint)num_eclipse_cells; ++cell_idx) {
+        for (size_t cell_idx = 0; cell_idx < (size_t)num_eclipse_cells; ++cell_idx) {
             ++totalcellcount_rocktype[satnums[cell_idx]];
             if (cellVolumes[cell_idx] > emptycellvolumecutoff) {
                 ++activecellcount_rocktype[satnums[cell_idx]];
@@ -441,7 +441,7 @@ int main(int varnum, char** vararg) {
           phi_var = 1/V*sum(v_i*(phi_i-phi_avg)^2)
         */
         if (doporosity) {
-            for (uint cell_idx = 0; cell_idx < (uint)num_eclipse_cells; ++cell_idx) {
+            for (size_t cell_idx = 0; cell_idx < (size_t)num_eclipse_cells; ++cell_idx) {
                 if (cellVolumes[cell_idx] > emptycellvolumecutoff) {
                     porosityvariancesum_rocktype[satnums[cell_idx]] += cellVolumes[cell_idx] 
                         * pow((poros[cell_idx]-porevolumesum_rocktype[satnums[cell_idx]]/volumesum_rocktype[satnums[cell_idx]]),2);

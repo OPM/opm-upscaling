@@ -32,4 +32,8 @@ missing
 
 # Ignoring executables
 *_test
-cpchop
+dune/upscaling/test/cpchop
+examples/upscale_avg
+examples/upscale_cond
+examples/upscale_perm
+examples/upscale_relperm
