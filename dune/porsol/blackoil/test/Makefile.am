@@ -2,7 +2,10 @@
 # $Revision$
 
 check_PROGRAMS =
-noinst_PROGRAMS =
+noinst_PROGRAMS = bo_transport_test
+
+bo_transport_test_SOURCES = bo_transport_test.cpp
+
 
 AM_CPPFLAGS += $(DUNEMPICPPFLAGS) $(BOOST_CPPFLAGS) $(ALUGRID_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 AM_LDFLAGS  += $(DUNEMPILDFLAGS) $(BOOST_LDFLAGS) $(ALUGRID_LDFLAGS) $(SUPERLU_LDFLAGS)
