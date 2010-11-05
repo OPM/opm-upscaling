@@ -57,6 +57,7 @@ int main(int argc, char** argv)
     int jlen = param.getDefault("jlen", jmax - jmin);
     double zlen = param.getDefault("zlen", zmax - zmin);
     bool upscale = param.getDefault("upscale", true);
+    bool resettoorigin = param.getDefault("resettoorigin", true);
     boost::mt19937::result_type userseed = param.getDefault("seed", 0);
 
     int outputprecision = param.getDefault("outputprecision", 8);
@@ -106,7 +107,7 @@ int main(int argc, char** argv)
         int istart = ri();
         int jstart = rj();
         double zstart = rz();
-        ch.chop(istart, istart + ilen, jstart, jstart + jlen, zstart, zstart + zlen);
+        ch.chop(istart, istart + ilen, jstart, jstart + jlen, zstart, zstart + zlen, resettoorigin);
         std::string subsampledgrdecl = filebase;
 
         // Output grdecl-data to file if a filebase is supplied.
