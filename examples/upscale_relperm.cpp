@@ -498,7 +498,7 @@ int main(int varnum, char** vararg)
    const double surfaceTension     = atof(options["surfaceTension"].c_str()) * 1e-3; // multiply with 10^-3 to obtain SI units 
    const double waterDensity       = atof(options["waterDensity"].c_str());
    const double oilDensity         = atof(options["oilDensity"].c_str());
-   const bool includeGravity       = (abs(gravity) > DBL_MIN); // true for non-zero gravity
+   const bool includeGravity       = (fabs(gravity) > DBL_MIN); // true for non-zero gravity
    const int outputprecision       = atoi(options["outputprecision"].c_str());
 
    // Handle two command line input formats, either one J-function for all stone types
