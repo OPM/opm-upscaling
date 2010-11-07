@@ -6,7 +6,8 @@ noinst_PROGRAMS = upscale_perm \
                   upscale_relperm \
                   upscale_avg  \
                   upscale_cond \
-		  cpchop
+		  cpchop \
+                  exp_variogram
 
 upscale_perm_SOURCES = upscale_perm.cpp
 
@@ -17,6 +18,8 @@ upscale_cond_SOURCES = upscale_cond.cpp
 upscale_avg_SOURCES = upscale_avg.cpp
 
 cpchop_SOURCES = cpchop.cpp
+
+exp_variogram_SOURCES = exp_variogram.cpp
 
 AM_CPPFLAGS += $(DUNEMPICPPFLAGS) $(BOOST_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 AM_LDFLAGS  += $(DUNEMPILDFLAGS) $(BOOST_LDFLAGS) $(SUPERLU_LDFLAGS)
