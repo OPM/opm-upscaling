@@ -1,7 +1,7 @@
 # $Date$
 # $Revision$
 
-check_PROGRAMS = boundaryconditions_test nonuniformtablelinear_test
+check_PROGRAMS = boundaryconditions_test nonuniformtablelinear_test uniformtablelinear_test
 noinst_PROGRAMS = \
         gie_test \
         periodic_test \
@@ -18,6 +18,8 @@ LDADD = $(DUNE_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB)   \
 boundaryconditions_test_SOURCES = boundaryconditions_test.cpp
 
 nonuniformtablelinear_test_SOURCES = nonuniformtablelinear_test.cpp
+
+uniformtablelinear_test_SOURCES = uniformtablelinear_test.cpp
 
 periodic_test_SOURCES = periodic_test.cpp
 
