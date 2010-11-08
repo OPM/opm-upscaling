@@ -32,7 +32,7 @@ missing
 
 # Ignoring executables
 *_test
-dune/upscaling/test/cpchop
+examples/cpchop
 examples/upscale_avg
 examples/upscale_cond
 examples/upscale_perm
