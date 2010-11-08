@@ -33,6 +33,7 @@ missing
 # Ignoring executables
 *_test
 dune/upscaling/test/cpchop
+examples/exp_variogram
 examples/upscale_avg
 examples/upscale_cond
 examples/upscale_perm
