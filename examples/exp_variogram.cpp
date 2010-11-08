@@ -1,6 +1,4 @@
 /*
-  Copyright 2010 SINTEF ICT, Applied Mathematics.
-
   This file is part of the Open Porous Media project (OPM).
 
   OPM is free software: you can redistribute it and/or modify
