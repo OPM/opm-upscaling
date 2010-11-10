@@ -22,6 +22,7 @@
 
 
 #include <dune/common/param/ParameterGroup.hpp>
+#include <dune/common/SparseVector.hpp>
 
 namespace Opm
 {
@@ -30,11 +31,33 @@ namespace Opm
     class BlackoilUpstreamEuler
     {
     public:
+	/// @brief
+	/// @todo Doc me
+	/// @param
         void init(const Dune::parameter::ParameterGroup& param)
         {
         }
-    };
 
+	/// @brief
+	/// @todo Doc me
+	/// @param
+	void initObj(const SimpleGrid& grid)
+        {
+        }
+
+	/// \brief Solve transport equation, evolving \param fluid_state
+	/// for \param time seconds.
+	/// Cfl type conditions may force many explicit timesteps to
+	/// be taken, before the function returns.
+	/// @tparam
+	/// @param
+	template <class PressureSolution>
+	void transportSolve(std::vector<typename Fluid::ComponentVec>& fluid_state,
+			    const double time,
+			    const typename SimpleGrid::Vector& gravity,
+			    const PressureSolution& pressure_sol,
+			    const Dune::SparseVector<double>& injection_rates) const;
+    };
 
 } // namespace Opm
 
