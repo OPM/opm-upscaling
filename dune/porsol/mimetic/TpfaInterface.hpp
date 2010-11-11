@@ -21,7 +21,7 @@
 #define OPM_TPFAINTERFACE_HEADER_INCLUDED
 
 
-#include "../opmpressure/TPFAPressureSolver.hpp"
+#include "../opmpressure/src/TPFAPressureSolver.hpp"
 #include <dune/common/ErrorMacros.hpp>
 #include <dune/common/SparseTable.hpp>
 #include <dune/porsol/common/LinearSolverISTL.hpp>
