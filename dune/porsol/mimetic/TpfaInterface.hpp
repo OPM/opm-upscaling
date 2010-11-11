@@ -235,6 +235,91 @@ namespace Dune
                                            ncf.begin(), ncf.end());
         }
 
+    private:
+        /// A helper class for postProcessFluxes.
+        class FaceFluxes
+        {
+        public:
+            FaceFluxes(int sz)
+                : fluxes_(sz, 0.0), visited_(sz, 0), max_modification_(0.0)
+            {
+            }
+            void put(double flux, int f_ix) {
+                ASSERT(visited_[f_ix] == 0 || visited_[f_ix] == 1);
+                double sign = visited_[f_ix] ? -1.0 : 1.0;
+                fluxes_[f_ix] += sign*flux;
+                ++visited_[f_ix];
+            }
+            void get(double& flux, int f_ix) {
+                ASSERT(visited_[f_ix] == 0 || visited_[f_ix] == 1);
+                double sign = visited_[f_ix] ? -1.0 : 1.0;
+                double new_flux = 0.5*sign*fluxes_[f_ix];
+                double diff = std::fabs(flux - new_flux);
+                max_modification_ = std::max(max_modification_, diff);
+                flux = new_flux;
+                ++visited_[f_ix];
+            }
+            void resetVisited()
+            {
+                std::fill(visited_.begin(), visited_.end(), 0);
+            }
+
+            double maxMod() const
+            {
+                return max_modification_;
+            }
+        private:
+            std::vector<double> fluxes_;
+            std::vector<int> visited_;
+            double max_modification_;
+
+        };
+
+    public:
+        /// @brief
+        ///    Postprocess the solution fluxes.
+        ///    This method modifies the solution object so that
+        ///    out-fluxes of twin faces (that is, the two faces on a
+        ///    cell-cell intersection) will be made antisymmetric.
+        ///
+        /// @return
+        ///    The maximum modification made to the fluxes.
+        double postProcessFluxes()
+        {
+            typedef typename GridInterface::CellIterator CI;
+            typedef typename CI           ::FaceIterator FI;
+            SparseTable<double>& cflux = flow_solution_.outflux_;
+
+            FaceFluxes face_fluxes(pgrid_->numberOfFaces());
+            // First pass: compute projected fluxes.
+            for (CI c = pgrid_->cellbegin(); c != pgrid_->cellend(); ++c) {
+                const int cell_index = c->index();
+                for (FI f = c->facebegin(); f != c->faceend(); ++f) {
+                    int f_ix = f->index();
+                    double flux = cflux[cell_index][f->localIndex()];
+                    if (f->boundary()) {
+                        continue;
+                    } else {
+                        face_fluxes.put(flux, f_ix);
+                    }
+                }
+            }
+            face_fluxes.resetVisited();
+            // Second pass: set all fluxes to the projected ones.
+            for (CI c = pgrid_->cellbegin(); c != pgrid_->cellend(); ++c) {
+                const int cell_index = c->index();
+                for (FI f = c->facebegin(); f != c->faceend(); ++f) {
+                    int f_ix = f->index();
+                    double& flux = cflux[cell_index][f->localIndex()];
+                    if (f->boundary()) {
+                        continue;
+                    } else {
+                        face_fluxes.get(flux, f_ix);
+                    }
+                }
+            }
+            return face_fluxes.maxMod();
+        }
 
 
 
