@@ -21,6 +21,7 @@
 #define OPM_FLUIDMATRIXINTERACTIONBLACKOIL_HEADER_INCLUDED
 
 #include <dune/common/EclipseGridParser.hpp>
+#include <dune/common/Units.hpp>
 #include <dune/porsol/common/UniformTableLinear.hpp>
 #include <dune/porsol/common/buildUniformMonotoneTable.hpp>
 #include <iostream>
@@ -40,6 +41,7 @@ public:
     typedef ScalarT Scalar;
     void init(const Dune::EclipseGridParser& ep)
     {
+        // Extract input data.
         const Dune::SGOF::table_t& sgof_table = ep.getSGOF().sgof_;
         const Dune::SWOF::table_t& swof_table = ep.getSWOF().swof_;
         if (sgof_table.size() != 1 || swof_table.size() != 1) {
@@ -49,11 +51,13 @@ public:
         const std::vector<double>& sw = swof_table[0][0];
         const std::vector<double>& krw = swof_table[0][1];
         const std::vector<double>& krow = swof_table[0][2];
-        // const std::vector<double>& pcow = swof_table[0][3];
+        const std::vector<double>& pcow_raw = swof_table[0][3];
         const std::vector<double>& sg = sgof_table[0][0];
         const std::vector<double>& krg = sgof_table[0][1];
         const std::vector<double>& krog = sgof_table[0][2];
-        // const std::vector<double>& pcog = sgof_table[0][3];
+        const std::vector<double>& pcog_raw = sgof_table[0][3];
+
+        // Create tables for krw, krow, krg and krog.
         int samples = 200;
         buildUniformMonotoneTable(sw, krw,  samples, krw_);
         buildUniformMonotoneTable(sw, krow, samples, krow_);
@@ -65,16 +69,58 @@ public:
                 break;
             }
         }
+
+        // Create tables for pcow and pcog.
+        // We must convert the pressures depending on units.
+        double pressure_unit = 0.0;
+        switch (unitsInParser(ep)) {
+        case Metric:
+            pressure_unit = Dune::unit::barsa;
+            break;
+        case Field:
+            pressure_unit = Dune::unit::psia;
+            break;
+        case Lab:
+        case Pvtm:
+            pressure_unit = Dune::unit::atm;
+            break;
+        default:
+            throw std::logic_error("Unknown unit system.");
+        }
+        int numw = sw.size();
+        std::vector<double> pcow(numw);
+        for (int i = 0; i < numw; ++i) {
+            pcow[i] = Dune::unit::convert::from(pcow_raw[i], pressure_unit);
+        }
+        int numg = sg.size();
+        std::vector<double> pcog(numg);
+        for (int i = 0; i < numg; ++i) {
+            pcog[i] = Dune::unit::convert::from(pcog_raw[i], pressure_unit);
+        }
+        buildUniformMonotoneTable(sw, pcow, samples, pcow_);
+        buildUniformMonotoneTable(sg, pcog, samples, pcog_);
     }
+
 private:
     template <class S, class P>
     friend class FluidMatrixInteractionBlackoil;
 
     Dune::utils::UniformTableLinear<Scalar> krw_;
     Dune::utils::UniformTableLinear<Scalar> krow_;
+    Dune::utils::UniformTableLinear<Scalar> pcow_;
     Dune::utils::UniformTableLinear<Scalar> krg_;
     Dune::utils::UniformTableLinear<Scalar> krog_;
+    Dune::utils::UniformTableLinear<Scalar> pcog_;
     Scalar krocw_; // = krow_(s_wc)
+
+    enum EclipseUnitFamily { Metric = 0, Field = 1, Lab = 2, Pvtm = 3 };
+    EclipseUnitFamily unitsInParser(const Dune::EclipseGridParser& ep)
+    {
+        if (ep.hasField("FIELD")) return Field;
+        if (ep.hasField("LAB")) return Lab;
+        if (ep.hasField("PVT-M")) return Pvtm;
+        return Metric; // The default.
+    }
 };
 
 
@@ -90,7 +136,7 @@ public:
     typedef ParamsT Params;
     typedef typename Params::Scalar Scalar;
     enum { numPhases = 3 };
-    enum { Aqua = 0, Vapour = 1, Liquid = 2 };
+    enum PhaseIndex { Aqua = 0, Vapour = 1, Liquid = 2 };
 
     /*!
      * \brief The linear capillary pressure-saturation curve.
@@ -108,8 +154,11 @@ public:
                    const SatContainerT &saturations,
                    Scalar /*temperature*/)
     {
-        std::cerr << "FluidMatrixInteractionBlackoil::pC() is not implemented yet\n";
-        throw std::logic_error("Not implemented");
+        Scalar sw = saturations[Aqua];
+        Scalar sg = saturations[Vapour];
+        pc[Liquid] = 0.0;
+        pc[Aqua] = params.pcow_(sw);
+        pc[Vapour] = params.pcog_(sg);
     }
 
     /*!
@@ -150,7 +199,7 @@ public:
         Scalar krw = params.krw_(sw);
         Scalar krg = params.krg_(sg);
         Scalar krow = params.krow_(so);
-        Scalar krog = params.krog_(1.0 - sg);
+        Scalar krog = params.krog_(sg);
         Scalar krocw = params.krocw_;
         kr[Aqua] = krw;
         kr[Vapour] = krg;
