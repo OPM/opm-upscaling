@@ -14,7 +14,8 @@ AM_LDFLAGS  += $(DUNEMPILDFLAGS) $(BOOST_LDFLAGS) $(ALUGRID_LDFLAGS) $(SUPERLU_L
 LDADD = $(DUNE_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB)   \
         $(BOOST_SYSTEM_LIB) $(DUNEMPILIBS)              \
 	 $(ALUGRID_LIBS) $(SUPERLU_LIBS)                \
-        $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
+        $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)            \
+	../fluid/libblackoilfluid_noinst.la
 
 
 TESTS = $(check_PROGRAMS)
