@@ -1,7 +1,7 @@
 # $Date$
 # $Revision$
 
-SUBDIRS = test
+SUBDIRS = fluid test
 
 blackoildir = $(includedir)/dune/porsol/blackoil
 blackoil_HEADERS =

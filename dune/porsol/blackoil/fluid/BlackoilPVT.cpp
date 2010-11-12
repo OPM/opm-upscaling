@@ -17,31 +17,3 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef OPM_OILGASFLUID_HEADER_INCLUDED
-#define OPM_OILGASFLUID_HEADER_INCLUDED
-
-
-#include <dune/common/param/ParameterGroup.hpp>
-#include <dune/common/fvector.hh>
-
-namespace Opm
-{
-
-    class OilGasFluid
-    {
-    public:
-        enum { NumPhases = 2 };
-        enum { NumComponents = 2 };
-        typedef Dune::FieldVector<double, NumPhases> PhaseVec;
-        typedef Dune::FieldVector<double, NumPhases> ComponentVec;
-
-        void init(const Dune::parameter::ParameterGroup& param)
-        {
-        }
-    };
-
-
-} // namespace Opm
-
-
-#endif // OPM_OILGASFLUID_HEADER_INCLUDED

@@ -19,7 +19,7 @@
 
 #include <dune/porsol/blackoil/BlackoilUpstreamEuler.hpp>
 #include <dune/porsol/common/SimpleRock.hpp>
-#include <dune/porsol/blackoil/OilGasFluid.hpp>
+//#include <dune/porsol/blackoil/OilGasFluid.hpp>
 #include <dune/grid/CpGrid.hpp>
 #include <vector>
 
@@ -37,6 +37,7 @@ void initializeBlackoilState(const Grid& grid,
 
 int main(int argc, char** argv)
 {
+#if 0
     // Parameters.
     Dune::parameter::ParameterGroup param(argc, argv);
 
@@ -59,4 +60,5 @@ int main(int argc, char** argv)
     std::vector<Fluid::ComponentVec> z(num_cells);
     std::vector<double> cell_pressure(num_cells);
     initializeBlackoilState(grid, rock, fluid, z, cell_pressure);
+#endif
 }

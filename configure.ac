@@ -34,6 +34,7 @@ AC_CONFIG_FILES([
   dune/porsol/mimetic/Makefile
   dune/porsol/mimetic/test/Makefile
   dune/porsol/blackoil/Makefile
+  dune/porsol/blackoil/fluid/Makefile
   dune/porsol/blackoil/test/Makefile
   lib/Makefile
   examples/Makefile
