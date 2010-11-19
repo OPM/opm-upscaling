@@ -10,6 +10,7 @@ noinst_PROGRAMS = grdecl_to_legacy_test \
                   mimetic_periodic_test \
 		  spe10_test \
 		  tpfa_solver_test \
+		  tpfa_compressible_solver_test \
 		  known_answer_test \
                   aniso_implicitcap_test \
                   implicitcap_test \
@@ -35,6 +36,9 @@ spe10_test_SOURCES = spe10_test.cpp
 
 tpfa_solver_test_SOURCES = tpfa_solver_test.cpp
 tpfa_solver_test_LDADD = $(LDADD) ../lib/libduneporsol.la
+
+tpfa_compressible_solver_test_SOURCES = tpfa_compressible_solver_test.cpp
+tpfa_compressible_solver_test_LDADD = $(LDADD) ../lib/libduneporsol.la
 
 known_answer_test_SOURCES = known_answer_test.cpp
 
