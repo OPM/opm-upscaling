@@ -183,6 +183,10 @@ namespace Dune
             std::vector<double> bcvalues(num_faces, 0.0);
             for (int face = 0; face < num_faces; ++face) {
                 int bid = pgrid_->grid().boundaryId(face);
+                if (bid == 0) {
+                    bctypes[face] = PressureSolver::FBC_UNSET;
+                    continue;
+                }
                 FlowBC face_bc = bc.flowCond(bid);
                 if (face_bc.isDirichlet()) {
                     bctypes[face] = PressureSolver::FBC_PRESSURE;
@@ -206,7 +210,7 @@ namespace Dune
             const int np = 3;
             const int nc = 3;
             BOOST_STATIC_ASSERT(np == nc);
-            std::vector<double> totcompr(num_cells, 0.0);
+            std::vector<double> totcompr(num_cells, 1.0e-6);
             std::vector<double> voldiscr(num_cells, 0.0);
             std::vector<double> cellA(num_cells*nc*np, 0.0);
             std::vector<double> faceA(num_faces*nc*np, 0.0);
