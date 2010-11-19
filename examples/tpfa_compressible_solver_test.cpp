@@ -53,7 +53,7 @@
 
 
 template<int dim, class GI, class RI>
-void test_flowsolver(const GI& g, const RI& r)
+void test_flowsolver(const GI& g, const RI& r, double dt)
 {
     typedef typename GI::CellIterator                   CI;
     typedef typename CI::FaceIterator                   FI;
@@ -84,7 +84,6 @@ void test_flowsolver(const GI& g, const RI& r)
         src.back() = -1.0;
     }
     std::vector<double> cell_pressure(g.numberOfCells(), 0.0);
-    double dt = 1;
 
     solver.solve(r, cell_pressure, sat, flow_bc, src, dt, 1e-8, 3, 1);
 
@@ -100,8 +99,8 @@ void test_flowsolver(const GI& g, const RI& r)
     getCellPressure(cell_pressure, g, soln);
 
     Dune::VTKWriter<typename GI::GridType::LeafGridView> vtkwriter(g.grid().leafView());
-    vtkwriter.addCellData(cell_velocity_flat, "velocity", dim);
     vtkwriter.addCellData(cell_pressure, "pressure");
+    vtkwriter.addCellData(cell_velocity_flat, "velocity", dim);
     vtkwriter.write("testsolution-" + boost::lexical_cast<std::string>(0),
                     Dune::VTKOptions::ascii);
 }
@@ -122,7 +121,9 @@ int main(int argc, char** argv)
     // Make the grid interface.
     Dune::GridInterfaceEuler<Dune::CpGrid> g(grid);
 
+    double dt = param.getDefault("dt", 1.0);
+
     // Run test.
-    test_flowsolver<3>(g, res_prop);
+    test_flowsolver<3>(g, res_prop, dt);
 }
 
