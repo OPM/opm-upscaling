@@ -64,6 +64,7 @@ int main(int argc, char** argv)
     std::string filebase = param.getDefault<std::string>("filebase", "");
     std::string resultfile = param.getDefault<std::string>("resultfile", "");
 
+    double minperm = param.getDefault("minperm", 1e-9);
     double z_tolerance = param.getDefault("z_tolerance", 0.0);
     double residual_tolerance = param.getDefault("residual_tolerance", 1e-8);
     double linsolver_verbosity = param.getDefault("linsolver_verbosity", 0);
@@ -123,7 +124,7 @@ int main(int argc, char** argv)
             Dune::EclipseGridParser subparser = ch.subparser();
             
             Dune::SinglePhaseUpscaler upscaler;
-            upscaler.init(subparser, Dune::SinglePhaseUpscaler::Fixed, 0.0, z_tolerance,
+            upscaler.init(subparser, Dune::SinglePhaseUpscaler::Fixed, minperm, z_tolerance,
                           residual_tolerance, linsolver_verbosity, linsolver_type, false);
             
             Dune::SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
