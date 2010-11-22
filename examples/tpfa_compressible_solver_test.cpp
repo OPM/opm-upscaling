@@ -44,65 +44,76 @@
 #include <dune/porsol/common/blas_lapack.hpp>
 #include <dune/porsol/common/Matrix.hpp>
 #include <dune/porsol/common/GridInterfaceEuler.hpp>
-#include <dune/porsol/common/ReservoirPropertyCapillary.hpp>
+#include <dune/porsol/common/Rock.hpp>
 #include <dune/porsol/common/BoundaryConditions.hpp>
 
 #include <dune/porsol/mimetic/TpfaCompressible.hpp>
 #include <dune/common/param/ParameterGroup.hpp>
 #include <dune/porsol/common/setupGridAndProps.hpp>
+#include <dune/porsol/blackoil/fluid/FluidMatrixInteractionBlackoil.hpp>
+#include <dune/porsol/blackoil/BlackoilFluid.hpp>
 
 
-template<int dim, class GI, class RI>
-void test_flowsolver(const GI& g, const RI& r, double dt)
+template<int dim, class Grid, class Rock, class Fluid>
+void test_flowsolver(const Grid& grid,
+                     const Rock& rock,
+                     const Fluid& fluid,
+                     const double dt,
+                     const int num_iter)
 {
-    typedef typename GI::CellIterator                   CI;
-    typedef typename CI::FaceIterator                   FI;
+    // Boundary conditions.
     typedef Dune::BasicBoundaryConditions<true, false>  FBC;
-    typedef Dune::TpfaCompressible<GI, RI, FBC> FlowSolver;
-    // typedef Dune::TpfaInterface<GI, RI, FBC> FlowSolver;
-    // typedef Dune::IfshInterface<GI, RI, FBC> FlowSolver;
-    // typedef Dune::IncompFlowSolverHybrid<GI, RI, FBC,
-    //                                   Dune::MimeticIPEvaluator> FlowSolver;
-
-    FlowSolver solver;
-
     typedef Dune::FlowBC BC;
     FBC flow_bc(7);
+    flow_bc.flowCond(1) = BC(BC::Dirichlet, 300.0*Dune::unit::barsa);
+    flow_bc.flowCond(2) = BC(BC::Dirichlet, 100.0*Dune::unit::barsa);
 
-//     flow_bc.flowCond(5) = BC(BC::Dirichlet, 100.0*Dune::unit::barsa);
-//     flow_bc.flowCond(6) = BC(BC::Dirichlet, 0.0*Dune::unit::barsa);
-
-    typename CI::Vector gravity(0.0);
+    // Gravity.
+    typename Grid::Vector gravity(0.0);
 //     gravity[2] = Dune::unit::gravity;
 
-    solver.init(g, r, gravity, flow_bc);
+    // Flow solver.
+    typedef Dune::TpfaCompressible<Grid, Rock, FBC> FlowSolver;
+    FlowSolver solver;
+    solver.init(grid, rock, gravity, flow_bc);
 
-    std::vector<double> src(g.numberOfCells(), 0.0);
-    std::vector<double> sat(g.numberOfCells(), 0.0);
-    if (g.numberOfCells() > 1) {
-        src[0]     = 1.0;
-        src.back() = -1.0;
-    }
-    std::vector<double> cell_pressure(g.numberOfCells(), 0.0);
-
-    solver.solve(r, cell_pressure, sat, flow_bc, src, dt, 1e-8, 3, 1);
+    // Source terms.
+    std::vector<double> src(grid.numCells(), 0.0);
+//     if (g.numberOfCells() > 1) {
+//         src[0]     = 1.0;
+//         src.back() = -1.0;
+//     }
 
 
+    // Initial state.
+    typedef typename Fluid::CompVec CompVec;
+    CompVec init_z(0.0);
+    init_z[0] = 1.0;
+    std::vector<CompVec> z(grid.numCells(), init_z);
+    std::vector<double> cell_pressure(grid.numCells(), 100.0*Dune::unit::barsa);
+
+    // Solve flow system.
+    solver.solve(fluid, cell_pressure, z, flow_bc, src, dt, num_iter, 1e-8, 3, 1);
+
+    // Output to VTK.
     typedef typename FlowSolver::SolutionType FlowSolution;
     FlowSolution soln = solver.getSolution();
-
-    std::vector<typename GI::Vector> cell_velocity;
-    estimateCellVelocity(cell_velocity, g, soln);
+    std::vector<typename Grid::Vector> cell_velocity;
+    estimateCellVelocitySimpleInterface(cell_velocity, grid, soln);
     // Dune's vtk writer wants multi-component data to be flattened.
     std::vector<double> cell_velocity_flat(&*cell_velocity.front().begin(),
                                            &*cell_velocity.back().end());
-    getCellPressure(cell_pressure, g, soln);
-
-    Dune::VTKWriter<typename GI::GridType::LeafGridView> vtkwriter(g.grid().leafView());
+//     getCellPressure(cell_pressure, grid, soln);
+    cell_pressure = soln.cellPressure();
+    Dune::VTKWriter<typename Grid::LeafGridView> vtkwriter(grid.leafView());
     vtkwriter.addCellData(cell_pressure, "pressure");
     vtkwriter.addCellData(cell_velocity_flat, "velocity", dim);
     vtkwriter.write("testsolution-" + boost::lexical_cast<std::string>(0),
                     Dune::VTKOptions::ascii);
+
+    // Dump pressures to Matlab.
+    std::ofstream dump("pressure");
+    std::copy(cell_pressure.begin(), cell_pressure.end(), std::ostream_iterator<double>(dump, " "));
 }
 
 
@@ -115,15 +126,44 @@ int main(int argc, char** argv)
 
     // Make a grid and props.
     Dune::CpGrid grid;
-    ReservoirPropertyCapillary<3> res_prop;
-    setupGridAndProps(param, grid, res_prop);
+    Dune::Rock<3> rock;
+    Opm::BlackoilFluid fluid;
 
-    // Make the grid interface.
-    Dune::GridInterfaceEuler<Dune::CpGrid> g(grid);
+    // Initialization.
+    std::string fileformat = param.getDefault<std::string>("fileformat", "cartesian");
+    if (fileformat == "eclipse") {
+        EclipseGridParser parser(param.get<std::string>("filename"));
+        double z_tolerance = param.getDefault<double>("z_tolerance", 0.0);
+        bool periodic_extension = param.getDefault<bool>("periodic_extension", false);
+        bool turn_normals = param.getDefault<bool>("turn_normals", false);
+        grid.processEclipseFormat(parser, z_tolerance, periodic_extension, turn_normals);
+        double perm_threshold_md = param.getDefault("perm_threshold_md", 0.0);
+        double perm_threshold = unit::convert::from(perm_threshold_md, prefix::milli*unit::darcy);
+        rock.init(parser, grid.globalCell(), perm_threshold);
+        fluid.init(parser);
+    } else if (fileformat == "cartesian") {
+        array<int, 3> dims = {{ param.getDefault<int>("nx", 1),
+                                param.getDefault<int>("ny", 1),
+                                param.getDefault<int>("nz", 1) }};
+        array<double, 3> cellsz = {{ param.getDefault<double>("dx", 1.0),
+                                     param.getDefault<double>("dy", 1.0),
+                                     param.getDefault<double>("dz", 1.0) }};
+        grid.createCartesian(dims, cellsz);
+        double default_poro = param.getDefault("default_poro", 0.2);
+        double default_perm_md = param.getDefault("default_perm_md", 100.0);
+        double default_perm = unit::convert::from(default_perm_md, prefix::milli*unit::darcy);
+        MESSAGE("Warning: For generated cartesian grids, we use uniform rock properties.");
+        rock.init(grid.size(0), default_poro, default_perm);
+        EclipseGridParser parser(param.get<std::string>("filename")); // Need a parser for the fluids anyway.
+        fluid.init(parser);
+    } else {
+        THROW("Unknown file format string: " << fileformat);
+    }
 
     double dt = param.getDefault("dt", 1.0);
+    int num_iter = param.getDefault("num_iter", 5);
 
     // Run test.
-    test_flowsolver<3>(g, res_prop, dt);
+    test_flowsolver<3>(grid, rock, fluid, dt, num_iter);
 }
 

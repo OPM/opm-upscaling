@@ -12,6 +12,7 @@ nodist_EXTRA_libduneporsol_la_SOURCES = dummy.cpp
 # Collect constituent parts into module library.
 libduneporsol_la_LIBADD = \
    ../dune/porsol/opmpressure/src/libopmpressure_noinst.la \
-   ../dune/porsol/common/libduneporsolcommon.la
+   ../dune/porsol/common/libduneporsolcommon.la \
+   ../dune/porsol/blackoil/fluid/libblackoilfluid_noinst.la
 
 include $(top_srcdir)/am/global-rules

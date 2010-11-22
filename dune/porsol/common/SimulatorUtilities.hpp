@@ -79,6 +79,36 @@ namespace Dune
 	}
     }
 
+    /// @brief Estimates a scalar cell velocity from face fluxes.
+    /// @tparam GridInterface a grid interface.
+    /// @tparam FlowSol a flow solution type.
+    /// @param[out] cell_velocity the estimated velocities.
+    /// @param[in] ginterf an interface to the grid.
+    /// @param[in] flow_solution the object containing the fluxes.
+    template <class GridInterface, class FlowSol>
+    void estimateCellVelocitySimpleInterface(std::vector<typename GridInterface::Vector>& cell_velocity,
+                                             const GridInterface& grid,
+                                             const FlowSol& flow_solution)
+    {
+	// Algorithm used is same as in halfFaceFluxToCellVelocity.hpp
+	// in the Sintef legacy c++ code.
+        typedef typename GridInterface::Vector Vec;
+	cell_velocity.clear();
+	cell_velocity.resize(grid.numCells(), Vec(0.0));
+        for (int face = 0; face < grid.numFaces(); ++face) {
+            int c[2] = { grid.faceCell(face, 0), grid.faceCell(face, 1) };
+            Vec fc = grid.faceCentroid(face);
+            double flux = flow_solution.faceFlux(face);
+            for (int i = 0; i < 2; ++i) {
+                if (c[i] >= 0) {
+                    Vec v_contrib = fc - grid.cellCentroid(c[i]);
+                    v_contrib *= flux/grid.cellVolume(c[i]);
+                    cell_velocity[c[i]] += (i == 0) ? v_contrib : -v_contrib;
+                }
+            }
+        }
+    }
+
 
     /// @brief Estimates a scalar cell velocity from outgoing fluxes.
     /// @tparam GridInterface a grid interface.

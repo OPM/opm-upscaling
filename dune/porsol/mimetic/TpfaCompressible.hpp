@@ -75,17 +75,17 @@ namespace Dune
         ///    The specific values of the boundary conditions are not
         ///    inspected in @code init() @endcode.
         template<class Point>
-        void init(const GridInterface&      g,
-                  const RockInterface&      r,
+        void init(const GridInterface&      grid,
+                  const RockInterface&      rock,
                   const Point&              grav,
                   const BCInterface&        bc)
         {
-            pgrid_ = &g;
+            pgrid_ = &grid;
             // Extract perm tensors.
-            const double* perm = &(r.permeability(0)(0,0));
-            std::vector<double> poro(g.numberOfCells(), 1.0);
-            for (int i = 0; i < g.numberOfCells(); ++i) {
-                poro[i] = r.porosity(i);
+            const double* perm = &(rock.permeability(0)(0,0));
+            std::vector<double> poro(grid.numCells(), 1.0);
+            for (int i = 0; i < grid.numCells(); ++i) {
+                poro[i] = rock.porosity(i);
             }
             // Check that we only have noflow boundary conditions.
             for (int i = 0; i < bc.size(); ++i) {
@@ -94,7 +94,7 @@ namespace Dune
                 }
             }
             // Initialize 
-            psolver_.init(g.grid(), perm, &poro[0]);
+            psolver_.init(grid, perm, &poro[0]);
         }
 
 
@@ -165,24 +165,24 @@ namespace Dune
         ///    Control parameter for iterative linear solver software.
         ///    Type 0 selects a BiCGStab solver, type 1 selects AMG/CG.
         ///
-        template<class FluidInterface>
-        void solve(const FluidInterface& fl,
+        template<class Fluid>
+        void solve(const Fluid& fluid,
                    const std::vector<double>& cell_pressure,
-                   // const std::vector<typename FluidInterface::ComponentVec>& z,
-                   const std::vector<double>& sat,
+                   const std::vector<typename Fluid::CompVec>& z,
                    const BCInterface& bc,
                    const std::vector<double>& src,
                    const double dt,
+                   const int num_iter,
                    const double residual_tolerance = 1e-8,
                    const int linsolver_verbosity = 1,
                    const int linsolver_type = 1)
         {
             // Build bctypes and bcvalues.
-            int num_faces = pgrid_->numberOfFaces();
+            int num_faces = pgrid_->numFaces();
             std::vector<PressureSolver::FlowBCTypes> bctypes(num_faces, PressureSolver::FBC_UNSET);
             std::vector<double> bcvalues(num_faces, 0.0);
             for (int face = 0; face < num_faces; ++face) {
-                int bid = pgrid_->grid().boundaryId(face);
+                int bid = pgrid_->boundaryId(face);
                 if (bid == 0) {
                     bctypes[face] = PressureSolver::FBC_UNSET;
                     continue;
@@ -203,12 +203,9 @@ namespace Dune
             }
 
             // Compute fluid properties.
-//             int num_cells = z.size();
-//             const int np = FluidInterface::numPhases;
-//             const int nc = FluidInterface::numComponents;
-            int num_cells = sat.size();
-            const int np = 3;
-            const int nc = 3;
+            int num_cells = z.size();
+            const int np = Fluid::numPhases;
+            const int nc = Fluid::numComponents;
             BOOST_STATIC_ASSERT(np == nc);
             std::vector<double> totcompr(num_cells, 1.0e-6);
             std::vector<double> voldiscr(num_cells, 0.0);
@@ -216,12 +213,12 @@ namespace Dune
             std::vector<double> faceA(num_faces*nc*np, 0.0);
             std::vector<double> phasemobf(num_faces*np, 0.0);
             std::vector<double> phasemobc(num_cells*np, 0.0); // Just a helper
-            boost::array<double, np> mob;
+            typename Fluid::PhaseVec mob;
             BOOST_STATIC_ASSERT(np == 3);
-            mob[2] = 0.0; // Dummy third phase.
             // Set cellA to unity for now.
             for (int cell = 0; cell < num_cells; ++cell) {
-                fl.phaseMobilities(cell, sat[cell], mob);
+                mob = z[cell];
+                mob *= 0.001; // Linear mobilities... @@@ TEMPORARY HACK
                 std::copy(mob.begin(), mob.end(), phasemobc.begin() + cell*np);
                 for (int row = 0; row < nc; ++row) {
                     for (int col = 0; col < np; ++col) {
@@ -233,7 +230,7 @@ namespace Dune
             }
             // Set cellB to unity for now. Set phasemobf from 'old' interface, to average of cells'.
             for (int face = 0; face < num_faces; ++face) {
-                int c[2] = { pgrid_->grid().faceCell(face, 0), pgrid_->grid().faceCell(face, 1) };
+                int c[2] = { pgrid_->faceCell(face, 0), pgrid_->faceCell(face, 1) };
                 for (int phase = 0; phase < np; ++phase) {
                     double aver = 0.0;
                     int num = 0;
@@ -255,30 +252,47 @@ namespace Dune
                 }
             }
 
-            // Assemble system matrix and rhs.
-            psolver_.assemble(src, bctypes, bcvalues, dt, totcompr, voldiscr, cellA, faceA, phasemobf, cell_pressure);
-
-            // Solve system.
-            PressureSolver::LinearSystem s;
-            psolver_.linearSystem(s);
+            // Prepare linear solver.
             parameter::ParameterGroup params;
             params.insertParameter("linsolver_tolerance", boost::lexical_cast<std::string>(residual_tolerance));
             params.insertParameter("linsolver_verbosity", boost::lexical_cast<std::string>(linsolver_verbosity));
             params.insertParameter("linsolver_type", boost::lexical_cast<std::string>(linsolver_type));
             linsolver_.init(params);
-            LinearSolverISTL::LinearSolverResults res = linsolver_.solve(s.n, s.nnz, s.ia, s.ja, s.sa, s.b, s.x);
-            if (!res.converged) {
-                THROW("Linear solver failed to converge in " << res.iterations << " iterations.\n"
-                      << "Residual reduction achieved is " << res.reduction << '\n');
-            }
-            flow_solution_.clear();
+
+            // Assemble and solve.
+            flow_solution_.pressure_ = cell_pressure;
+            std::vector<double> face_pressure;
             std::vector<double> face_flux;
-            psolver_.computePressuresAndFluxes(flow_solution_.pressure_, face_flux);
-            std::vector<double> cell_flux;
-            psolver_.faceFluxToCellFlux(face_flux, cell_flux);
-            const std::vector<int>& ncf = psolver_.numCellFaces();
-            flow_solution_.outflux_.assign(cell_flux.begin(), cell_flux.end(),
-                                           ncf.begin(), ncf.end());
+            for (int i = 0; i < num_iter; ++i) {
+                // (Re-)compute fluid properties.
+
+                // Assemble system matrix and rhs.
+                psolver_.assemble(src, bctypes, bcvalues, dt, totcompr, voldiscr, cellA, faceA, phasemobf, flow_solution_.pressure_);
+                // Solve system.
+                PressureSolver::LinearSystem s;
+                psolver_.linearSystem(s);
+                LinearSolverISTL::LinearSolverResults res = linsolver_.solve(s.n, s.nnz, s.ia, s.ja, s.sa, s.b, s.x);
+                if (!res.converged) {
+                    THROW("Linear solver failed to converge in " << res.iterations << " iterations.\n"
+                          << "Residual reduction achieved is " << res.reduction << '\n');
+                }
+                // Get pressures and face fluxes.
+                flow_solution_.clear();
+                psolver_.computePressuresAndFluxes(flow_solution_.pressure_, face_pressure, face_flux);
+
+                // DUMP HACK
+                std::string fname("facepress-");
+                fname += boost::lexical_cast<std::string>(i);
+                std::ofstream f(fname.c_str());
+                f.precision(15);
+                std::copy(face_pressure.begin(), face_pressure.end(), std::ostream_iterator<double>(f, "\n"));
+            }
+
+            // Compute and set fluxes of flow solution.
+//             std::vector<double> cell_flux;
+//             psolver_.faceFluxToCellFlux(face_flux, cell_flux);
+//             const std::vector<int>& ncf = psolver_.numCellFaces();
+            flow_solution_.faceflux_.assign(face_flux.begin(), face_flux.end());
         }
 
     private:
@@ -381,16 +395,7 @@ namespace Dune
             ///    the mimetic inner product.  Assumed to be a
             ///    floating point type, and usually, @code Scalar
             ///    @endcode is an alias for @code double @endcode.
-            typedef typename GridInterface::Scalar       Scalar;
-
-            /// @brief
-            ///    Convenience alias for the grid interface's cell
-            ///    iterator.
-            typedef typename GridInterface::CellIterator CI;
-
-            /// @brief
-            ///    Convenience alias for the cell's face iterator.
-            typedef typename CI           ::FaceIterator FI;
+            typedef double Scalar;
 
             /// @brief
             ///    Retrieve the current cell pressure in a given cell.
@@ -401,9 +406,14 @@ namespace Dune
             ///
             /// @return
             ///    Current cell pressure in cell @code *c @endcode.
-            Scalar pressure(const CI& c) const
+            Scalar cellPressure(const int cell) const
             {
-                return pressure_[c->index()];
+                return pressure_[cell];
+            }
+
+            const std::vector<double>& cellPressure() const
+            {
+                return pressure_;
             }
 
             /// @brief
@@ -411,23 +421,28 @@ namespace Dune
             ///    direction of outward normal vector.
             ///
             /// @param [in] f
-            ///    Face across which to retrieve the current outward
+            ///    Face across which to retrieve the current signed
             ///    flux.
             ///
             /// @return
             ///    Current outward flux across face @code *f @endcode.
-            Scalar outflux (const FI& f) const
+            Scalar faceFlux(const int face) const
             {
-                return outflux_[f->cellIndex()][f->localIndex()];
+                return faceflux_[face];
+            }
+
+            const std::vector<double>& faceFlux() const
+            {
+                return faceflux_;
             }
         private:
             std::vector<Scalar> pressure_;
-            SparseTable<Scalar> outflux_;
+            std::vector<Scalar> faceflux_;
 
             void clear()
             {
                 pressure_.clear();
-                outflux_.clear();
+                faceflux_.clear();
             }
         };
 
