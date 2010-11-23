@@ -215,20 +215,19 @@ namespace Dune
             std::vector<double> phasemobc(num_cells*np, 0.0); // Just a helper
             typename Fluid::PhaseVec mob;
             BOOST_STATIC_ASSERT(np == 3);
-            // Set cellA to unity for now.
             for (int cell = 0; cell < num_cells; ++cell) {
-                mob = z[cell];
-                mob *= 0.001; // Linear mobilities... @@@ TEMPORARY HACK
-                std::copy(mob.begin(), mob.end(), phasemobc.begin() + cell*np);
+                // Assuming zero capillary pressures.
+                typename Fluid::PhaseVec phase_press(cell_pressure[cell]);
+                typename Fluid::FluidState state = fluid.computeState(phase_press, z[cell]);
+                std::copy(state.mobility_.begin(), state.mobility_.end(), phasemobc.begin() + cell*np);
+                Dune::SharedFortranMatrix A(nc, np, state.phase_to_comp_);
                 for (int row = 0; row < nc; ++row) {
                     for (int col = 0; col < np; ++col) {
-                        if (row == col) {
-                            cellA[cell*nc*np + col*nc + row] = 1.0; // Column-wise storage in cellA.
-                        }
+                        cellA[cell*nc*np + col*nc + row] = A(row, col); // Column-wise storage in cellA.
                     }
                 }
             }
-            // Set cellB to unity for now. Set phasemobf from 'old' interface, to average of cells'.
+            // Set phasemobf to average of cells'.
             for (int face = 0; face < num_faces; ++face) {
                 int c[2] = { pgrid_->faceCell(face, 0), pgrid_->faceCell(face, 1) };
                 for (int phase = 0; phase < np; ++phase) {
@@ -243,10 +242,15 @@ namespace Dune
                     aver /= double(num);
                     phasemobf[np*face + phase] = aver;
                 }
-                for (int row = 0; row < nc; ++row) {
-                    for (int col = 0; col < np; ++col) {
-                        if (row == col) {
-                            faceA[face*nc*np + col*nc + row] = 1.0; // Column-wise storage in faceA.
+                int num = 0;
+                for (int j = 0; j < 2; ++j) {
+                    if (c[j] >= 0) {
+                        ++num;
+                        std::vector<double>::const_iterator cA = cellA.begin() + np*nc*(c[j]);
+                        for (int row = 0; row < nc; ++row) {
+                            for (int col = 0; col < np; ++col) {
+                                faceA[face*nc*np + col*nc + row] = cA[col*nc + row]; // Column-wise storage in faceA.
+                            }
                         }
                     }
                 }
