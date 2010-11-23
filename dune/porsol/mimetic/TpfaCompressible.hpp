@@ -207,7 +207,7 @@ namespace Dune
             const int np = Fluid::numPhases;
             const int nc = Fluid::numComponents;
             BOOST_STATIC_ASSERT(np == nc);
-            std::vector<double> totcompr(num_cells, 1.0e-6);
+            std::vector<double> totcompr(num_cells, 0.0);
             std::vector<double> voldiscr(num_cells, 0.0);
             std::vector<double> cellA(num_cells*nc*np, 0.0);
             std::vector<double> faceA(num_faces*nc*np, 0.0);
@@ -219,6 +219,8 @@ namespace Dune
                 // Assuming zero capillary pressures.
                 typename Fluid::PhaseVec phase_press(cell_pressure[cell]);
                 typename Fluid::FluidState state = fluid.computeState(phase_press, z[cell]);
+                totcompr[cell] = state.total_compressibility_;
+                voldiscr[cell] = state.total_phase_volume_;
                 std::copy(state.mobility_.begin(), state.mobility_.end(), phasemobc.begin() + cell*np);
                 Dune::SharedFortranMatrix A(nc, np, state.phase_to_comp_);
                 for (int row = 0; row < nc; ++row) {
