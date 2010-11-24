@@ -87,13 +87,24 @@ void test_flowsolver(const Grid& grid,
 
     // Initial state.
     typedef typename Fluid::CompVec CompVec;
+    typedef typename Fluid::PhaseVec PhaseVec;
     CompVec init_z(0.0);
     init_z[0] = 1.0;
     std::vector<CompVec> z(grid.numCells(), init_z);
-    std::vector<double> cell_pressure(grid.numCells(), 100.0*Dune::unit::barsa);
+    MESSAGE("******* Assuming zero capillary pressures *******");
+    PhaseVec init_p(100.0*Dune::unit::barsa);
+    std::vector<PhaseVec> phase_pressure(grid.numCells(), init_p);
+    // Rescale z values so that pore volume is filled exactly
+    // (to get zero initial volume discrepancy).
+    for (int cell = 0; cell < grid.numCells(); ++cell) {
+        double pore_vol = grid.cellVolume(cell)*rock.porosity(cell);
+        typename Fluid::FluidState state = fluid.computeState(phase_pressure[cell], z[cell]);
+        double fluid_vol = state.total_phase_volume_;
+        z[cell] *= pore_vol/fluid_vol;
+    }
 
     // Solve flow system.
-    solver.solve(fluid, cell_pressure, z, flow_bc, src, dt, num_iter, 1e-8, 3, 1);
+    solver.solve(fluid, phase_pressure, z, flow_bc, src, dt, num_iter, 1e-8, 3, 1);
 
     // Output to VTK.
     typedef typename FlowSolver::SolutionType FlowSolution;
@@ -104,16 +115,17 @@ void test_flowsolver(const Grid& grid,
     std::vector<double> cell_velocity_flat(&*cell_velocity.front().begin(),
                                            &*cell_velocity.back().end());
 //     getCellPressure(cell_pressure, grid, soln);
-    cell_pressure = soln.cellPressure();
+//    output_pressure = soln.cellPressure();
     Dune::VTKWriter<typename Grid::LeafGridView> vtkwriter(grid.leafView());
-    vtkwriter.addCellData(cell_pressure, "pressure");
+    vtkwriter.addCellData(soln.cellPressure(), "pressure");
     vtkwriter.addCellData(cell_velocity_flat, "velocity", dim);
     vtkwriter.write("testsolution-" + boost::lexical_cast<std::string>(0),
                     Dune::VTKOptions::ascii);
 
     // Dump pressures to Matlab.
     std::ofstream dump("pressure");
-    std::copy(cell_pressure.begin(), cell_pressure.end(), std::ostream_iterator<double>(dump, " "));
+    std::copy(soln.cellPressure().begin(), soln.cellPressure().end(),
+              std::ostream_iterator<double>(dump, " "));
 }
 
 
