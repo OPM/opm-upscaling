@@ -8,7 +8,7 @@ noinst_PROGRAMS = upscale_perm \
                   upscale_cond \
                   cpchop \
                   exp_variogram \
-                  cp_regularize
+                  cpregularize
 
 upscale_perm_SOURCES = upscale_perm.cpp
 
