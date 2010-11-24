@@ -22,7 +22,7 @@ cpchop_SOURCES = cpchop.cpp
 
 exp_variogram_SOURCES = exp_variogram.cpp
 
-cp_regularize_SOURCES = cp_regularize.cpp
+cpregularize_SOURCES = cpregularize.cpp
 
 AM_CPPFLAGS += $(DUNEMPICPPFLAGS) $(BOOST_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 AM_LDFLAGS  += $(DUNEMPILDFLAGS) $(BOOST_LDFLAGS) $(SUPERLU_LDFLAGS)
