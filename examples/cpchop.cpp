@@ -122,23 +122,29 @@ int main(int argc, char** argv)
             ch.writeGrdecl(subsampledgrdecl);
         }
 
-        if (upscale) {
-            Dune::EclipseGridParser subparser = ch.subparser();
-            
-            Dune::SinglePhaseUpscaler upscaler;
-            upscaler.init(subparser, Dune::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
-                          residual_tolerance, linsolver_verbosity, linsolver_type, false);
-            
-            Dune::SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
-            upscaled_K *= (1.0/(Dune::prefix::milli*Dune::unit::darcy));
-            
-            
-            porosities.push_back(upscaler.upscalePorosity());
-            permxs.push_back(upscaled_K(0,0));
-            permys.push_back(upscaled_K(1,1));
-            permzs.push_back(upscaled_K(2,2));
+        try { /* The upscaling may fail to converge on icky grids, lets just pass by those */
+            if (upscale) {
+                Dune::EclipseGridParser subparser = ch.subparser();
+                
+                Dune::SinglePhaseUpscaler upscaler;
+                upscaler.init(subparser, Dune::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
+                              residual_tolerance, linsolver_verbosity, linsolver_type, false);
+                
+                Dune::SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
+                upscaled_K *= (1.0/(Dune::prefix::milli*Dune::unit::darcy));
+                
+                
+                porosities.push_back(upscaler.upscalePorosity());
+                permxs.push_back(upscaled_K(0,0));
+                permys.push_back(upscaled_K(1,1));
+                permzs.push_back(upscaled_K(2,2));
+                
+            }   
+        }
+        catch (...) {
+            std::cerr << "Warning: Upscaling chopped subsample nr. " << sample << "failed, proceeding to next subsample\n";
+        }
         
-        }   
     }
      
     if (upscale) {
@@ -165,7 +171,7 @@ int main(int argc, char** argv)
         outputtmp << "# id          porosity                 permx                   permy                   permz" << std::endl;
         
         const int fieldwidth = outputprecision + 8;
-        for (int sample = 1; sample <= subsamples; ++sample) {
+        for (int sample = 1; sample <= porosities.size(); ++sample) {
             outputtmp << sample << '\t' <<
                 std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << porosities[sample-1] << '\t' <<
                 std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permxs[sample-1] << '\t' <<
