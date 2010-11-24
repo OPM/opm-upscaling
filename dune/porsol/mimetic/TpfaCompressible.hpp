@@ -168,7 +168,7 @@ namespace Dune
         ///
         template<class Fluid>
         void solve(const Fluid& fluid,
-                   const std::vector<typename Fluid::PhaseVec>& phase_pressure,
+                   const std::vector<typename Fluid::PhaseVec>& initial_phase_pressure,
                    const std::vector<typename Fluid::CompVec>& z,
                    const BCInterface& bc,
                    const std::vector<double>& src,
@@ -203,15 +203,14 @@ namespace Dune
                 }
             }
 
-            // Compute fluid properties.
-            computeFluidProps(fluid, phase_pressure, z);
-
             // Prepare linear solver.
             parameter::ParameterGroup params;
             params.insertParameter("linsolver_tolerance", boost::lexical_cast<std::string>(residual_tolerance));
             params.insertParameter("linsolver_verbosity", boost::lexical_cast<std::string>(linsolver_verbosity));
             params.insertParameter("linsolver_type", boost::lexical_cast<std::string>(linsolver_type));
             linsolver_.init(params);
+
+            std::vector<typename Fluid::PhaseVec> phase_pressure = initial_phase_pressure;
 
             // Assemble and solve.
             // Set initial pressure to Liquid phase pressure. \TODO what is correct with capillary pressure?
@@ -222,12 +221,17 @@ namespace Dune
             }
             std::vector<double> face_pressure;
             std::vector<double> face_flux;
+            std::vector<double> initial_voldiscr;
             for (int i = 0; i < num_iter; ++i) {
                 // (Re-)compute fluid properties.
+                computeFluidProps(fluid, phase_pressure, z);
+                if (i == 0) {
+                    initial_voldiscr = fp_.voldiscr;
+                }
 
                 // Assemble system matrix and rhs.
                 psolver_.assemble(src, bctypes, bcvalues, dt,
-                                  fp_.totcompr, fp_.voldiscr, fp_.cellA, fp_.faceA, fp_.phasemobf,
+                                  fp_.totcompr, initial_voldiscr, fp_.cellA, fp_.faceA, fp_.phasemobf,
                                   flow_solution_.pressure_);
                 // Solve system.
                 PressureSolver::LinearSystem s;
@@ -240,6 +244,10 @@ namespace Dune
                 // Get pressures and face fluxes.
                 flow_solution_.clear();
                 psolver_.computePressuresAndFluxes(flow_solution_.pressure_, face_pressure, face_flux);
+                // Copy to phase pressures. \TODO handle capillary pressure.
+                for (int cell = 0; cell < num_cells; ++cell) {
+                    phase_pressure[cell] = flow_solution_.pressure_[cell];
+                }
 
                 // DUMP HACK
                 std::string fname("facepress-");
