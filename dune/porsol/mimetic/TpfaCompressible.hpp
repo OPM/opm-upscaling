@@ -49,50 +49,40 @@ namespace Dune
 
 
         /// @brief
-        ///    All-in-one initialization routine.  Enumerates all grid
-        ///    connections, allocates sufficient space, defines the
-        ///    structure of the global system of linear equations for
-        ///    the contact pressures, and computes the permeability
-        ///    dependent inner products for all of the grid's cells.
-        ///
-        /// @param [in] g
+        ///    Initializes run-time parameters of the solver.
+        void init(const parameter::ParameterGroup& param)
+        {
+            linsolver_.init(param);
+        }
+
+
+        /// @brief
+        ///    Setup routine, does grid/rock-dependent initialization.
+        /// @param [in] grid
         ///    The grid.
         ///
-        /// @param [in] r
-        ///    The reservoir properties of each grid cell.
+        /// @param [in] rock
+        ///    The cell-wise permeabilities and porosities.
         ///
         /// @param [in] grav
         ///    Gravity vector.  Its Euclidian two-norm value
         ///    represents the strength of the gravity field (in units
         ///    of m/s^2) while its direction is the direction of
         ///    gravity in the current model.
-        ///
-        /// @param [in] bc
-        ///    The boundary conditions describing how the current flow
-        ///    problem interacts with the outside world.  This is used
-        ///    only for the purpose of introducing additional
-        ///    couplings in the case of periodic boundary conditions.
-        ///    The specific values of the boundary conditions are not
-        ///    inspected in @code init() @endcode.
-        template<class Point>
-        void init(const GridInterface&      grid,
-                  const RockInterface&      rock,
-                  const Point&              grav,
-                  const BCInterface&        bc)
+        void setup(const GridInterface&         grid,
+                   const RockInterface&         rock,
+                   const typename GridInterface::Vector& grav)
         {
             pgrid_ = &grid;
+            if (grav.two_norm() > 0.0) {
+                THROW("TpfaCompressible does not handle gravity yet.");
+            } 
             // Extract perm tensors.
             const double* perm = &(rock.permeability(0)(0,0));
             poro_.clear();
             poro_.resize(grid.numCells(), 1.0);
             for (int i = 0; i < grid.numCells(); ++i) {
                 poro_[i] = rock.porosity(i);
-            }
-            // Check that we only have noflow boundary conditions.
-            for (int i = 0; i < bc.size(); ++i) {
-                if (bc.flowCond(i).isPeriodic()) {
-                    THROW("Periodic BCs are not handled yet by ifsh.");
-                }
             }
             // Initialize 
             psolver_.init(grid, perm, &poro_[0]);
@@ -110,39 +100,8 @@ namespace Dune
         ///    @encode, you may recover the flow solution from the
         ///    @code getSolution() @endcode method.
         ///
-        /// @tparam FluidInterface
-        ///    Type presenting an interface to fluid properties such
-        ///    as density, mobility &c.  The type is expected to
-        ///    provide methods @code phaseMobilities() @endcode and
-        ///    @code phaseDensities() @endcode for phase mobility and
-        ///    density in a single cell, respectively.
-        ///
-        /// @param [in] r
-        ///    The fluid properties of each grid cell.  In method
-        ///    @code solve() @endcode we query this object for the
-        ///    phase mobilities (i.e., @code r.phaseMobilities()
-        ///    @endcode) and the phase densities (i.e., @code
-        ///    phaseDensities() @encode) of each phase.
-        ///
-        /// @param [in] sat
-        ///    Saturation of primary phase.  One scalar value for each
-        ///    grid cell.  This parameter currently limits @code
-        ///    IncompFlowSolverHybrid @endcode to two-phase flow
-        ///    problems.
-        ///
-        /// @param [in] bc
-        ///    The boundary conditions describing how the current flow
-        ///    problem interacts with the outside world.  Method @code
-        ///    solve() @endcode inspects the actual values of the
-        ///    boundary conditions whilst forming the system of linear
-        ///    equations.
-        ///
-        ///    Specifically, the @code bc.flowCond(bid) @endcode
-        ///    method is expected to yield a valid @code FlowBC
-        ///    @endcode object for which the methods @code pressure()
-        ///    @endcode, @code pressureDifference() @endcode, and
-        ///    @code outflux() @endcode yield valid responses
-        ///    depending on the type of the object.
+        /// @tparam Fluid
+        ///    Type presenting an interface to fluid properties.
         ///
         /// @param [in] src
         ///    Explicit source terms.  One scalar value for each grid
@@ -173,10 +132,7 @@ namespace Dune
                    const BCInterface& bc,
                    const std::vector<double>& src,
                    const double dt,
-                   const int num_iter,
-                   const double residual_tolerance = 1e-8,
-                   const int linsolver_verbosity = 1,
-                   const int linsolver_type = 1)
+                   const int num_iter)
         {
             // Build bctypes and bcvalues.
             int num_faces = pgrid_->numFaces();
@@ -202,13 +158,6 @@ namespace Dune
                     THROW("Unhandled boundary condition type.");
                 }
             }
-
-            // Prepare linear solver.
-            parameter::ParameterGroup params;
-            params.insertParameter("linsolver_tolerance", boost::lexical_cast<std::string>(residual_tolerance));
-            params.insertParameter("linsolver_verbosity", boost::lexical_cast<std::string>(linsolver_verbosity));
-            params.insertParameter("linsolver_type", boost::lexical_cast<std::string>(linsolver_type));
-            linsolver_.init(params);
 
             std::vector<typename Fluid::PhaseVec> phase_pressure = initial_phase_pressure;
 

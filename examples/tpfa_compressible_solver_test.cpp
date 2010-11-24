@@ -54,16 +54,17 @@
 #include <dune/porsol/blackoil/BlackoilFluid.hpp>
 
 
-template<int dim, class Grid, class Rock, class Fluid>
+template<int dim, class Grid, class Rock, class Fluid, class FlowSolver>
 void test_flowsolver(const Grid& grid,
                      const Rock& rock,
                      const Fluid& fluid,
+                     FlowSolver& solver,
                      const double dt,
                      const int num_iter)
 {
     // Boundary conditions.
-    typedef Dune::BasicBoundaryConditions<true, false>  FBC;
     typedef Dune::FlowBC BC;
+    typedef Dune::BasicBoundaryConditions<true, false>  FBC;
     FBC flow_bc(7);
     flow_bc.flowCond(1) = BC(BC::Dirichlet, 300.0*Dune::unit::barsa);
     flow_bc.flowCond(2) = BC(BC::Dirichlet, 100.0*Dune::unit::barsa);
@@ -72,10 +73,8 @@ void test_flowsolver(const Grid& grid,
     typename Grid::Vector gravity(0.0);
 //     gravity[2] = Dune::unit::gravity;
 
-    // Flow solver.
-    typedef Dune::TpfaCompressible<Grid, Rock, FBC> FlowSolver;
-    FlowSolver solver;
-    solver.init(grid, rock, gravity, flow_bc);
+    // Flow solver setup.
+    solver.setup(grid, rock, gravity);
 
     // Source terms.
     std::vector<double> src(grid.numCells(), 0.0);
@@ -89,7 +88,7 @@ void test_flowsolver(const Grid& grid,
     typedef typename Fluid::CompVec CompVec;
     typedef typename Fluid::PhaseVec PhaseVec;
     CompVec init_z(0.0);
-    init_z[0] = 1.0;
+    init_z[Fluid::Gas] = 1.0;
     std::vector<CompVec> z(grid.numCells(), init_z);
     MESSAGE("******* Assuming zero capillary pressures *******");
     PhaseVec init_p(100.0*Dune::unit::barsa);
@@ -104,7 +103,7 @@ void test_flowsolver(const Grid& grid,
     }
 
     // Solve flow system.
-    solver.solve(fluid, phase_pressure, z, flow_bc, src, dt, num_iter, 1e-8, 3, 1);
+    solver.solve(fluid, phase_pressure, z, flow_bc, src, dt, num_iter);
 
     // Output to VTK.
     typedef typename FlowSolver::SolutionType FlowSolution;
@@ -129,7 +128,11 @@ void test_flowsolver(const Grid& grid,
 }
 
 
-using namespace Dune;
+typedef Dune::CpGrid Grid;
+typedef Dune::Rock<Grid::dimension> Rock;
+typedef Opm::BlackoilFluid Fluid;
+typedef Dune::BasicBoundaryConditions<true, false>  FBC;
+typedef Dune::TpfaCompressible<Grid, Rock, FBC> FlowSolver;
 
 int main(int argc, char** argv)
 {
@@ -137,29 +140,32 @@ int main(int argc, char** argv)
     Dune::MPIHelper::instance(argc,argv);
 
     // Make a grid and props.
-    Dune::CpGrid grid;
-    Dune::Rock<3> rock;
-    Opm::BlackoilFluid fluid;
+    Grid grid;
+    Rock rock;
+    Fluid fluid;
+    FlowSolver solver;
+
+    using namespace Dune;
 
     // Initialization.
     std::string fileformat = param.getDefault<std::string>("fileformat", "cartesian");
     if (fileformat == "eclipse") {
-        EclipseGridParser parser(param.get<std::string>("filename"));
+        Dune::EclipseGridParser parser(param.get<std::string>("filename"));
         double z_tolerance = param.getDefault<double>("z_tolerance", 0.0);
         bool periodic_extension = param.getDefault<bool>("periodic_extension", false);
         bool turn_normals = param.getDefault<bool>("turn_normals", false);
         grid.processEclipseFormat(parser, z_tolerance, periodic_extension, turn_normals);
         double perm_threshold_md = param.getDefault("perm_threshold_md", 0.0);
-        double perm_threshold = unit::convert::from(perm_threshold_md, prefix::milli*unit::darcy);
+        double perm_threshold = Dune::unit::convert::from(perm_threshold_md, Dune::prefix::milli*Dune::unit::darcy);
         rock.init(parser, grid.globalCell(), perm_threshold);
         fluid.init(parser);
     } else if (fileformat == "cartesian") {
-        array<int, 3> dims = {{ param.getDefault<int>("nx", 1),
-                                param.getDefault<int>("ny", 1),
-                                param.getDefault<int>("nz", 1) }};
-        array<double, 3> cellsz = {{ param.getDefault<double>("dx", 1.0),
-                                     param.getDefault<double>("dy", 1.0),
-                                     param.getDefault<double>("dz", 1.0) }};
+        Dune::array<int, 3> dims = {{ param.getDefault<int>("nx", 1),
+                                      param.getDefault<int>("ny", 1),
+                                      param.getDefault<int>("nz", 1) }};
+        Dune::array<double, 3> cellsz = {{ param.getDefault<double>("dx", 1.0),
+                                           param.getDefault<double>("dy", 1.0),
+                                           param.getDefault<double>("dz", 1.0) }};
         grid.createCartesian(dims, cellsz);
         double default_poro = param.getDefault("default_poro", 0.2);
         double default_perm_md = param.getDefault("default_perm_md", 100.0);
@@ -171,11 +177,11 @@ int main(int argc, char** argv)
     } else {
         THROW("Unknown file format string: " << fileformat);
     }
-
+    solver.init(param);
     double dt = param.getDefault("dt", 1.0);
     int num_iter = param.getDefault("num_iter", 5);
 
     // Run test.
-    test_flowsolver<3>(grid, rock, fluid, dt, num_iter);
+    test_flowsolver<3>(grid, rock, fluid, solver, dt, num_iter);
 }
 
