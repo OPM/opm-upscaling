@@ -83,9 +83,10 @@ namespace Dune
             pgrid_ = &grid;
             // Extract perm tensors.
             const double* perm = &(rock.permeability(0)(0,0));
-            std::vector<double> poro(grid.numCells(), 1.0);
+            poro_.clear();
+            poro_.resize(grid.numCells(), 1.0);
             for (int i = 0; i < grid.numCells(); ++i) {
-                poro[i] = rock.porosity(i);
+                poro_[i] = rock.porosity(i);
             }
             // Check that we only have noflow boundary conditions.
             for (int i = 0; i < bc.size(); ++i) {
@@ -94,7 +95,7 @@ namespace Dune
                 }
             }
             // Initialize 
-            psolver_.init(grid, perm, &poro[0]);
+            psolver_.init(grid, perm, &poro_[0]);
         }
 
 
@@ -167,7 +168,7 @@ namespace Dune
         ///
         template<class Fluid>
         void solve(const Fluid& fluid,
-                   const std::vector<double>& cell_pressure,
+                   const std::vector<typename Fluid::PhaseVec>& phase_pressure,
                    const std::vector<typename Fluid::CompVec>& z,
                    const BCInterface& bc,
                    const std::vector<double>& src,
@@ -216,11 +217,9 @@ namespace Dune
             typename Fluid::PhaseVec mob;
             BOOST_STATIC_ASSERT(np == 3);
             for (int cell = 0; cell < num_cells; ++cell) {
-                // Assuming zero capillary pressures.
-                typename Fluid::PhaseVec phase_press(cell_pressure[cell]);
-                typename Fluid::FluidState state = fluid.computeState(phase_press, z[cell]);
+                typename Fluid::FluidState state = fluid.computeState(phase_pressure[cell], z[cell]);
                 totcompr[cell] = state.total_compressibility_;
-                voldiscr[cell] = state.total_phase_volume_;
+                voldiscr[cell] = state.total_phase_volume_ - pgrid_->cellVolume(cell)*poro_[cell];
                 std::copy(state.mobility_.begin(), state.mobility_.end(), phasemobc.begin() + cell*np);
                 Dune::SharedFortranMatrix A(nc, np, state.phase_to_comp_);
                 for (int row = 0; row < nc; ++row) {
@@ -266,7 +265,11 @@ namespace Dune
             linsolver_.init(params);
 
             // Assemble and solve.
-            flow_solution_.pressure_ = cell_pressure;
+            // Set initial pressure to Liquid phase pressure. \TODO what is correct with capillary pressure?
+            flow_solution_.pressure_.resize(num_cells);
+            for (int cell = 0; cell < num_cells; ++cell) {
+                flow_solution_.pressure_[cell] = phase_pressure[cell][Fluid::Liquid];
+            }
             std::vector<double> face_pressure;
             std::vector<double> face_flux;
             for (int i = 0; i < num_iter; ++i) {
@@ -489,6 +492,7 @@ namespace Dune
 
     private:
         const GridInterface* pgrid_;
+        std::vector<double> poro_;
         PressureSolver psolver_;
         LinearSolverISTL linsolver_;
         FlowSolution flow_solution_;
