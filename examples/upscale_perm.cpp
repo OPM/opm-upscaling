@@ -68,7 +68,7 @@ void usage() {
         "                     Default: f (fixed boundary conditions)" << endl <<
         "-minPerm <float>  -- Minimum floating point value allowed for" << endl <<
         "                     permeability. If zero, the problem is singular" << endl <<
-        "                     Default 1e-9" << endl;
+        "                     Default 1e-9. Unit Millidarcy." << endl;
 }
 
 /**
