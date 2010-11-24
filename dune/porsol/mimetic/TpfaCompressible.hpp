@@ -204,58 +204,7 @@ namespace Dune
             }
 
             // Compute fluid properties.
-            int num_cells = z.size();
-            const int np = Fluid::numPhases;
-            const int nc = Fluid::numComponents;
-            BOOST_STATIC_ASSERT(np == nc);
-            std::vector<double> totcompr(num_cells, 0.0);
-            std::vector<double> voldiscr(num_cells, 0.0);
-            std::vector<double> cellA(num_cells*nc*np, 0.0);
-            std::vector<double> faceA(num_faces*nc*np, 0.0);
-            std::vector<double> phasemobf(num_faces*np, 0.0);
-            std::vector<double> phasemobc(num_cells*np, 0.0); // Just a helper
-            typename Fluid::PhaseVec mob;
-            BOOST_STATIC_ASSERT(np == 3);
-            for (int cell = 0; cell < num_cells; ++cell) {
-                typename Fluid::FluidState state = fluid.computeState(phase_pressure[cell], z[cell]);
-                totcompr[cell] = state.total_compressibility_;
-                voldiscr[cell] = state.total_phase_volume_ - pgrid_->cellVolume(cell)*poro_[cell];
-                std::copy(state.mobility_.begin(), state.mobility_.end(), phasemobc.begin() + cell*np);
-                Dune::SharedFortranMatrix A(nc, np, state.phase_to_comp_);
-                for (int row = 0; row < nc; ++row) {
-                    for (int col = 0; col < np; ++col) {
-                        cellA[cell*nc*np + col*nc + row] = A(row, col); // Column-wise storage in cellA.
-                    }
-                }
-            }
-            // Set phasemobf to average of cells'.
-            for (int face = 0; face < num_faces; ++face) {
-                int c[2] = { pgrid_->faceCell(face, 0), pgrid_->faceCell(face, 1) };
-                for (int phase = 0; phase < np; ++phase) {
-                    double aver = 0.0;
-                    int num = 0;
-                    for (int j = 0; j < 2; ++j) {
-                        if (c[j] >= 0) {
-                            aver += phasemobc[np*c[j] + phase];
-                            ++num;
-                        }
-                    }
-                    aver /= double(num);
-                    phasemobf[np*face + phase] = aver;
-                }
-                int num = 0;
-                for (int j = 0; j < 2; ++j) {
-                    if (c[j] >= 0) {
-                        ++num;
-                        std::vector<double>::const_iterator cA = cellA.begin() + np*nc*(c[j]);
-                        for (int row = 0; row < nc; ++row) {
-                            for (int col = 0; col < np; ++col) {
-                                faceA[face*nc*np + col*nc + row] = cA[col*nc + row]; // Column-wise storage in faceA.
-                            }
-                        }
-                    }
-                }
-            }
+            computeFluidProps(fluid, phase_pressure, z);
 
             // Prepare linear solver.
             parameter::ParameterGroup params;
@@ -266,6 +215,7 @@ namespace Dune
 
             // Assemble and solve.
             // Set initial pressure to Liquid phase pressure. \TODO what is correct with capillary pressure?
+            int num_cells = z.size();
             flow_solution_.pressure_.resize(num_cells);
             for (int cell = 0; cell < num_cells; ++cell) {
                 flow_solution_.pressure_[cell] = phase_pressure[cell][Fluid::Liquid];
@@ -276,7 +226,9 @@ namespace Dune
                 // (Re-)compute fluid properties.
 
                 // Assemble system matrix and rhs.
-                psolver_.assemble(src, bctypes, bcvalues, dt, totcompr, voldiscr, cellA, faceA, phasemobf, flow_solution_.pressure_);
+                psolver_.assemble(src, bctypes, bcvalues, dt,
+                                  fp_.totcompr, fp_.voldiscr, fp_.cellA, fp_.faceA, fp_.phasemobf,
+                                  flow_solution_.pressure_);
                 // Solve system.
                 PressureSolver::LinearSystem s;
                 psolver_.linearSystem(s);
@@ -491,11 +443,86 @@ namespace Dune
 
 
     private:
+        template <class Fluid>
+        void computeFluidProps(const Fluid& fluid,
+                               const std::vector<typename Fluid::PhaseVec>& phase_pressure,
+                               const std::vector<typename Fluid::CompVec>& z)
+        {
+            int num_cells = z.size();
+            int num_faces = pgrid_->numFaces();
+            ASSERT(num_cells == pgrid_->numCells());
+            const int np = Fluid::numPhases;
+            const int nc = Fluid::numComponents;
+            BOOST_STATIC_ASSERT(np == nc);
+            fp_.totcompr.resize(num_cells);
+            fp_.voldiscr.resize(num_cells);
+            fp_.cellA.resize(num_cells*nc*np);
+            fp_.faceA.resize(num_faces*nc*np);
+            fp_.phasemobf.resize(num_faces*np);
+            fp_.phasemobc.resize(num_cells*np); // Just a helper
+            typename Fluid::PhaseVec mob;
+            BOOST_STATIC_ASSERT(np == 3);
+            for (int cell = 0; cell < num_cells; ++cell) {
+                typename Fluid::FluidState state = fluid.computeState(phase_pressure[cell], z[cell]);
+                fp_.totcompr[cell] = state.total_compressibility_;
+                fp_.voldiscr[cell] = state.total_phase_volume_ - pgrid_->cellVolume(cell)*poro_[cell];
+                std::copy(state.mobility_.begin(), state.mobility_.end(), fp_.phasemobc.begin() + cell*np);
+                Dune::SharedFortranMatrix A(nc, np, state.phase_to_comp_);
+                for (int row = 0; row < nc; ++row) {
+                    for (int col = 0; col < np; ++col) {
+                        fp_.cellA[cell*nc*np + col*nc + row] = A(row, col); // Column-wise storage in cellA.
+                    }
+                }
+            }
+            // Set phasemobf to average of cells'.
+            for (int face = 0; face < num_faces; ++face) {
+                int c[2] = { pgrid_->faceCell(face, 0), pgrid_->faceCell(face, 1) };
+                for (int phase = 0; phase < np; ++phase) {
+                    double aver = 0.0;
+                    int num = 0;
+                    for (int j = 0; j < 2; ++j) {
+                        if (c[j] >= 0) {
+                            aver += fp_.phasemobc[np*c[j] + phase];
+                            ++num;
+                        }
+                    }
+                    aver /= double(num);
+                    fp_.phasemobf[np*face + phase] = aver;
+                }
+                for (int row = 0; row < nc; ++row) {
+                    for (int col = 0; col < np; ++col) {
+                        double aver = 0.0;
+                        int num = 0;
+                        for (int j = 0; j < 2; ++j) {
+                            if (c[j] >= 0) {
+                                aver += fp_.cellA[np*nc*c[j] + col*nc + row]; // Column-wise storage in cellA.
+                                ++num;
+                            }
+                        }
+                        aver /= double(num);
+                        fp_.faceA[face*nc*np + col*nc + row] = aver; // Column-wise storage in faceA, too.
+                    }
+                }
+            }
+        }
+
+        struct FluidProps
+        {
+            std::vector<double> totcompr;
+            std::vector<double> voldiscr;
+            std::vector<double> cellA;
+            std::vector<double> faceA;
+            std::vector<double> phasemobf;
+            std::vector<double> phasemobc;
+        };
+
+        FluidProps fp_;
         const GridInterface* pgrid_;
         std::vector<double> poro_;
         PressureSolver psolver_;
         LinearSolverISTL linsolver_;
         FlowSolution flow_solution_;
+
     };
 
 
