@@ -53,6 +53,27 @@ namespace Dune
         ///    Initializes run-time parameters of the solver.
         void init(const parameter::ParameterGroup& param)
         {
+            // Initialize inflow mixture to a fixed, user-provided mix.
+            typename FluidInterface::CompVec mix(0.0);
+            const int nc = FluidInterface::numComponents;
+            double inflow_mixture_oil = param.getDefault("inflow_mixture_oil", 0.0);
+            double inflow_mixture_gas = param.getDefault("inflow_mixture_gas", nc == 3 ? 0.0 : 1.0);
+            switch (nc) {
+            case 2:
+                mix[0] = inflow_mixture_oil;
+                mix[1] = inflow_mixture_gas;
+                break;
+            case 3: {
+                double inflow_mixture_water = param.getDefault("inflow_mixture_water", 1.0);
+                mix[0] = inflow_mixture_water;
+                mix[1] = inflow_mixture_oil;
+                mix[0] = inflow_mixture_gas;
+                break;
+            }
+            default:
+                THROW("Unhandled number of components: " << nc);
+            }
+            inflow_mixture_ = mix;
             linsolver_.init(param);
         }
 
@@ -461,6 +482,9 @@ namespace Dune
                     } else {
                         // Boundaries get essentially -inf pressure for upwinding purpose. \TODO handle BCs.
                         phase_p[j] = PhaseVec(-1e100);
+                        // \TODO The two lines below are wrong for outflow faces.
+                        z_face += inflow_mixture_;
+                        ++num;
                     }
                 }
                 z_face /= double(num);
@@ -499,6 +523,7 @@ namespace Dune
         LinearSolverISTL linsolver_;
         FlowSolution flow_solution_;
 
+        typename FluidInterface::CompVec inflow_mixture_;
     };
 
 
