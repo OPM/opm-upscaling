@@ -159,7 +159,21 @@ namespace Dune
                 }
             }
 
+            // Set starting pressures.
             std::vector<typename Fluid::PhaseVec> phase_pressure = initial_phase_pressure;
+            std::vector<typename Fluid::PhaseVec> phase_pressure_face;
+            for (int face = 0; face < num_faces; ++face) {
+                int c[2] = { pgrid_->faceCell(face, 0), pgrid_->faceCell(face, 1) };
+                phase_pressure_face[face] = 0.0;
+                int num = 0;
+                for (int j = 0; j < 2; ++j) {
+                    if (c[j] >= 0) {
+                        phase_pressure_face[face] += phase_pressure[c[j]];
+                        ++num;
+                    }
+                }
+                phase_pressure_face[face] /= double(num);
+            }
 
             // Assemble and solve.
             // Set initial pressure to Liquid phase pressure. \TODO what is correct with capillary pressure?
@@ -173,7 +187,7 @@ namespace Dune
             std::vector<double> initial_voldiscr;
             for (int i = 0; i < num_iter; ++i) {
                 // (Re-)compute fluid properties.
-                computeFluidProps(fluid, phase_pressure, z);
+                computeFluidProps(fluid, phase_pressure, phase_pressure_face, z);
                 if (i == 0) {
                     initial_voldiscr = fp_.voldiscr;
                 }
@@ -196,6 +210,9 @@ namespace Dune
                 // Copy to phase pressures. \TODO handle capillary pressure.
                 for (int cell = 0; cell < num_cells; ++cell) {
                     phase_pressure[cell] = flow_solution_.pressure_[cell];
+                }
+                for (int face = 0; face < num_faces; ++face) {
+                    phase_pressure_face[face] = face_pressure[face];
                 }
 
                 // DUMP HACK
@@ -403,6 +420,7 @@ namespace Dune
         template <class Fluid>
         void computeFluidProps(const Fluid& fluid,
                                const std::vector<typename Fluid::PhaseVec>& phase_pressure,
+                               const std::vector<typename Fluid::PhaseVec>& phase_pressure_face,
                                const std::vector<typename Fluid::CompVec>& z)
         {
             int num_cells = z.size();
@@ -417,7 +435,9 @@ namespace Dune
             fp_.faceA.resize(num_faces*nc*np);
             fp_.phasemobf.resize(num_faces*np);
             fp_.phasemobc.resize(num_cells*np); // Just a helper
-            typename Fluid::PhaseVec mob;
+            typedef typename Fluid::PhaseVec PhaseVec;
+            typedef typename Fluid::CompVec CompVec;
+            PhaseVec mob;
             BOOST_STATIC_ASSERT(np == 3);
             for (int cell = 0; cell < num_cells; ++cell) {
                 typename Fluid::FluidState state = fluid.computeState(phase_pressure[cell], z[cell]);
@@ -425,41 +445,42 @@ namespace Dune
                 fp_.voldiscr[cell] = state.total_phase_volume_ - pgrid_->cellVolume(cell)*poro_[cell];
                 std::copy(state.mobility_.begin(), state.mobility_.end(), fp_.phasemobc.begin() + cell*np);
                 Dune::SharedFortranMatrix A(nc, np, state.phase_to_comp_);
-                for (int row = 0; row < nc; ++row) {
-                    for (int col = 0; col < np; ++col) {
-                        fp_.cellA[cell*nc*np + col*nc + row] = A(row, col); // Column-wise storage in cellA.
-                    }
-                }
+                Dune::SharedFortranMatrix cA(nc, np, &fp_.cellA[cell*nc*np]);
+                cA = A;
             }
-            // Set phasemobf to average of cells'.
+            // Set phasemobf to average of cells' phase mobs, if pressures are equal, else use upwinding.
+            // Set faceA by using average of cells' z and face pressures.
             for (int face = 0; face < num_faces; ++face) {
                 int c[2] = { pgrid_->faceCell(face, 0), pgrid_->faceCell(face, 1) };
+                PhaseVec phase_p[2];
+                CompVec z_face(0.0);
+                int num = 0;
+                for (int j = 0; j < 2; ++j) {
+                    if (c[j] >= 0) {
+                        phase_p[j] = phase_pressure[c[j]];
+                        z_face += z[c[j]];
+                        ++num;
+                    } else {
+                        // Boundaries get essentially -inf pressure for upwinding purpose. \TODO handle BCs.
+                        phase_p[j] = PhaseVec(-1e100);
+                    }
+                }
+                z_face /= double(num);
                 for (int phase = 0; phase < np; ++phase) {
-                    double aver = 0.0;
-                    int num = 0;
-                    for (int j = 0; j < 2; ++j) {
-                        if (c[j] >= 0) {
-                            aver += fp_.phasemobc[np*c[j] + phase];
-                            ++num;
-                        }
-                    }
-                    aver /= double(num);
-                    fp_.phasemobf[np*face + phase] = aver;
-                }
-                for (int row = 0; row < nc; ++row) {
-                    for (int col = 0; col < np; ++col) {
-                        double aver = 0.0;
-                        int num = 0;
-                        for (int j = 0; j < 2; ++j) {
-                            if (c[j] >= 0) {
-                                aver += fp_.cellA[np*nc*c[j] + col*nc + row]; // Column-wise storage in cellA.
-                                ++num;
-                            }
-                        }
-                        aver /= double(num);
-                        fp_.faceA[face*nc*np + col*nc + row] = aver; // Column-wise storage in faceA, too.
+                    if (phase_p[0][phase] == phase_p[1][phase]) {
+                        // Average mobilities.
+                        double aver = 0.5*(fp_.phasemobc[np*c[0] + phase] + fp_.phasemobc[np*c[1] + phase]);
+                        fp_.phasemobf[np*face + phase] = aver;
+                    } else {
+                        // Upwind mobilities.
+                        int upwind = (phase_p[0][phase] > phase_p[1][phase]) ? 0 : 1;
+                        fp_.phasemobf[np*face + phase] = fp_.phasemobc[np*c[upwind] + phase];
                     }
                 }
+                typename Fluid::FluidState face_state = fluid.computeState(phase_pressure_face[face], z_face);
+                Dune::SharedFortranMatrix A(nc, np, face_state.phase_to_comp_);
+                Dune::SharedFortranMatrix fA(nc, np, &fp_.faceA[face*nc*np]);
+                fA = A;
             }
         }
 
