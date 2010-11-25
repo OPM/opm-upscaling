@@ -447,6 +447,23 @@ namespace Dune {
         /// @brief
         ///    Assignment operator.
         ///
+        /// @param [in] m
+        ///    Assignment right hand side.
+        FullMatrix& operator=(const FullMatrix& m)
+        {
+            ASSERT(numRows() == m.numRows());
+            ASSERT(numCols() == m.numCols());
+            for (int r = 0; r < numRows(); ++r) {
+                for (int c = 0; c < numCols(); ++c) {
+                    this->operator()(r, c) = m(r,c);
+                }
+            }
+            return *this;
+        }
+
+        /// @brief
+        ///    Assignment operator.
+        ///
         /// @tparam OtherSP
         ///    Storage policy of other matrix.
         ///
@@ -466,6 +483,34 @@ namespace Dune {
                 }
             }
             return *this;
+        }
+
+
+        /// @brief
+        ///    Equality operator.
+        ///
+        /// @tparam OtherSP
+        ///    Storage policy of other matrix.
+        ///
+        /// @tparam OtherOP
+        ///    Ordering policy of other matrix.
+        ///
+        /// @param [in] m
+        ///    Assignment right hand side.
+        template <template<typename> class OtherSP, class OtherOP>
+        bool operator==(const FullMatrix<T, OtherSP, OtherOP>& m)
+        {
+            if (numRows() != m.numRows() || numCols() != m.numCols()) {
+                return false;
+            }
+            for (int r = 0; r < numRows(); ++r) {
+                for (int c = 0; c < numCols(); ++c) {
+                    if (this->operator()(r,c) != m(r,c)) {
+                        return false;
+                    }
+                }
+            }
+            return true;
         }
 
         /// @brief
