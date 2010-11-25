@@ -34,6 +34,7 @@ namespace Dune
 
     template <class GridInterface,
               class RockInterface,
+              class FluidInterface,
               class BCInterface>
     class TpfaCompressible
     {
@@ -49,52 +50,64 @@ namespace Dune
 
 
         /// @brief
-        ///    All-in-one initialization routine.  Enumerates all grid
-        ///    connections, allocates sufficient space, defines the
-        ///    structure of the global system of linear equations for
-        ///    the contact pressures, and computes the permeability
-        ///    dependent inner products for all of the grid's cells.
-        ///
-        /// @param [in] g
+        ///    Initializes run-time parameters of the solver.
+        void init(const parameter::ParameterGroup& param)
+        {
+            // Initialize inflow mixture to a fixed, user-provided mix.
+            typename FluidInterface::CompVec mix(0.0);
+            const int nc = FluidInterface::numComponents;
+            double inflow_mixture_oil = param.getDefault("inflow_mixture_oil", 0.0);
+            double inflow_mixture_gas = param.getDefault("inflow_mixture_gas", nc == 3 ? 0.0 : 1.0);
+            switch (nc) {
+            case 2:
+                mix[0] = inflow_mixture_oil;
+                mix[1] = inflow_mixture_gas;
+                break;
+            case 3: {
+                double inflow_mixture_water = param.getDefault("inflow_mixture_water", 1.0);
+                mix[0] = inflow_mixture_water;
+                mix[1] = inflow_mixture_oil;
+                mix[0] = inflow_mixture_gas;
+                break;
+            }
+            default:
+                THROW("Unhandled number of components: " << nc);
+            }
+            inflow_mixture_ = mix;
+            linsolver_.init(param);
+        }
+
+
+        /// @brief
+        ///    Setup routine, does grid/rock-dependent initialization.
+        /// @param [in] grid
         ///    The grid.
         ///
-        /// @param [in] r
-        ///    The reservoir properties of each grid cell.
+        /// @param [in] rock
+        ///    The cell-wise permeabilities and porosities.
         ///
         /// @param [in] grav
         ///    Gravity vector.  Its Euclidian two-norm value
         ///    represents the strength of the gravity field (in units
         ///    of m/s^2) while its direction is the direction of
         ///    gravity in the current model.
-        ///
-        /// @param [in] bc
-        ///    The boundary conditions describing how the current flow
-        ///    problem interacts with the outside world.  This is used
-        ///    only for the purpose of introducing additional
-        ///    couplings in the case of periodic boundary conditions.
-        ///    The specific values of the boundary conditions are not
-        ///    inspected in @code init() @endcode.
-        template<class Point>
-        void init(const GridInterface&      grid,
-                  const RockInterface&      rock,
-                  const Point&              grav,
-                  const BCInterface&        bc)
+        void setup(const GridInterface&         grid,
+                   const RockInterface&         rock,
+                   const typename GridInterface::Vector& grav)
         {
             pgrid_ = &grid;
+            if (grav.two_norm() > 0.0) {
+                THROW("TpfaCompressible does not handle gravity yet.");
+            } 
             // Extract perm tensors.
             const double* perm = &(rock.permeability(0)(0,0));
-            std::vector<double> poro(grid.numCells(), 1.0);
+            poro_.clear();
+            poro_.resize(grid.numCells(), 1.0);
             for (int i = 0; i < grid.numCells(); ++i) {
-                poro[i] = rock.porosity(i);
-            }
-            // Check that we only have noflow boundary conditions.
-            for (int i = 0; i < bc.size(); ++i) {
-                if (bc.flowCond(i).isPeriodic()) {
-                    THROW("Periodic BCs are not handled yet by ifsh.");
-                }
+                poro_[i] = rock.porosity(i);
             }
             // Initialize 
-            psolver_.init(grid, perm, &poro[0]);
+            psolver_.init(grid, perm, &poro_[0]);
         }
 
 
@@ -109,39 +122,6 @@ namespace Dune
         ///    @encode, you may recover the flow solution from the
         ///    @code getSolution() @endcode method.
         ///
-        /// @tparam FluidInterface
-        ///    Type presenting an interface to fluid properties such
-        ///    as density, mobility &c.  The type is expected to
-        ///    provide methods @code phaseMobilities() @endcode and
-        ///    @code phaseDensities() @endcode for phase mobility and
-        ///    density in a single cell, respectively.
-        ///
-        /// @param [in] r
-        ///    The fluid properties of each grid cell.  In method
-        ///    @code solve() @endcode we query this object for the
-        ///    phase mobilities (i.e., @code r.phaseMobilities()
-        ///    @endcode) and the phase densities (i.e., @code
-        ///    phaseDensities() @encode) of each phase.
-        ///
-        /// @param [in] sat
-        ///    Saturation of primary phase.  One scalar value for each
-        ///    grid cell.  This parameter currently limits @code
-        ///    IncompFlowSolverHybrid @endcode to two-phase flow
-        ///    problems.
-        ///
-        /// @param [in] bc
-        ///    The boundary conditions describing how the current flow
-        ///    problem interacts with the outside world.  Method @code
-        ///    solve() @endcode inspects the actual values of the
-        ///    boundary conditions whilst forming the system of linear
-        ///    equations.
-        ///
-        ///    Specifically, the @code bc.flowCond(bid) @endcode
-        ///    method is expected to yield a valid @code FlowBC
-        ///    @endcode object for which the methods @code pressure()
-        ///    @endcode, @code pressureDifference() @endcode, and
-        ///    @code outflux() @endcode yield valid responses
-        ///    depending on the type of the object.
         ///
         /// @param [in] src
         ///    Explicit source terms.  One scalar value for each grid
@@ -165,20 +145,32 @@ namespace Dune
         ///    Control parameter for iterative linear solver software.
         ///    Type 0 selects a BiCGStab solver, type 1 selects AMG/CG.
         ///
-        template<class Fluid>
-        void solve(const Fluid& fluid,
-                   const std::vector<double>& cell_pressure,
-                   const std::vector<typename Fluid::CompVec>& z,
+        void solve(const FluidInterface& fluid,
+                   const std::vector<typename FluidInterface::PhaseVec>& initial_phase_pressure,
+                   const std::vector<typename FluidInterface::CompVec>& z,
                    const BCInterface& bc,
                    const std::vector<double>& src,
                    const double dt,
-                   const int num_iter,
-                   const double residual_tolerance = 1e-8,
-                   const int linsolver_verbosity = 1,
-                   const int linsolver_type = 1)
+                   const int num_iter)
         {
-            // Build bctypes and bcvalues.
+            // Set starting pressures.
             int num_faces = pgrid_->numFaces();
+            std::vector<typename FluidInterface::PhaseVec> phase_pressure = initial_phase_pressure;
+            std::vector<typename FluidInterface::PhaseVec> phase_pressure_face(num_faces);
+            for (int face = 0; face < num_faces; ++face) {
+                int c[2] = { pgrid_->faceCell(face, 0), pgrid_->faceCell(face, 1) };
+                phase_pressure_face[face] = 0.0;
+                int num = 0;
+                for (int j = 0; j < 2; ++j) {
+                    if (c[j] >= 0) {
+                        phase_pressure_face[face] += phase_pressure[c[j]];
+                        ++num;
+                    }
+                }
+                phase_pressure_face[face] /= double(num);
+            }
+
+            // Build bctypes and bcvalues.
             std::vector<PressureSolver::FlowBCTypes> bctypes(num_faces, PressureSolver::FBC_UNSET);
             std::vector<double> bcvalues(num_faces, 0.0);
             for (int face = 0; face < num_faces; ++face) {
@@ -191,6 +183,7 @@ namespace Dune
                 if (face_bc.isDirichlet()) {
                     bctypes[face] = PressureSolver::FBC_PRESSURE;
                     bcvalues[face] = face_bc.pressure();
+                    phase_pressure_face[face] = face_bc.pressure();
                 } else if (face_bc.isNeumann()) {
                     bctypes[face] = PressureSolver::FBC_FLUX;
                     bcvalues[face] = face_bc.outflux(); // TODO: may have to switch sign here depending on orientation.
@@ -202,76 +195,27 @@ namespace Dune
                 }
             }
 
-            // Compute fluid properties.
-            int num_cells = z.size();
-            const int np = Fluid::numPhases;
-            const int nc = Fluid::numComponents;
-            BOOST_STATIC_ASSERT(np == nc);
-            std::vector<double> totcompr(num_cells, 1.0e-6);
-            std::vector<double> voldiscr(num_cells, 0.0);
-            std::vector<double> cellA(num_cells*nc*np, 0.0);
-            std::vector<double> faceA(num_faces*nc*np, 0.0);
-            std::vector<double> phasemobf(num_faces*np, 0.0);
-            std::vector<double> phasemobc(num_cells*np, 0.0); // Just a helper
-            typename Fluid::PhaseVec mob;
-            BOOST_STATIC_ASSERT(np == 3);
-            for (int cell = 0; cell < num_cells; ++cell) {
-                // Assuming zero capillary pressures.
-                typename Fluid::PhaseVec phase_press(cell_pressure[cell]);
-                typename Fluid::FluidState state = fluid.computeState(phase_press, z[cell]);
-                std::copy(state.mobility_.begin(), state.mobility_.end(), phasemobc.begin() + cell*np);
-                Dune::SharedFortranMatrix A(nc, np, state.phase_to_comp_);
-                for (int row = 0; row < nc; ++row) {
-                    for (int col = 0; col < np; ++col) {
-                        cellA[cell*nc*np + col*nc + row] = A(row, col); // Column-wise storage in cellA.
-                    }
-                }
-            }
-            // Set phasemobf to average of cells'.
-            for (int face = 0; face < num_faces; ++face) {
-                int c[2] = { pgrid_->faceCell(face, 0), pgrid_->faceCell(face, 1) };
-                for (int phase = 0; phase < np; ++phase) {
-                    double aver = 0.0;
-                    int num = 0;
-                    for (int j = 0; j < 2; ++j) {
-                        if (c[j] >= 0) {
-                            aver += phasemobc[np*c[j] + phase];
-                            ++num;
-                        }
-                    }
-                    aver /= double(num);
-                    phasemobf[np*face + phase] = aver;
-                }
-                int num = 0;
-                for (int j = 0; j < 2; ++j) {
-                    if (c[j] >= 0) {
-                        ++num;
-                        std::vector<double>::const_iterator cA = cellA.begin() + np*nc*(c[j]);
-                        for (int row = 0; row < nc; ++row) {
-                            for (int col = 0; col < np; ++col) {
-                                faceA[face*nc*np + col*nc + row] = cA[col*nc + row]; // Column-wise storage in faceA.
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Prepare linear solver.
-            parameter::ParameterGroup params;
-            params.insertParameter("linsolver_tolerance", boost::lexical_cast<std::string>(residual_tolerance));
-            params.insertParameter("linsolver_verbosity", boost::lexical_cast<std::string>(linsolver_verbosity));
-            params.insertParameter("linsolver_type", boost::lexical_cast<std::string>(linsolver_type));
-            linsolver_.init(params);
-
             // Assemble and solve.
-            flow_solution_.pressure_ = cell_pressure;
+            // Set initial pressure to Liquid phase pressure. \TODO what is correct with capillary pressure?
+            int num_cells = z.size();
+            flow_solution_.pressure_.resize(num_cells);
+            for (int cell = 0; cell < num_cells; ++cell) {
+                flow_solution_.pressure_[cell] = phase_pressure[cell][FluidInterface::Liquid];
+            }
             std::vector<double> face_pressure;
             std::vector<double> face_flux;
+            std::vector<double> initial_voldiscr;
             for (int i = 0; i < num_iter; ++i) {
                 // (Re-)compute fluid properties.
+                computeFluidProps(fluid, phase_pressure, phase_pressure_face, z);
+                if (i == 0) {
+                    initial_voldiscr = fp_.voldiscr;
+                }
 
                 // Assemble system matrix and rhs.
-                psolver_.assemble(src, bctypes, bcvalues, dt, totcompr, voldiscr, cellA, faceA, phasemobf, flow_solution_.pressure_);
+                psolver_.assemble(src, bctypes, bcvalues, dt,
+                                  fp_.totcompr, initial_voldiscr, fp_.cellA, fp_.faceA, fp_.phasemobf,
+                                  flow_solution_.pressure_);
                 // Solve system.
                 PressureSolver::LinearSystem s;
                 psolver_.linearSystem(s);
@@ -283,6 +227,13 @@ namespace Dune
                 // Get pressures and face fluxes.
                 flow_solution_.clear();
                 psolver_.computePressuresAndFluxes(flow_solution_.pressure_, face_pressure, face_flux);
+                // Copy to phase pressures. \TODO handle capillary pressure.
+                for (int cell = 0; cell < num_cells; ++cell) {
+                    phase_pressure[cell] = flow_solution_.pressure_[cell];
+                }
+                for (int face = 0; face < num_faces; ++face) {
+                    phase_pressure_face[face] = face_pressure[face];
+                }
 
                 // DUMP HACK
                 std::string fname("facepress-");
@@ -486,10 +437,93 @@ namespace Dune
 
 
     private:
+        void computeFluidProps(const FluidInterface& fluid,
+                               const std::vector<typename FluidInterface::PhaseVec>& phase_pressure,
+                               const std::vector<typename FluidInterface::PhaseVec>& phase_pressure_face,
+                               const std::vector<typename FluidInterface::CompVec>& z)
+        {
+            int num_cells = z.size();
+            int num_faces = pgrid_->numFaces();
+            ASSERT(num_cells == pgrid_->numCells());
+            const int np = FluidInterface::numPhases;
+            const int nc = FluidInterface::numComponents;
+            BOOST_STATIC_ASSERT(np == nc);
+            fp_.totcompr.resize(num_cells);
+            fp_.voldiscr.resize(num_cells);
+            fp_.cellA.resize(num_cells*nc*np);
+            fp_.faceA.resize(num_faces*nc*np);
+            fp_.phasemobf.resize(num_faces*np);
+            fp_.phasemobc.resize(num_cells*np); // Just a helper
+            typedef typename FluidInterface::PhaseVec PhaseVec;
+            typedef typename FluidInterface::CompVec CompVec;
+            PhaseVec mob;
+            BOOST_STATIC_ASSERT(np == 3);
+            for (int cell = 0; cell < num_cells; ++cell) {
+                typename FluidInterface::FluidState state = fluid.computeState(phase_pressure[cell], z[cell]);
+                fp_.totcompr[cell] = state.total_compressibility_;
+                fp_.voldiscr[cell] = state.total_phase_volume_ - pgrid_->cellVolume(cell)*poro_[cell];
+                std::copy(state.mobility_.begin(), state.mobility_.end(), fp_.phasemobc.begin() + cell*np);
+                Dune::SharedFortranMatrix A(nc, np, state.phase_to_comp_);
+                Dune::SharedFortranMatrix cA(nc, np, &fp_.cellA[cell*nc*np]);
+                cA = A;
+            }
+            // Set phasemobf to average of cells' phase mobs, if pressures are equal, else use upwinding.
+            // Set faceA by using average of cells' z and face pressures.
+            for (int face = 0; face < num_faces; ++face) {
+                int c[2] = { pgrid_->faceCell(face, 0), pgrid_->faceCell(face, 1) };
+                PhaseVec phase_p[2];
+                CompVec z_face(0.0);
+                int num = 0;
+                for (int j = 0; j < 2; ++j) {
+                    if (c[j] >= 0) {
+                        phase_p[j] = phase_pressure[c[j]];
+                        z_face += z[c[j]];
+                        ++num;
+                    } else {
+                        // Boundaries get essentially -inf pressure for upwinding purpose. \TODO handle BCs.
+                        phase_p[j] = PhaseVec(-1e100);
+                        // \TODO The two lines below are wrong for outflow faces.
+                        z_face += inflow_mixture_;
+                        ++num;
+                    }
+                }
+                z_face /= double(num);
+                for (int phase = 0; phase < np; ++phase) {
+                    if (phase_p[0][phase] == phase_p[1][phase]) {
+                        // Average mobilities.
+                        double aver = 0.5*(fp_.phasemobc[np*c[0] + phase] + fp_.phasemobc[np*c[1] + phase]);
+                        fp_.phasemobf[np*face + phase] = aver;
+                    } else {
+                        // Upwind mobilities.
+                        int upwind = (phase_p[0][phase] > phase_p[1][phase]) ? 0 : 1;
+                        fp_.phasemobf[np*face + phase] = fp_.phasemobc[np*c[upwind] + phase];
+                    }
+                }
+                typename FluidInterface::FluidState face_state = fluid.computeState(phase_pressure_face[face], z_face);
+                Dune::SharedFortranMatrix A(nc, np, face_state.phase_to_comp_);
+                Dune::SharedFortranMatrix fA(nc, np, &fp_.faceA[face*nc*np]);
+                fA = A;
+            }
+        }
+
+        struct FluidProps
+        {
+            std::vector<double> totcompr;
+            std::vector<double> voldiscr;
+            std::vector<double> cellA;
+            std::vector<double> faceA;
+            std::vector<double> phasemobf;
+            std::vector<double> phasemobc;
+        };
+
+        FluidProps fp_;
         const GridInterface* pgrid_;
+        std::vector<double> poro_;
         PressureSolver psolver_;
         LinearSolverISTL linsolver_;
         FlowSolution flow_solution_;
+
+        typename FluidInterface::CompVec inflow_mixture_;
     };
 
 
