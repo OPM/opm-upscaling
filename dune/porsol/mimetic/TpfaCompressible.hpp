@@ -161,7 +161,7 @@ namespace Dune
 
             // Set starting pressures.
             std::vector<typename Fluid::PhaseVec> phase_pressure = initial_phase_pressure;
-            std::vector<typename Fluid::PhaseVec> phase_pressure_face;
+            std::vector<typename Fluid::PhaseVec> phase_pressure_face(num_faces);
             for (int face = 0; face < num_faces; ++face) {
                 int c[2] = { pgrid_->faceCell(face, 0), pgrid_->faceCell(face, 1) };
                 phase_pressure_face[face] = 0.0;
