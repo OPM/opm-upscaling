@@ -34,6 +34,7 @@ namespace Dune
 
     template <class GridInterface,
               class RockInterface,
+              class FluidInterface,
               class BCInterface>
     class TpfaCompressible
     {
@@ -100,8 +101,6 @@ namespace Dune
         ///    @encode, you may recover the flow solution from the
         ///    @code getSolution() @endcode method.
         ///
-        /// @tparam Fluid
-        ///    Type presenting an interface to fluid properties.
         ///
         /// @param [in] src
         ///    Explicit source terms.  One scalar value for each grid
@@ -125,43 +124,18 @@ namespace Dune
         ///    Control parameter for iterative linear solver software.
         ///    Type 0 selects a BiCGStab solver, type 1 selects AMG/CG.
         ///
-        template<class Fluid>
-        void solve(const Fluid& fluid,
-                   const std::vector<typename Fluid::PhaseVec>& initial_phase_pressure,
-                   const std::vector<typename Fluid::CompVec>& z,
+        void solve(const FluidInterface& fluid,
+                   const std::vector<typename FluidInterface::PhaseVec>& initial_phase_pressure,
+                   const std::vector<typename FluidInterface::CompVec>& z,
                    const BCInterface& bc,
                    const std::vector<double>& src,
                    const double dt,
                    const int num_iter)
         {
-            // Build bctypes and bcvalues.
-            int num_faces = pgrid_->numFaces();
-            std::vector<PressureSolver::FlowBCTypes> bctypes(num_faces, PressureSolver::FBC_UNSET);
-            std::vector<double> bcvalues(num_faces, 0.0);
-            for (int face = 0; face < num_faces; ++face) {
-                int bid = pgrid_->boundaryId(face);
-                if (bid == 0) {
-                    bctypes[face] = PressureSolver::FBC_UNSET;
-                    continue;
-                }
-                FlowBC face_bc = bc.flowCond(bid);
-                if (face_bc.isDirichlet()) {
-                    bctypes[face] = PressureSolver::FBC_PRESSURE;
-                    bcvalues[face] = face_bc.pressure();
-                } else if (face_bc.isNeumann()) {
-                    bctypes[face] = PressureSolver::FBC_FLUX;
-                    bcvalues[face] = face_bc.outflux(); // TODO: may have to switch sign here depending on orientation.
-                    if (bcvalues[face] != 0.0) {
-                        THROW("Nonzero Neumann conditions not yet properly implemented (signs must be fixed)");
-                    }
-                } else {
-                    THROW("Unhandled boundary condition type.");
-                }
-            }
-
             // Set starting pressures.
-            std::vector<typename Fluid::PhaseVec> phase_pressure = initial_phase_pressure;
-            std::vector<typename Fluid::PhaseVec> phase_pressure_face(num_faces);
+            int num_faces = pgrid_->numFaces();
+            std::vector<typename FluidInterface::PhaseVec> phase_pressure = initial_phase_pressure;
+            std::vector<typename FluidInterface::PhaseVec> phase_pressure_face(num_faces);
             for (int face = 0; face < num_faces; ++face) {
                 int c[2] = { pgrid_->faceCell(face, 0), pgrid_->faceCell(face, 1) };
                 phase_pressure_face[face] = 0.0;
@@ -175,12 +149,37 @@ namespace Dune
                 phase_pressure_face[face] /= double(num);
             }
 
+            // Build bctypes and bcvalues.
+            std::vector<PressureSolver::FlowBCTypes> bctypes(num_faces, PressureSolver::FBC_UNSET);
+            std::vector<double> bcvalues(num_faces, 0.0);
+            for (int face = 0; face < num_faces; ++face) {
+                int bid = pgrid_->boundaryId(face);
+                if (bid == 0) {
+                    bctypes[face] = PressureSolver::FBC_UNSET;
+                    continue;
+                }
+                FlowBC face_bc = bc.flowCond(bid);
+                if (face_bc.isDirichlet()) {
+                    bctypes[face] = PressureSolver::FBC_PRESSURE;
+                    bcvalues[face] = face_bc.pressure();
+                    phase_pressure_face[face] = face_bc.pressure();
+                } else if (face_bc.isNeumann()) {
+                    bctypes[face] = PressureSolver::FBC_FLUX;
+                    bcvalues[face] = face_bc.outflux(); // TODO: may have to switch sign here depending on orientation.
+                    if (bcvalues[face] != 0.0) {
+                        THROW("Nonzero Neumann conditions not yet properly implemented (signs must be fixed)");
+                    }
+                } else {
+                    THROW("Unhandled boundary condition type.");
+                }
+            }
+
             // Assemble and solve.
             // Set initial pressure to Liquid phase pressure. \TODO what is correct with capillary pressure?
             int num_cells = z.size();
             flow_solution_.pressure_.resize(num_cells);
             for (int cell = 0; cell < num_cells; ++cell) {
-                flow_solution_.pressure_[cell] = phase_pressure[cell][Fluid::Liquid];
+                flow_solution_.pressure_[cell] = phase_pressure[cell][FluidInterface::Liquid];
             }
             std::vector<double> face_pressure;
             std::vector<double> face_flux;
@@ -417,17 +416,16 @@ namespace Dune
 
 
     private:
-        template <class Fluid>
-        void computeFluidProps(const Fluid& fluid,
-                               const std::vector<typename Fluid::PhaseVec>& phase_pressure,
-                               const std::vector<typename Fluid::PhaseVec>& phase_pressure_face,
-                               const std::vector<typename Fluid::CompVec>& z)
+        void computeFluidProps(const FluidInterface& fluid,
+                               const std::vector<typename FluidInterface::PhaseVec>& phase_pressure,
+                               const std::vector<typename FluidInterface::PhaseVec>& phase_pressure_face,
+                               const std::vector<typename FluidInterface::CompVec>& z)
         {
             int num_cells = z.size();
             int num_faces = pgrid_->numFaces();
             ASSERT(num_cells == pgrid_->numCells());
-            const int np = Fluid::numPhases;
-            const int nc = Fluid::numComponents;
+            const int np = FluidInterface::numPhases;
+            const int nc = FluidInterface::numComponents;
             BOOST_STATIC_ASSERT(np == nc);
             fp_.totcompr.resize(num_cells);
             fp_.voldiscr.resize(num_cells);
@@ -435,12 +433,12 @@ namespace Dune
             fp_.faceA.resize(num_faces*nc*np);
             fp_.phasemobf.resize(num_faces*np);
             fp_.phasemobc.resize(num_cells*np); // Just a helper
-            typedef typename Fluid::PhaseVec PhaseVec;
-            typedef typename Fluid::CompVec CompVec;
+            typedef typename FluidInterface::PhaseVec PhaseVec;
+            typedef typename FluidInterface::CompVec CompVec;
             PhaseVec mob;
             BOOST_STATIC_ASSERT(np == 3);
             for (int cell = 0; cell < num_cells; ++cell) {
-                typename Fluid::FluidState state = fluid.computeState(phase_pressure[cell], z[cell]);
+                typename FluidInterface::FluidState state = fluid.computeState(phase_pressure[cell], z[cell]);
                 fp_.totcompr[cell] = state.total_compressibility_;
                 fp_.voldiscr[cell] = state.total_phase_volume_ - pgrid_->cellVolume(cell)*poro_[cell];
                 std::copy(state.mobility_.begin(), state.mobility_.end(), fp_.phasemobc.begin() + cell*np);
@@ -477,7 +475,7 @@ namespace Dune
                         fp_.phasemobf[np*face + phase] = fp_.phasemobc[np*c[upwind] + phase];
                     }
                 }
-                typename Fluid::FluidState face_state = fluid.computeState(phase_pressure_face[face], z_face);
+                typename FluidInterface::FluidState face_state = fluid.computeState(phase_pressure_face[face], z_face);
                 Dune::SharedFortranMatrix A(nc, np, face_state.phase_to_comp_);
                 Dune::SharedFortranMatrix fA(nc, np, &fp_.faceA[face*nc*np]);
                 fA = A;
