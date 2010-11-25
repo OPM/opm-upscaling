@@ -88,7 +88,7 @@ void test_flowsolver(const Grid& grid,
     typedef typename Fluid::CompVec CompVec;
     typedef typename Fluid::PhaseVec PhaseVec;
     CompVec init_z(0.0);
-    init_z[Fluid::Gas] = 1.0;
+    init_z[Fluid::Oil] = 1.0;
     std::vector<CompVec> z(grid.numCells(), init_z);
     MESSAGE("******* Assuming zero capillary pressures *******");
     PhaseVec init_p(100.0*Dune::unit::barsa);
@@ -123,8 +123,9 @@ void test_flowsolver(const Grid& grid,
 
     // Dump pressures to Matlab.
     std::ofstream dump("pressure");
+    dump.precision(15);
     std::copy(soln.cellPressure().begin(), soln.cellPressure().end(),
-              std::ostream_iterator<double>(dump, " "));
+              std::ostream_iterator<double>(dump, "\n"));
 }
 
 
@@ -132,7 +133,7 @@ typedef Dune::CpGrid Grid;
 typedef Dune::Rock<Grid::dimension> Rock;
 typedef Opm::BlackoilFluid Fluid;
 typedef Dune::BasicBoundaryConditions<true, false>  FBC;
-typedef Dune::TpfaCompressible<Grid, Rock, FBC> FlowSolver;
+typedef Dune::TpfaCompressible<Grid, Rock, Fluid, FBC> FlowSolver;
 
 int main(int argc, char** argv)
 {
