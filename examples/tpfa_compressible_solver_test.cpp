@@ -59,8 +59,7 @@ void test_flowsolver(const Grid& grid,
                      const Rock& rock,
                      const Fluid& fluid,
                      FlowSolver& solver,
-                     const double dt,
-                     const int num_iter)
+                     const double dt)
 {
     // Boundary conditions.
     typedef Dune::FlowBC BC;
@@ -103,7 +102,7 @@ void test_flowsolver(const Grid& grid,
     }
 
     // Solve flow system.
-    solver.solve(fluid, phase_pressure, z, flow_bc, src, dt, num_iter);
+    solver.solve(fluid, phase_pressure, z, flow_bc, src, dt);
 
     // Output to VTK.
     typedef typename FlowSolver::SolutionType FlowSolution;
@@ -180,9 +179,8 @@ int main(int argc, char** argv)
     }
     solver.init(param);
     double dt = param.getDefault("dt", 1.0);
-    int num_iter = param.getDefault("num_iter", 5);
 
     // Run test.
-    test_flowsolver<3>(grid, rock, fluid, solver, dt, num_iter);
+    test_flowsolver<3>(grid, rock, fluid, solver, dt);
 }
 

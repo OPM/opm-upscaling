@@ -75,6 +75,7 @@ namespace Dune
             }
             inflow_mixture_ = mix;
             linsolver_.init(param);
+            num_iter_ = param.getDefault("num_iter", 5);
         }
 
 
@@ -150,8 +151,7 @@ namespace Dune
                    const std::vector<typename FluidInterface::CompVec>& z,
                    const BCInterface& bc,
                    const std::vector<double>& src,
-                   const double dt,
-                   const int num_iter)
+                   const double dt)
         {
             // Set starting pressures.
             int num_faces = pgrid_->numFaces();
@@ -205,7 +205,7 @@ namespace Dune
             std::vector<double> face_pressure;
             std::vector<double> face_flux;
             std::vector<double> initial_voldiscr;
-            for (int i = 0; i < num_iter; ++i) {
+            for (int i = 0; i < num_iter_; ++i) {
                 // (Re-)compute fluid properties.
                 computeFluidProps(fluid, phase_pressure, phase_pressure_face, z);
                 if (i == 0) {
@@ -524,6 +524,7 @@ namespace Dune
         FlowSolution flow_solution_;
 
         typename FluidInterface::CompVec inflow_mixture_;
+        int num_iter_;
     };
 
 
