@@ -168,7 +168,7 @@ int main(int argc, char** argv)
                                            param.getDefault<double>("dy", 1.0),
                                            param.getDefault<double>("dz", 1.0) }};
         grid.createCartesian(dims, cellsz);
-        double default_poro = param.getDefault("default_poro", 0.2);
+        double default_poro = param.getDefault("default_poro", 1.0);
         double default_perm_md = param.getDefault("default_perm_md", 100.0);
         double default_perm = unit::convert::from(default_perm_md, prefix::milli*unit::darcy);
         MESSAGE("Warning: For generated cartesian grids, we use uniform rock properties.");
