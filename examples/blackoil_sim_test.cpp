@@ -64,7 +64,8 @@ void simulate(const Grid& grid,
               const Fluid& fluid,
               FlowSolver& flow_solver,
               TransportSolver& transport_solver,
-              const double dt)
+              const int simulation_steps,
+              const double stepsize)
 {
     // Boundary conditions.
     typedef Dune::FlowBC BC;
@@ -93,10 +94,13 @@ void simulate(const Grid& grid,
     typedef typename Fluid::PhaseVec PhaseVec;
     CompVec init_z(0.0);
     init_z[Fluid::Oil] = 1.0;
+    CompVec bdy_z(0.0);
+    bdy_z[Fluid::Gas] = 1.0;
     std::vector<CompVec> z(grid.numCells(), init_z);
     MESSAGE("******* Assuming zero capillary pressures *******");
     PhaseVec init_p(100.0*Dune::unit::barsa);
     std::vector<PhaseVec> phase_pressure(grid.numCells(), init_p);
+    PhaseVec bdy_p(300.0*Dune::unit::barsa);
     // Rescale z values so that pore volume is filled exactly
     // (to get zero initial volume discrepancy).
     for (int cell = 0; cell < grid.numCells(); ++cell) {
@@ -106,40 +110,50 @@ void simulate(const Grid& grid,
         z[cell] *= pore_vol/fluid_vol;
     }
 
+    for (int step = 0; step < simulation_steps; ++step) {
+        std::cout << "\n\n================    Simulation step number " << step
+                  << "    ===============" << std::endl;
+        // Solve flow system.
+        flow_solver.solve(fluid, phase_pressure, z, flow_bc, src, stepsize);
 
-    // Solve flow system.
-    flow_solver.solve(fluid, phase_pressure, z, flow_bc, src, dt);
+        // Get solution.
+        typedef typename FlowSolver::SolutionType FlowSolution;
+        FlowSolution soln = flow_solver.getSolution();
 
-    // Get solution.
-    typedef typename FlowSolver::SolutionType FlowSolution;
-    FlowSolution soln = flow_solver.getSolution();
+        // Transport.
+        Opm::EquationOfStateBlackOil eos(fluid);
+        transport_solver.transport(grid, rock, bdy_p[Fluid::Liquid], bdy_z, soln.faceFlux(), eos, phase_pressure, stepsize, z);
 
-    // Transport.
-    Opm::EquationOfStateBlackOil eos(fluid);
-    transport_solver.transport(grid, rock, soln.faceFlux(), eos, phase_pressure, dt, z);
+        // Output to VTK.
+        std::vector<typename Grid::Vector> cell_velocity;
+        estimateCellVelocitySimpleInterface(cell_velocity, grid, soln);
+        // Dune's vtk writer wants multi-component data to be flattened.
+        std::vector<double> cell_velocity_flat(&*cell_velocity.front().begin(),
+                                               &*cell_velocity.back().end());
+        std::vector<double> z_flat(&*z.front().begin(),
+                                   &*z.back().end());
+        //     getCellPressure(cell_pressure, grid, soln);
+        //    output_pressure = soln.cellPressure();
+        Dune::VTKWriter<typename Grid::LeafGridView> vtkwriter(grid.leafView());
+        vtkwriter.addCellData(soln.cellPressure(), "pressure");
+        vtkwriter.addCellData(cell_velocity_flat, "velocity", Grid::dimension);
+        vtkwriter.addCellData(z_flat, "z", Fluid::numComponents);
+        vtkwriter.write("testsolution-" + boost::lexical_cast<std::string>(step),
+                        Dune::VTKOptions::ascii);
 
-    // Output to VTK.
-    std::vector<typename Grid::Vector> cell_velocity;
-    estimateCellVelocitySimpleInterface(cell_velocity, grid, soln);
-    // Dune's vtk writer wants multi-component data to be flattened.
-    std::vector<double> cell_velocity_flat(&*cell_velocity.front().begin(),
-                                           &*cell_velocity.back().end());
-    std::vector<double> z_flat(&*z.front().begin(),
-                               &*z.back().end());
-//     getCellPressure(cell_pressure, grid, soln);
-//    output_pressure = soln.cellPressure();
-    Dune::VTKWriter<typename Grid::LeafGridView> vtkwriter(grid.leafView());
-    vtkwriter.addCellData(soln.cellPressure(), "pressure");
-    vtkwriter.addCellData(cell_velocity_flat, "velocity", Grid::dimension);
-    vtkwriter.addCellData(z_flat, "z", Fluid::numComponents);
-    vtkwriter.write("testsolution-" + boost::lexical_cast<std::string>(0),
-                    Dune::VTKOptions::ascii);
+        // Dump pressures to Matlab.
+        std::string matlabdumpname("pressure");
+        matlabdumpname += boost::lexical_cast<std::string>(step);
+        std::ofstream dump(matlabdumpname.c_str());
+        dump.precision(15);
+        std::copy(soln.cellPressure().begin(), soln.cellPressure().end(),
+                  std::ostream_iterator<double>(dump, "\n"));
 
-    // Dump pressures to Matlab.
-    std::ofstream dump("pressure");
-    dump.precision(15);
-    std::copy(soln.cellPressure().begin(), soln.cellPressure().end(),
-              std::ostream_iterator<double>(dump, "\n"));
+        // Update variables used as input for solvers.
+        for (int cell = 0; cell < grid.numCells(); ++cell) {
+            phase_pressure[cell] = soln.cellPressure(cell);
+        }
+    }
 }
 
 
@@ -196,9 +210,10 @@ int main(int argc, char** argv)
     }
     flow_solver.init(param);
     transport_solver.init(param);
-    double dt = param.getDefault("dt", 1.0);
+    int simulation_steps = param.getDefault("simulation_steps", 10);
+    double stepsize = param.getDefault("stepsize", 1.0*unit::day);
 
     // Run test.
-    simulate(grid, rock, fluid, flow_solver, transport_solver, dt);
+    simulate(grid, rock, fluid, flow_solver, transport_solver, simulation_steps, stepsize);
 }
 

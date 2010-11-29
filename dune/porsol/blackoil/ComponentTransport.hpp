@@ -40,7 +40,7 @@ public:
     {
     }
 
-    void compute(int cell, const PhaseVec& phase_pressure, const CompVec& z)
+    void compute(const PhaseVec& phase_pressure, const CompVec& z)
     {
         BlackoilFluid::FluidState state = fluid_.computeState(phase_pressure, z);
         double total_mobility = 0.0;
@@ -80,6 +80,8 @@ public:
 
     void transport(const Grid& grid,
                    const Rock& rock,
+                   const double external_pressure,
+                   const CompVec& external_composition,
                    const std::vector<double>& face_flux,
                    EquationOfState& eos,
                    const std::vector<PhaseVec>& phase_pressure,
@@ -90,11 +92,13 @@ public:
         std::vector<PhaseVec> fractional_flow(num_cells);
         std::vector<typename EquationOfState::ComponentInPhaseMatrix> comp_in_phase(num_cells);
         for (int cell = 0; cell < num_cells; ++cell) {
-            eos.compute(cell, phase_pressure[cell], comp_amount[cell]);
+            eos.compute(phase_pressure[cell], comp_amount[cell]);
             fractional_flow[cell] = eos.fractionalFlow();
             comp_in_phase[cell] = eos.compositionByPhase();
         }
-        transportImpl(grid, rock, face_flux, fractional_flow, comp_in_phase, dt, comp_amount);
+        eos.compute(PhaseVec(external_pressure), external_composition);
+        transportImpl(grid, rock, face_flux, fractional_flow, comp_in_phase,
+                      eos.fractionalFlow(), eos.compositionByPhase(), dt, comp_amount);
     }
 
 
@@ -104,11 +108,14 @@ public:
                        const std::vector<double>& face_flux,
                        const std::vector<PhaseVec>& fractional_flow,
                        const std::vector<typename EquationOfState::ComponentInPhaseMatrix>& comp_in_phase,
+                       const PhaseVec& bdy_fractional_flow,
+                       const typename EquationOfState::ComponentInPhaseMatrix& bdy_comp_in_phase,
                        const double dt,
                        std::vector<CompVec>& comp_amount)
     {
         std::vector<CompVec> comp_change;
-        computeChange(grid, face_flux, fractional_flow, comp_in_phase, comp_change);
+        computeChange(grid, face_flux, fractional_flow, comp_in_phase,
+                      bdy_fractional_flow, bdy_comp_in_phase, comp_change);
         for (int cell = 0; cell < grid.numCells(); ++cell) {
             comp_change[cell] *= (dt/rock.porosity(cell));
             comp_amount[cell] += comp_change[cell];
@@ -120,6 +127,8 @@ public:
                        const std::vector<double>& face_flux,
                        const std::vector<PhaseVec>& fractional_flow,
                        const std::vector<typename EquationOfState::ComponentInPhaseMatrix>& comp_in_phase,
+                       const PhaseVec& bdy_fractional_flow,
+                       const typename EquationOfState::ComponentInPhaseMatrix& bdy_comp_in_phase,
                        std::vector<CompVec>& comp_change)
     {
         comp_change.clear();
@@ -128,19 +137,19 @@ public:
         for (int face = 0; face < grid.numFaces(); ++face) {
             int c0 = grid.faceCell(face, 0);
             int c1 = grid.faceCell(face, 1);
-            if (c0 < 0 || c1 < 0) {
-                // Handle boundary case.
-            } else {
-                // Handle interior case.
-                CompVec change(0.0);
-                for (int phase = 0; phase < numPhases; ++phase) {
-                    int upwind_cell = (face_flux[face] > 0.0) ? c0 : c1;
-                    double phase_flux = face_flux[face]*fractional_flow[upwind_cell][phase];
-                    CompVec z_in_phase = comp_in_phase[upwind_cell][phase];
-                    z_in_phase *= phase_flux;
+            CompVec change(0.0);
+            for (int phase = 0; phase < numPhases; ++phase) {
+                int upwind_cell = (face_flux[face] > 0.0) ? c0 : c1;
+                double ff = upwind_cell < 0 ? bdy_fractional_flow[phase] : fractional_flow[upwind_cell][phase];
+                double phase_flux = face_flux[face]*ff;
+                CompVec z_in_phase = upwind_cell < 0 ? bdy_comp_in_phase[phase] : comp_in_phase[upwind_cell][phase];
+                z_in_phase *= phase_flux;
                     change += z_in_phase;
-                }
+            }
+            if (c0 >= 0) {
                 comp_change[c0] -= change;
+            }
+            if (c1 >= 0) {
                 comp_change[c1] += change;
             }
         }
