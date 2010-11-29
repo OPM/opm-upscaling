@@ -122,7 +122,7 @@ void simulate(const Grid& grid,
 
         // Transport.
         Opm::EquationOfStateBlackOil eos(fluid);
-        transport_solver.transport(grid, rock, bdy_p[Fluid::Liquid], bdy_z, soln.faceFlux(), eos, phase_pressure, stepsize, z);
+        transport_solver.transport(grid, rock, bdy_p, bdy_z, soln.faceFlux(), eos, phase_pressure, stepsize, z);
 
         // Output to VTK.
         std::vector<typename Grid::Vector> cell_velocity;
