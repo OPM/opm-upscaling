@@ -49,8 +49,9 @@ public:
         }
         fractional_flow_ = state.mobility_;
         fractional_flow_ /= total_mobility;
-        std::copy(state.phase_to_comp_, state.phase_to_comp_ + numPhases*numComponents,
-                  &comp_by_phase_[0][0]);
+        Dune::SharedFortranMatrix A(numComponents, numPhases, state.phase_to_comp_);
+        Dune::SharedCMatrix cbp(numComponents, numPhases, &comp_by_phase_[0][0]);
+        cbp = A; // Converting between orderings.
     }
 
     const PhaseVec& fractionalFlow() const
