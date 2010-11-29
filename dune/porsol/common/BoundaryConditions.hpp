@@ -41,11 +41,13 @@
 #include <ostream>
 #include <boost/mpl/if.hpp>
 #include <dune/common/ErrorMacros.hpp>
+#include <dune/common/fvector.hh>
 
 namespace Dune
 {
 
     /// @brief A class for building boundary conditions in a uniform way.
+    template <typename T>
     class BCBase
     {
     public:
@@ -74,7 +76,7 @@ namespace Dune
 	/// @brief Constructor taking a type and value.
 	/// @param type the condition type.
 	/// @param value the condition value.
-        BCBase(BCType type, double value)
+        BCBase(BCType type, T value)
             : type_(type), value_(value)
         {
         }
@@ -99,14 +101,14 @@ namespace Dune
 
     protected: // data
 	BCType type_;
-	double value_;
+	T value_;
     };
 
     /// @brief Stream insertion for BCBase.
-    template<typename charT, class traits>
+    template<typename charT, class traits, typename T>
     std::basic_ostream<charT,traits>&
     operator<<(std::basic_ostream<charT,traits>& os,
-               const BCBase& bc)
+               const BCBase<T>& bc)
     {
         bc.write(os);
         return os;
@@ -116,27 +118,27 @@ namespace Dune
 
 
     /// @brief A class for representing a flow boundary condition.
-    class FlowBC : public BCBase
+    class FlowBC : public BCBase<double>
     {
     public:
 	/// @brief Default constructor, that makes a noflow condition (Neumann, value 0.0).
         FlowBC()
-            : BCBase(Neumann, 0.0)
+            : BCBase<double>(Neumann, 0.0)
         {
         }
 	/// @brief Constructor taking a type and value.
 	/// @param type the condition type.
 	/// @param value the condition value.
         FlowBC(BCType type, double value)
-            : BCBase(type, value)
+            : BCBase<double>(type, value)
         {
 	    ASSERT(isNeumann() || isDirichlet() || isPeriodic());
         }
 
 	/// @brief Forwarding the relevant type queries.
-	using BCBase::isDirichlet;
-	using BCBase::isNeumann;
-	using BCBase::isPeriodic;
+	using BCBase<double>::isDirichlet;
+	using BCBase<double>::isNeumann;
+	using BCBase<double>::isPeriodic;
 
 	/// @brief Query a Dirichlet condition.
 	/// @return the pressure condition value
@@ -164,25 +166,25 @@ namespace Dune
 
 
     /// @brief A class for representing a saturation boundary condition.
-    class SatBC : public BCBase
+    class SatBC : public BCBase<double>
     {
     public:
 	/// @brief Default constructor, that makes a Dirichlet condition with value 1.0.
         SatBC()
-            : BCBase(Dirichlet, 1.0)
+            : BCBase<double>(Dirichlet, 1.0)
         {
         }
 	/// @brief Constructor taking a type and value.
 	/// @param type the condition type.
 	/// @param value the condition value.
         SatBC(BCType type, double value)
-            : BCBase(type, value)
+            : BCBase<double>(type, value)
         {
 	    ASSERT(isDirichlet() || isPeriodic());
         }
 	/// @brief Forwarding the relevant type queries.
-	using BCBase::isDirichlet;
-	using BCBase::isPeriodic;
+	using BCBase<double>::isDirichlet;
+	using BCBase<double>::isPeriodic;
 
 	/// @brief Query a Dirichlet condition.
 	/// @return the boundary saturation value
@@ -200,44 +202,36 @@ namespace Dune
         }
     };
 
-    /*
-    /// @brief A class for representing a capillary pressure boundary condition.
-    class PcapBC : public BCBase
+
+    /// @brief A class for representing a surface volume boundary condition.
+    template <int numComponents>
+    class SurfvolBC : public BCBase<Dune::FieldVector<double, numComponents> >
     {
     public:
-	/// @brief Default constructor, that makes a Dirichlet condition with value 0.0.
-        PcapBC()
-            : BCBase(Dirichlet, 0.0)
+        typedef Dune::FieldVector<double, numComponents> CompVec;
+        typedef BCBase<CompVec> Base;
+	/// @brief Default constructor, that makes a Dirichlet condition with all zero component values.
+        SurfvolBC()
+            : Base(Base::Dirichlet, CompVec(0.0))
         {
         }
-	/// @brief Constructor taking a type and value.
-	/// @param type the condition type.
+	/// @brief Constructor taking a value.
 	/// @param value the condition value.
-        PcapBC(BCType type, double value)
-            : BCBase(type, value)
+        explicit SurfvolBC(Dune::FieldVector<double, numComponents> value)
+            : Base(Base::Dirichlet, value)
         {
-	    ASSERT(isDirichlet() || isPeriodic());
+	    ASSERT(isDirichlet());
         }
-	/// @brief Forwarding the relevant type queries.
-	using BCBase::isDirichlet;
-	using BCBase::isPeriodic;
+	/// @brief Forwarding the relevant type query.
+	using Base::isDirichlet;
 
 	/// @brief Query a Dirichlet condition.
 	/// @return the boundary saturation value
-        double capPressure() const
+        CompVec surfvol() const
         {
-            ASSERT (isDirichlet());
-            return value_;
-        }
-	/// @brief Query a Periodic condition.
-	/// @return the saturation difference value.
-        double capPressureDifference() const
-        {
-            ASSERT (isPeriodic());
-            return value_;
+            return Base::value_;
         }
     };
-    */
 
 
 
@@ -338,17 +332,19 @@ namespace Dune
 	void clear() {}
     };
 
-    template <bool FC = false, bool SC = false>//, bool PC = false >
+    template <bool FC = false, bool SC = false, bool ZC = false, int numComponents = 3>
     class BasicBoundaryConditions : public PeriodicConditionHandler,
-			       private boost::mpl::if_c<FC, std::vector<FlowBC>, DummyVec<FlowBC> >::type,
-			       private boost::mpl::if_c<SC, std::vector<SatBC>,  DummyVec<SatBC>  >::type
-	      // private boost::mpl::if_c<PC, std::vector<PcapBC>, DummyVec<PcapBC> >::type
+        private boost::mpl::if_c<FC, std::vector<FlowBC>, DummyVec<FlowBC> >::type,
+        private boost::mpl::if_c<SC, std::vector<SatBC>,  DummyVec<SatBC>  >::type,
+        private boost::mpl::if_c<ZC, std::vector<SurfvolBC<numComponents> >, DummyVec<SurfvolBC<numComponents> > >::type
     {
     public:
 	typedef typename boost::mpl::if_c<FC, std::vector<FlowBC>, DummyVec<FlowBC> >::type FlowConds;
 	typedef typename boost::mpl::if_c<SC,  std::vector<SatBC>, DummyVec<SatBC>  >::type SatConds;
+	typedef typename boost::mpl::if_c<ZC, std::vector<SurfvolBC<numComponents> >, DummyVec<SurfvolBC<numComponents> > >::type SurfvolConds;
 	const static bool HasFlowConds = FC;
 	const static bool HasSatConds = SC;
+	const static bool HasSurfvolConds = SC;
 
         BasicBoundaryConditions()
 	{
@@ -357,8 +353,8 @@ namespace Dune
         BasicBoundaryConditions(int num_different_boundary_ids)
 	    : PeriodicConditionHandler(num_different_boundary_ids),
 	      FlowConds(num_different_boundary_ids),
-	      SatConds(num_different_boundary_ids)
-// 	      PcapConds(num_different_boundary_ids)
+	      SatConds(num_different_boundary_ids),
+ 	      SurfvolConds(num_different_boundary_ids)
 	{
         }
 
@@ -367,7 +363,7 @@ namespace Dune
 	    PeriodicConditionHandler::resize(new_size);
 	    FlowConds::resize(new_size);
 	    SatConds::resize(new_size);
-	    // PcapConds::resize(new_size);
+            SurfvolConds::resize(new_size);
         }
 
         bool empty() const
@@ -380,7 +376,7 @@ namespace Dune
 	    PeriodicConditionHandler::clear();
 	    FlowConds::clear();
 	    SatConds::clear();
-	    // PcapConds::clear();
+	    SurfvolConds::clear();
         }
 
         int size() const
@@ -420,6 +416,23 @@ namespace Dune
 	{
             ASSERT(bf.boundary());
 	    return SatConds::operator[](bf.boundaryId());
+	}
+
+	SurfvolBC<numComponents>& surfvolCond(int i)
+	{
+	    return SurfvolConds::operator[](i);
+	}
+
+	const SurfvolBC<numComponents>& surfvolCond(int i) const
+	{
+	    return SurfvolConds::operator[](i);
+	}
+
+        template <class BoundaryFace>
+	const SurfvolBC<numComponents>& surfvolCond(const BoundaryFace& bf) const
+	{
+            ASSERT(bf.boundary());
+	    return SurfvolConds::operator[](bf.boundaryId());
 	}
 
         template<typename charT, class traits>
