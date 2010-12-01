@@ -148,10 +148,11 @@ namespace Dune
         ///
         void solve(const FluidInterface& fluid,
                    const std::vector<typename FluidInterface::PhaseVec>& initial_phase_pressure,
-                   const std::vector<typename FluidInterface::CompVec>& z,
+                   std::vector<typename FluidInterface::CompVec>& z,
                    const BCInterface& bc,
                    const std::vector<double>& src,
-                   const double dt)
+                   const double dt,
+                   bool transport = false)
         {
             // Set starting pressures.
             int num_faces = pgrid_->numFaces();
@@ -207,7 +208,7 @@ namespace Dune
             std::vector<double> initial_voldiscr;
             for (int i = 0; i < num_iter_; ++i) {
                 // (Re-)compute fluid properties.
-                computeFluidProps(fluid, phase_pressure, phase_pressure_face, z);
+                computeFluidProps(fluid, phase_pressure, phase_pressure_face, z, dt);
                 if (i == 0) {
                     initial_voldiscr = fp_.voldiscr;
                 }
@@ -243,11 +244,12 @@ namespace Dune
                 std::copy(face_pressure.begin(), face_pressure.end(), std::ostream_iterator<double>(f, "\n"));
             }
 
-            // Compute and set fluxes of flow solution.
-//             std::vector<double> cell_flux;
-//             psolver_.faceFluxToCellFlux(face_flux, cell_flux);
-//             const std::vector<int>& ncf = psolver_.numCellFaces();
+            // Compute set fluxes of flow solution.
             flow_solution_.faceflux_.assign(face_flux.begin(), face_flux.end());
+
+            if (transport) {
+                psolver_.explicitTransport(dt, &flow_solution_.pressure_[0], &(z[0][0]));
+            }
         }
 
     private:
@@ -440,7 +442,8 @@ namespace Dune
         void computeFluidProps(const FluidInterface& fluid,
                                const std::vector<typename FluidInterface::PhaseVec>& phase_pressure,
                                const std::vector<typename FluidInterface::PhaseVec>& phase_pressure_face,
-                               const std::vector<typename FluidInterface::CompVec>& z)
+                               const std::vector<typename FluidInterface::CompVec>& z,
+                               const double dt)
         {
             int num_cells = z.size();
             int num_faces = pgrid_->numFaces();
@@ -461,7 +464,7 @@ namespace Dune
             for (int cell = 0; cell < num_cells; ++cell) {
                 typename FluidInterface::FluidState state = fluid.computeState(phase_pressure[cell], z[cell]);
                 fp_.totcompr[cell] = state.total_compressibility_;
-                fp_.voldiscr[cell] = state.total_phase_volume_ - pgrid_->cellVolume(cell)*poro_[cell];
+                fp_.voldiscr[cell] = (state.total_phase_volume_ - pgrid_->cellVolume(cell)*poro_[cell])/dt;
                 std::copy(state.mobility_.begin(), state.mobility_.end(), fp_.phasemobc.begin() + cell*np);
                 Dune::SharedFortranMatrix A(nc, np, state.phase_to_comp_);
                 Dune::SharedFortranMatrix cA(nc, np, &fp_.cellA[cell*nc*np]);
