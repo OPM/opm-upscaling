@@ -65,7 +65,8 @@ void simulate(const Grid& grid,
               FlowSolver& flow_solver,
               TransportSolver& transport_solver,
               const int simulation_steps,
-              const double stepsize)
+              const double stepsize,
+              const bool do_impes)
 {
     // Boundary conditions.
     typedef Dune::FlowBC BC;
@@ -113,16 +114,24 @@ void simulate(const Grid& grid,
     for (int step = 0; step < simulation_steps; ++step) {
         std::cout << "\n\n================    Simulation step number " << step
                   << "    ===============" << std::endl;
+
         // Solve flow system.
-        flow_solver.solve(fluid, phase_pressure, z, flow_bc, src, stepsize);
+        flow_solver.solve(fluid, phase_pressure, z, flow_bc, src, stepsize, do_impes);
 
         // Get solution.
         typedef typename FlowSolver::SolutionType FlowSolution;
         FlowSolution soln = flow_solver.getSolution();
 
+        // Update variables used as input for solvers.
+        for (int cell = 0; cell < grid.numCells(); ++cell) {
+            phase_pressure[cell] = soln.cellPressure(cell);
+        }
+
         // Transport.
-        Opm::EquationOfStateBlackOil eos(fluid);
-        transport_solver.transport(grid, rock, bdy_p, bdy_z, soln.faceFlux(), eos, phase_pressure, stepsize, z);
+        if (!do_impes) {
+            Opm::EquationOfStateBlackOil eos(fluid);
+            transport_solver.transport(grid, rock, bdy_p, bdy_z, soln.faceFlux(), eos, phase_pressure, stepsize, z);
+        }
 
         // Output to VTK.
         std::vector<typename Grid::Vector> cell_velocity;
@@ -141,18 +150,27 @@ void simulate(const Grid& grid,
         vtkwriter.write("testsolution-" + boost::lexical_cast<std::string>(step),
                         Dune::VTKOptions::ascii);
 
-        // Dump pressures to Matlab.
-        std::string matlabdumpname("pressure");
+        // Dump data for Matlab.
+        std::vector<double> zv[Fluid::numComponents];
+        for (int comp = 0; comp < Fluid::numComponents; ++comp) {
+            zv[comp].resize(grid.numCells());
+            for (int cell = 0; cell < grid.numCells(); ++cell) {
+                zv[comp][cell] = z[cell][comp];
+            }
+        }
+        std::string matlabdumpname("celldump");
         matlabdumpname += boost::lexical_cast<std::string>(step);
         std::ofstream dump(matlabdumpname.c_str());
         dump.precision(15);
         std::copy(soln.cellPressure().begin(), soln.cellPressure().end(),
-                  std::ostream_iterator<double>(dump, "\n"));
-
-        // Update variables used as input for solvers.
-        for (int cell = 0; cell < grid.numCells(); ++cell) {
-            phase_pressure[cell] = soln.cellPressure(cell);
+                  std::ostream_iterator<double>(dump, " "));
+        dump << '\n';
+        for (int comp = 0; comp < Fluid::numComponents; ++comp) {
+            std::copy(zv[comp].begin(), zv[comp].end(),
+                      std::ostream_iterator<double>(dump, " "));
+            dump << '\n';
         }
+
     }
 }
 
@@ -212,8 +230,9 @@ int main(int argc, char** argv)
     transport_solver.init(param);
     int simulation_steps = param.getDefault("simulation_steps", 10);
     double stepsize = param.getDefault("stepsize", 1.0*unit::day);
+    bool do_impes = param.getDefault("do_impes", false);
 
     // Run test.
-    simulate(grid, rock, fluid, flow_solver, transport_solver, simulation_steps, stepsize);
+    simulate(grid, rock, fluid, flow_solver, transport_solver, simulation_steps, stepsize, do_impes);
 }
 
