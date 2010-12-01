@@ -51,8 +51,12 @@ public:
         fractional_flow_ = state.mobility_;
         fractional_flow_ /= total_mobility;
         Dune::SharedFortranMatrix A(numComponents, numPhases, state.phase_to_comp_);
-        Dune::SharedCMatrix cbp(numComponents, numPhases, &comp_by_phase_[0][0]);
-        cbp = A; // Converting between orderings.
+        Dune::SharedFortranMatrix cbp(numComponents, numPhases, &comp_by_phase_[0][0]);
+        // Converting between orderings. @@afr: No longer converting,
+        // because later we are accessing the columns of A as z_in_phase,
+        // no longer the rows (that was a bug).
+        cbp = A;
+        // total_volume_ = state.total_phase_volume_;
     }
 
     const PhaseVec& saturation() const
@@ -65,15 +69,22 @@ public:
         return fractional_flow_;
     }
 
-    const ComponentInPhaseMatrix& compositionByPhase()
+    /// The transpose of the A matrix.
+    const ComponentInPhaseMatrix& compositionByPhase() const
     {
         return comp_by_phase_;
     }
+
+//     double totalVolume() const
+//     {
+//         return total_volume_;
+//     }
 private:
     const BlackoilFluid& fluid_;
     PhaseVec saturation_;
     PhaseVec fractional_flow_;
     ComponentInPhaseMatrix comp_by_phase_;
+    // double total_volume_;
 };
 
 
@@ -128,6 +139,7 @@ private: // Data
     PhaseVec bdy_saturation_;
     PhaseVec bdy_fractional_flow_;
     typename EquationOfState::ComponentInPhaseMatrix bdy_comp_in_phase_;
+    // double bdy_total_volume_;
     std::vector<PhaseVec> saturation_;
     std::vector<PhaseVec> fractional_flow_;
     std::vector<typename EquationOfState::ComponentInPhaseMatrix> comp_in_phase_;
@@ -155,6 +167,7 @@ private: // Methods
         bdy_saturation_ = eos.saturation();
         bdy_fractional_flow_ = eos.fractionalFlow();
         bdy_comp_in_phase_ = eos.compositionByPhase();
+        // bdy_total_volume_ = eos.totalVolume();
     }
 
 
