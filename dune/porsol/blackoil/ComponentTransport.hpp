@@ -119,6 +119,7 @@ public:
                 double time = (rock.porosity(cell)*grid.cellVolume(cell))/(cell_outflux[cell]*cell_max_ff_deriv[cell]);
                 min_time = std::min(time, min_time);
             }
+            min_time *= 0.49; // Semi-random CFL factor... \TODO rigorize
             double step_time = dt - cur_time;
             if (min_time < step_time) {
                 step_time = min_time;
@@ -211,7 +212,8 @@ private: // Methods
                         ff_deriv = ff_diff/(upwind_sat[phase] - saturation_[downwind_cell][phase]);
                     }
                 }
-                ASSERT(ff_deriv >= 0.0);
+                ff_deriv = std::fabs(ff_deriv); // May be negative due to viscosity effects.
+                // ASSERT(ff_deriv >= 0.0);
                 face_max_ff_deriv = std::max(face_max_ff_deriv, ff_deriv);
             }
             if (upwind_cell >= 0) {
