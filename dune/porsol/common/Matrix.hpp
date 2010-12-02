@@ -445,24 +445,7 @@ namespace Dune {
         }
 
         /// @brief
-        ///    Assignment operator.
-        ///
-        /// @param [in] m
-        ///    Assignment right hand side.
-        FullMatrix& operator=(const FullMatrix& m)
-        {
-            ASSERT(numRows() == m.numRows());
-            ASSERT(numCols() == m.numCols());
-            for (int r = 0; r < numRows(); ++r) {
-                for (int c = 0; c < numCols(); ++c) {
-                    this->operator()(r, c) = m(r,c);
-                }
-            }
-            return *this;
-        }
-
-        /// @brief
-        ///    Assignment operator.
+        ///    Assignment operator for heterogeneous assignment.
         ///
         /// @tparam OtherSP
         ///    Storage policy of other matrix.
@@ -484,7 +467,6 @@ namespace Dune {
             }
             return *this;
         }
-
 
         /// @brief
         ///    Equality operator.
