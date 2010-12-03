@@ -205,35 +205,50 @@ private: // Methods
         cell_max_ff_deriv.clear();
         cell_max_ff_deriv.resize(grid.numCells(), 0.0);
         for (int face = 0; face < grid.numFaces(); ++face) {
+            // Set up needed quantities.
             int c0 = grid.faceCell(face, 0);
             int c1 = grid.faceCell(face, 1);
             int upwind_cell = (face_flux[face] > 0.0) ? c0 : c1;
             int downwind_cell = (face_flux[face] > 0.0) ? c1 : c0;
             PhaseVec upwind_sat = upwind_cell < 0 ? bdy_saturation_ : saturation_[upwind_cell];
+            PhaseVec upwind_relperm = upwind_cell < 0 ? bdy_relperm_ : relperm_[upwind_cell];
+            PhaseVec upwind_viscosity = upwind_cell < 0 ? bdy_viscosity_ : viscosity_[upwind_cell];
             PhaseVec upwind_ff = upwind_cell < 0 ? bdy_fractional_flow_ : fractional_flow_[upwind_cell];
             PhaseVec phase_flux(upwind_ff);
             phase_flux *= face_flux[face];
             CompVec change(0.0);
+
+            // Estimate max derivative of ff.
             double face_max_ff_deriv = 0.0;
+            if (downwind_cell >= 0) { // Only contribution on inflow and internal faces.
+                // Evaluating all functions at upwind viscosity.
+                PhaseVec downwind_mob(0.0);
+                double downwind_totmob = 0.0;
+                for (int phase = 0; phase < numPhases; ++phase) {
+                    downwind_mob[phase] = relperm_[downwind_cell][phase]/upwind_viscosity[phase];
+                    downwind_totmob += downwind_mob[phase];
+                }
+                PhaseVec downwind_ff = downwind_mob;
+                downwind_ff /= downwind_totmob;
+                PhaseVec ff_diff = upwind_ff;
+                ff_diff -= downwind_ff;
+                for (int phase = 0; phase < numPhases; ++phase) {
+                    if (std::fabs(ff_diff[phase]) > 1e-14) {
+                        double ff_deriv = ff_diff[phase]/(upwind_sat[phase] - saturation_[downwind_cell][phase]);
+                        ASSERT(ff_deriv >= 0.0);
+                        face_max_ff_deriv = std::max(face_max_ff_deriv, ff_deriv);
+                    }
+                }
+            }
+
+            // Compute z change.
             for (int phase = 0; phase < numPhases; ++phase) {
-                // Compute z change.
                 CompVec z_in_phase = upwind_cell < 0 ? bdy_comp_in_phase_[phase] : comp_in_phase_[upwind_cell][phase];
                 z_in_phase *= phase_flux[phase];
                 change += z_in_phase;
-                // Estimate derivative of fractional flow.
-                double ff_deriv = 0.0;
-                if (downwind_cell >= 0) { // Only contribution on inflow and internal faces.
-                    double ff_diff = upwind_ff[phase] - fractional_flow_[downwind_cell][phase];
-                    if (std::fabs(ff_diff) < 1e-14) {
-                        ff_deriv = 0.0; // No contribution if identical saturations.
-                    } else {
-                        ff_deriv = ff_diff/(upwind_sat[phase] - saturation_[downwind_cell][phase]);
-                    }
-                }
-                ff_deriv = std::fabs(ff_deriv); // May be negative due to viscosity effects.
-                // ASSERT(ff_deriv >= 0.0);
-                face_max_ff_deriv = std::max(face_max_ff_deriv, ff_deriv);
             }
+
+            // Update output variables.
             if (upwind_cell >= 0) {
                 cell_outflux[upwind_cell] += std::fabs(face_flux[face]);
             }
