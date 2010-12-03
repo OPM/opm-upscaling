@@ -58,7 +58,8 @@ public:
 //         cbp = A;
         std::copy(state.phase_to_comp_, state.phase_to_comp_ + numComponents*numPhases,
                   &comp_by_phase_[0][0]);
-        // total_volume_ = state.total_phase_volume_;
+        relperm_ = state.relperm_;
+        viscosity_ = state.viscosity_;
     }
 
     const PhaseVec& saturation() const
@@ -77,16 +78,23 @@ public:
         return comp_by_phase_;
     }
 
-//     double totalVolume() const
-//     {
-//         return total_volume_;
-//     }
+    const PhaseVec& relativePermeability() const
+    {
+        return relperm_;
+    }
+
+    const PhaseVec& viscosity() const
+    {
+        return viscosity_;
+    }
+
 private:
     const BlackoilFluid& fluid_;
     PhaseVec saturation_;
     PhaseVec fractional_flow_;
     ComponentInPhaseMatrix comp_by_phase_;
-    // double total_volume_;
+    PhaseVec relperm_;
+    PhaseVec viscosity_;
 };
 
 
@@ -142,9 +150,12 @@ private: // Data
     PhaseVec bdy_saturation_;
     PhaseVec bdy_fractional_flow_;
     typename EquationOfState::ComponentInPhaseMatrix bdy_comp_in_phase_;
-    // double bdy_total_volume_;
+    PhaseVec bdy_relperm_;
+    PhaseVec bdy_viscosity_;
     std::vector<PhaseVec> saturation_;
     std::vector<PhaseVec> fractional_flow_;
+    std::vector<PhaseVec> relperm_;
+    std::vector<PhaseVec> viscosity_;
     std::vector<typename EquationOfState::ComponentInPhaseMatrix> comp_in_phase_;
 
 
@@ -160,17 +171,22 @@ private: // Methods
         saturation_.resize(num_cells);
         fractional_flow_.resize(num_cells);
         comp_in_phase_.resize(num_cells);
+        relperm_.resize(num_cells);
+        viscosity_.resize(num_cells);
         for (int cell = 0; cell < num_cells; ++cell) {
             eos.compute(phase_pressure[cell], comp_amount[cell]);
             saturation_[cell] = eos.saturation();
             fractional_flow_[cell] = eos.fractionalFlow();
             comp_in_phase_[cell] = eos.compositionByPhase();
+            relperm_[cell] = eos.relativePermeability();
+            viscosity_[cell] = eos.viscosity();
         }
         eos.compute(external_pressure, external_composition);
         bdy_saturation_ = eos.saturation();
         bdy_fractional_flow_ = eos.fractionalFlow();
         bdy_comp_in_phase_ = eos.compositionByPhase();
-        // bdy_total_volume_ = eos.totalVolume();
+        bdy_relperm_ = eos.relativePermeability();
+        bdy_viscosity_ = eos.viscosity();
     }
 
 
