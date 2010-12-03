@@ -466,9 +466,10 @@ namespace Dune
                 fp_.totcompr[cell] = state.total_compressibility_;
                 fp_.voldiscr[cell] = (state.total_phase_volume_ - pgrid_->cellVolume(cell)*poro_[cell])/dt;
                 std::copy(state.mobility_.begin(), state.mobility_.end(), fp_.phasemobc.begin() + cell*np);
-                Dune::SharedFortranMatrix A(nc, np, state.phase_to_comp_);
-                Dune::SharedFortranMatrix cA(nc, np, &fp_.cellA[cell*nc*np]);
-                cA = A;
+                std::copy(state.phase_to_comp_, state.phase_to_comp_ + nc*np, &fp_.cellA[cell*nc*np]);
+//                 Dune::SharedFortranMatrix A(nc, np, state.phase_to_comp_);
+//                 Dune::SharedFortranMatrix cA(nc, np, &fp_.cellA[cell*nc*np]);
+//                 cA = A;
             }
             // Set phasemobf to average of cells' phase mobs, if pressures are equal, else use upwinding.
             // Set faceA by using average of cells' z and face pressures.
@@ -503,9 +504,10 @@ namespace Dune
                     }
                 }
                 typename FluidInterface::FluidState face_state = fluid.computeState(phase_pressure_face[face], z_face);
-                Dune::SharedFortranMatrix A(nc, np, face_state.phase_to_comp_);
-                Dune::SharedFortranMatrix fA(nc, np, &fp_.faceA[face*nc*np]);
-                fA = A;
+                std::copy(face_state.phase_to_comp_, face_state.phase_to_comp_ + nc*np, &fp_.faceA[face*nc*np]);
+//                 Dune::SharedFortranMatrix A(nc, np, face_state.phase_to_comp_);
+//                 Dune::SharedFortranMatrix fA(nc, np, &fp_.faceA[face*nc*np]);
+//                 fA = A;
             }
         }
 

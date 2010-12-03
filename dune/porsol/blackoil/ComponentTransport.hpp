@@ -50,12 +50,14 @@ public:
         }
         fractional_flow_ = state.mobility_;
         fractional_flow_ /= total_mobility;
-        Dune::SharedFortranMatrix A(numComponents, numPhases, state.phase_to_comp_);
-        Dune::SharedFortranMatrix cbp(numComponents, numPhases, &comp_by_phase_[0][0]);
         // Converting between orderings. @@afr: No longer converting,
         // because later we are accessing the columns of A as z_in_phase,
         // no longer the rows (that was a bug).
-        cbp = A;
+//         Dune::SharedFortranMatrix A(numComponents, numPhases, state.phase_to_comp_);
+//         Dune::SharedFortranMatrix cbp(numComponents, numPhases, &comp_by_phase_[0][0]);
+//         cbp = A;
+        std::copy(state.phase_to_comp_, state.phase_to_comp_ + numComponents*numPhases,
+                  &comp_by_phase_[0][0]);
         // total_volume_ = state.total_phase_volume_;
     }
 
