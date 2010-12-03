@@ -64,8 +64,8 @@ void simulate(const Grid& grid,
               const Fluid& fluid,
               FlowSolver& flow_solver,
               TransportSolver& transport_solver,
-              const int simulation_steps,
-              const double stepsize,
+              const double total_time,
+              const double initial_stepsize,
               const bool do_impes)
 {
     // Boundary conditions.
@@ -110,13 +110,33 @@ void simulate(const Grid& grid,
         double fluid_vol = state.total_phase_volume_;
         z[cell] *= pore_vol/fluid_vol;
     }
-
-    for (int step = 0; step < simulation_steps; ++step) {
+    double stepsize = initial_stepsize;
+    double current_time = 0.0;
+    int step = -1;
+    while (current_time < total_time) {
+        ++step;
         std::cout << "\n\n================    Simulation step number " << step
-                  << "    ===============" << std::endl;
+                  << "    ==============="
+                  << "\n      Current time (days) " << Dune::unit::convert::to(current_time, Dune::unit::day)
+                  << "\n      Total time (days)   " << Dune::unit::convert::to(total_time, Dune::unit::day)
+                  << "\n" << std::endl;
+
+        // Do not run past total_time.
+        if (current_time + stepsize > total_time) {
+            stepsize = total_time - current_time;
+        }
 
         // Solve flow system.
-        flow_solver.solve(fluid, phase_pressure, z, flow_bc, src, stepsize, do_impes);
+        enum FlowSolver::ReturnCode result
+            = flow_solver.solve(fluid, phase_pressure, z, flow_bc, src, stepsize, do_impes);
+
+        // If too long step, shorten \TODO This goes wrong since we should redo the previous step.
+        if (result != FlowSolver::SolveOk) {
+            std::cout << "********* Shortening stepsize, redoing step **********" << std::endl;
+            stepsize *= 0.5;
+            --step;
+            continue;
+        }
 
         // Get solution.
         typedef typename FlowSolver::SolutionType FlowSolution;
@@ -171,6 +191,8 @@ void simulate(const Grid& grid,
             dump << '\n';
         }
 
+        // Adjust time.
+        current_time += stepsize;
     }
 }
 
@@ -228,11 +250,11 @@ int main(int argc, char** argv)
     }
     flow_solver.init(param);
     transport_solver.init(param);
-    int simulation_steps = param.getDefault("simulation_steps", 10);
-    double stepsize = param.getDefault("stepsize", 1.0*unit::day);
+    double total_time = param.getDefault("total_time", 30*unit::day);
+    double initial_stepsize = param.getDefault("initial_stepsize", 1.0*unit::day);
     bool do_impes = param.getDefault("do_impes", false);
 
     // Run test.
-    simulate(grid, rock, fluid, flow_solver, transport_solver, simulation_steps, stepsize, do_impes);
+    simulate(grid, rock, fluid, flow_solver, transport_solver, total_time, initial_stepsize, do_impes);
 }
 

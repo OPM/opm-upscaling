@@ -113,7 +113,7 @@ namespace Dune
         }
 
 
-
+        enum ReturnCode { SolveOk, VolumeDiscrepancyTooLarge };
 
 
         /// @brief
@@ -147,13 +147,13 @@ namespace Dune
         ///    Control parameter for iterative linear solver software.
         ///    Type 0 selects a BiCGStab solver, type 1 selects AMG/CG.
         ///
-        void solve(const FluidInterface& fluid,
-                   const std::vector<typename FluidInterface::PhaseVec>& initial_phase_pressure,
-                   std::vector<typename FluidInterface::CompVec>& z,
-                   const BCInterface& bc,
-                   const std::vector<double>& src,
-                   const double dt,
-                   bool transport = false)
+        ReturnCode solve(const FluidInterface& fluid,
+                         const std::vector<typename FluidInterface::PhaseVec>& initial_phase_pressure,
+                         std::vector<typename FluidInterface::CompVec>& z,
+                         const BCInterface& bc,
+                         const std::vector<double>& src,
+                         const double dt,
+                         bool transport = false)
         {
             // Set starting pressures.
             int num_faces = pgrid_->numFaces();
@@ -212,10 +212,12 @@ namespace Dune
                 computeFluidProps(fluid, phase_pressure, phase_pressure_face, z, dt);
                 if (i == 0) {
                     initial_voldiscr = fp_.voldiscr;
+                    double rel_voldiscr = *std::max_element(fp_.relvoldiscr.begin(), fp_.relvoldiscr.end());
+                    if (rel_voldiscr > max_relative_voldiscr_) {
+                        std::cout << "    Relative volume discrepancy too large: " << rel_voldiscr << std::endl;
+                        return VolumeDiscrepancyTooLarge;
+                    }
                 }
-
-                double max_rel_voldiscr = *std::max_element(fp_.relvoldiscr.begin(), fp_.relvoldiscr.end());
-                std::cout << "    Max relative volume discrepancy: " << max_rel_voldiscr << std::endl;
 
                 // Assemble system matrix and rhs.
                 psolver_.assemble(src, bctypes, bcvalues, dt,
@@ -254,6 +256,8 @@ namespace Dune
             if (transport) {
                 psolver_.explicitTransport(dt, &flow_solution_.pressure_[0], &(z[0][0]));
             }
+
+            return SolveOk;
         }
 
     private:
