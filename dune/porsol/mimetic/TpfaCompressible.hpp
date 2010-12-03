@@ -76,6 +76,7 @@ namespace Dune
             inflow_mixture_ = mix;
             linsolver_.init(param);
             num_iter_ = param.getDefault("num_iter", 5);
+            max_relative_voldiscr_ = param.getDefault("max_relative_voldiscr", 0.15);
         }
 
 
@@ -212,6 +213,9 @@ namespace Dune
                 if (i == 0) {
                     initial_voldiscr = fp_.voldiscr;
                 }
+
+                double max_rel_voldiscr = *std::max_element(fp_.relvoldiscr.begin(), fp_.relvoldiscr.end());
+                std::cout << "    Max relative volume discrepancy: " << max_rel_voldiscr << std::endl;
 
                 // Assemble system matrix and rhs.
                 psolver_.assemble(src, bctypes, bcvalues, dt,
@@ -453,6 +457,7 @@ namespace Dune
             BOOST_STATIC_ASSERT(np == nc);
             fp_.totcompr.resize(num_cells);
             fp_.voldiscr.resize(num_cells);
+            fp_.relvoldiscr.resize(num_cells);
             fp_.cellA.resize(num_cells*nc*np);
             fp_.faceA.resize(num_faces*nc*np);
             fp_.phasemobf.resize(num_faces*np);
@@ -464,7 +469,9 @@ namespace Dune
             for (int cell = 0; cell < num_cells; ++cell) {
                 typename FluidInterface::FluidState state = fluid.computeState(phase_pressure[cell], z[cell]);
                 fp_.totcompr[cell] = state.total_compressibility_;
-                fp_.voldiscr[cell] = (state.total_phase_volume_ - pgrid_->cellVolume(cell)*poro_[cell])/dt;
+                double pv = pgrid_->cellVolume(cell)*poro_[cell];
+                fp_.voldiscr[cell] = (state.total_phase_volume_ - pv)/dt;
+                fp_.relvoldiscr[cell] = (state.total_phase_volume_ - pv)/pv;
                 std::copy(state.mobility_.begin(), state.mobility_.end(), fp_.phasemobc.begin() + cell*np);
                 std::copy(state.phase_to_comp_, state.phase_to_comp_ + nc*np, &fp_.cellA[cell*nc*np]);
 //                 Dune::SharedFortranMatrix A(nc, np, state.phase_to_comp_);
@@ -515,6 +522,7 @@ namespace Dune
         {
             std::vector<double> totcompr;
             std::vector<double> voldiscr;
+            std::vector<double> relvoldiscr;
             std::vector<double> cellA;
             std::vector<double> faceA;
             std::vector<double> phasemobf;
@@ -530,6 +538,7 @@ namespace Dune
 
         typename FluidInterface::CompVec inflow_mixture_;
         int num_iter_;
+        double max_relative_voldiscr_;
     };
 
 
