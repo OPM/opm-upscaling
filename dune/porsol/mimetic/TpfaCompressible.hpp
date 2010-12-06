@@ -217,8 +217,8 @@ namespace Dune
                 // (Re-)compute fluid properties.
                 computeFluidProps(fluid, phase_pressure, phase_pressure_face, z, dt);
                 if (i == 0) {
-                    initial_voldiscr = fp_.voldiscr;
-                    double rel_voldiscr = *std::max_element(fp_.relvoldiscr.begin(), fp_.relvoldiscr.end());
+                    initial_voldiscr = voldiscr;
+                    double rel_voldiscr = *std::max_element(relvoldiscr.begin(), relvoldiscr.end());
                     if (rel_voldiscr > max_relative_voldiscr_) {
                         std::cout << "    Relative volume discrepancy too large: " << rel_voldiscr << std::endl;
                         return VolumeDiscrepancyTooLarge;
@@ -372,87 +372,22 @@ namespace Dune
                                const std::vector<typename FluidInterface::CompVec>& z,
                                const double dt)
         {
+            fp_.compute(*pgrid_, fluid, phase_pressure, phase_pressure_face, z, inflow_mixture_);
             int num_cells = z.size();
-            int num_faces = pgrid_->numFaces();
             ASSERT(num_cells == pgrid_->numCells());
-            const int np = FluidInterface::numPhases;
-            const int nc = FluidInterface::numComponents;
-            BOOST_STATIC_ASSERT(np == nc);
-            fp_.totcompr.resize(num_cells);
-            fp_.voldiscr.resize(num_cells);
-            fp_.relvoldiscr.resize(num_cells);
-            fp_.cellA.resize(num_cells*nc*np);
-            fp_.faceA.resize(num_faces*nc*np);
-            fp_.phasemobf.resize(num_faces*np);
-            fp_.phasemobc.resize(num_cells*np); // Just a helper
-            typedef typename FluidInterface::PhaseVec PhaseVec;
-            typedef typename FluidInterface::CompVec CompVec;
-            PhaseVec mob;
-            BOOST_STATIC_ASSERT(np == 3);
+            voldiscr.resize(num_cells);
+            relvoldiscr.resize(num_cells);
             for (int cell = 0; cell < num_cells; ++cell) {
-                typename FluidInterface::FluidState state = fluid.computeState(phase_pressure[cell], z[cell]);
-                fp_.totcompr[cell] = state.total_compressibility_;
                 double pv = pgrid_->cellVolume(cell)*poro_[cell];
-                fp_.voldiscr[cell] = (state.total_phase_volume_ - pv)/dt;
-                fp_.relvoldiscr[cell] = (state.total_phase_volume_ - pv)/pv;
-                std::copy(state.mobility_.begin(), state.mobility_.end(), fp_.phasemobc.begin() + cell*np);
-                std::copy(state.phase_to_comp_, state.phase_to_comp_ + nc*np, &fp_.cellA[cell*nc*np]);
-//                 Dune::SharedFortranMatrix A(nc, np, state.phase_to_comp_);
-//                 Dune::SharedFortranMatrix cA(nc, np, &fp_.cellA[cell*nc*np]);
-//                 cA = A;
-            }
-            // Set phasemobf to average of cells' phase mobs, if pressures are equal, else use upwinding.
-            // Set faceA by using average of cells' z and face pressures.
-            for (int face = 0; face < num_faces; ++face) {
-                int c[2] = { pgrid_->faceCell(face, 0), pgrid_->faceCell(face, 1) };
-                PhaseVec phase_p[2];
-                CompVec z_face(0.0);
-                int num = 0;
-                for (int j = 0; j < 2; ++j) {
-                    if (c[j] >= 0) {
-                        phase_p[j] = phase_pressure[c[j]];
-                        z_face += z[c[j]];
-                        ++num;
-                    } else {
-                        // Boundaries get essentially -inf pressure for upwinding purpose. \TODO handle BCs.
-                        phase_p[j] = PhaseVec(-1e100);
-                        // \TODO The two lines below are wrong for outflow faces.
-                        z_face += inflow_mixture_;
-                        ++num;
-                    }
-                }
-                z_face /= double(num);
-                for (int phase = 0; phase < np; ++phase) {
-                    if (phase_p[0][phase] == phase_p[1][phase]) {
-                        // Average mobilities.
-                        double aver = 0.5*(fp_.phasemobc[np*c[0] + phase] + fp_.phasemobc[np*c[1] + phase]);
-                        fp_.phasemobf[np*face + phase] = aver;
-                    } else {
-                        // Upwind mobilities.
-                        int upwind = (phase_p[0][phase] > phase_p[1][phase]) ? 0 : 1;
-                        fp_.phasemobf[np*face + phase] = fp_.phasemobc[np*c[upwind] + phase];
-                    }
-                }
-                typename FluidInterface::FluidState face_state = fluid.computeState(phase_pressure_face[face], z_face);
-                std::copy(face_state.phase_to_comp_, face_state.phase_to_comp_ + nc*np, &fp_.faceA[face*nc*np]);
-//                 Dune::SharedFortranMatrix A(nc, np, face_state.phase_to_comp_);
-//                 Dune::SharedFortranMatrix fA(nc, np, &fp_.faceA[face*nc*np]);
-//                 fA = A;
+                voldiscr[cell] = (fp_.totphasevol[cell] - pv)/dt;
+                relvoldiscr[cell] = (fp_.totphasevol[cell] - pv)/pv;
             }
         }
 
-        struct FluidProps
-        {
-            std::vector<double> totcompr;
-            std::vector<double> voldiscr;
-            std::vector<double> relvoldiscr;
-            std::vector<double> cellA;
-            std::vector<double> faceA;
-            std::vector<double> phasemobf;
-            std::vector<double> phasemobc;
-        };
+        std::vector<double> voldiscr;
+        std::vector<double> relvoldiscr;
 
-        FluidProps fp_;
+        typename FluidInterface::FluidData fp_;
         const GridInterface* pgrid_;
         std::vector<double> poro_;
         PressureSolver psolver_;

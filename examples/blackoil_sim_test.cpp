@@ -50,12 +50,12 @@
 
 #include <dune/porsol/mimetic/TpfaCompressible.hpp>
 #include <dune/common/param/ParameterGroup.hpp>
+#include <dune/common/StopWatch.hpp>
 #include <dune/porsol/common/setupGridAndProps.hpp>
 #include <dune/porsol/blackoil/fluid/FluidMatrixInteractionBlackoil.hpp>
 #include <dune/porsol/blackoil/BlackoilFluid.hpp>
 
 #include <dune/porsol/blackoil/ComponentTransport.hpp>
-
 
 
 template<class Grid, class Rock, class Fluid, class FlowSolver, class TransportSolver>
@@ -254,7 +254,11 @@ int main(int argc, char** argv)
     double initial_stepsize = param.getDefault("initial_stepsize", 1.0*unit::day);
     bool do_impes = param.getDefault("do_impes", false);
 
-    // Run test.
+    // Run simulation.
+    Dune::time::StopWatch clock;
+    clock.start();
     simulate(grid, rock, fluid, flow_solver, transport_solver, total_time, initial_stepsize, do_impes);
+    clock.stop();
+    std::cout << "\n\nSimulation clock time (secs): " << clock.secsSinceStart() << std::endl;
 }
 
