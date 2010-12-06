@@ -82,6 +82,7 @@ namespace Dune
 
         /// @brief
         ///    Setup routine, does grid/rock-dependent initialization.
+        ///
         /// @param [in] grid
         ///    The grid.
         ///
@@ -93,6 +94,10 @@ namespace Dune
         ///    represents the strength of the gravity field (in units
         ///    of m/s^2) while its direction is the direction of
         ///    gravity in the current model.
+        ///
+        /// @param [in] bc
+        ///    Boundary conditions.
+        ///
         void setup(const GridInterface&         grid,
                    const RockInterface&         rock,
                    const typename GridInterface::Vector& grav,
@@ -147,11 +152,26 @@ namespace Dune
         /// @brief
         ///    Construct and solve system of linear equations for the
         ///    pressure values on each interface/contact between
-        ///    neighbouring grid cells.  Recover cell pressure and
-        ///    interface fluxes.  Following a call to @code solve()
-        ///    @encode, you may recover the flow solution from the
-        ///    @code getSolution() @endcode method.
+        ///    neighbouring grid cells.  Recover cell and face
+        ///    pressures by phase and interface volumetric fluxes.
         ///
+        ///
+        /// @param [in] fluid
+        ///    Fluid behaviour is governed by this object.
+        ///
+        /// @param [inout] cell_pressure
+        ///    Phase pressures per cell.
+        ///
+        /// @param [inout] face_pressure
+        ///    Phase pressures per face.
+        ///
+        /// @param [inout] z
+        ///    Surface volume per cell. Only changed if the @code
+        ///    transport @endcode argument is true.
+        ///
+        /// @param [out] face_flux
+        ///    Total (summed over all phases) volume flux (signed)
+        ///    across each face.
         ///
         /// @param [in] src
         ///    Explicit source terms.  One scalar value for each grid
@@ -159,32 +179,25 @@ namespace Dune
         ///    being injected into (>0) or extracted from (<0) a given
         ///    grid cell.
         ///
-        /// @param [in] residual_tolerance
-        ///    Control parameter for iterative linear solver software.
-        ///    The iteration process is terminated when the norm of
-        ///    the linear system residual is less than @code
-        ///    residual_tolerance @endcode times the initial residual.
+        /// @param [in] dt
+        ///    Timestep for pressure solver.
         ///
-        /// @param [in] linsolver_verbosity
-        ///    Control parameter for iterative linear solver software.
-        ///    Verbosity level 0 prints nothing, level 1 prints
-        ///    summary information, level 2 prints data for each
-        ///    iteration.
-        ///
-        /// @param [in] linsolver_type
-        ///    Control parameter for iterative linear solver software.
-        ///    Type 0 selects a BiCGStab solver, type 1 selects AMG/CG.
+        /// @param [in] transport
+        ///    If true, modify @code z @endcode by IMPES scheme.
         ///
         ReturnCode solve(const FluidInterface& fluid,
-                         const std::vector<typename FluidInterface::PhaseVec>& initial_phase_pressure,
-                         std::vector<typename FluidInterface::CompVec>& z,
+                         std::vector<typename FluidInterface::PhaseVec>& cell_pressure,
+                         std::vector<typename FluidInterface::PhaseVec>& face_pressure,
+                         std::vector<typename FluidInterface::CompVec>& cell_z,
+                         std::vector<double>& face_flux,
                          const std::vector<double>& src,
                          const double dt,
                          bool transport = false)
         {
             // Set starting pressures.
             int num_faces = pgrid_->numFaces();
-            std::vector<typename FluidInterface::PhaseVec> phase_pressure = initial_phase_pressure;
+            #if 0
+            std::vector<typename FluidInterface::PhaseVec> phase_pressure = cell_pressure;
             std::vector<typename FluidInterface::PhaseVec> phase_pressure_face(num_faces);
             for (int face = 0; face < num_faces; ++face) {
                 if (bctypes_[face] == PressureSolver::FBC_PRESSURE) {
@@ -202,20 +215,20 @@ namespace Dune
                     phase_pressure_face[face] /= double(num);
                 }
             }
+            #endif
 
             // Assemble and solve.
+            int num_cells = cell_z.size();
+            std::vector<double> cell_pressure_scalar(num_cells);
             // Set initial pressure to Liquid phase pressure. \TODO what is correct with capillary pressure?
-            int num_cells = z.size();
-            flow_solution_.pressure_.resize(num_cells);
             for (int cell = 0; cell < num_cells; ++cell) {
-                flow_solution_.pressure_[cell] = phase_pressure[cell][FluidInterface::Liquid];
+                cell_pressure_scalar[cell] = cell_pressure[cell][FluidInterface::Liquid];
             }
-            std::vector<double> face_pressure;
-            std::vector<double> face_flux;
             std::vector<double> initial_voldiscr;
+            std::vector<double> face_pressure_scalar;
             for (int i = 0; i < num_iter_; ++i) {
                 // (Re-)compute fluid properties.
-                computeFluidProps(fluid, phase_pressure, phase_pressure_face, z, dt);
+                computeFluidProps(fluid, cell_pressure, face_pressure, cell_z, dt);
                 if (i == 0) {
                     initial_voldiscr = voldiscr;
                     double rel_voldiscr = *std::max_element(relvoldiscr.begin(), relvoldiscr.end());
@@ -228,7 +241,7 @@ namespace Dune
                 // Assemble system matrix and rhs.
                 psolver_.assemble(src, bctypes_, bcvalues_, dt,
                                   fp_.totcompr, initial_voldiscr, fp_.cellA, fp_.faceA, fp_.phasemobf,
-                                  flow_solution_.pressure_);
+                                  cell_pressure_scalar);
                 // Solve system.
                 PressureSolver::LinearSystem s;
                 psolver_.linearSystem(s);
@@ -238,14 +251,13 @@ namespace Dune
                           << "Residual reduction achieved is " << res.reduction << '\n');
                 }
                 // Get pressures and face fluxes.
-                flow_solution_.clear();
-                psolver_.computePressuresAndFluxes(flow_solution_.pressure_, face_pressure, face_flux);
+                psolver_.computePressuresAndFluxes(cell_pressure_scalar, face_pressure_scalar, face_flux);
                 // Copy to phase pressures. \TODO handle capillary pressure.
                 for (int cell = 0; cell < num_cells; ++cell) {
-                    phase_pressure[cell] = flow_solution_.pressure_[cell];
+                    cell_pressure[cell] = cell_pressure_scalar[cell];
                 }
                 for (int face = 0; face < num_faces; ++face) {
-                    phase_pressure_face[face] = face_pressure[face];
+                    face_pressure[face] = face_pressure_scalar[face];
                 }
 
                 // DUMP HACK
@@ -253,14 +265,12 @@ namespace Dune
                 fname += boost::lexical_cast<std::string>(i);
                 std::ofstream f(fname.c_str());
                 f.precision(15);
-                std::copy(face_pressure.begin(), face_pressure.end(), std::ostream_iterator<double>(f, "\n"));
+                std::copy(face_pressure_scalar.begin(), face_pressure_scalar.end(),
+                          std::ostream_iterator<double>(f, "\n"));
             }
 
-            // Compute set fluxes of flow solution.
-            flow_solution_.faceflux_.assign(face_flux.begin(), face_flux.end());
-
             if (transport) {
-                psolver_.explicitTransport(dt, &flow_solution_.pressure_[0], &(z[0][0]));
+                psolver_.explicitTransport(dt, &cell_pressure_scalar[0], &(cell_z[0][0]));
             }
 
             return SolveOk;
@@ -269,111 +279,15 @@ namespace Dune
 
 
 
-        /// @brief
-        ///    Type representing the solution to a given flow problem.
-        class FlowSolution {
-        public:
-            friend class TpfaCompressible;
-
-            /// @brief
-            ///    The element type of the matrix representation of
-            ///    the mimetic inner product.  Assumed to be a
-            ///    floating point type, and usually, @code Scalar
-            ///    @endcode is an alias for @code double @endcode.
-            typedef double Scalar;
-
-            /// @brief
-            ///    Retrieve the current cell pressure in a given cell.
-            ///
-            /// @param [in] c
-            ///    Cell for which to retrieve the current cell
-            ///    pressure.
-            ///
-            /// @return
-            ///    Current cell pressure in cell @code *c @endcode.
-            Scalar cellPressure(const int cell) const
-            {
-                return pressure_[cell];
-            }
-
-            const std::vector<double>& cellPressure() const
-            {
-                return pressure_;
-            }
-
-            /// @brief
-            ///    Retrieve current flux across given face in
-            ///    direction of outward normal vector.
-            ///
-            /// @param [in] f
-            ///    Face across which to retrieve the current signed
-            ///    flux.
-            ///
-            /// @return
-            ///    Current outward flux across face @code *f @endcode.
-            Scalar faceFlux(const int face) const
-            {
-                return faceflux_[face];
-            }
-
-            const std::vector<double>& faceFlux() const
-            {
-                return faceflux_;
-            }
-        private:
-            std::vector<Scalar> pressure_;
-            std::vector<Scalar> faceflux_;
-
-            void clear()
-            {
-                pressure_.clear();
-                faceflux_.clear();
-            }
-        };
-
-
-
-
-
-        /// @brief Type representing the solution to the problem
-        ///    defined by the parameters to @code solve() @endcode.
-        ///    Always a reference-to-const.  The @code SolutionType
-        ///    @endcode exposes methods @code cellPressure() @endcode
-        ///    and @code faceFlux() @endcode from which the cell
-        ///    pressures and signed fluxes across a facemay be
-        ///    recovered.
-        typedef const FlowSolution& SolutionType;
-
-
-
-
-
-        /// @brief
-        ///    Recover the solution to the problem defined by the
-        ///    parameters to method @code solve() @endcode.  This
-        ///    solution is meaningless without a previous call to
-        ///    method @code solve() @endcode.
-        ///
-        /// @return
-        ///    The current solution.
-        SolutionType getSolution()
-        {
-            return flow_solution_;
-        }
-
-
-
-
-
     private:
         void computeFluidProps(const FluidInterface& fluid,
                                const std::vector<typename FluidInterface::PhaseVec>& phase_pressure,
                                const std::vector<typename FluidInterface::PhaseVec>& phase_pressure_face,
-                               const std::vector<typename FluidInterface::CompVec>& z,
+                               const std::vector<typename FluidInterface::CompVec>& cell_z,
                                const double dt)
         {
-            fp_.compute(*pgrid_, fluid, phase_pressure, phase_pressure_face, z, inflow_mixture_);
-            int num_cells = z.size();
+            fp_.compute(*pgrid_, fluid, phase_pressure, phase_pressure_face, cell_z, inflow_mixture_);
+            int num_cells = cell_z.size();
             ASSERT(num_cells == pgrid_->numCells());
             voldiscr.resize(num_cells);
             relvoldiscr.resize(num_cells);
@@ -392,7 +306,6 @@ namespace Dune
         std::vector<double> poro_;
         PressureSolver psolver_;
         LinearSolverISTL linsolver_;
-        FlowSolution flow_solution_;
         std::vector<PressureSolver::FlowBCTypes> bctypes_;
         std::vector<double> bcvalues_;
 

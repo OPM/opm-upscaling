@@ -89,6 +89,8 @@ void simulate(const Grid& grid,
 //         src.back() = -1.0;
 //     }
 
+    int num_cells = grid.numCells();
+    int num_faces = grid.numFaces();
 
     // Initial state.
     typedef typename Fluid::CompVec CompVec;
@@ -100,19 +102,39 @@ void simulate(const Grid& grid,
     std::vector<CompVec> z(grid.numCells(), init_z);
     MESSAGE("******* Assuming zero capillary pressures *******");
     PhaseVec init_p(100.0*Dune::unit::barsa);
-    std::vector<PhaseVec> phase_pressure(grid.numCells(), init_p);
+    std::vector<PhaseVec> cell_pressure(grid.numCells(), init_p);
     PhaseVec bdy_p(300.0*Dune::unit::barsa);
     // Rescale z values so that pore volume is filled exactly
     // (to get zero initial volume discrepancy).
     for (int cell = 0; cell < grid.numCells(); ++cell) {
         double pore_vol = grid.cellVolume(cell)*rock.porosity(cell);
-        typename Fluid::FluidState state = fluid.computeState(phase_pressure[cell], z[cell]);
+        typename Fluid::FluidState state = fluid.computeState(cell_pressure[cell], z[cell]);
         double fluid_vol = state.total_phase_volume_;
         z[cell] *= pore_vol/fluid_vol;
     }
+    std::vector<PhaseVec> face_pressure(num_faces);
+    for (int face = 0; face < num_faces; ++face) {
+        int bid = grid.boundaryId(face);
+        if (flow_bc.flowCond(bid).isDirichlet()) {
+            face_pressure[face] = flow_bc.flowCond(bid).pressure();
+        } else {
+            int c[2] = { grid.faceCell(face, 0), grid.faceCell(face, 1) };
+            face_pressure[face] = 0.0;
+            int num = 0;
+            for (int j = 0; j < 2; ++j) {
+                if (c[j] >= 0) {
+                    face_pressure[face] += cell_pressure[c[j]];
+                    ++num;
+                }
+            }
+            face_pressure[face] /= double(num);
+        }
+    }
+
     double stepsize = initial_stepsize;
     double current_time = 0.0;
     int step = -1;
+    std::vector<double> face_flux;
     while (current_time < total_time) {
         ++step;
         std::cout << "\n\n================    Simulation step number " << step
@@ -128,7 +150,7 @@ void simulate(const Grid& grid,
 
         // Solve flow system.
         enum FlowSolver::ReturnCode result
-            = flow_solver.solve(fluid, phase_pressure, z, src, stepsize, do_impes);
+            = flow_solver.solve(fluid, cell_pressure, face_pressure, z, face_flux, src, stepsize, do_impes);
 
         // If too long step, shorten \TODO This goes wrong since we should redo the previous step.
         if (result != FlowSolver::SolveOk) {
@@ -138,33 +160,24 @@ void simulate(const Grid& grid,
             continue;
         }
 
-        // Get solution.
-        typedef typename FlowSolver::SolutionType FlowSolution;
-        FlowSolution soln = flow_solver.getSolution();
-
-        // Update variables used as input for solvers.
-        for (int cell = 0; cell < grid.numCells(); ++cell) {
-            phase_pressure[cell] = soln.cellPressure(cell);
-        }
-
         // Transport.
         if (!do_impes) {
             Opm::EquationOfStateBlackOil eos(fluid);
-            transport_solver.transport(grid, rock, bdy_p, bdy_z, soln.faceFlux(), eos, phase_pressure, stepsize, z);
+            transport_solver.transport(grid, rock, bdy_p, bdy_z, face_flux, eos, cell_pressure, stepsize, z);
         }
 
         // Output to VTK.
         std::vector<typename Grid::Vector> cell_velocity;
-        estimateCellVelocitySimpleInterface(cell_velocity, grid, soln);
+        estimateCellVelocitySimpleInterface(cell_velocity, grid, face_flux);
         // Dune's vtk writer wants multi-component data to be flattened.
+        std::vector<double> cell_pressure_flat(&*cell_pressure.front().begin(),
+                                               &*cell_pressure.back().end());
         std::vector<double> cell_velocity_flat(&*cell_velocity.front().begin(),
                                                &*cell_velocity.back().end());
         std::vector<double> z_flat(&*z.front().begin(),
                                    &*z.back().end());
-        //     getCellPressure(cell_pressure, grid, soln);
-        //    output_pressure = soln.cellPressure();
         Dune::VTKWriter<typename Grid::LeafGridView> vtkwriter(grid.leafView());
-        vtkwriter.addCellData(soln.cellPressure(), "pressure");
+        vtkwriter.addCellData(cell_pressure_flat, "pressure", Fluid::numPhases);
         vtkwriter.addCellData(cell_velocity_flat, "velocity", Grid::dimension);
         vtkwriter.addCellData(z_flat, "z", Fluid::numComponents);
         vtkwriter.write("testsolution-" + boost::lexical_cast<std::string>(step),
@@ -182,7 +195,11 @@ void simulate(const Grid& grid,
         matlabdumpname += boost::lexical_cast<std::string>(step);
         std::ofstream dump(matlabdumpname.c_str());
         dump.precision(15);
-        std::copy(soln.cellPressure().begin(), soln.cellPressure().end(),
+        std::vector<double> liq_press(num_cells);
+        for (int cell = 0; cell < num_cells; ++cell) {
+            liq_press[cell] = cell_pressure[cell][Fluid::Liquid];
+        }
+        std::copy(liq_press.begin(), liq_press.end(),
                   std::ostream_iterator<double>(dump, " "));
         dump << '\n';
         for (int comp = 0; comp < Fluid::numComponents; ++comp) {
