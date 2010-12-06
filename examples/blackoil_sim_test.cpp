@@ -150,8 +150,7 @@ void simulate(const Grid& grid,
     typedef typename Fluid::PhaseVec PhaseVec;
     CompVec init_z(0.0);
     init_z[Fluid::Oil] = 1.0;
-    CompVec bdy_z(0.0);
-    bdy_z[Fluid::Gas] = 1.0;
+    CompVec bdy_z = flow_solver.inflowMixture();
     std::vector<CompVec> z(grid.numCells(), init_z);
     MESSAGE("******* Assuming zero capillary pressures *******");
     PhaseVec init_p(100.0*Dune::unit::barsa);

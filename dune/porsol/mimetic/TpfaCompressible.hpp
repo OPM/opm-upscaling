@@ -56,18 +56,18 @@ namespace Dune
             // Initialize inflow mixture to a fixed, user-provided mix.
             typename FluidInterface::CompVec mix(0.0);
             const int nc = FluidInterface::numComponents;
+            double inflow_mixture_gas = param.getDefault("inflow_mixture_gas", 1.0);
             double inflow_mixture_oil = param.getDefault("inflow_mixture_oil", 0.0);
-            double inflow_mixture_gas = param.getDefault("inflow_mixture_gas", nc == 3 ? 0.0 : 1.0);
             switch (nc) {
             case 2:
-                mix[0] = inflow_mixture_oil;
-                mix[1] = inflow_mixture_gas;
+                mix[FluidInterface::Gas] = inflow_mixture_gas;
+                mix[FluidInterface::Oil] = inflow_mixture_oil;
                 break;
             case 3: {
-                double inflow_mixture_water = param.getDefault("inflow_mixture_water", 1.0);
-                mix[0] = inflow_mixture_water;
-                mix[1] = inflow_mixture_oil;
-                mix[0] = inflow_mixture_gas;
+                double inflow_mixture_water = param.getDefault("inflow_mixture_water", 0.0);
+                mix[FluidInterface::Water] = inflow_mixture_water;
+                mix[FluidInterface::Gas] = inflow_mixture_gas;
+                mix[FluidInterface::Oil] = inflow_mixture_oil;
                 break;
             }
             default:
@@ -78,6 +78,18 @@ namespace Dune
             num_iter_ = param.getDefault("num_iter", 5);
             max_relative_voldiscr_ = param.getDefault("max_relative_voldiscr", 0.15);
         }
+
+
+
+
+        /// @brief
+        ///    Accessor for the inflow mixture.
+        typename FluidInterface::CompVec inflowMixture() const
+        {
+            return inflow_mixture_;
+        }
+
+
 
 
         /// @brief
