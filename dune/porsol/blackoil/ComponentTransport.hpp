@@ -30,75 +30,7 @@ namespace Opm
 {
 
 
-class EquationOfStateBlackOil : public BlackoilDefs
-{
-public:
-    typedef std::tr1::array<CompVec, numPhases> ComponentInPhaseMatrix;
-
-    EquationOfStateBlackOil(const BlackoilFluid& fluid)
-        : fluid_(fluid)
-    {
-    }
-
-    void compute(const PhaseVec& phase_pressure, const CompVec& z)
-    {
-        BlackoilFluid::FluidState state = fluid_.computeState(phase_pressure, z);
-        saturation_ = state.saturation_;
-        double total_mobility = 0.0;
-        for (int phase = 0; phase < numPhases; ++phase) {
-            total_mobility += state.mobility_[phase];
-        }
-        fractional_flow_ = state.mobility_;
-        fractional_flow_ /= total_mobility;
-        // Converting between orderings. @@afr: No longer converting,
-        // because later we are accessing the columns of A as z_in_phase,
-        // no longer the rows (that was a bug).
-//         Dune::SharedFortranMatrix A(numComponents, numPhases, state.phase_to_comp_);
-//         Dune::SharedFortranMatrix cbp(numComponents, numPhases, &comp_by_phase_[0][0]);
-//         cbp = A;
-        std::copy(state.phase_to_comp_, state.phase_to_comp_ + numComponents*numPhases,
-                  &comp_by_phase_[0][0]);
-        relperm_ = state.relperm_;
-        viscosity_ = state.viscosity_;
-    }
-
-    const PhaseVec& saturation() const
-    {
-        return saturation_;
-    }
-
-    const PhaseVec& fractionalFlow() const
-    {
-        return fractional_flow_;
-    }
-
-    /// The transpose of the A matrix.
-    const ComponentInPhaseMatrix& compositionByPhase() const
-    {
-        return comp_by_phase_;
-    }
-
-    const PhaseVec& relativePermeability() const
-    {
-        return relperm_;
-    }
-
-    const PhaseVec& viscosity() const
-    {
-        return viscosity_;
-    }
-
-private:
-    const BlackoilFluid& fluid_;
-    PhaseVec saturation_;
-    PhaseVec fractional_flow_;
-    ComponentInPhaseMatrix comp_by_phase_;
-    PhaseVec relperm_;
-    PhaseVec viscosity_;
-};
-
-
-template <class Grid, class Rock, class EquationOfState>
+template <class Grid, class Rock, class Fluid>
 class ExplicitCompositionalTransport : public BlackoilDefs
 {
 public:
@@ -108,13 +40,14 @@ public:
 
     void transport(const Grid& grid,
                    const Rock& rock,
+                   const Fluid& fluid,
                    const PhaseVec& external_pressure,
                    const CompVec& external_composition,
                    const std::vector<double>& face_flux,
-                   EquationOfState& eos,
-                   const std::vector<PhaseVec>& phase_pressure,
+                   const std::vector<PhaseVec>& cell_pressure,
+                   const std::vector<PhaseVec>& face_pressure,
                    const double dt,
-                   std::vector<CompVec>& comp_amount)
+                   std::vector<CompVec>& cell_z)
     {
         int num_cells = grid.numCells();
         std::vector<CompVec> comp_change;
@@ -122,7 +55,7 @@ public:
         std::vector<double> cell_max_ff_deriv;
         double cur_time = 0.0;
         while (cur_time < dt) {
-            updateFluidProperties(phase_pressure, comp_amount, external_pressure, external_composition, eos);
+            updateFluidProperties(grid, fluid, cell_pressure, face_pressure, cell_z, external_pressure, external_composition);
             computeChange(grid, face_flux, comp_change, cell_outflux, cell_max_ff_deriv);
             double min_time = 1e100;
             for (int cell = 0; cell < num_cells; ++cell) {
@@ -140,53 +73,44 @@ public:
             std::cout << "Taking step in explicit transport solver: " << step_time << std::endl;
             for (int cell = 0; cell < num_cells; ++cell) {
                 comp_change[cell] *= (step_time/rock.porosity(cell));
-                comp_amount[cell] += comp_change[cell];
+                cell_z[cell] += comp_change[cell];
             }
         }
     }
 
 
 private: // Data
+    typename Fluid::FluidData fluid_data_;
     PhaseVec bdy_saturation_;
     PhaseVec bdy_fractional_flow_;
-    typename EquationOfState::ComponentInPhaseMatrix bdy_comp_in_phase_;
+    std::tr1::array<CompVec, numPhases> bdy_comp_in_phase_;
     PhaseVec bdy_relperm_;
     PhaseVec bdy_viscosity_;
-    std::vector<PhaseVec> saturation_;
-    std::vector<PhaseVec> fractional_flow_;
-    std::vector<PhaseVec> relperm_;
-    std::vector<PhaseVec> viscosity_;
-    std::vector<typename EquationOfState::ComponentInPhaseMatrix> comp_in_phase_;
-
 
 private: // Methods
 
-    void updateFluidProperties(const std::vector<PhaseVec>& phase_pressure,
-                               const std::vector<CompVec>& comp_amount,
+    void updateFluidProperties(const Grid& grid,
+                               const Fluid& fluid,
+                               const std::vector<PhaseVec>& cell_pressure,
+                               const std::vector<PhaseVec>& face_pressure,
+                               const std::vector<CompVec>& cell_z,
                                const PhaseVec& external_pressure,
-                               const CompVec& external_composition,
-                               EquationOfState& eos)
+                               const CompVec& external_composition)
     {
-        int num_cells = phase_pressure.size();
-        saturation_.resize(num_cells);
-        fractional_flow_.resize(num_cells);
-        comp_in_phase_.resize(num_cells);
-        relperm_.resize(num_cells);
-        viscosity_.resize(num_cells);
-        for (int cell = 0; cell < num_cells; ++cell) {
-            eos.compute(phase_pressure[cell], comp_amount[cell]);
-            saturation_[cell] = eos.saturation();
-            fractional_flow_[cell] = eos.fractionalFlow();
-            comp_in_phase_[cell] = eos.compositionByPhase();
-            relperm_[cell] = eos.relativePermeability();
-            viscosity_[cell] = eos.viscosity();
+        fluid_data_.compute(grid, fluid, cell_pressure, face_pressure, cell_z, external_composition);
+
+        BlackoilFluid::FluidState state = fluid.computeState(external_pressure, external_composition);
+        bdy_saturation_ = state.saturation_;
+        double total_mobility = 0.0;
+        for (int phase = 0; phase < numPhases; ++phase) {
+            total_mobility += state.mobility_[phase];
         }
-        eos.compute(external_pressure, external_composition);
-        bdy_saturation_ = eos.saturation();
-        bdy_fractional_flow_ = eos.fractionalFlow();
-        bdy_comp_in_phase_ = eos.compositionByPhase();
-        bdy_relperm_ = eos.relativePermeability();
-        bdy_viscosity_ = eos.viscosity();
+        bdy_fractional_flow_ = state.mobility_;
+        bdy_fractional_flow_ /= total_mobility;
+        std::copy(state.phase_to_comp_, state.phase_to_comp_ + numComponents*numPhases,
+                  &bdy_comp_in_phase_[0][0]);
+        bdy_relperm_ = state.relperm_;
+        bdy_viscosity_ = state.viscosity_;
     }
 
 
@@ -210,10 +134,10 @@ private: // Methods
             int c1 = grid.faceCell(face, 1);
             int upwind_cell = (face_flux[face] > 0.0) ? c0 : c1;
             int downwind_cell = (face_flux[face] > 0.0) ? c1 : c0;
-            PhaseVec upwind_sat = upwind_cell < 0 ? bdy_saturation_ : saturation_[upwind_cell];
-            PhaseVec upwind_relperm = upwind_cell < 0 ? bdy_relperm_ : relperm_[upwind_cell];
-            PhaseVec upwind_viscosity = upwind_cell < 0 ? bdy_viscosity_ : viscosity_[upwind_cell];
-            PhaseVec upwind_ff = upwind_cell < 0 ? bdy_fractional_flow_ : fractional_flow_[upwind_cell];
+            PhaseVec upwind_sat = upwind_cell < 0 ? bdy_saturation_ : fluid_data_.saturation[upwind_cell];
+            PhaseVec upwind_relperm = upwind_cell < 0 ? bdy_relperm_ : fluid_data_.rel_perm[upwind_cell];
+            PhaseVec upwind_viscosity = upwind_cell < 0 ? bdy_viscosity_ : fluid_data_.viscosity[upwind_cell];
+            PhaseVec upwind_ff = upwind_cell < 0 ? bdy_fractional_flow_ : fluid_data_.frac_flow[upwind_cell];
             PhaseVec phase_flux(upwind_ff);
             phase_flux *= face_flux[face];
             CompVec change(0.0);
@@ -225,7 +149,7 @@ private: // Methods
                 PhaseVec downwind_mob(0.0);
                 double downwind_totmob = 0.0;
                 for (int phase = 0; phase < numPhases; ++phase) {
-                    downwind_mob[phase] = relperm_[downwind_cell][phase]/upwind_viscosity[phase];
+                    downwind_mob[phase] = fluid_data_.rel_perm[downwind_cell][phase]/upwind_viscosity[phase];
                     downwind_totmob += downwind_mob[phase];
                 }
                 PhaseVec downwind_ff = downwind_mob;
@@ -234,7 +158,7 @@ private: // Methods
                 ff_diff -= downwind_ff;
                 for (int phase = 0; phase < numPhases; ++phase) {
                     if (std::fabs(ff_diff[phase]) > 1e-14) {
-                        double ff_deriv = ff_diff[phase]/(upwind_sat[phase] - saturation_[downwind_cell][phase]);
+                        double ff_deriv = ff_diff[phase]/(upwind_sat[phase] - fluid_data_.saturation[downwind_cell][phase]);
                         ASSERT(ff_deriv >= 0.0);
                         face_max_ff_deriv = std::max(face_max_ff_deriv, ff_deriv);
                     }
@@ -243,7 +167,12 @@ private: // Methods
 
             // Compute z change.
             for (int phase = 0; phase < numPhases; ++phase) {
-                CompVec z_in_phase = upwind_cell < 0 ? bdy_comp_in_phase_[phase] : comp_in_phase_[upwind_cell][phase];
+                CompVec z_in_phase = bdy_comp_in_phase_[phase];
+                if (upwind_cell >= 0) {
+                    for (int comp = 0; comp < numComponents; ++comp) {
+                        z_in_phase[comp] = fluid_data_.cellA[numPhases*numComponents*upwind_cell + numComponents*phase + comp];
+                    }
+                }
                 z_in_phase *= phase_flux[phase];
                 change += z_in_phase;
             }
@@ -262,6 +191,8 @@ private: // Methods
             }
         }
     }
+
+
 };
 
 

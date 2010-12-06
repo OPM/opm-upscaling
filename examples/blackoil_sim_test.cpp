@@ -215,8 +215,7 @@ void simulate(const Grid& grid,
 
         // Transport.
         if (!do_impes) {
-            Opm::EquationOfStateBlackOil eos(fluid);
-            transport_solver.transport(grid, rock, bdy_p, bdy_z, face_flux, eos, cell_pressure, stepsize, z);
+            transport_solver.transport(grid, rock, fluid, bdy_p, bdy_z, face_flux, cell_pressure, face_pressure, stepsize, z);
         }
 
         // Output.
@@ -233,7 +232,7 @@ typedef Dune::Rock<Grid::dimension> Rock;
 typedef Opm::BlackoilFluid Fluid;
 typedef Dune::BasicBoundaryConditions<true, false>  FBC;
 typedef Dune::TpfaCompressible<Grid, Rock, Fluid, FBC> FlowSolver;
-typedef Opm::ExplicitCompositionalTransport<Grid, Rock, Opm::EquationOfStateBlackOil> TransportSolver;
+typedef Opm::ExplicitCompositionalTransport<Grid, Rock, Fluid> TransportSolver;
 
 int main(int argc, char** argv)
 {
