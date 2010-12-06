@@ -196,26 +196,6 @@ namespace Dune
         {
             // Set starting pressures.
             int num_faces = pgrid_->numFaces();
-            #if 0
-            std::vector<typename FluidInterface::PhaseVec> phase_pressure = cell_pressure;
-            std::vector<typename FluidInterface::PhaseVec> phase_pressure_face(num_faces);
-            for (int face = 0; face < num_faces; ++face) {
-                if (bctypes_[face] == PressureSolver::FBC_PRESSURE) {
-                    phase_pressure_face[face] = bcvalues_[face];
-                } else {
-                    int c[2] = { pgrid_->faceCell(face, 0), pgrid_->faceCell(face, 1) };
-                    phase_pressure_face[face] = 0.0;
-                    int num = 0;
-                    for (int j = 0; j < 2; ++j) {
-                        if (c[j] >= 0) {
-                            phase_pressure_face[face] += phase_pressure[c[j]];
-                            ++num;
-                        }
-                    }
-                    phase_pressure_face[face] /= double(num);
-                }
-            }
-            #endif
 
             // Assemble and solve.
             int num_cells = cell_z.size();

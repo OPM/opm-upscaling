@@ -58,6 +58,8 @@
 #include <dune/porsol/blackoil/ComponentTransport.hpp>
 
 
+
+
 template<class Grid, class Fluid>
 void output(const Grid& grid,
             const std::vector<typename Fluid::PhaseVec>& cell_pressure,
@@ -108,6 +110,9 @@ void output(const Grid& grid,
         dump << '\n';
     }
 }
+
+
+
 
 template<class Grid, class Rock, class Fluid, class FlowSolver, class TransportSolver>
 void simulate(const Grid& grid,
