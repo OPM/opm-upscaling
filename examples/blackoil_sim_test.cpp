@@ -58,6 +58,57 @@
 #include <dune/porsol/blackoil/ComponentTransport.hpp>
 
 
+template<class Grid, class Fluid>
+void output(const Grid& grid,
+            const std::vector<typename Fluid::PhaseVec>& cell_pressure,
+            const std::vector<typename Fluid::CompVec>& z,
+            const std::vector<double>& face_flux,
+            const int step)
+{
+    // Output to VTK.
+    std::vector<typename Grid::Vector> cell_velocity;
+    estimateCellVelocitySimpleInterface(cell_velocity, grid, face_flux);
+    // Dune's vtk writer wants multi-component data to be flattened.
+    std::vector<double> cell_pressure_flat(&*cell_pressure.front().begin(),
+                                           &*cell_pressure.back().end());
+    std::vector<double> cell_velocity_flat(&*cell_velocity.front().begin(),
+                                           &*cell_velocity.back().end());
+    std::vector<double> z_flat(&*z.front().begin(),
+                               &*z.back().end());
+    Dune::VTKWriter<typename Grid::LeafGridView> vtkwriter(grid.leafView());
+    vtkwriter.addCellData(cell_pressure_flat, "pressure", Fluid::numPhases);
+    vtkwriter.addCellData(cell_velocity_flat, "velocity", Grid::dimension);
+    vtkwriter.addCellData(z_flat, "z", Fluid::numComponents);
+    vtkwriter.write("testsolution-" + boost::lexical_cast<std::string>(step),
+                    Dune::VTKOptions::ascii);
+
+    // Dump data for Matlab.
+    std::vector<double> zv[Fluid::numComponents];
+    for (int comp = 0; comp < Fluid::numComponents; ++comp) {
+        zv[comp].resize(grid.numCells());
+        for (int cell = 0; cell < grid.numCells(); ++cell) {
+            zv[comp][cell] = z[cell][comp];
+        }
+    }
+    std::string matlabdumpname("celldump");
+    matlabdumpname += boost::lexical_cast<std::string>(step);
+    std::ofstream dump(matlabdumpname.c_str());
+    dump.precision(15);
+    int num_cells = cell_pressure.size();
+    std::vector<double> liq_press(num_cells);
+    for (int cell = 0; cell < num_cells; ++cell) {
+        liq_press[cell] = cell_pressure[cell][Fluid::Liquid];
+    }
+    std::copy(liq_press.begin(), liq_press.end(),
+              std::ostream_iterator<double>(dump, " "));
+    dump << '\n';
+    for (int comp = 0; comp < Fluid::numComponents; ++comp) {
+        std::copy(zv[comp].begin(), zv[comp].end(),
+                  std::ostream_iterator<double>(dump, " "));
+        dump << '\n';
+    }
+}
+
 template<class Grid, class Rock, class Fluid, class FlowSolver, class TransportSolver>
 void simulate(const Grid& grid,
               const Rock& rock,
@@ -89,9 +140,6 @@ void simulate(const Grid& grid,
 //         src.back() = -1.0;
 //     }
 
-    int num_cells = grid.numCells();
-    int num_faces = grid.numFaces();
-
     // Initial state.
     typedef typename Fluid::CompVec CompVec;
     typedef typename Fluid::PhaseVec PhaseVec;
@@ -112,6 +160,7 @@ void simulate(const Grid& grid,
         double fluid_vol = state.total_phase_volume_;
         z[cell] *= pore_vol/fluid_vol;
     }
+    int num_faces = grid.numFaces();
     std::vector<PhaseVec> face_pressure(num_faces);
     for (int face = 0; face < num_faces; ++face) {
         int bid = grid.boundaryId(face);
@@ -166,47 +215,8 @@ void simulate(const Grid& grid,
             transport_solver.transport(grid, rock, bdy_p, bdy_z, face_flux, eos, cell_pressure, stepsize, z);
         }
 
-        // Output to VTK.
-        std::vector<typename Grid::Vector> cell_velocity;
-        estimateCellVelocitySimpleInterface(cell_velocity, grid, face_flux);
-        // Dune's vtk writer wants multi-component data to be flattened.
-        std::vector<double> cell_pressure_flat(&*cell_pressure.front().begin(),
-                                               &*cell_pressure.back().end());
-        std::vector<double> cell_velocity_flat(&*cell_velocity.front().begin(),
-                                               &*cell_velocity.back().end());
-        std::vector<double> z_flat(&*z.front().begin(),
-                                   &*z.back().end());
-        Dune::VTKWriter<typename Grid::LeafGridView> vtkwriter(grid.leafView());
-        vtkwriter.addCellData(cell_pressure_flat, "pressure", Fluid::numPhases);
-        vtkwriter.addCellData(cell_velocity_flat, "velocity", Grid::dimension);
-        vtkwriter.addCellData(z_flat, "z", Fluid::numComponents);
-        vtkwriter.write("testsolution-" + boost::lexical_cast<std::string>(step),
-                        Dune::VTKOptions::ascii);
-
-        // Dump data for Matlab.
-        std::vector<double> zv[Fluid::numComponents];
-        for (int comp = 0; comp < Fluid::numComponents; ++comp) {
-            zv[comp].resize(grid.numCells());
-            for (int cell = 0; cell < grid.numCells(); ++cell) {
-                zv[comp][cell] = z[cell][comp];
-            }
-        }
-        std::string matlabdumpname("celldump");
-        matlabdumpname += boost::lexical_cast<std::string>(step);
-        std::ofstream dump(matlabdumpname.c_str());
-        dump.precision(15);
-        std::vector<double> liq_press(num_cells);
-        for (int cell = 0; cell < num_cells; ++cell) {
-            liq_press[cell] = cell_pressure[cell][Fluid::Liquid];
-        }
-        std::copy(liq_press.begin(), liq_press.end(),
-                  std::ostream_iterator<double>(dump, " "));
-        dump << '\n';
-        for (int comp = 0; comp < Fluid::numComponents; ++comp) {
-            std::copy(zv[comp].begin(), zv[comp].end(),
-                      std::ostream_iterator<double>(dump, " "));
-            dump << '\n';
-        }
+        // Output.
+        output<Grid, Fluid>(grid, cell_pressure, z, face_flux, step);
 
         // Adjust time.
         current_time += stepsize;
