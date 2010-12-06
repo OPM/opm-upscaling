@@ -80,7 +80,7 @@ void simulate(const Grid& grid,
 //     gravity[2] = Dune::unit::gravity;
 
     // Flow solver setup.
-    flow_solver.setup(grid, rock, gravity);
+    flow_solver.setup(grid, rock, gravity, flow_bc);
 
     // Source terms.
     std::vector<double> src(grid.numCells(), 0.0);
@@ -128,7 +128,7 @@ void simulate(const Grid& grid,
 
         // Solve flow system.
         enum FlowSolver::ReturnCode result
-            = flow_solver.solve(fluid, phase_pressure, z, flow_bc, src, stepsize, do_impes);
+            = flow_solver.solve(fluid, phase_pressure, z, src, stepsize, do_impes);
 
         // If too long step, shorten \TODO This goes wrong since we should redo the previous step.
         if (result != FlowSolver::SolveOk) {

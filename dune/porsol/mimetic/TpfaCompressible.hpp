@@ -95,7 +95,8 @@ namespace Dune
         ///    gravity in the current model.
         void setup(const GridInterface&         grid,
                    const RockInterface&         rock,
-                   const typename GridInterface::Vector& grav)
+                   const typename GridInterface::Vector& grav,
+                   const BCInterface& bc)
         {
             pgrid_ = &grid;
             if (grav.two_norm() > 0.0) {
@@ -110,6 +111,33 @@ namespace Dune
             }
             // Initialize 
             psolver_.init(grid, perm, &poro_[0]);
+
+            // Build bctypes_ and bcvalues_.
+            int num_faces = grid.numFaces();
+            bctypes_.clear();
+            bctypes_.resize(num_faces, PressureSolver::FBC_UNSET);
+            bcvalues_.clear();
+            bcvalues_.resize(num_faces, 0.0);
+            for (int face = 0; face < num_faces; ++face) {
+                int bid = pgrid_->boundaryId(face);
+                if (bid == 0) {
+                    bctypes_[face] = PressureSolver::FBC_UNSET;
+                    continue;
+                }
+                FlowBC face_bc = bc.flowCond(bid);
+                if (face_bc.isDirichlet()) {
+                    bctypes_[face] = PressureSolver::FBC_PRESSURE;
+                    bcvalues_[face] = face_bc.pressure();
+                } else if (face_bc.isNeumann()) {
+                    bctypes_[face] = PressureSolver::FBC_FLUX;
+                    bcvalues_[face] = face_bc.outflux(); // TODO: may have to switch sign here depending on orientation.
+                    if (bcvalues_[face] != 0.0) {
+                        THROW("Nonzero Neumann conditions not yet properly implemented (signs must be fixed)");
+                    }
+                } else {
+                    THROW("Unhandled boundary condition type.");
+                }
+            }
         }
 
 
@@ -150,7 +178,6 @@ namespace Dune
         ReturnCode solve(const FluidInterface& fluid,
                          const std::vector<typename FluidInterface::PhaseVec>& initial_phase_pressure,
                          std::vector<typename FluidInterface::CompVec>& z,
-                         const BCInterface& bc,
                          const std::vector<double>& src,
                          const double dt,
                          bool transport = false)
@@ -160,40 +187,19 @@ namespace Dune
             std::vector<typename FluidInterface::PhaseVec> phase_pressure = initial_phase_pressure;
             std::vector<typename FluidInterface::PhaseVec> phase_pressure_face(num_faces);
             for (int face = 0; face < num_faces; ++face) {
-                int c[2] = { pgrid_->faceCell(face, 0), pgrid_->faceCell(face, 1) };
-                phase_pressure_face[face] = 0.0;
-                int num = 0;
-                for (int j = 0; j < 2; ++j) {
-                    if (c[j] >= 0) {
-                        phase_pressure_face[face] += phase_pressure[c[j]];
-                        ++num;
-                    }
-                }
-                phase_pressure_face[face] /= double(num);
-            }
-
-            // Build bctypes and bcvalues.
-            std::vector<PressureSolver::FlowBCTypes> bctypes(num_faces, PressureSolver::FBC_UNSET);
-            std::vector<double> bcvalues(num_faces, 0.0);
-            for (int face = 0; face < num_faces; ++face) {
-                int bid = pgrid_->boundaryId(face);
-                if (bid == 0) {
-                    bctypes[face] = PressureSolver::FBC_UNSET;
-                    continue;
-                }
-                FlowBC face_bc = bc.flowCond(bid);
-                if (face_bc.isDirichlet()) {
-                    bctypes[face] = PressureSolver::FBC_PRESSURE;
-                    bcvalues[face] = face_bc.pressure();
-                    phase_pressure_face[face] = face_bc.pressure();
-                } else if (face_bc.isNeumann()) {
-                    bctypes[face] = PressureSolver::FBC_FLUX;
-                    bcvalues[face] = face_bc.outflux(); // TODO: may have to switch sign here depending on orientation.
-                    if (bcvalues[face] != 0.0) {
-                        THROW("Nonzero Neumann conditions not yet properly implemented (signs must be fixed)");
-                    }
+                if (bctypes_[face] == PressureSolver::FBC_PRESSURE) {
+                    phase_pressure_face[face] = bcvalues_[face];
                 } else {
-                    THROW("Unhandled boundary condition type.");
+                    int c[2] = { pgrid_->faceCell(face, 0), pgrid_->faceCell(face, 1) };
+                    phase_pressure_face[face] = 0.0;
+                    int num = 0;
+                    for (int j = 0; j < 2; ++j) {
+                        if (c[j] >= 0) {
+                            phase_pressure_face[face] += phase_pressure[c[j]];
+                            ++num;
+                        }
+                    }
+                    phase_pressure_face[face] /= double(num);
                 }
             }
 
@@ -220,7 +226,7 @@ namespace Dune
                 }
 
                 // Assemble system matrix and rhs.
-                psolver_.assemble(src, bctypes, bcvalues, dt,
+                psolver_.assemble(src, bctypes_, bcvalues_, dt,
                                   fp_.totcompr, initial_voldiscr, fp_.cellA, fp_.faceA, fp_.phasemobf,
                                   flow_solution_.pressure_);
                 // Solve system.
@@ -539,6 +545,8 @@ namespace Dune
         PressureSolver psolver_;
         LinearSolverISTL linsolver_;
         FlowSolution flow_solution_;
+        std::vector<PressureSolver::FlowBCTypes> bctypes_;
+        std::vector<double> bcvalues_;
 
         typename FluidInterface::CompVec inflow_mixture_;
         int num_iter_;

@@ -73,7 +73,7 @@ void test_flowsolver(const Grid& grid,
 //     gravity[2] = Dune::unit::gravity;
 
     // Flow solver setup.
-    solver.setup(grid, rock, gravity);
+    solver.setup(grid, rock, gravity, flow_bc);
 
     // Source terms.
     std::vector<double> src(grid.numCells(), 0.0);
@@ -102,7 +102,7 @@ void test_flowsolver(const Grid& grid,
     }
 
     // Solve flow system.
-    solver.solve(fluid, phase_pressure, z, flow_bc, src, dt);
+    solver.solve(fluid, phase_pressure, z, src, dt);
 
     // Output to VTK.
     typedef typename FlowSolver::SolutionType FlowSolution;
