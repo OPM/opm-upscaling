@@ -158,6 +158,23 @@ namespace Dune
         }
 
 
+
+        bool volumeDiscrepancyAcceptable(const FluidInterface& fluid,
+                                         const std::vector<typename FluidInterface::PhaseVec>& cell_pressure,
+                                         const std::vector<typename FluidInterface::PhaseVec>& face_pressure,
+                                         const std::vector<typename FluidInterface::CompVec>& cell_z,
+                                         const double dt)
+        {
+            computeFluidProps(fluid, cell_pressure, face_pressure, cell_z, dt);
+            double rel_voldiscr = *std::max_element(relvoldiscr.begin(), relvoldiscr.end());
+            if (rel_voldiscr > max_relative_voldiscr_) {
+                std::cout << "    Relative volume discrepancy too large: " << rel_voldiscr << std::endl;
+                return false;
+            } else {
+                return true;
+            }
+        }
+
         enum ReturnCode { SolveOk, VolumeDiscrepancyTooLarge };
 
 

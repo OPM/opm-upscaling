@@ -151,7 +151,7 @@ void simulate(const Grid& grid,
     CompVec init_z(0.0);
     init_z[Fluid::Oil] = 1.0;
     CompVec bdy_z = flow_solver.inflowMixture();
-    std::vector<CompVec> z(grid.numCells(), init_z);
+    std::vector<CompVec> cell_z(grid.numCells(), init_z);
     MESSAGE("******* Assuming zero capillary pressures *******");
     PhaseVec init_p(100.0*Dune::unit::barsa);
     std::vector<PhaseVec> cell_pressure(grid.numCells(), init_p);
@@ -160,9 +160,9 @@ void simulate(const Grid& grid,
     // (to get zero initial volume discrepancy).
     for (int cell = 0; cell < grid.numCells(); ++cell) {
         double pore_vol = grid.cellVolume(cell)*rock.porosity(cell);
-        typename Fluid::FluidState state = fluid.computeState(cell_pressure[cell], z[cell]);
+        typename Fluid::FluidState state = fluid.computeState(cell_pressure[cell], cell_z[cell]);
         double fluid_vol = state.total_phase_volume_;
-        z[cell] *= pore_vol/fluid_vol;
+        cell_z[cell] *= pore_vol/fluid_vol;
     }
     int num_faces = grid.numFaces();
     std::vector<PhaseVec> face_pressure(num_faces);
@@ -188,7 +188,16 @@ void simulate(const Grid& grid,
     double current_time = 0.0;
     int step = -1;
     std::vector<double> face_flux;
+
+    std::vector<PhaseVec> cell_pressure_start;
+    std::vector<PhaseVec> face_pressure_start;
+    std::vector<CompVec> cell_z_start;
+
     while (current_time < total_time) {
+        cell_pressure_start = cell_pressure;
+        face_pressure_start = face_pressure;
+        cell_z_start = cell_z;
+
         ++step;
         std::cout << "\n\n================    Simulation step number " << step
                   << "    ==============="
@@ -203,26 +212,38 @@ void simulate(const Grid& grid,
 
         // Solve flow system.
         enum FlowSolver::ReturnCode result
-            = flow_solver.solve(fluid, cell_pressure, face_pressure, z, face_flux, src, stepsize, do_impes);
+            = flow_solver.solve(fluid, cell_pressure, face_pressure, cell_z, face_flux, src, stepsize, do_impes);
 
         // If too long step, shorten \TODO This goes wrong since we should redo the previous step.
         if (result != FlowSolver::SolveOk) {
-            std::cout << "********* Shortening stepsize, redoing step **********" << std::endl;
-            stepsize *= 0.5;
-            --step;
-            continue;
+            THROW("Flow solver refused to run due to too large volume discrepancy.");
         }
 
         // Transport.
         if (!do_impes) {
-            transport_solver.transport(grid, rock, fluid, bdy_p, bdy_z, face_flux, cell_pressure, face_pressure, stepsize, z);
+            transport_solver.transport(grid, rock, fluid, bdy_p, bdy_z,
+                                       face_flux, cell_pressure, face_pressure, stepsize, cell_z);
+        }
+
+        bool voldisc_ok = flow_solver.volumeDiscrepancyAcceptable(fluid, cell_pressure, face_pressure, cell_z, stepsize);
+        if (!voldisc_ok) {
+            std::cout << "********* Shortening stepsize, redoing step **********" << std::endl;
+            stepsize *= 0.5;
+            --step;
+            cell_pressure = cell_pressure_start;
+            face_pressure = face_pressure_start;
+            cell_z = cell_z_start;
+            continue;
         }
 
         // Output.
-        output<Grid, Fluid>(grid, cell_pressure, z, face_flux, step);
+        output<Grid, Fluid>(grid, cell_pressure, cell_z, face_flux, step);
 
         // Adjust time.
         current_time += stepsize;
+        if (voldisc_ok) {
+            stepsize *= 1.5;
+        }
     }
 }
 
