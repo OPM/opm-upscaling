@@ -57,7 +57,7 @@
 
 #include <dune/porsol/blackoil/ComponentTransport.hpp>
 
-
+#include <boost/filesystem/convenience.hpp>
 
 
 template<class Grid, class Fluid>
@@ -65,8 +65,15 @@ void output(const Grid& grid,
             const std::vector<typename Fluid::PhaseVec>& cell_pressure,
             const std::vector<typename Fluid::CompVec>& z,
             const std::vector<double>& face_flux,
-            const int step)
+            const int step,
+            const std::string& filebase)
 {
+    // Ensure directory exists.
+    boost::filesystem::path fpath(filebase);
+    if (fpath.has_branch_path()) {
+        create_directories(fpath.branch_path());
+    }
+
     // Output to VTK.
     std::vector<typename Grid::Vector> cell_velocity;
     estimateCellVelocitySimpleInterface(cell_velocity, grid, face_flux);
@@ -81,7 +88,7 @@ void output(const Grid& grid,
     vtkwriter.addCellData(cell_pressure_flat, "pressure", Fluid::numPhases);
     vtkwriter.addCellData(cell_velocity_flat, "velocity", Grid::dimension);
     vtkwriter.addCellData(z_flat, "z", Fluid::numComponents);
-    vtkwriter.write("testsolution-" + boost::lexical_cast<std::string>(step),
+    vtkwriter.write(filebase + '-' + boost::lexical_cast<std::string>(step),
                     Dune::VTKOptions::ascii);
 
     // Dump data for Matlab.
@@ -92,8 +99,9 @@ void output(const Grid& grid,
             zv[comp][cell] = z[cell][comp];
         }
     }
-    std::string matlabdumpname("celldump");
+    std::string matlabdumpname(filebase + "-");
     matlabdumpname += boost::lexical_cast<std::string>(step);
+    matlabdumpname += ".dat";
     std::ofstream dump(matlabdumpname.c_str());
     dump.precision(15);
     int num_cells = cell_pressure.size();
@@ -122,7 +130,8 @@ void simulate(const Grid& grid,
               TransportSolver& transport_solver,
               const double total_time,
               const double initial_stepsize,
-              const bool do_impes)
+              const bool do_impes,
+              const std::string& output_dir)
 {
     // Boundary conditions.
     typedef Dune::FlowBC BC;
@@ -244,7 +253,8 @@ void simulate(const Grid& grid,
         }
 
         // Output.
-        output<Grid, Fluid>(grid, cell_pressure, cell_z, face_flux, step);
+        std::string output_name = output_dir + "/" + "blackoil-output";
+        output<Grid, Fluid>(grid, cell_pressure, cell_z, face_flux, step, output_name);
 
         // Adjust time.
         current_time += stepsize;
@@ -311,11 +321,12 @@ int main(int argc, char** argv)
     double total_time = param.getDefault("total_time", 30*unit::day);
     double initial_stepsize = param.getDefault("initial_stepsize", 1.0*unit::day);
     bool do_impes = param.getDefault("do_impes", false);
+    std::string output_dir = param.getDefault<std::string>("output_dir", "output");
 
     // Run simulation.
     Dune::time::StopWatch clock;
     clock.start();
-    simulate(grid, rock, fluid, flow_solver, transport_solver, total_time, initial_stepsize, do_impes);
+    simulate(grid, rock, fluid, flow_solver, transport_solver, total_time, initial_stepsize, do_impes, output_dir);
     clock.stop();
     std::cout << "\n\nSimulation clock time (secs): " << clock.secsSinceStart() << std::endl;
 }

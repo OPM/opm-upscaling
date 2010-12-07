@@ -280,12 +280,12 @@ namespace Dune
                 }
 
                 // DUMP HACK
-                std::string fname("facepress-");
-                fname += boost::lexical_cast<std::string>(i);
-                std::ofstream f(fname.c_str());
-                f.precision(15);
-                std::copy(face_pressure_scalar.begin(), face_pressure_scalar.end(),
-                          std::ostream_iterator<double>(f, "\n"));
+//                 std::string fname("facepress-");
+//                 fname += boost::lexical_cast<std::string>(i);
+//                 std::ofstream f(fname.c_str());
+//                 f.precision(15);
+//                 std::copy(face_pressure_scalar.begin(), face_pressure_scalar.end(),
+//                           std::ostream_iterator<double>(f, "\n"));
             }
 
             if (transport) {
