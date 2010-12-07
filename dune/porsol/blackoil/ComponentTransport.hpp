@@ -38,6 +38,13 @@ public:
     {
     }
 
+    void setup(const Grid& grid,
+               const Rock& rock)
+    {
+        int num_cells = grid.numCells();
+        
+    }
+
     void transport(const Grid& grid,
                    const Rock& rock,
                    const Fluid& fluid,
@@ -47,6 +54,7 @@ public:
                    const std::vector<PhaseVec>& cell_pressure,
                    const std::vector<PhaseVec>& face_pressure,
                    const double dt,
+                   const double voldisclimit,
                    std::vector<CompVec>& cell_z)
     {
         int num_cells = grid.numCells();
@@ -55,7 +63,9 @@ public:
         std::vector<double> cell_max_ff_deriv;
         double cur_time = 0.0;
         while (cur_time < dt) {
-            updateFluidProperties(grid, fluid, cell_pressure, face_pressure, cell_z, external_pressure, external_composition);
+            updateFluidProperties(grid, rock, fluid,
+                                  cell_pressure, face_pressure, cell_z,
+                                  external_pressure, external_composition);
             computeChange(grid, face_flux, comp_change, cell_outflux, cell_max_ff_deriv);
             double min_time = 1e100;
             for (int cell = 0; cell < num_cells; ++cell) {
@@ -90,6 +100,7 @@ private: // Data
 private: // Methods
 
     void updateFluidProperties(const Grid& grid,
+                               const Rock& rock,
                                const Fluid& fluid,
                                const std::vector<PhaseVec>& cell_pressure,
                                const std::vector<PhaseVec>& face_pressure,
@@ -97,7 +108,8 @@ private: // Methods
                                const PhaseVec& external_pressure,
                                const CompVec& external_composition)
     {
-        fluid_data_.compute(grid, fluid, cell_pressure, face_pressure, cell_z, external_composition);
+        const double dummy_dt = 1.0;
+        fluid_data_.compute(grid, rock, fluid, cell_pressure, face_pressure, cell_z, external_composition, dummy_dt);
 
         BlackoilFluid::FluidState state = fluid.computeState(external_pressure, external_composition);
         bdy_saturation_ = state.saturation_;

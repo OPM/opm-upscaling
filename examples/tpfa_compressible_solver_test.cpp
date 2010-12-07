@@ -73,7 +73,7 @@ void test_flowsolver(const Grid& grid,
 //     gravity[2] = Dune::unit::gravity;
 
     // Flow solver setup.
-    solver.setup(grid, rock, gravity, flow_bc);
+    solver.setup(grid, rock, fluid, gravity, flow_bc);
 
     // Source terms.
     std::vector<double> src(grid.numCells(), 0.0);
@@ -123,7 +123,7 @@ void test_flowsolver(const Grid& grid,
     std::vector<double> face_flux;
 
     // Solve flow system.
-    solver.solve(fluid, cell_pressure, face_pressure, z, face_flux, src, dt);
+    solver.solve(cell_pressure, face_pressure, z, face_flux, src, dt);
 
     // Output to VTK.
     std::vector<typename Grid::Vector> cell_velocity;

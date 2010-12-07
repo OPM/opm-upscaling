@@ -136,7 +136,7 @@ void simulate(const Grid& grid,
 //     gravity[2] = Dune::unit::gravity;
 
     // Flow solver setup.
-    flow_solver.setup(grid, rock, gravity, flow_bc);
+    flow_solver.setup(grid, rock, fluid, gravity, flow_bc);
 
     // Source terms.
     std::vector<double> src(grid.numCells(), 0.0);
@@ -183,16 +183,14 @@ void simulate(const Grid& grid,
             face_pressure[face] /= double(num);
         }
     }
-
+    double voldisclimit = flow_solver.volumeDiscrepancyLimit();
     double stepsize = initial_stepsize;
     double current_time = 0.0;
     int step = -1;
     std::vector<double> face_flux;
-
     std::vector<PhaseVec> cell_pressure_start;
     std::vector<PhaseVec> face_pressure_start;
     std::vector<CompVec> cell_z_start;
-
     while (current_time < total_time) {
         cell_pressure_start = cell_pressure;
         face_pressure_start = face_pressure;
@@ -212,9 +210,9 @@ void simulate(const Grid& grid,
 
         // Solve flow system.
         enum FlowSolver::ReturnCode result
-            = flow_solver.solve(fluid, cell_pressure, face_pressure, cell_z, face_flux, src, stepsize, do_impes);
+            = flow_solver.solve(cell_pressure, face_pressure, cell_z, face_flux, src, stepsize, do_impes);
 
-        // If too long step, shorten \TODO This goes wrong since we should redo the previous step.
+        // Check if the flow solver succeeded.
         if (result != FlowSolver::SolveOk) {
             THROW("Flow solver refused to run due to too large volume discrepancy.");
         }
@@ -222,10 +220,11 @@ void simulate(const Grid& grid,
         // Transport.
         if (!do_impes) {
             transport_solver.transport(grid, rock, fluid, bdy_p, bdy_z,
-                                       face_flux, cell_pressure, face_pressure, stepsize, cell_z);
+                                       face_flux, cell_pressure, face_pressure,
+                                       stepsize, voldisclimit, cell_z);
         }
 
-        bool voldisc_ok = flow_solver.volumeDiscrepancyAcceptable(fluid, cell_pressure, face_pressure, cell_z, stepsize);
+        bool voldisc_ok = flow_solver.volumeDiscrepancyAcceptable(cell_pressure, face_pressure, cell_z, stepsize);
         if (!voldisc_ok) {
             std::cout << "********* Shortening stepsize, redoing step **********" << std::endl;
             stepsize *= 0.5;
@@ -242,7 +241,7 @@ void simulate(const Grid& grid,
         // Adjust time.
         current_time += stepsize;
         if (voldisc_ok) {
-            stepsize *= 1.5;
+            // stepsize *= 1.5;
         }
     }
 }

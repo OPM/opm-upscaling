@@ -44,7 +44,7 @@ namespace Dune
         /// @brief
         ///    Default constructor. Does nothing.
         TpfaCompressible()
-            : pgrid_(0)
+            : pgrid_(0), prock_(0), pfluid_(0)
         {
         }
 
@@ -112,10 +112,13 @@ namespace Dune
         ///
         void setup(const GridInterface&         grid,
                    const RockInterface&         rock,
+                   const FluidInterface&        fluid,
                    const typename GridInterface::Vector& grav,
                    const BCInterface& bc)
         {
             pgrid_ = &grid;
+            prock_ = &rock;
+            pfluid_ = &fluid;
             if (grav.two_norm() > 0.0) {
                 THROW("TpfaCompressible does not handle gravity yet.");
             } 
@@ -159,14 +162,22 @@ namespace Dune
 
 
 
-        bool volumeDiscrepancyAcceptable(const FluidInterface& fluid,
-                                         const std::vector<typename FluidInterface::PhaseVec>& cell_pressure,
+
+        double volumeDiscrepancyLimit() const
+        {
+            return max_relative_voldiscr_;
+        }
+
+
+
+
+        bool volumeDiscrepancyAcceptable(const std::vector<typename FluidInterface::PhaseVec>& cell_pressure,
                                          const std::vector<typename FluidInterface::PhaseVec>& face_pressure,
                                          const std::vector<typename FluidInterface::CompVec>& cell_z,
                                          const double dt)
         {
-            computeFluidProps(fluid, cell_pressure, face_pressure, cell_z, dt);
-            double rel_voldiscr = *std::max_element(relvoldiscr.begin(), relvoldiscr.end());
+            computeFluidProps(cell_pressure, face_pressure, cell_z, dt);
+            double rel_voldiscr = *std::max_element(fp_.relvoldiscr.begin(), fp_.relvoldiscr.end());
             if (rel_voldiscr > max_relative_voldiscr_) {
                 std::cout << "    Relative volume discrepancy too large: " << rel_voldiscr << std::endl;
                 return false;
@@ -214,8 +225,7 @@ namespace Dune
         /// @param [in] transport
         ///    If true, modify @code z @endcode by IMPES scheme.
         ///
-        ReturnCode solve(const FluidInterface& fluid,
-                         std::vector<typename FluidInterface::PhaseVec>& cell_pressure,
+        ReturnCode solve(std::vector<typename FluidInterface::PhaseVec>& cell_pressure,
                          std::vector<typename FluidInterface::PhaseVec>& face_pressure,
                          std::vector<typename FluidInterface::CompVec>& cell_z,
                          std::vector<double>& face_flux,
@@ -237,10 +247,10 @@ namespace Dune
             std::vector<double> face_pressure_scalar;
             for (int i = 0; i < num_iter_; ++i) {
                 // (Re-)compute fluid properties.
-                computeFluidProps(fluid, cell_pressure, face_pressure, cell_z, dt);
+                computeFluidProps(cell_pressure, face_pressure, cell_z, dt);
                 if (i == 0) {
-                    initial_voldiscr = voldiscr;
-                    double rel_voldiscr = *std::max_element(relvoldiscr.begin(), relvoldiscr.end());
+                    initial_voldiscr = fp_.voldiscr;
+                    double rel_voldiscr = *std::max_element(fp_.relvoldiscr.begin(), fp_.relvoldiscr.end());
                     if (rel_voldiscr > max_relative_voldiscr_) {
                         std::cout << "    Relative volume discrepancy too large: " << rel_voldiscr << std::endl;
                         return VolumeDiscrepancyTooLarge;
@@ -289,29 +299,18 @@ namespace Dune
 
 
     private:
-        void computeFluidProps(const FluidInterface& fluid,
-                               const std::vector<typename FluidInterface::PhaseVec>& phase_pressure,
+        void computeFluidProps(const std::vector<typename FluidInterface::PhaseVec>& phase_pressure,
                                const std::vector<typename FluidInterface::PhaseVec>& phase_pressure_face,
                                const std::vector<typename FluidInterface::CompVec>& cell_z,
                                const double dt)
         {
-            fp_.compute(*pgrid_, fluid, phase_pressure, phase_pressure_face, cell_z, inflow_mixture_);
-            int num_cells = cell_z.size();
-            ASSERT(num_cells == pgrid_->numCells());
-            voldiscr.resize(num_cells);
-            relvoldiscr.resize(num_cells);
-            for (int cell = 0; cell < num_cells; ++cell) {
-                double pv = pgrid_->cellVolume(cell)*poro_[cell];
-                voldiscr[cell] = (fp_.totphasevol[cell] - pv)/dt;
-                relvoldiscr[cell] = (fp_.totphasevol[cell] - pv)/pv;
-            }
+            fp_.compute(*pgrid_, *prock_, *pfluid_, phase_pressure, phase_pressure_face, cell_z, inflow_mixture_, dt);
         }
 
-        std::vector<double> voldiscr;
-        std::vector<double> relvoldiscr;
-
-        typename FluidInterface::FluidData fp_;
         const GridInterface* pgrid_;
+        const RockInterface* prock_;
+        const FluidInterface* pfluid_;
+        typename FluidInterface::FluidData fp_;
         std::vector<double> poro_;
         PressureSolver psolver_;
         LinearSolverISTL linsolver_;
