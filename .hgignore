@@ -33,6 +33,7 @@ missing
 # Ignoring executables
 *_test
 examples/cpchop
+examples/cpregularize
 examples/exp_variogram
 examples/upscale_avg
 examples/upscale_cond
