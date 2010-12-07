@@ -106,21 +106,21 @@ int main(int argc, char** argv)
     std::vector<double> newcoords_x;
     int finesprcoarse_i = floor(dims[0] / ires);
     int remainder_i = dims[0] - ires*finesprcoarse_i;
-    for (int iidx_c=0; iidx_c < remainder_i; ++iidx_c) {
-        iidx_f.push_back(iidx_c*finesprcoarse_i + 1);  // Spread remainder evenly
+    for (int iidx_c=0; iidx_c < remainder_i+1; ++iidx_c) {
+        iidx_f.push_back(iidx_c*(finesprcoarse_i + 1));  // Spread remainder evenly
     }
-    for (int iidx_c=remainder_i; iidx_c < ires; ++iidx_c) {
-        iidx_f.push_back(iidx_c*finesprcoarse_i);
+    for (int iidx_c=remainder_i + 1; iidx_c < ires; ++iidx_c) {
+        iidx_f.push_back(iidx_c*finesprcoarse_i + remainder_i);
     }
     iidx_f.push_back(imax); // endpoint needed below
 
     int finesprcoarse_j = floor(dims[1] / jres);
     int remainder_j = dims[1] - jres*finesprcoarse_j;
-    for (int jidx_c=0; jidx_c < remainder_j; ++jidx_c) {
-        jidx_f.push_back(jidx_c*finesprcoarse_j + 1); // Spread remainder evenly
+    for (int jidx_c=0; jidx_c < remainder_j+1; ++jidx_c) {
+        jidx_f.push_back(jidx_c*(finesprcoarse_j + 1)); // Spread remainder evenly
     }
-    for (int jidx_c=remainder_j; jidx_c < jres; ++jidx_c) {
-        jidx_f.push_back(jidx_c*finesprcoarse_j);
+    for (int jidx_c=remainder_j + 1; jidx_c < jres; ++jidx_c) {
+        jidx_f.push_back(jidx_c*finesprcoarse_j + remainder_j);
     }
     jidx_f.push_back(jmax); // endpoint needed below
 
