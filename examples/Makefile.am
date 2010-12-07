@@ -15,7 +15,8 @@ noinst_PROGRAMS = grdecl_to_legacy_test \
                   aniso_implicitcap_test \
                   implicitcap_test \
                   aniso_simulator_test \
-                  simulator_test
+                  simulator_test \
+		  blackoil_sim_test
 
 grdecl_to_legacy_test_SOURCES = grdecl_to_legacy_test.cpp
 
@@ -50,6 +51,10 @@ aniso_simulator_test_SOURCES = aniso_simulator_test.cpp
 implicitcap_test_SOURCES = implicitcap_test.cpp
 
 aniso_implicitcap_test_SOURCES = aniso_implicitcap_test.cpp
+
+blackoil_sim_test_SOURCES = blackoil_sim_test.cpp
+blackoil_sim_test_LDADD = $(LDADD) ../lib/libduneporsol.la
+
 
 
 

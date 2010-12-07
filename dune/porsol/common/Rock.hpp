@@ -21,7 +21,6 @@
 #ifndef OPM_ROCK_HEADER_INCLUDED
 #define OPM_ROCK_HEADER_INCLUDED
 
-#include <dune/common/Units.hpp>
 #include <dune/common/EclipseGridParser.hpp>
 #include <dune/porsol/common/Matrix.hpp>
 
@@ -67,8 +66,8 @@ namespace Dune
         /// @param uniform_poro the uniform porosity.
         /// @param uniform_perm the uniform (scalar) permeability.
         void init(const int num_cells,
-                  const double uniform_poro = 0.2,
-                  const double uniform_perm = 100.0*prefix::milli*unit::darcy);
+                  const double uniform_poro,
+                  const double uniform_perm);
 
 
         /// @brief Read-access to porosity.

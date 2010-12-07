@@ -112,3 +112,23 @@ BOOST_AUTO_TEST_CASE(saturationboundaryconditions)
     BOOST_CHECK(bc2.satCond(1).isDirichlet());
     BOOST_CHECK(bc2.satCond(1).saturation() == 0.8);
 }
+
+BOOST_AUTO_TEST_CASE(surfvolboundaryconditions)
+{
+    enum { Nc = 3 };
+    typedef Dune::FieldVector<double, Nc> Z;
+    typedef BasicBoundaryConditions<false, false, true, Nc> BCs;
+    BCs bc1;
+    BOOST_CHECK(bc1.empty());
+    BCs bc2(2);
+    BOOST_CHECK(bc2.surfvolCond(0).isDirichlet());
+    Z zero(0.0);
+    BOOST_CHECK(bc2.surfvolCond(0).surfvol() == zero);
+    BOOST_CHECK(bc2.surfvolCond(1).isDirichlet());
+    BOOST_CHECK(bc2.surfvolCond(1).surfvol() == zero);
+    Z z(0.0);
+    z[Nc - 1] = 1.0;
+    bc2.surfvolCond(1) = SurfvolBC<Nc>(z);
+    BOOST_CHECK(bc2.surfvolCond(1).isDirichlet());
+    BOOST_CHECK(bc2.surfvolCond(1).surfvol() == z);
+}

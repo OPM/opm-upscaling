@@ -59,8 +59,7 @@ void test_flowsolver(const Grid& grid,
                      const Rock& rock,
                      const Fluid& fluid,
                      FlowSolver& solver,
-                     const double dt,
-                     const int num_iter)
+                     const double dt)
 {
     // Boundary conditions.
     typedef Dune::FlowBC BC;
@@ -74,7 +73,7 @@ void test_flowsolver(const Grid& grid,
 //     gravity[2] = Dune::unit::gravity;
 
     // Flow solver setup.
-    solver.setup(grid, rock, gravity);
+    solver.setup(grid, rock, fluid, gravity, flow_bc);
 
     // Source terms.
     std::vector<double> src(grid.numCells(), 0.0);
@@ -83,6 +82,8 @@ void test_flowsolver(const Grid& grid,
 //         src.back() = -1.0;
 //     }
 
+    int num_cells = grid.numCells();
+    int num_faces = grid.numFaces();
 
     // Initial state.
     typedef typename Fluid::CompVec CompVec;
@@ -92,40 +93,61 @@ void test_flowsolver(const Grid& grid,
     std::vector<CompVec> z(grid.numCells(), init_z);
     MESSAGE("******* Assuming zero capillary pressures *******");
     PhaseVec init_p(100.0*Dune::unit::barsa);
-    std::vector<PhaseVec> phase_pressure(grid.numCells(), init_p);
+    std::vector<PhaseVec> cell_pressure(grid.numCells(), init_p);
     // Rescale z values so that pore volume is filled exactly
     // (to get zero initial volume discrepancy).
     for (int cell = 0; cell < grid.numCells(); ++cell) {
         double pore_vol = grid.cellVolume(cell)*rock.porosity(cell);
-        typename Fluid::FluidState state = fluid.computeState(phase_pressure[cell], z[cell]);
+        typename Fluid::FluidState state = fluid.computeState(cell_pressure[cell], z[cell]);
         double fluid_vol = state.total_phase_volume_;
         z[cell] *= pore_vol/fluid_vol;
     }
+    std::vector<PhaseVec> face_pressure(num_faces);
+    for (int face = 0; face < num_faces; ++face) {
+        int bid = grid.boundaryId(face);
+        if (flow_bc.flowCond(bid).isDirichlet()) {
+            face_pressure[face] = flow_bc.flowCond(bid).pressure();
+        } else {
+            int c[2] = { grid.faceCell(face, 0), grid.faceCell(face, 1) };
+            face_pressure[face] = 0.0;
+            int num = 0;
+            for (int j = 0; j < 2; ++j) {
+                if (c[j] >= 0) {
+                    face_pressure[face] += cell_pressure[c[j]];
+                    ++num;
+                }
+            }
+            face_pressure[face] /= double(num);
+        }
+    }
+    std::vector<double> face_flux;
 
     // Solve flow system.
-    solver.solve(fluid, phase_pressure, z, flow_bc, src, dt, num_iter);
+    solver.solve(cell_pressure, face_pressure, z, face_flux, src, dt);
 
     // Output to VTK.
-    typedef typename FlowSolver::SolutionType FlowSolution;
-    FlowSolution soln = solver.getSolution();
     std::vector<typename Grid::Vector> cell_velocity;
-    estimateCellVelocitySimpleInterface(cell_velocity, grid, soln);
+    estimateCellVelocitySimpleInterface(cell_velocity, grid, face_flux);
     // Dune's vtk writer wants multi-component data to be flattened.
+    std::vector<double> cell_pressure_flat(&*cell_pressure.front().begin(),
+                                           &*cell_pressure.back().end());
     std::vector<double> cell_velocity_flat(&*cell_velocity.front().begin(),
                                            &*cell_velocity.back().end());
-//     getCellPressure(cell_pressure, grid, soln);
-//    output_pressure = soln.cellPressure();
     Dune::VTKWriter<typename Grid::LeafGridView> vtkwriter(grid.leafView());
-    vtkwriter.addCellData(soln.cellPressure(), "pressure");
-    vtkwriter.addCellData(cell_velocity_flat, "velocity", dim);
-    vtkwriter.write("testsolution-" + boost::lexical_cast<std::string>(0),
-                    Dune::VTKOptions::ascii);
+    vtkwriter.addCellData(cell_pressure_flat, "pressure", Fluid::numPhases);
+    vtkwriter.addCellData(cell_velocity_flat, "velocity", Grid::dimension);
+    vtkwriter.write("testsolution", Dune::VTKOptions::ascii);
 
-    // Dump pressures to Matlab.
-    std::ofstream dump("pressure");
+    // Dump data for Matlab.
+    std::ofstream dump("celldump");
     dump.precision(15);
-    std::copy(soln.cellPressure().begin(), soln.cellPressure().end(),
-              std::ostream_iterator<double>(dump, "\n"));
+    std::vector<double> liq_press(num_cells);
+    for (int cell = 0; cell < num_cells; ++cell) {
+        liq_press[cell] = cell_pressure[cell][Fluid::Liquid];
+    }
+    std::copy(liq_press.begin(), liq_press.end(),
+              std::ostream_iterator<double>(dump, " "));
+    dump << '\n';
 }
 
 
@@ -168,7 +190,7 @@ int main(int argc, char** argv)
                                            param.getDefault<double>("dy", 1.0),
                                            param.getDefault<double>("dz", 1.0) }};
         grid.createCartesian(dims, cellsz);
-        double default_poro = param.getDefault("default_poro", 0.2);
+        double default_poro = param.getDefault("default_poro", 1.0);
         double default_perm_md = param.getDefault("default_perm_md", 100.0);
         double default_perm = unit::convert::from(default_perm_md, prefix::milli*unit::darcy);
         MESSAGE("Warning: For generated cartesian grids, we use uniform rock properties.");
@@ -180,9 +202,7 @@ int main(int argc, char** argv)
     }
     solver.init(param);
     double dt = param.getDefault("dt", 1.0);
-    int num_iter = param.getDefault("num_iter", 5);
 
     // Run test.
-    test_flowsolver<3>(grid, rock, fluid, solver, dt, num_iter);
+    test_flowsolver<3>(grid, rock, fluid, solver, dt);
 }
-
