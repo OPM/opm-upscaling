@@ -54,23 +54,31 @@ public:
         pfluid_ = &fluid;
     }
 
-    void transport(const PhaseVec& external_pressure,
-                   const CompVec& external_composition,
-                   const std::vector<double>& face_flux,
-                   const std::vector<PhaseVec>& cell_pressure,
-                   const std::vector<PhaseVec>& face_pressure,
-                   const double dt,
-                   const double voldisclimit,
-                   std::vector<CompVec>& cell_z)
+
+    /// Return value is the time actually used, it may be smaller than dt if
+    /// we stop due to unacceptable volume discrepancy.
+    double transport(const PhaseVec& external_pressure,
+                     const CompVec& external_composition,
+                     const std::vector<double>& face_flux,
+                     const std::vector<PhaseVec>& cell_pressure,
+                     const std::vector<PhaseVec>& face_pressure,
+                     const double dt,
+                     const double voldisclimit,
+                     std::vector<CompVec>& cell_z)
     {
         int num_cells = pgrid_->numCells();
         std::vector<CompVec> comp_change;
         std::vector<double> cell_outflux;
         std::vector<double> cell_max_ff_deriv;
         double cur_time = 0.0;
+        updateFluidProperties(cell_pressure, face_pressure, cell_z,
+                              external_pressure, external_composition);
+        if (!volumeDiscrepancyAcceptable(voldisclimit)) {
+            THROW("Encountered unacceptable volume discrepancy on transport solver entry.");
+        }
+        std::vector<CompVec> cell_z_start;
         while (cur_time < dt) {
-            updateFluidProperties(cell_pressure, face_pressure, cell_z,
-                                  external_pressure, external_composition);
+            cell_z_start = cell_z;
             computeChange(face_flux, comp_change, cell_outflux, cell_max_ff_deriv);
             double min_time = 1e100;
             for (int cell = 0; cell < num_cells; ++cell) {
@@ -90,7 +98,18 @@ public:
                 comp_change[cell] *= (step_time/prock_->porosity(cell));
                 cell_z[cell] += comp_change[cell];
             }
+            // After changing z, we recompute fluid properties.
+            updateFluidProperties(cell_pressure, face_pressure, cell_z,
+                                  external_pressure, external_composition);
+            bool ok = volumeDiscrepancyAcceptable(voldisclimit);
+            if (!ok) {
+                // Roll back to last ok step.
+                cell_z = cell_z_start;
+                cur_time -= step_time;
+                return cur_time;
+            }
         }
+        return dt;
     }
 
 
@@ -130,6 +149,17 @@ private: // Methods
         bdy_viscosity_ = state.viscosity_;
     }
 
+
+    bool volumeDiscrepancyAcceptable(const double voldisclimit) const
+    {
+        double rel_voldiscr = *std::max_element(fluid_data_.relvoldiscr.begin(), fluid_data_.relvoldiscr.end());
+        if (rel_voldiscr > voldisclimit) {
+            std::cout << "    Relative volume discrepancy too large: " << rel_voldiscr << std::endl;
+            return false;
+        } else {
+            return true;
+        }
+    }
 
 
     void computeChange(const std::vector<double>& face_flux,

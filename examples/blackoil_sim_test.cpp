@@ -220,16 +220,21 @@ void simulate(const Grid& grid,
             THROW("Flow solver refused to run due to too large volume discrepancy.");
         }
 
-        // Transport.
+        // Transport and check volume discrepancy.
+        bool voldisc_ok = true;
         if (!do_impes) {
-            transport_solver.transport(bdy_p, bdy_z,
-                                       face_flux, cell_pressure, face_pressure,
-                                       stepsize, voldisclimit, cell_z);
+            double actual_computed_time
+                = transport_solver.transport(bdy_p, bdy_z,
+                                             face_flux, cell_pressure, face_pressure,
+                                             stepsize, voldisclimit, cell_z);
+            voldisc_ok = (actual_computed_time == stepsize);
+        } else {
+            voldisc_ok = flow_solver.volumeDiscrepancyAcceptable(cell_pressure, face_pressure, cell_z, stepsize);
         }
 
-        bool voldisc_ok = flow_solver.volumeDiscrepancyAcceptable(cell_pressure, face_pressure, cell_z, stepsize);
+        // If discrepancy too large, redo entire pressure step.
         if (!voldisc_ok) {
-            std::cout << "********* Shortening stepsize, redoing step **********" << std::endl;
+            std::cout << "********* Shortening (pressure) stepsize, redoing step number " << step <<" **********" << std::endl;
             stepsize *= 0.5;
             --step;
             cell_pressure = cell_pressure_start;
