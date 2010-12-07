@@ -34,21 +34,27 @@ template <class Grid, class Rock, class Fluid>
 class ExplicitCompositionalTransport : public BlackoilDefs
 {
 public:
+    /// @brief
+    ///    Default constructor. Does nothing.
+    ExplicitCompositionalTransport()
+        : pgrid_(0), prock_(0), pfluid_(0)
+    {
+    }
+
     void init(const Dune::parameter::ParameterGroup& param)
     {
     }
 
     void setup(const Grid& grid,
-               const Rock& rock)
+               const Rock& rock,
+               const Fluid& fluid)
     {
-        int num_cells = grid.numCells();
-        
+        pgrid_ = &grid;
+        prock_ = &rock;
+        pfluid_ = &fluid;
     }
 
-    void transport(const Grid& grid,
-                   const Rock& rock,
-                   const Fluid& fluid,
-                   const PhaseVec& external_pressure,
+    void transport(const PhaseVec& external_pressure,
                    const CompVec& external_composition,
                    const std::vector<double>& face_flux,
                    const std::vector<PhaseVec>& cell_pressure,
@@ -57,19 +63,18 @@ public:
                    const double voldisclimit,
                    std::vector<CompVec>& cell_z)
     {
-        int num_cells = grid.numCells();
+        int num_cells = pgrid_->numCells();
         std::vector<CompVec> comp_change;
         std::vector<double> cell_outflux;
         std::vector<double> cell_max_ff_deriv;
         double cur_time = 0.0;
         while (cur_time < dt) {
-            updateFluidProperties(grid, rock, fluid,
-                                  cell_pressure, face_pressure, cell_z,
+            updateFluidProperties(cell_pressure, face_pressure, cell_z,
                                   external_pressure, external_composition);
-            computeChange(grid, face_flux, comp_change, cell_outflux, cell_max_ff_deriv);
+            computeChange(face_flux, comp_change, cell_outflux, cell_max_ff_deriv);
             double min_time = 1e100;
             for (int cell = 0; cell < num_cells; ++cell) {
-                double time = (rock.porosity(cell)*grid.cellVolume(cell))/(cell_outflux[cell]*cell_max_ff_deriv[cell]);
+                double time = (prock_->porosity(cell)*pgrid_->cellVolume(cell))/(cell_outflux[cell]*cell_max_ff_deriv[cell]);
                 min_time = std::min(time, min_time);
             }
             min_time *= 0.49; // Semi-random CFL factor... \TODO rigorize
@@ -82,7 +87,7 @@ public:
             }
             std::cout << "Taking step in explicit transport solver: " << step_time << std::endl;
             for (int cell = 0; cell < num_cells; ++cell) {
-                comp_change[cell] *= (step_time/rock.porosity(cell));
+                comp_change[cell] *= (step_time/prock_->porosity(cell));
                 cell_z[cell] += comp_change[cell];
             }
         }
@@ -90,6 +95,9 @@ public:
 
 
 private: // Data
+    const Grid* pgrid_;
+    const Rock* prock_;
+    const Fluid* pfluid_;
     typename Fluid::FluidData fluid_data_;
     PhaseVec bdy_saturation_;
     PhaseVec bdy_fractional_flow_;
@@ -99,19 +107,16 @@ private: // Data
 
 private: // Methods
 
-    void updateFluidProperties(const Grid& grid,
-                               const Rock& rock,
-                               const Fluid& fluid,
-                               const std::vector<PhaseVec>& cell_pressure,
+    void updateFluidProperties(const std::vector<PhaseVec>& cell_pressure,
                                const std::vector<PhaseVec>& face_pressure,
                                const std::vector<CompVec>& cell_z,
                                const PhaseVec& external_pressure,
                                const CompVec& external_composition)
     {
         const double dummy_dt = 1.0;
-        fluid_data_.compute(grid, rock, fluid, cell_pressure, face_pressure, cell_z, external_composition, dummy_dt);
+        fluid_data_.compute(*pgrid_, *prock_, *pfluid_, cell_pressure, face_pressure, cell_z, external_composition, dummy_dt);
 
-        BlackoilFluid::FluidState state = fluid.computeState(external_pressure, external_composition);
+        BlackoilFluid::FluidState state = pfluid_->computeState(external_pressure, external_composition);
         bdy_saturation_ = state.saturation_;
         double total_mobility = 0.0;
         for (int phase = 0; phase < numPhases; ++phase) {
@@ -127,23 +132,23 @@ private: // Methods
 
 
 
-    void computeChange(const Grid& grid,
-                       const std::vector<double>& face_flux,
+    void computeChange(const std::vector<double>& face_flux,
                        std::vector<CompVec>& comp_change,
                        std::vector<double>& cell_outflux,
                        std::vector<double>& cell_max_ff_deriv)
     {
+        int num_cells = pgrid_->numCells();
         comp_change.clear();
         CompVec zero(0.0);
-        comp_change.resize(grid.numCells(), zero);
+        comp_change.resize(num_cells, zero);
         cell_outflux.clear();
-        cell_outflux.resize(grid.numCells(), 0.0);
+        cell_outflux.resize(num_cells, 0.0);
         cell_max_ff_deriv.clear();
-        cell_max_ff_deriv.resize(grid.numCells(), 0.0);
-        for (int face = 0; face < grid.numFaces(); ++face) {
+        cell_max_ff_deriv.resize(num_cells, 0.0);
+        for (int face = 0; face < pgrid_->numFaces(); ++face) {
             // Set up needed quantities.
-            int c0 = grid.faceCell(face, 0);
-            int c1 = grid.faceCell(face, 1);
+            int c0 = pgrid_->faceCell(face, 0);
+            int c1 = pgrid_->faceCell(face, 1);
             int upwind_cell = (face_flux[face] > 0.0) ? c0 : c1;
             int downwind_cell = (face_flux[face] > 0.0) ? c1 : c0;
             PhaseVec upwind_sat = upwind_cell < 0 ? bdy_saturation_ : fluid_data_.saturation[upwind_cell];

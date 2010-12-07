@@ -138,6 +138,9 @@ void simulate(const Grid& grid,
     // Flow solver setup.
     flow_solver.setup(grid, rock, fluid, gravity, flow_bc);
 
+    // Transport solver setup.
+    transport_solver.setup(grid, rock, fluid);
+
     // Source terms.
     std::vector<double> src(grid.numCells(), 0.0);
 //     if (g.numberOfCells() > 1) {
@@ -219,7 +222,7 @@ void simulate(const Grid& grid,
 
         // Transport.
         if (!do_impes) {
-            transport_solver.transport(grid, rock, fluid, bdy_p, bdy_z,
+            transport_solver.transport(bdy_p, bdy_z,
                                        face_flux, cell_pressure, face_pressure,
                                        stepsize, voldisclimit, cell_z);
         }
