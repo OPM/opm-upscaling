@@ -72,7 +72,7 @@ int main(int argc, char** argv)
 
     double minperm = param.getDefault("minperm", 1e-9);
     double minpermSI = Dune::unit::convert::from(minperm, Dune::prefix::milli*Dune::unit::darcy);
-    double z_tolerance = param.getDefault("z_tolerance", 0.0);
+    double z_tolerance = param.getDefault("z_tolerance", 1e-8);
     double residual_tolerance = param.getDefault("residual_tolerance", 1e-8);
     double linsolver_verbosity = param.getDefault("linsolver_verbosity", 0);
     double linsolver_type = param.getDefault("linsolver_type", 1);
