@@ -116,8 +116,10 @@ int main(int argc, char** argv)
         // Output grdecl-data to file if a filebase is supplied.
         if (filebase != "") {
             std::ostringstream oss;
-            oss << 'R' << std::setw(4) << std::setfill('0') << sample;
-            subsampledgrdecl += oss.str();
+            if ((size_t) subsamples > 1) { // Only add number to filename if more than one sample is asked for
+                oss << 'R' << std::setw(4) << std::setfill('0') << sample;
+                subsampledgrdecl += oss.str();
+            }
             subsampledgrdecl += ".grdecl";
             ch.writeGrdecl(subsampledgrdecl);
         }
@@ -171,7 +173,7 @@ int main(int argc, char** argv)
         outputtmp << "# id          porosity                 permx                   permy                   permz" << std::endl;
         
         const int fieldwidth = outputprecision + 8;
-        for (int sample = 1; sample <= porosities.size(); ++sample) {
+        for (size_t sample = 1; sample <= porosities.size(); ++sample) {
             outputtmp << sample << '\t' <<
                 std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << porosities[sample-1] << '\t' <<
                 std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permxs[sample-1] << '\t' <<
