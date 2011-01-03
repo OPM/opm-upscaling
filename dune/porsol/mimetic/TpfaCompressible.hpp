@@ -191,13 +191,8 @@ namespace Dune
 
         /// @brief
         ///    Construct and solve system of linear equations for the
-        ///    pressure values on each interface/contact between
-        ///    neighbouring grid cells.  Recover cell and face
-        ///    pressures by phase and interface volumetric fluxes.
-        ///
-        ///
-        /// @param [in] fluid
-        ///    Fluid behaviour is governed by this object.
+        ///    phase pressure values on cells and faces, also compute
+        ///    total face fluxes.
         ///
         /// @param [inout] cell_pressure
         ///    Phase pressures per cell.
@@ -205,7 +200,7 @@ namespace Dune
         /// @param [inout] face_pressure
         ///    Phase pressures per face.
         ///
-        /// @param [inout] z
+        /// @param [inout] cell_z
         ///    Surface volume per cell. Only changed if the @code
         ///    transport @endcode argument is true.
         ///
@@ -223,7 +218,7 @@ namespace Dune
         ///    Timestep for pressure solver.
         ///
         /// @param [in] transport
-        ///    If true, modify @code z @endcode by IMPES scheme.
+        ///    If true, modify @code cell_z @endcode by IMPES scheme.
         ///
         ReturnCode solve(std::vector<typename FluidInterface::PhaseVec>& cell_pressure,
                          std::vector<typename FluidInterface::PhaseVec>& face_pressure,
@@ -245,6 +240,7 @@ namespace Dune
             }
             std::vector<double> initial_voldiscr;
             std::vector<double> face_pressure_scalar;
+            std::vector<double> well_pressures, well_fluxes;
             for (int i = 0; i < num_iter_; ++i) {
                 // (Re-)compute fluid properties.
                 computeFluidProps(cell_pressure, face_pressure, cell_z, dt);
@@ -270,7 +266,8 @@ namespace Dune
                           << "Residual reduction achieved is " << res.reduction << '\n');
                 }
                 // Get pressures and face fluxes.
-                psolver_.computePressuresAndFluxes(cell_pressure_scalar, face_pressure_scalar, face_flux);
+                psolver_.computePressuresAndFluxes(cell_pressure_scalar, face_pressure_scalar, face_flux,
+                                                   well_pressures, well_fluxes);
                 // Copy to phase pressures. \TODO handle capillary pressure.
                 for (int cell = 0; cell < num_cells; ++cell) {
                     cell_pressure[cell] = cell_pressure_scalar[cell];
