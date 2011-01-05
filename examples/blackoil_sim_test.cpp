@@ -52,6 +52,7 @@
 #include <dune/common/param/ParameterGroup.hpp>
 #include <dune/common/StopWatch.hpp>
 #include <dune/porsol/common/setupGridAndProps.hpp>
+#include <dune/porsol/common/Wells.hpp>
 #include <dune/porsol/blackoil/fluid/FluidMatrixInteractionBlackoil.hpp>
 #include <dune/porsol/blackoil/BlackoilFluid.hpp>
 
@@ -122,10 +123,11 @@ void output(const Grid& grid,
 
 
 
-template<class Grid, class Rock, class Fluid, class FlowSolver, class TransportSolver>
+template<class Grid, class Rock, class Fluid, class Wells, class FlowSolver, class TransportSolver>
 void simulate(const Grid& grid,
               const Rock& rock,
               const Fluid& fluid,
+              const Wells& wells,
               FlowSolver& flow_solver,
               TransportSolver& transport_solver,
               const double total_time,
@@ -145,7 +147,7 @@ void simulate(const Grid& grid,
 //     gravity[2] = Dune::unit::gravity;
 
     // Flow solver setup.
-    flow_solver.setup(grid, rock, fluid, gravity, flow_bc);
+    flow_solver.setup(grid, rock, fluid, wells, gravity, flow_bc);
 
     // Transport solver setup.
     transport_solver.setup(grid, rock, fluid);
@@ -268,6 +270,7 @@ void simulate(const Grid& grid,
 typedef Dune::CpGrid Grid;
 typedef Dune::Rock<Grid::dimension> Rock;
 typedef Opm::BlackoilFluid Fluid;
+typedef Opm::Wells Wells;
 typedef Dune::BasicBoundaryConditions<true, false>  FBC;
 typedef Dune::TpfaCompressible<Grid, Rock, Fluid, FBC> FlowSolver;
 typedef Opm::ExplicitCompositionalTransport<Grid, Rock, Fluid> TransportSolver;
@@ -281,6 +284,7 @@ int main(int argc, char** argv)
     Grid grid;
     Rock rock;
     Fluid fluid;
+    Wells wells;
     FlowSolver flow_solver;
     TransportSolver transport_solver;
 
@@ -298,6 +302,7 @@ int main(int argc, char** argv)
         double perm_threshold = Dune::unit::convert::from(perm_threshold_md, Dune::prefix::milli*Dune::unit::darcy);
         rock.init(parser, grid.globalCell(), perm_threshold);
         fluid.init(parser);
+        wells.init(parser);
     } else if (fileformat == "cartesian") {
         Dune::array<int, 3> dims = {{ param.getDefault<int>("nx", 1),
                                       param.getDefault<int>("ny", 1),
@@ -313,6 +318,7 @@ int main(int argc, char** argv)
         rock.init(grid.size(0), default_poro, default_perm);
         EclipseGridParser parser(param.get<std::string>("filename")); // Need a parser for the fluids anyway.
         fluid.init(parser);
+        wells.init(parser);
     } else {
         THROW("Unknown file format string: " << fileformat);
     }
@@ -326,7 +332,7 @@ int main(int argc, char** argv)
     // Run simulation.
     Dune::time::StopWatch clock;
     clock.start();
-    simulate(grid, rock, fluid, flow_solver, transport_solver, total_time, initial_stepsize, do_impes, output_dir);
+    simulate(grid, rock, fluid, wells, flow_solver, transport_solver, total_time, initial_stepsize, do_impes, output_dir);
     clock.stop();
     std::cout << "\n\nSimulation clock time (secs): " << clock.secsSinceStart() << std::endl;
 }

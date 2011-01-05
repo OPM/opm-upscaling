@@ -101,6 +101,12 @@ namespace Dune
         /// @param [in] rock
         ///    The cell-wise permeabilities and porosities.
         ///
+        /// @param [in] fluid
+        ///    Fluid properties.
+        ///
+        /// @param [in] wells
+        ///    Well specifications.
+        ///
         /// @param [in] grav
         ///    Gravity vector.  Its Euclidian two-norm value
         ///    represents the strength of the gravity field (in units
@@ -110,9 +116,11 @@ namespace Dune
         /// @param [in] bc
         ///    Boundary conditions.
         ///
+        template <class WellsInterface>
         void setup(const GridInterface&         grid,
                    const RockInterface&         rock,
                    const FluidInterface&        fluid,
+                   const WellsInterface&        wells,
                    const typename GridInterface::Vector& grav,
                    const BCInterface& bc)
         {
@@ -131,6 +139,7 @@ namespace Dune
             }
             // Initialize 
             psolver_.init(grid, perm, &poro_[0]);
+            psolver_.initWells(wells);
 
             // Build bctypes_ and bcvalues_.
             int num_faces = grid.numFaces();

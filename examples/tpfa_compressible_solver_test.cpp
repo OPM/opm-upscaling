@@ -50,6 +50,7 @@
 #include <dune/porsol/mimetic/TpfaCompressible.hpp>
 #include <dune/common/param/ParameterGroup.hpp>
 #include <dune/porsol/common/setupGridAndProps.hpp>
+#include <dune/porsol/common/Wells.hpp>
 #include <dune/porsol/blackoil/fluid/FluidMatrixInteractionBlackoil.hpp>
 #include <dune/porsol/blackoil/BlackoilFluid.hpp>
 
@@ -72,8 +73,10 @@ void test_flowsolver(const Grid& grid,
     typename Grid::Vector gravity(0.0);
 //     gravity[2] = Dune::unit::gravity;
 
+    Opm::Wells wells;
+
     // Flow solver setup.
-    solver.setup(grid, rock, fluid, gravity, flow_bc);
+    solver.setup(grid, rock, fluid, wells, gravity, flow_bc);
 
     // Source terms.
     std::vector<double> src(grid.numCells(), 0.0);
