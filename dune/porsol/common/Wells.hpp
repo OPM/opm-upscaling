@@ -20,6 +20,9 @@
 #ifndef OPM_WELLS_HEADER_INCLUDED
 #define OPM_WELLS_HEADER_INCLUDED
 
+#include <dune/common/ErrorMacros.hpp>
+#include <dune/common/SparseTable.hpp>
+#include <vector>
 
 // Forward declaration.
 namespace Dune
@@ -34,8 +37,7 @@ namespace Opm
 
 
     /// A class designed to encapsulate a set of rate- or
-    /// pressure-controlled wells. Current implementation is a
-    /// skeleton only.
+    /// pressure-controlled wells.
     class Wells
     {
     public:
@@ -56,6 +58,10 @@ namespace Opm
         // Cell-centric interface.
         double wellOutflowRate(int cell) const;
     private:
+        struct WellData { WellType type; WellControl control; double target; };
+        std::vector<WellData> well_data_;
+        struct PerfData { int cell; double well_index; double pdelta; };
+        Dune::SparseTable<PerfData> perf_data_;
     };
 
 
@@ -67,46 +73,47 @@ namespace Opm
 
     inline int Wells::numWells() const
     {
-        return 0;
+        return well_data_.size();
     }
 
     inline Wells::WellType Wells::type(int wellnum) const
     {
-        return Injector;
+        return well_data_[wellnum].type;
     }
 
     inline Wells::WellControl Wells::control(int wellnum) const
     {
-        return Rate;
+        return well_data_[wellnum].control;
     }
 
     inline double Wells::target(int wellnum) const
     {
-        return 0.0;
+        return well_data_[wellnum].target;
     }
 
     inline int Wells::numPerforations(int wellnum) const
     {
-        return 0;
+        return perf_data_[wellnum].size();
     }
 
     inline int Wells::wellCell(int wellnum, int perfnum) const
     {
-        return -1;
+        return perf_data_[wellnum][perfnum].cell;
     }
 
     inline double Wells::wellIndex(int wellnum, int perfnum) const
     {
-        return 0.0;
+        return perf_data_[wellnum][perfnum].well_index;
     }
 
     inline double Wells::pressureDelta(int wellnum, int perfnum) const
     {
-        return 0.0;
+        return perf_data_[wellnum][perfnum].pdelta;
     }
 
     inline double Wells::wellOutflowRate(int cell) const
     {
+        THROW("Not implemented");
         return 0.0;
     }
 
