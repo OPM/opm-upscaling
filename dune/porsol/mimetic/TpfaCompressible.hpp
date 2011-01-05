@@ -138,8 +138,7 @@ namespace Dune
                 poro_[i] = rock.porosity(i);
             }
             // Initialize 
-            psolver_.init(grid, perm, &poro_[0]);
-            psolver_.initWells(wells);
+            psolver_.init(grid, wells, perm, &poro_[0]);
 
             // Build bctypes_ and bcvalues_.
             int num_faces = grid.numFaces();
