@@ -243,7 +243,7 @@ private: // Methods
                 PhaseVec ff_diff = upwind_ff;
                 ff_diff -= downwind_ff;
                 for (int phase = 0; phase < numPhases; ++phase) {
-                    if (std::fabs(ff_diff[phase]) > 1e-14) {
+                    if (std::fabs(ff_diff[phase]) > 1e-10) {
                         double ff_deriv = ff_diff[phase]/(upwind_sat[phase] - fluid_data_.saturation[downwind_cell][phase]);
                         ASSERT(ff_deriv >= 0.0);
                         face_max_ff_deriv = std::max(face_max_ff_deriv, ff_deriv);
