@@ -216,8 +216,9 @@ void simulate(const Grid& grid,
         ++step;
         std::cout << "\n\n================    Simulation step number " << step
                   << "    ==============="
-                  << "\n      Current time (days) " << Dune::unit::convert::to(current_time, Dune::unit::day)
-                  << "\n      Total time (days)   " << Dune::unit::convert::to(total_time, Dune::unit::day)
+                  << "\n      Current time (days)     " << Dune::unit::convert::to(current_time, Dune::unit::day)
+                  << "\n      Current stepsize (days) " << Dune::unit::convert::to(stepsize, Dune::unit::day)
+                  << "\n      Total time (days)       " << Dune::unit::convert::to(total_time, Dune::unit::day)
                   << "\n" << std::endl;
 
         // Do not run past total_time.
