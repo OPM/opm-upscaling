@@ -75,7 +75,8 @@ namespace Dune
             }
             inflow_mixture_ = mix;
             linsolver_.init(param);
-            num_iter_ = param.getDefault("num_iter", 5);
+            flux_rel_tol_ = param.getDefault("flux_rel_tol", 1e-5);
+            max_num_iter_ = param.getDefault("max_num_iter", 15);
             max_relative_voldiscr_ = param.getDefault("max_relative_voldiscr", 0.15);
         }
 
@@ -257,7 +258,14 @@ namespace Dune
             }
             std::vector<double> initial_voldiscr;
             std::vector<double> face_pressure_scalar;
-            for (int i = 0; i < num_iter_; ++i) {
+            std::vector<double> start_face_flux;
+            if (int(face_flux.size()) != num_faces) {
+                face_flux.clear();
+                face_flux.resize(num_faces, 0.0);
+            }
+            bool converged = false;
+            for (int i = 0; i < max_num_iter_; ++i) {
+                start_face_flux = face_flux;
                 // (Re-)compute fluid properties.
                 computeFluidProps(cell_pressure, face_pressure, cell_z, dt);
                 if (i == 0) {
@@ -290,6 +298,25 @@ namespace Dune
                 }
                 for (int face = 0; face < num_faces; ++face) {
                     face_pressure[face] = face_pressure_scalar[face];
+                }
+
+                // Test for convergence.
+                double max_flux = std::max(std::fabs(*std::min_element(face_flux.begin(), face_flux.end())),
+                                           std::fabs(*std::max_element(face_flux.begin(), face_flux.end())));
+                double flux_change_infnorm = 0.0;
+                for (int face = 0; face < num_faces; ++face) {
+                    flux_change_infnorm = std::max(flux_change_infnorm, std::fabs(face_flux[face] - start_face_flux[face]));
+                }
+                double rel_difference = flux_change_infnorm/max_flux;
+                std::cout << "    Iteration in pressure solver complete. Relative flux change: " << rel_difference << std::endl;
+                if (rel_difference < flux_rel_tol_) {
+                    std::cout << "    Pressure solver converged. Number of iterations: " << i + 1 << std::endl;
+                    converged = true;
+                    break;
+                }
+
+                if (!converged) {
+                    THROW("Pressure solver failed to converge after " << max_num_iter_ << " iterations.");
                 }
 
                 // DUMP HACK
@@ -331,7 +358,8 @@ namespace Dune
         std::vector<double> bcvalues_;
 
         typename FluidInterface::CompVec inflow_mixture_;
-        int num_iter_;
+        double flux_rel_tol_;
+        int max_num_iter_;
         double max_relative_voldiscr_;
     };
 
