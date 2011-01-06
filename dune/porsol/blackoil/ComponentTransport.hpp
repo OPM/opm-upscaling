@@ -30,7 +30,7 @@ namespace Opm
 {
 
 
-template <class Grid, class Rock, class Fluid>
+template <class Grid, class Rock, class Fluid, class Wells>
 class ExplicitCompositionalTransport : public BlackoilDefs
 {
 public:
@@ -47,11 +47,13 @@ public:
 
     void setup(const Grid& grid,
                const Rock& rock,
-               const Fluid& fluid)
+               const Fluid& fluid,
+               const Wells& wells)
     {
         pgrid_ = &grid;
         prock_ = &rock;
         pfluid_ = &fluid;
+        pwells_ = &wells;
     }
 
 
@@ -117,12 +119,17 @@ private: // Data
     const Grid* pgrid_;
     const Rock* prock_;
     const Fluid* pfluid_;
+    const Wells* pwells_;
     typename Fluid::FluidData fluid_data_;
-    PhaseVec bdy_saturation_;
-    PhaseVec bdy_fractional_flow_;
-    std::tr1::array<CompVec, numPhases> bdy_comp_in_phase_;
-    PhaseVec bdy_relperm_;
-    PhaseVec bdy_viscosity_;
+    struct TransportFluidData
+    {
+        PhaseVec saturation;
+        PhaseVec fractional_flow;
+        std::tr1::array<CompVec, numPhases> comp_in_phase;
+        PhaseVec relperm;
+        PhaseVec viscosity;
+    };
+    TransportFluidData bdy_;
 
 private: // Methods
 
@@ -132,21 +139,26 @@ private: // Methods
                                const PhaseVec& external_pressure,
                                const CompVec& external_composition)
     {
+        // Properties in reservoir.
         const double dummy_dt = 1.0;
         fluid_data_.compute(*pgrid_, *prock_, *pfluid_, cell_pressure, face_pressure, cell_z, external_composition, dummy_dt);
 
+        // Properties on boundary. \TODO need not update this.
         BlackoilFluid::FluidState state = pfluid_->computeState(external_pressure, external_composition);
-        bdy_saturation_ = state.saturation_;
+        bdy_.saturation = state.saturation_;
         double total_mobility = 0.0;
         for (int phase = 0; phase < numPhases; ++phase) {
             total_mobility += state.mobility_[phase];
         }
-        bdy_fractional_flow_ = state.mobility_;
-        bdy_fractional_flow_ /= total_mobility;
+        bdy_.fractional_flow = state.mobility_;
+        bdy_.fractional_flow /= total_mobility;
         std::copy(state.phase_to_comp_, state.phase_to_comp_ + numComponents*numPhases,
-                  &bdy_comp_in_phase_[0][0]);
-        bdy_relperm_ = state.relperm_;
-        bdy_viscosity_ = state.viscosity_;
+                  &bdy_.comp_in_phase[0][0]);
+        bdy_.relperm = state.relperm_;
+        bdy_.viscosity = state.viscosity_;
+
+        // Properties in wells.
+        
     }
 
 
@@ -181,10 +193,10 @@ private: // Methods
             int c1 = pgrid_->faceCell(face, 1);
             int upwind_cell = (face_flux[face] > 0.0) ? c0 : c1;
             int downwind_cell = (face_flux[face] > 0.0) ? c1 : c0;
-            PhaseVec upwind_sat = upwind_cell < 0 ? bdy_saturation_ : fluid_data_.saturation[upwind_cell];
-            PhaseVec upwind_relperm = upwind_cell < 0 ? bdy_relperm_ : fluid_data_.rel_perm[upwind_cell];
-            PhaseVec upwind_viscosity = upwind_cell < 0 ? bdy_viscosity_ : fluid_data_.viscosity[upwind_cell];
-            PhaseVec upwind_ff = upwind_cell < 0 ? bdy_fractional_flow_ : fluid_data_.frac_flow[upwind_cell];
+            PhaseVec upwind_sat = upwind_cell < 0 ? bdy_.saturation : fluid_data_.saturation[upwind_cell];
+            PhaseVec upwind_relperm = upwind_cell < 0 ? bdy_.relperm : fluid_data_.rel_perm[upwind_cell];
+            PhaseVec upwind_viscosity = upwind_cell < 0 ? bdy_.viscosity : fluid_data_.viscosity[upwind_cell];
+            PhaseVec upwind_ff = upwind_cell < 0 ? bdy_.fractional_flow : fluid_data_.frac_flow[upwind_cell];
             PhaseVec phase_flux(upwind_ff);
             phase_flux *= face_flux[face];
             CompVec change(0.0);
@@ -214,7 +226,7 @@ private: // Methods
 
             // Compute z change.
             for (int phase = 0; phase < numPhases; ++phase) {
-                CompVec z_in_phase = bdy_comp_in_phase_[phase];
+                CompVec z_in_phase = bdy_.comp_in_phase[phase];
                 if (upwind_cell >= 0) {
                     for (int comp = 0; comp < numComponents; ++comp) {
                         z_in_phase[comp] = fluid_data_.cellA[numPhases*numComponents*upwind_cell + numComponents*phase + comp];

@@ -216,6 +216,13 @@ namespace Dune
         ///    Total (summed over all phases) volume flux (signed)
         ///    across each face.
         ///
+        /// @param [out] well_pressures
+        ///    Pressure in each well perforation.
+        ///
+        /// @param [out] well_fluxes
+        ///    Total (summed over all phases) volume flux (signed,
+        ///    positive meaning injection) from each well perforation.
+        ///
         /// @param [in] src
         ///    Explicit source terms.  One scalar value for each grid
         ///    cell representing the rate (in units of m^3/s) of fluid
@@ -232,6 +239,8 @@ namespace Dune
                          std::vector<typename FluidInterface::PhaseVec>& face_pressure,
                          std::vector<typename FluidInterface::CompVec>& cell_z,
                          std::vector<double>& face_flux,
+                         std::vector<double>& well_pressures,
+                         std::vector<double>& well_fluxes,
                          const std::vector<double>& src,
                          const double dt,
                          bool transport = false)
@@ -248,7 +257,6 @@ namespace Dune
             }
             std::vector<double> initial_voldiscr;
             std::vector<double> face_pressure_scalar;
-            std::vector<double> well_pressures, well_fluxes;
             for (int i = 0; i < num_iter_; ++i) {
                 // (Re-)compute fluid properties.
                 computeFluidProps(cell_pressure, face_pressure, cell_z, dt);

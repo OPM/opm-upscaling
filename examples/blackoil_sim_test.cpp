@@ -52,7 +52,7 @@
 #include <dune/common/param/ParameterGroup.hpp>
 #include <dune/common/StopWatch.hpp>
 #include <dune/porsol/common/setupGridAndProps.hpp>
-#include <dune/porsol/common/Wells.hpp>
+#include <dune/porsol/blackoil/BlackoilWells.hpp>
 #include <dune/porsol/blackoil/fluid/FluidMatrixInteractionBlackoil.hpp>
 #include <dune/porsol/blackoil/BlackoilFluid.hpp>
 
@@ -127,7 +127,7 @@ template<class Grid, class Rock, class Fluid, class Wells, class FlowSolver, cla
 void simulate(const Grid& grid,
               const Rock& rock,
               const Fluid& fluid,
-              const Wells& wells,
+              Wells& wells,  // Will change after pressure updates.
               FlowSolver& flow_solver,
               TransportSolver& transport_solver,
               const double total_time,
@@ -139,8 +139,8 @@ void simulate(const Grid& grid,
     typedef Dune::FlowBC BC;
     typedef Dune::BasicBoundaryConditions<true, false>  FBC;
     FBC flow_bc(7);
-    flow_bc.flowCond(1) = BC(BC::Dirichlet, 300.0*Dune::unit::barsa);
-    flow_bc.flowCond(2) = BC(BC::Dirichlet, 100.0*Dune::unit::barsa);
+    // flow_bc.flowCond(1) = BC(BC::Dirichlet, 300.0*Dune::unit::barsa);
+    // flow_bc.flowCond(2) = BC(BC::Dirichlet, 100.0*Dune::unit::barsa);
 
     // Gravity.
     typename Grid::Vector gravity(0.0);
@@ -150,7 +150,7 @@ void simulate(const Grid& grid,
     flow_solver.setup(grid, rock, fluid, wells, gravity, flow_bc);
 
     // Transport solver setup.
-    transport_solver.setup(grid, rock, fluid);
+    transport_solver.setup(grid, rock, fluid, wells);
 
     // Source terms.
     std::vector<double> src(grid.numCells(), 0.0);
@@ -169,7 +169,8 @@ void simulate(const Grid& grid,
     MESSAGE("******* Assuming zero capillary pressures *******");
     PhaseVec init_p(100.0*Dune::unit::barsa);
     std::vector<PhaseVec> cell_pressure(grid.numCells(), init_p);
-    PhaseVec bdy_p(300.0*Dune::unit::barsa);
+    // PhaseVec bdy_p(300.0*Dune::unit::barsa);
+    PhaseVec bdy_p(100.0*Dune::unit::barsa);
     // Rescale z values so that pore volume is filled exactly
     // (to get zero initial volume discrepancy).
     for (int cell = 0; cell < grid.numCells(); ++cell) {
@@ -202,6 +203,8 @@ void simulate(const Grid& grid,
     double current_time = 0.0;
     int step = -1;
     std::vector<double> face_flux;
+    std::vector<double> well_pressure;
+    std::vector<double> well_flux;
     std::vector<PhaseVec> cell_pressure_start;
     std::vector<PhaseVec> face_pressure_start;
     std::vector<CompVec> cell_z_start;
@@ -224,12 +227,15 @@ void simulate(const Grid& grid,
 
         // Solve flow system.
         enum FlowSolver::ReturnCode result
-            = flow_solver.solve(cell_pressure, face_pressure, cell_z, face_flux, src, stepsize, do_impes);
+            = flow_solver.solve(cell_pressure, face_pressure, cell_z, face_flux, well_pressure, well_flux, src, stepsize, do_impes);
 
         // Check if the flow solver succeeded.
         if (result != FlowSolver::SolveOk) {
             THROW("Flow solver refused to run due to too large volume discrepancy.");
         }
+
+        // Update wells with new perforation pressures and fluxes.
+        wells.update(grid.numCells(), well_pressure, well_flux);
 
         // Transport and check volume discrepancy.
         bool voldisc_ok = true;
@@ -270,10 +276,10 @@ void simulate(const Grid& grid,
 typedef Dune::CpGrid Grid;
 typedef Dune::Rock<Grid::dimension> Rock;
 typedef Opm::BlackoilFluid Fluid;
-typedef Opm::Wells Wells;
+typedef Opm::BlackoilWells Wells;
 typedef Dune::BasicBoundaryConditions<true, false>  FBC;
 typedef Dune::TpfaCompressible<Grid, Rock, Fluid, FBC> FlowSolver;
-typedef Opm::ExplicitCompositionalTransport<Grid, Rock, Fluid> TransportSolver;
+typedef Opm::ExplicitCompositionalTransport<Grid, Rock, Fluid, Wells> TransportSolver;
 
 int main(int argc, char** argv)
 {
