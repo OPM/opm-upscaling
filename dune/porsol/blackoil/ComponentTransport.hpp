@@ -125,13 +125,35 @@ private: // Data
     {
         PhaseVec saturation;
         PhaseVec fractional_flow;
-        std::tr1::array<CompVec, numPhases> comp_in_phase;
+        std::tr1::array<CompVec, numPhases> phase_to_comp;
         PhaseVec relperm;
         PhaseVec viscosity;
     };
     TransportFluidData bdy_;
+    std::vector<int> perf_cells_;
+    std::vector<double> perf_flow_;
+    std::vector<TransportFluidData> perf_props_;
 
 private: // Methods
+
+    TransportFluidData computeProps(const PhaseVec& pressure,
+                                    const CompVec& composition)
+    {
+        BlackoilFluid::FluidState state = pfluid_->computeState(pressure, composition);
+        TransportFluidData data;
+        data.saturation = state.saturation_;
+        double total_mobility = 0.0;
+        for (int phase = 0; phase < numPhases; ++phase) {
+            total_mobility += state.mobility_[phase];
+        }
+        data.fractional_flow = state.mobility_;
+        data.fractional_flow /= total_mobility;
+        std::copy(state.phase_to_comp_, state.phase_to_comp_ + numComponents*numPhases,
+                  &data.phase_to_comp[0][0]);
+        data.relperm = state.relperm_;
+        data.viscosity = state.viscosity_;
+        return data;
+    }
 
     void updateFluidProperties(const std::vector<PhaseVec>& cell_pressure,
                                const std::vector<PhaseVec>& face_pressure,
@@ -143,22 +165,27 @@ private: // Methods
         const double dummy_dt = 1.0;
         fluid_data_.compute(*pgrid_, *prock_, *pfluid_, cell_pressure, face_pressure, cell_z, external_composition, dummy_dt);
 
-        // Properties on boundary. \TODO need not update this.
-        BlackoilFluid::FluidState state = pfluid_->computeState(external_pressure, external_composition);
-        bdy_.saturation = state.saturation_;
-        double total_mobility = 0.0;
-        for (int phase = 0; phase < numPhases; ++phase) {
-            total_mobility += state.mobility_[phase];
-        }
-        bdy_.fractional_flow = state.mobility_;
-        bdy_.fractional_flow /= total_mobility;
-        std::copy(state.phase_to_comp_, state.phase_to_comp_ + numComponents*numPhases,
-                  &bdy_.comp_in_phase[0][0]);
-        bdy_.relperm = state.relperm_;
-        bdy_.viscosity = state.viscosity_;
+        // Properties on boundary. \TODO no need to ever recompute this.
+        bdy_ = computeProps(external_pressure, external_composition);
 
-        // Properties in wells.
-        
+        // Properties at well perforations.
+        // \TODO only need to recompute this once per pressure update.
+        // No, that is false, at production perforations the cell z is
+        // used, which may change every step.
+        perf_cells_.clear();
+        perf_flow_.clear();
+        perf_props_.clear();
+        int num_cells = pgrid_->numCells();
+        for (int cell = 0; cell < num_cells; ++cell) {
+            double flow = pwells_->wellToReservoirFlux(cell);
+            if (flow != 0.0) {
+                perf_cells_.push_back(cell);
+                perf_flow_.push_back(flow);
+                CompVec well_mixture = flow > 0.0 ? pwells_->injectionMixture(cell) : cell_z[cell];
+                perf_props_.push_back(computeProps(PhaseVec(pwells_->perforationPressure(cell)), // \TODO handle capillary pressure?
+                                                   well_mixture));
+            }
+        }
     }
 
 
@@ -226,7 +253,7 @@ private: // Methods
 
             // Compute z change.
             for (int phase = 0; phase < numPhases; ++phase) {
-                CompVec z_in_phase = bdy_.comp_in_phase[phase];
+                CompVec z_in_phase = bdy_.phase_to_comp[phase];
                 if (upwind_cell >= 0) {
                     for (int comp = 0; comp < numComponents; ++comp) {
                         z_in_phase[comp] = fluid_data_.cellA[numPhases*numComponents*upwind_cell + numComponents*phase + comp];
@@ -248,6 +275,28 @@ private: // Methods
                 comp_change[c1] += change;
                 cell_max_ff_deriv[c1] = std::max(cell_max_ff_deriv[c1], face_max_ff_deriv);
             }
+        }
+
+        // Done with all faces, now deal with well perforations.
+        int num_perf = perf_cells_.size();
+        for (int perf = 0; perf < num_perf; ++perf) {
+            int cell = perf_cells_[perf];
+            double flow = perf_flow_[perf];
+            ASSERT(flow != 0.0);
+            const TransportFluidData& fl = perf_props_[perf];
+            // For injection, phase volumes depend on fractional
+            // flow of injection perforation, for production we
+            // use the fractional flow of the producing cell.
+            PhaseVec phase_flux = flow > 0.0 ? fl.fractional_flow : fluid_data_.frac_flow[cell];
+            phase_flux *= flow;
+            // Conversion to mass flux is given at perforation.
+            CompVec change(0.0);
+            for (int phase = 0; phase < numPhases; ++phase) {
+                CompVec z_in_phase = fl.phase_to_comp[phase];
+                z_in_phase *= phase_flux[phase];
+                change += z_in_phase;
+            }
+            comp_change[cell] += change;
         }
     }
 
