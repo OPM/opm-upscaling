@@ -76,7 +76,7 @@ public:
         updateFluidProperties(cell_pressure, face_pressure, cell_z,
                               external_pressure, external_composition);
         if (!volumeDiscrepancyAcceptable(voldisclimit)) {
-            THROW("Encountered unacceptable volume discrepancy on transport solver entry.");
+            return 0.0;
         }
         std::vector<CompVec> cell_z_start;
         while (cur_time < dt) {
@@ -181,9 +181,10 @@ private: // Methods
             if (flow != 0.0) {
                 perf_cells_.push_back(cell);
                 perf_flow_.push_back(flow);
+                // \TODO handle capillary in perforation pressure below?
+                PhaseVec well_pressure = flow > 0.0 ? PhaseVec(pwells_->perforationPressure(cell)) : cell_pressure[cell];
                 CompVec well_mixture = flow > 0.0 ? pwells_->injectionMixture(cell) : cell_z[cell];
-                perf_props_.push_back(computeProps(PhaseVec(pwells_->perforationPressure(cell)), // \TODO handle capillary pressure?
-                                                   well_mixture));
+                perf_props_.push_back(computeProps(well_pressure, well_mixture));
             }
         }
     }
@@ -289,7 +290,9 @@ private: // Methods
             // use the fractional flow of the producing cell.
             PhaseVec phase_flux = flow > 0.0 ? fl.fractional_flow : fluid_data_.frac_flow[cell];
             phase_flux *= flow;
-            // Conversion to mass flux is given at perforation.
+            // Conversion to mass flux is given at perforation state
+            // if injector, cell state if producer (this is ensured by
+            // updateFluidProperties()).
             CompVec change(0.0);
             for (int phase = 0; phase < numPhases; ++phase) {
                 CompVec z_in_phase = fl.phase_to_comp[phase];
