@@ -213,6 +213,10 @@ void simulate(const Grid& grid,
         face_pressure_start = face_pressure;
         cell_z_start = cell_z;
 
+        // Do not run past total_time.
+        if (current_time + stepsize > total_time) {
+            stepsize = total_time - current_time;
+        }
         ++step;
         std::cout << "\n\n================    Simulation step number " << step
                   << "    ==============="
@@ -220,11 +224,6 @@ void simulate(const Grid& grid,
                   << "\n      Current stepsize (days) " << Dune::unit::convert::to(stepsize, Dune::unit::day)
                   << "\n      Total time (days)       " << Dune::unit::convert::to(total_time, Dune::unit::day)
                   << "\n" << std::endl;
-
-        // Do not run past total_time.
-        if (current_time + stepsize > total_time) {
-            stepsize = total_time - current_time;
-        }
 
         // Solve flow system.
         enum FlowSolver::ReturnCode result
