@@ -55,8 +55,16 @@ namespace Opm
         double wellIndex(int wellnum, int perfnum) const;
         double pressureDelta(int wellnum, int perfnum) const;
 
-        // Cell-centric interface.
-        double wellOutflowRate(int cell) const;
+        // Updating rates and pressures after pressure solve.
+        void update(int num_cells,
+                    const std::vector<double>& well_pressures,
+                    const std::vector<double>& well_fluxes);
+
+        // Cell-centric interface. Mostly used by transport solver.
+        double perforationPressure(int cell) const;
+        double wellToReservoirFlux(int cell) const;
+        Dune::FieldVector<double, 3> injectionMixture(int cell) const;
+
     private:
         struct WellData { WellType type; WellControl control; double target; };
         std::vector<WellData> well_data_;
@@ -111,10 +119,27 @@ namespace Opm
         return perf_data_[wellnum][perfnum].pdelta;
     }
 
-    inline double Wells::wellOutflowRate(int cell) const
+    inline void Wells::update(int /*num_cells*/,
+                              const std::vector<double>& /*well_pressures*/,
+                              const std::vector<double>& /*well_fluxes*/)
+    {
+    }
+
+    inline double Wells::perforationPressure(int cell) const
     {
         THROW("Not implemented");
         return 0.0;
+    }
+
+    inline double Wells::wellToReservoirFlux(int cell) const
+    {
+        return 0.0;
+    }
+
+    inline Dune::FieldVector<double, 3> Wells::injectionMixture(int cell) const
+    {
+        THROW("Not implemented");
+        return Dune::FieldVector<double, 3>(0.0);
     }
 
 

@@ -52,6 +52,7 @@
 #include <dune/common/param/ParameterGroup.hpp>
 #include <dune/common/StopWatch.hpp>
 #include <dune/porsol/common/setupGridAndProps.hpp>
+#include <dune/porsol/common/Wells.hpp>
 #include <dune/porsol/blackoil/BlackoilWells.hpp>
 #include <dune/porsol/blackoil/fluid/FluidMatrixInteractionBlackoil.hpp>
 #include <dune/porsol/blackoil/BlackoilFluid.hpp>
@@ -139,8 +140,8 @@ void simulate(const Grid& grid,
     typedef Dune::FlowBC BC;
     typedef Dune::BasicBoundaryConditions<true, false>  FBC;
     FBC flow_bc(7);
-    // flow_bc.flowCond(1) = BC(BC::Dirichlet, 300.0*Dune::unit::barsa);
-    // flow_bc.flowCond(2) = BC(BC::Dirichlet, 100.0*Dune::unit::barsa);
+    flow_bc.flowCond(1) = BC(BC::Dirichlet, 300.0*Dune::unit::barsa);
+    flow_bc.flowCond(2) = BC(BC::Dirichlet, 100.0*Dune::unit::barsa); // WELLS
 
     // Gravity.
     typename Grid::Vector gravity(0.0);
@@ -169,8 +170,8 @@ void simulate(const Grid& grid,
     MESSAGE("******* Assuming zero capillary pressures *******");
     PhaseVec init_p(100.0*Dune::unit::barsa);
     std::vector<PhaseVec> cell_pressure(grid.numCells(), init_p);
-    // PhaseVec bdy_p(300.0*Dune::unit::barsa);
-    PhaseVec bdy_p(100.0*Dune::unit::barsa);
+    PhaseVec bdy_p(300.0*Dune::unit::barsa);
+    // PhaseVec bdy_p(100.0*Dune::unit::barsa); // WELLS
     // Rescale z values so that pore volume is filled exactly
     // (to get zero initial volume discrepancy).
     for (int cell = 0; cell < grid.numCells(); ++cell) {
@@ -276,7 +277,8 @@ void simulate(const Grid& grid,
 typedef Dune::CpGrid Grid;
 typedef Dune::Rock<Grid::dimension> Rock;
 typedef Opm::BlackoilFluid Fluid;
-typedef Opm::BlackoilWells Wells;
+// typedef Opm::BlackoilWells Wells; // WELLS
+typedef Opm::Wells Wells;
 typedef Dune::BasicBoundaryConditions<true, false>  FBC;
 typedef Dune::TpfaCompressible<Grid, Rock, Fluid, FBC> FlowSolver;
 typedef Opm::ExplicitCompositionalTransport<Grid, Rock, Fluid, Wells> TransportSolver;
