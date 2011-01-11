@@ -90,7 +90,7 @@ namespace Dune
                            boost::bind(std::plus<double>(), dp, _1));
             computeSaturations();
             std::pair<double, double> vols = poreSatVolumes(grid_, rp_, sat_);
-            return vols.second - orig_satvol_;
+            return (vols.second - orig_satvol_)/vols.first;
         }
 
         const std::vector<double>& lastSaturations() const
