@@ -48,12 +48,14 @@ public:
     void setup(const Grid& grid,
                const Rock& rock,
                const Fluid& fluid,
-               const Wells& wells)
+               const Wells& wells,
+               const typename Grid::Vector& gravity)
     {
         pgrid_ = &grid;
         prock_ = &rock;
         pfluid_ = &fluid;
         pwells_ = &wells;
+        gravity_ = gravity;
     }
 
 
@@ -120,6 +122,7 @@ private: // Data
     const Rock* prock_;
     const Fluid* pfluid_;
     const Wells* pwells_;
+    typename Grid::Vector gravity_;
     typename Fluid::FluidData fluid_data_;
     struct TransportFluidData
     {
