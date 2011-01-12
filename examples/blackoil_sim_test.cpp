@@ -145,13 +145,13 @@ void simulate(const Grid& grid,
 
     // Gravity.
     typename Grid::Vector gravity(0.0);
-//     gravity[2] = Dune::unit::gravity;
+    gravity[2] = Dune::unit::gravity;
 
     // Flow solver setup.
     flow_solver.setup(grid, rock, fluid, wells, gravity, flow_bc);
 
     // Transport solver setup.
-    transport_solver.setup(grid, rock, fluid, wells);
+    transport_solver.setup(grid, rock, fluid, wells, gravity);
 
     // Source terms.
     std::vector<double> src(grid.numCells(), 0.0);
