@@ -139,7 +139,7 @@ namespace Dune
                 poro_[i] = rock.porosity(i);
             }
             // Initialize 
-            psolver_.init(grid, wells, perm, &poro_[0]);
+            psolver_.init(grid, wells, perm, &poro_[0], grav);
 
             // Build bctypes_ and bcvalues_.
             int num_faces = grid.numFaces();
@@ -280,7 +280,7 @@ namespace Dune
                 // Assemble system matrix and rhs.
                 psolver_.assemble(src, bctypes_, bcvalues_, dt,
                                   fp_.totcompr, initial_voldiscr, fp_.cellA, fp_.faceA, fp_.phasemobf,
-                                  cell_pressure_scalar);
+                                  cell_pressure_scalar, &(pfluid_->surfaceDensities()[0]));
                 // Solve system.
                 PressureSolver::LinearSystem s;
                 psolver_.linearSystem(s);
