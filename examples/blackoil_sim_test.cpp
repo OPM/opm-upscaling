@@ -134,18 +134,23 @@ void simulate(const Grid& grid,
               const double total_time,
               const double initial_stepsize,
               const bool do_impes,
-              const std::string& output_dir)
+              const std::string& output_dir,
+              bool gravity_test)
 {
     // Boundary conditions.
     typedef Dune::FlowBC BC;
     typedef Dune::BasicBoundaryConditions<true, false>  FBC;
     FBC flow_bc(7);
-    flow_bc.flowCond(1) = BC(BC::Dirichlet, 300.0*Dune::unit::barsa);
-    flow_bc.flowCond(2) = BC(BC::Dirichlet, 100.0*Dune::unit::barsa); // WELLS
+    if (!gravity_test) {
+        flow_bc.flowCond(1) = BC(BC::Dirichlet, 300.0*Dune::unit::barsa);
+        flow_bc.flowCond(2) = BC(BC::Dirichlet, 100.0*Dune::unit::barsa); // WELLS
+    }
 
     // Gravity.
     typename Grid::Vector gravity(0.0);
-    gravity[2] = Dune::unit::gravity;
+    if (gravity_test) {
+        gravity[2] = Dune::unit::gravity;
+    }
 
     // Flow solver setup.
     flow_solver.setup(grid, rock, fluid, wells, gravity, flow_bc);
@@ -336,11 +341,13 @@ int main(int argc, char** argv)
     double initial_stepsize = param.getDefault("initial_stepsize", 1.0*unit::day);
     bool do_impes = param.getDefault("do_impes", false);
     std::string output_dir = param.getDefault<std::string>("output_dir", "output");
+    bool gravity_test = param.getDefault("gravity_test", false);
 
     // Run simulation.
     Dune::time::StopWatch clock;
     clock.start();
-    simulate(grid, rock, fluid, wells, flow_solver, transport_solver, total_time, initial_stepsize, do_impes, output_dir);
+    simulate(grid, rock, fluid, wells, flow_solver, transport_solver,
+             total_time, initial_stepsize, do_impes, output_dir, gravity_test);
     clock.stop();
     std::cout << "\n\nSimulation clock time (secs): " << clock.secsSinceStart() << std::endl;
 }
