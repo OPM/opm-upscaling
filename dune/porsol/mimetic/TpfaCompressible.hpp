@@ -178,6 +178,14 @@ namespace Dune
 
 
 
+        const std::vector<double>& faceTransmissibilities()
+        {
+            return psolver_.faceTransmissibilities();
+        }
+
+
+
+
         bool volumeDiscrepancyAcceptable(const std::vector<typename FluidInterface::PhaseVec>& cell_pressure,
                                          const std::vector<typename FluidInterface::PhaseVec>& face_pressure,
                                          const std::vector<typename FluidInterface::CompVec>& cell_z,

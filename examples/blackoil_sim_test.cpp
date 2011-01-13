@@ -149,14 +149,15 @@ void simulate(const Grid& grid,
     // Gravity.
     typename Grid::Vector gravity(0.0);
     if (gravity_test) {
-        gravity[2] = Dune::unit::gravity;
+        // gravity[2] = Dune::unit::gravity;
+        gravity[2] = 10;
     }
 
     // Flow solver setup.
     flow_solver.setup(grid, rock, fluid, wells, gravity, flow_bc);
 
     // Transport solver setup.
-    transport_solver.setup(grid, rock, fluid, wells, gravity);
+    transport_solver.setup(grid, rock, fluid, wells, flow_solver.faceTransmissibilities(), gravity);
 
     // Source terms.
     std::vector<double> src(grid.numCells(), 0.0);
@@ -169,12 +170,28 @@ void simulate(const Grid& grid,
     typedef typename Fluid::CompVec CompVec;
     typedef typename Fluid::PhaseVec PhaseVec;
     CompVec init_z(0.0);
-    init_z[Fluid::Oil] = 1.0;
+    if (gravity_test) {
+        init_z[Fluid::Oil] = 0.5;
+        init_z[Fluid::Water] = 0.5;
+    } else {
+        init_z[Fluid::Oil] = 1.0;
+    }
     CompVec bdy_z = flow_solver.inflowMixture();
+    if (gravity_test) {
+        bdy_z = -1e100;
+    }
     std::vector<CompVec> cell_z(grid.numCells(), init_z);
     MESSAGE("******* Assuming zero capillary pressures *******");
     PhaseVec init_p(100.0*Dune::unit::barsa);
     std::vector<PhaseVec> cell_pressure(grid.numCells(), init_p);
+    if (gravity_test) {
+        double ref_gravpot = grid.cellCentroid(0)*gravity;
+        double rho = init_z*fluid.surfaceDensities();  // Assuming incompressible, and constant initial z.
+        for (int cell = 1; cell < grid.numCells(); ++cell) {
+            double press = rho*(grid.cellCentroid(cell)*gravity - ref_gravpot) + cell_pressure[0][0];
+            cell_pressure[cell] = PhaseVec(press);
+        }
+    }
     PhaseVec bdy_p(300.0*Dune::unit::barsa);
     // PhaseVec bdy_p(100.0*Dune::unit::barsa); // WELLS
     // Rescale z values so that pore volume is filled exactly

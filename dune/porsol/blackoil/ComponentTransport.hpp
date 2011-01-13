@@ -56,12 +56,14 @@ public:
                const Rock& rock,
                const Fluid& fluid,
                const Wells& wells,
+               const std::vector<double>& face_trans,
                const typename Grid::Vector& gravity)
     {
         pgrid_ = &grid;
         prock_ = &rock;
         pfluid_ = &fluid;
         pwells_ = &wells;
+        ptrans_ = &face_trans;
         gravity_ = gravity;
     }
 
@@ -129,6 +131,7 @@ private: // Data
     const Rock* prock_;
     const Fluid* pfluid_;
     const Wells* pwells_;
+    const std::vector<double>* ptrans_;
     typename Grid::Vector gravity_;
     typename Fluid::FluidData fluid_data_;
     struct TransportFluidData
@@ -243,6 +246,7 @@ private: // Methods
             PhaseVec phase_flux(upwind_ff);
             phase_flux *= face_flux[face];
             CompVec change(0.0);
+            /*
             // Compute phase densities on face.
             PhaseVec phase_dens(0.0);
             for (int phase = 0; phase < 3; ++phase) {
@@ -260,7 +264,7 @@ private: // Methods
                 process_face(&fluid_data_.phasemobc[c0][0], &fluid_data_.phasemobc[c1][0],
                              &vstar[0], gravity_flux, 3, &phase_dens[0], upwind_dir);
             }
-
+            */
             // Estimate max derivative of ff.
             double face_max_ff_deriv = 0.0;
             if (downwind_cell >= 0) { // Only contribution on inflow and internal faces.
