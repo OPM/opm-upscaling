@@ -128,9 +128,7 @@ namespace Dune
             pgrid_ = &grid;
             prock_ = &rock;
             pfluid_ = &fluid;
-            if (grav.two_norm() > 0.0) {
-                THROW("TpfaCompressible does not handle gravity yet.");
-            } 
+
             // Extract perm tensors.
             const double* perm = &(rock.permeability(0)(0,0));
             poro_.clear();
