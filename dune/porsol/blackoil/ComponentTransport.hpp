@@ -26,6 +26,13 @@
 #include <dune/porsol/blackoil/BlackoilFluid.hpp>
 #include <dune/common/param/ParameterGroup.hpp>
 
+#include <stdlib.h>
+#include <float.h>
+#include <math.h>
+#include <limits.h>
+#include <assert.h>
+#include <stdio.h>
+
 namespace Opm
 {
 
@@ -218,7 +225,12 @@ private: // Methods
         cell_outflux.resize(num_cells, 0.0);
         cell_max_ff_deriv.clear();
         cell_max_ff_deriv.resize(num_cells, 0.0);
+        CompVec surf_dens = pfluid_->surfaceDensities();
         for (int face = 0; face < pgrid_->numFaces(); ++face) {
+            if (face_flux[face] == 0.0) {
+                // This only happens (probably) on no-flow boundaries.
+                continue;
+            }
             // Set up needed quantities.
             int c0 = pgrid_->faceCell(face, 0);
             int c1 = pgrid_->faceCell(face, 1);
@@ -231,6 +243,23 @@ private: // Methods
             PhaseVec phase_flux(upwind_ff);
             phase_flux *= face_flux[face];
             CompVec change(0.0);
+            // Compute phase densities on face.
+            PhaseVec phase_dens(0.0);
+            for (int phase = 0; phase < 3; ++phase) {
+                const double* At = &fluid_data_.faceA[9*face]; // Already transposed since in Fortran order...
+                for (int comp = 0; comp < 3; ++comp) {
+                    phase_dens[phase] += At[3*phase + comp]*surf_dens[comp];
+                }
+            }
+
+            // Compute upwind directions.
+            if (c0 >=0 && c1 >= 0) {
+                PhaseVec vstar(face_flux[face]);
+                double gravity_flux = gravity_*pgrid_->faceNormal(face);
+                int upwind_dir[3];
+                process_face(&fluid_data_.phasemobc[c0][0], &fluid_data_.phasemobc[c1][0],
+                             &vstar[0], gravity_flux, 3, &phase_dens[0], upwind_dir);
+            }
 
             // Estimate max derivative of ff.
             double face_max_ff_deriv = 0.0;
@@ -306,6 +335,93 @@ private: // Methods
         }
     }
 
+
+    // Arguments are:
+    //  [in] cmob1, cmob2: cell mobilities for adjacent cells
+    //  [in, destroyed] vstar: total velocity (equal for all phases) on input, modified on output
+    //  [in] gf: gravity flux
+    //  [in] np: number of phases
+    //  [in] rho: density on face
+    //  [out] ix: upwind cells for each phase (1 or 2)
+    static void 
+    process_face(double *cmob1, double *cmob2, double *vstar, double gf, 
+                 int np, double *rho, int *ix)
+    {
+        int i,j,k,a,b,c;
+        double v, r, m;
+        for (i=0; i<np; ++i) {
+            
+            /* ============= */
+            /* same sign     */
+
+            /* r = max(rho)*/
+            j = 0; r = DBL_MIN;
+            for(k=0; k<np; ++k) { if (rho[k] > r) { r = rho[k]; j = k; } }
+            a = !(vstar[j]<0) && !(gf<0);
+            b = !(vstar[j]>0) && !(gf>0);
+            c = a || b;
+
+            if ( !c ) {
+                rho[j] = NAN;        
+                v = vstar[j] - gf;
+                if (v < 0) { ix[j] = 2; m = cmob2[j]; }
+                else       { ix[j] = 1; m = cmob1[j]; }
+                for (k=0; k<np; ++k) { vstar[k] -= m *(rho[k]-r)*gf;}
+                continue;
+            }
+
+
+            /* ============= */
+            /* opposite sign */
+
+            /* r = min(rho)*/
+            j = 0; r = DBL_MAX;
+            for(k=0; k<np; ++k) { if (rho[k] < r) { r = rho[k]; j = k; } }
+        
+            if ( c ) {            
+                rho[j] = NAN;       
+                v      = vstar[j] + gf;
+                if (v < 0) { ix[j] = 2; m = cmob2[j]; }
+                else       { ix[j] = 1; m = cmob1[j]; }
+                for (k=0; k<np; ++k) { vstar[k] -= m *(rho[k]-r)*gf;}
+                continue;
+            }
+        }
+    }
+
+
+
+
+    static void
+    phase_upwind_directions(int number_of_faces, int *face_cells, double *dflux, double *gflux, int np, 
+                            double *cmobility, double *fdensity, int *ix)
+    {
+        int k,f;
+        int c1, c2;
+        double *cmob1, *cmob2;
+        double *fden  = malloc(np * sizeof *fden);
+        double *vstar = malloc(np * sizeof *vstar);
+        double gf;
+ 
+        for (f=0; f<number_of_faces; ++f) {
+            gf = gflux[f];
+
+            for (k=0; k<np; ++k) {
+                vstar[k] = dflux[f];
+                fden [k] = fdensity[np*f+k];
+            }
+            c1 = face_cells[2*f + 0];
+            c2 = face_cells[2*f + 1];
+            if (c1 != -1) {cmob1 = cmobility+np*c1;}
+            else          {cmob1 = cmobility+np*c2;}
+            if (c2 != -1) {cmob2 = cmobility+np*c2;}
+            else          {cmob2 = cmobility+np*c1;}
+            process_face(cmob1, cmob2, vstar, gf, np, fden, ix+np*f);
+        
+        }
+        free(fden);
+        free(vstar);
+    }
 
 };
 
