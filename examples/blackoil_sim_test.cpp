@@ -135,7 +135,8 @@ void simulate(const Grid& grid,
               const double initial_stepsize,
               const bool do_impes,
               const std::string& output_dir,
-              bool gravity_test)
+              bool gravity_test,
+              bool newcode)
 {
     // Boundary conditions.
     typedef Dune::FlowBC BC;
@@ -266,7 +267,7 @@ void simulate(const Grid& grid,
             double actual_computed_time
                 = transport_solver.transport(bdy_p, bdy_z,
                                              face_flux, cell_pressure, face_pressure,
-                                             stepsize, voldisclimit, cell_z);
+                                             stepsize, voldisclimit, cell_z, newcode);
             voldisc_ok = (actual_computed_time == stepsize);
         } else {
             voldisc_ok = flow_solver.volumeDiscrepancyAcceptable(cell_pressure, face_pressure, cell_z, stepsize);
@@ -359,12 +360,13 @@ int main(int argc, char** argv)
     bool do_impes = param.getDefault("do_impes", false);
     std::string output_dir = param.getDefault<std::string>("output_dir", "output");
     bool gravity_test = param.getDefault("gravity_test", false);
+    bool newcode = param.getDefault("newcode", true);
 
     // Run simulation.
     Dune::time::StopWatch clock;
     clock.start();
     simulate(grid, rock, fluid, wells, flow_solver, transport_solver,
-             total_time, initial_stepsize, do_impes, output_dir, gravity_test);
+             total_time, initial_stepsize, do_impes, output_dir, gravity_test, newcode);
     clock.stop();
     std::cout << "\n\nSimulation clock time (secs): " << clock.secsSinceStart() << std::endl;
 }

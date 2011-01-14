@@ -77,7 +77,8 @@ public:
                      const std::vector<PhaseVec>& face_pressure,
                      const double dt,
                      const double voldisclimit,
-                     std::vector<CompVec>& cell_z)
+                     std::vector<CompVec>& cell_z,
+                     bool newcode = false)
     {
         int num_cells = pgrid_->numCells();
         std::vector<CompVec> comp_change;
@@ -92,7 +93,11 @@ public:
         std::vector<CompVec> cell_z_start;
         while (cur_time < dt) {
             cell_z_start = cell_z;
-            computeChange(face_flux, comp_change, cell_outflux, cell_max_ff_deriv);
+            if (newcode) {
+                computeChangeNew(face_flux, comp_change, cell_outflux, cell_max_ff_deriv);
+            } else {
+                computeChange(face_flux, comp_change, cell_outflux, cell_max_ff_deriv);
+            }
             double min_time = 1e100;
             for (int cell = 0; cell < num_cells; ++cell) {
                 double time = (prock_->porosity(cell)*pgrid_->cellVolume(cell))/(cell_outflux[cell]*cell_max_ff_deriv[cell]);
@@ -137,6 +142,7 @@ private: // Data
     struct TransportFluidData
     {
         PhaseVec saturation;
+        PhaseVec mobility;
         PhaseVec fractional_flow;
         std::tr1::array<CompVec, numPhases> phase_to_comp;
         PhaseVec relperm;
@@ -155,6 +161,7 @@ private: // Methods
         BlackoilFluid::FluidState state = pfluid_->computeState(pressure, composition);
         TransportFluidData data;
         data.saturation = state.saturation_;
+        data.mobility = state.mobility_;
         double total_mobility = 0.0;
         for (int phase = 0; phase < numPhases; ++phase) {
             total_mobility += state.mobility_[phase];
@@ -203,6 +210,25 @@ private: // Methods
     }
 
 
+
+
+    void cellData(int cell, TransportFluidData& tfd) const
+    {
+        tfd.saturation = fluid_data_.saturation[cell];
+        tfd.mobility = fluid_data_.rel_perm[cell];
+        for (int phase = 0; phase < numPhases; ++phase) {
+            tfd.mobility[phase] /= fluid_data_.viscosity[cell][phase];
+        }
+        tfd.fractional_flow = fluid_data_.frac_flow[cell];
+        const double* A = &fluid_data_.cellA[cell*numComponents*numPhases];
+        std::copy(A, A + numComponents*numPhases, &tfd.phase_to_comp[0][0]);
+        tfd.relperm = fluid_data_.rel_perm[cell];
+        tfd.viscosity = fluid_data_.viscosity[cell];
+    }
+
+
+
+
     bool volumeDiscrepancyAcceptable(const double voldisclimit) const
     {
         double rel_voldiscr = *std::max_element(fluid_data_.relvoldiscr.begin(), fluid_data_.relvoldiscr.end());
@@ -246,25 +272,7 @@ private: // Methods
             PhaseVec phase_flux(upwind_ff);
             phase_flux *= face_flux[face];
             CompVec change(0.0);
-            /*
-            // Compute phase densities on face.
-            PhaseVec phase_dens(0.0);
-            for (int phase = 0; phase < 3; ++phase) {
-                const double* At = &fluid_data_.faceA[9*face]; // Already transposed since in Fortran order...
-                for (int comp = 0; comp < 3; ++comp) {
-                    phase_dens[phase] += At[3*phase + comp]*surf_dens[comp];
-                }
-            }
 
-            // Compute upwind directions.
-            if (c0 >=0 && c1 >= 0) {
-                PhaseVec vstar(face_flux[face]);
-                double gravity_flux = gravity_*pgrid_->faceNormal(face);
-                int upwind_dir[3];
-                process_face(&fluid_data_.phasemobc[c0][0], &fluid_data_.phasemobc[c1][0],
-                             &vstar[0], gravity_flux, 3, &phase_dens[0], upwind_dir);
-            }
-            */
             // Estimate max derivative of ff.
             double face_max_ff_deriv = 0.0;
             if (downwind_cell >= 0) { // Only contribution on inflow and internal faces.
@@ -337,6 +345,143 @@ private: // Methods
             }
             comp_change[cell] += change;
         }
+    }
+
+    void computeChangeNew(const std::vector<double>& face_flux,
+                          std::vector<CompVec>& comp_change,
+                          std::vector<double>& cell_outflux,
+                          std::vector<double>& cell_max_ff_deriv)
+    {
+        int num_cells = pgrid_->numCells();
+        comp_change.clear();
+        CompVec zero(0.0);
+        comp_change.resize(num_cells, zero);
+        cell_outflux.clear();
+        cell_outflux.resize(num_cells, 0.0);
+        cell_max_ff_deriv.clear();
+        cell_max_ff_deriv.resize(num_cells, 0.0);
+        CompVec surf_dens = pfluid_->surfaceDensities();
+        for (int face = 0; face < pgrid_->numFaces(); ++face) {
+            // Compute phase densities on face.
+            PhaseVec phase_dens(0.0);
+            for (int phase = 0; phase < 3; ++phase) {
+                const double* At = &fluid_data_.faceA[9*face]; // Already transposed since in Fortran order...
+                for (int comp = 0; comp < 3; ++comp) {
+                    phase_dens[phase] += At[3*phase + comp]*surf_dens[comp];
+                }
+            }
+            // Collect data from adjacent cells (or boundary).
+            int c[2];
+            TransportFluidData d[2];
+            for (int ix = 0; ix < 2; ++ix) {
+                c[ix] = pgrid_->faceCell(face, ix);
+                if (c[ix] >= 0) {
+                    cellData(c[ix], d[ix]);
+                } else {
+                    d[ix] = bdy_;
+                }
+            }
+            // Compute upwind directions.
+            int upwind_dir[numPhases] = { 0, 0, 0 };
+            PhaseVec vstar(face_flux[face]);
+            double gravity_flux = gravity_*pgrid_->faceNormal(face);
+            process_face(&(d[0].mobility[0]), &(d[1].mobility[0]),
+                         &vstar[0], gravity_flux, numPhases, &phase_dens[0], upwind_dir);
+            PhaseVec phase_mob;
+            double tot_mob = 0.0;
+            for (int phase = 0; phase < numPhases; ++phase) {
+                phase_mob[phase] = d[upwind_dir[phase] - 1].mobility[phase];
+                tot_mob += phase_mob[phase];
+            }
+            PhaseVec ff = phase_mob;
+            ff /= tot_mob;
+            PhaseVec phase_flux = ff;
+            phase_flux *= face_flux[face];
+            // \TODO Add gravity segregation...
+
+            // Estimate max derivative of ff.
+            double face_max_ff_deriv = 0.0;
+            // Only using total flux upwinding for this purpose.
+            // Aim is to reproduce old results first. \TODO fix, include gravity.
+            int downwind_cell = c[upwind_dir[0]%2]; // Keep in mind that upwind_dir[] \in {1, 2}
+            if (downwind_cell >= 0 && face_flux[face] != 0.0) { // Only contribution on inflow and internal faces.
+                // Evaluating all functions at upwind viscosity.
+
+                // Added for this version.
+                PhaseVec upwind_viscosity = d[upwind_dir[0] - 1].viscosity;
+                PhaseVec upwind_sat = d[upwind_dir[0] - 1].saturation;
+                PhaseVec upwind_ff = ff;
+
+                PhaseVec downwind_mob(0.0);
+                double downwind_totmob = 0.0;
+                for (int phase = 0; phase < numPhases; ++phase) {
+                    downwind_mob[phase] = fluid_data_.rel_perm[downwind_cell][phase]/upwind_viscosity[phase];
+                    downwind_totmob += downwind_mob[phase];
+                }
+                PhaseVec downwind_ff = downwind_mob;
+                downwind_ff /= downwind_totmob;
+                PhaseVec ff_diff = upwind_ff;
+                ff_diff -= downwind_ff;
+                for (int phase = 0; phase < numPhases; ++phase) {
+                    if (std::fabs(ff_diff[phase]) > 1e-10) {
+                        double ff_deriv = ff_diff[phase]/(upwind_sat[phase] - fluid_data_.saturation[downwind_cell][phase]);
+                        ASSERT(ff_deriv >= 0.0);
+                        face_max_ff_deriv = std::max(face_max_ff_deriv, ff_deriv);
+                    }
+                }
+            }
+
+            // Compute z change.
+            CompVec change(0.0);
+            for (int phase = 0; phase < numPhases; ++phase) {
+                int upwind_ix = upwind_dir[phase] - 1; // Since process_face returns 1 or 2.
+                CompVec z_in_phase = d[upwind_ix].phase_to_comp[phase];
+                z_in_phase *= phase_flux[phase];
+                change += z_in_phase;
+            }
+
+            // Update output variables.
+            int totflux_upwind_cell = face_flux[face] >= 0.0 ? c[0] : c[1];
+            if (totflux_upwind_cell >= 0) {
+                cell_outflux[totflux_upwind_cell] += std::fabs(face_flux[face]);
+            }
+            for (int ix = 0; ix < 2; ++ix) {
+                if (c[ix] >= 0) {
+                    if (ix == 0) {
+                        comp_change[c[ix]] -= change;
+                    } else {
+                        comp_change[c[ix]] += change;
+                    }
+                    cell_max_ff_deriv[c[ix]] = std::max(cell_max_ff_deriv[c[ix]], face_max_ff_deriv);
+                }
+            }
+        }
+
+        /*
+        // Done with all faces, now deal with well perforations.
+        int num_perf = perf_cells_.size();
+        for (int perf = 0; perf < num_perf; ++perf) {
+            int cell = perf_cells_[perf];
+            double flow = perf_flow_[perf];
+            ASSERT(flow != 0.0);
+            const TransportFluidData& fl = perf_props_[perf];
+            // For injection, phase volumes depend on fractional
+            // flow of injection perforation, for production we
+            // use the fractional flow of the producing cell.
+            PhaseVec phase_flux = flow > 0.0 ? fl.fractional_flow : fluid_data_.frac_flow[cell];
+            phase_flux *= flow;
+            // Conversion to mass flux is given at perforation state
+            // if injector, cell state if producer (this is ensured by
+            // updateFluidProperties()).
+            CompVec change(0.0);
+            for (int phase = 0; phase < numPhases; ++phase) {
+                CompVec z_in_phase = fl.phase_to_comp[phase];
+                z_in_phase *= phase_flux[phase];
+                change += z_in_phase;
+            }
+            comp_change[cell] += change;
+        }
+        */
     }
 
 
