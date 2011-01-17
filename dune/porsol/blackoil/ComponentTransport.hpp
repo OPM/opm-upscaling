@@ -384,9 +384,15 @@ private: // Methods
             // Compute upwind directions.
             int upwind_dir[numPhases] = { 0, 0, 0 };
             PhaseVec vstar(face_flux[face]);
-            double gravity_flux = gravity_*pgrid_->faceNormal(face);
+            // double gravity_flux = gravity_*pgrid_->faceNormal(face)*pgrid_->faceArea(face);
+            typename Grid::Vector centroid_diff = pgrid_->cellCentroid(c[0]);
+            centroid_diff -= c[1] >= 0 ? pgrid_->cellCentroid(c[1]) : pgrid_->faceCentroid(face);
+            double gravity_flux = gravity_*centroid_diff;
+            PhaseVec rho_star(phase_dens);
             process_face(&(d[0].mobility[0]), &(d[1].mobility[0]),
-                         &vstar[0], gravity_flux, numPhases, &phase_dens[0], upwind_dir);
+                         &vstar[0], gravity_flux, numPhases, &rho_star[0], upwind_dir);
+
+            // Compute phase fluxes.
             PhaseVec phase_mob;
             double tot_mob = 0.0;
             for (int phase = 0; phase < numPhases; ++phase) {
@@ -397,7 +403,15 @@ private: // Methods
             ff /= tot_mob;
             PhaseVec phase_flux = ff;
             phase_flux *= face_flux[face];
-            // \TODO Add gravity segregation...
+            // Until we have proper bcs for transport, assume no gravity flow across bdys.
+            if (gravity_flux != 0.0 && c[0] >= 0 && c[1] >= 0) {
+                // Gravity contribution.
+                double omega = ff*phase_dens;
+                double trans = ptrans_->operator[](face);
+                for (int phase = 0; phase < numPhases; ++phase) {
+                    phase_flux[phase] -= phase_mob[phase]*(phase_dens[phase] - omega)*trans*gravity_flux;
+                }
+            }
 
             // Estimate max derivative of ff.
             double face_max_ff_deriv = 0.0;
@@ -490,7 +504,7 @@ private: // Methods
     //  [in, destroyed] vstar: total velocity (equal for all phases) on input, modified on output
     //  [in] gf: gravity flux
     //  [in] np: number of phases
-    //  [in] rho: density on face
+    //  [in, destroyed] rho: density on face
     //  [out] ix: upwind cells for each phase (1 or 2)
     static void 
     process_face(double *cmob1, double *cmob2, double *vstar, double gf, 

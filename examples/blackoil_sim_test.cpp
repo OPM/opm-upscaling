@@ -261,6 +261,19 @@ void simulate(const Grid& grid,
         // Update wells with new perforation pressures and fluxes.
         wells.update(grid.numCells(), well_pressure, well_flux);
 
+
+
+
+
+
+        if (gravity_test) {
+            std::fill(face_flux.begin(), face_flux.end(), 0.0);
+        }
+
+
+
+
+
         // Transport and check volume discrepancy.
         bool voldisc_ok = true;
         if (!do_impes) {
