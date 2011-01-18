@@ -84,6 +84,8 @@ public:
         std::vector<CompVec> comp_change;
         std::vector<double> cell_outflux;
         std::vector<double> cell_max_ff_deriv;
+        std::vector<double> cell_gravflux;
+        std::vector<double> cell_max_mob_deriv;
         double cur_time = 0.0;
         updateFluidProperties(cell_pressure, face_pressure, cell_z,
                               external_pressure, external_composition);
@@ -100,7 +102,17 @@ public:
             }
             double min_time = 1e100;
             for (int cell = 0; cell < num_cells; ++cell) {
-                double time = (prock_->porosity(cell)*pgrid_->cellVolume(cell))/(cell_outflux[cell]*cell_max_ff_deriv[cell]);
+                double pvol = prock_->porosity(cell)*pgrid_->cellVolume(cell);
+                double vtime = pvol/(cell_outflux[cell]*cell_max_ff_deriv[cell]);
+                double gtime = 1e100; // No working CFL for gravity yet.
+                double max_nonzero_time = 1e100;
+                for (int comp = 0; comp < numComponents; ++comp) {
+                    if (comp_change[cell][comp] < 0.0) {
+                        max_nonzero_time = std::min(max_nonzero_time,
+                                                    -cell_z[cell][comp]*prock_->porosity(cell)/comp_change[cell][comp]);
+                    }
+                }
+                double time = std::min(std::min(vtime, gtime), max_nonzero_time);
                 min_time = std::min(time, min_time);
             }
             min_time *= 0.49; // Semi-random CFL factor... \TODO rigorize
@@ -360,6 +372,10 @@ private: // Methods
         cell_outflux.resize(num_cells, 0.0);
         cell_max_ff_deriv.clear();
         cell_max_ff_deriv.resize(num_cells, 0.0);
+//         cell_gravflux.clear();
+//         cell_gravflux.resize(num_cells, 0.0);
+//         cell_max_mob_deriv.clear();
+//         cell_max_mob_deriv.resize(num_cells, 0.0);
         CompVec surf_dens = pfluid_->surfaceDensities();
         for (int face = 0; face < pgrid_->numFaces(); ++face) {
             // Compute phase densities on face.
@@ -404,21 +420,25 @@ private: // Methods
             PhaseVec phase_flux = ff;
             phase_flux *= face_flux[face];
             // Until we have proper bcs for transport, assume no gravity flow across bdys.
+//             double max_face_gf_out = 0.0;
             if (gravity_flux != 0.0 && c[0] >= 0 && c[1] >= 0) {
                 // Gravity contribution.
                 double omega = ff*phase_dens;
                 double trans = ptrans_->operator[](face);
                 for (int phase = 0; phase < numPhases; ++phase) {
-                    phase_flux[phase] -= phase_mob[phase]*(phase_dens[phase] - omega)*trans*gravity_flux;
+                    double gf = (phase_dens[phase] - omega)*trans*gravity_flux;
+//                     max_face_gf_out = std::max(max_face_gf_out, gf);
+                    phase_flux[phase] -= phase_mob[phase]*gf;
                 }
             }
 
             // Estimate max derivative of ff.
             double face_max_ff_deriv = 0.0;
+//             double face_max_mob_deriv = 0.0;
             // Only using total flux upwinding for this purpose.
             // Aim is to reproduce old results first. \TODO fix, include gravity.
             int downwind_cell = c[upwind_dir[0]%2]; // Keep in mind that upwind_dir[] \in {1, 2}
-            if (downwind_cell >= 0 && face_flux[face] != 0.0) { // Only contribution on inflow and internal faces.
+            if (downwind_cell >= 0) { // Only contribution on inflow and internal faces.
                 // Evaluating all functions at upwind viscosity.
 
                 // Added for this version.
@@ -436,12 +456,23 @@ private: // Methods
                 downwind_ff /= downwind_totmob;
                 PhaseVec ff_diff = upwind_ff;
                 ff_diff -= downwind_ff;
+//                 PhaseVec mob_diff = phase_mob;
+//                 mob_diff -= downwind_mob;
                 for (int phase = 0; phase < numPhases; ++phase) {
                     if (std::fabs(ff_diff[phase]) > 1e-10) {
-                        double ff_deriv = ff_diff[phase]/(upwind_sat[phase] - fluid_data_.saturation[downwind_cell][phase]);
-                        ASSERT(ff_deriv >= 0.0);
-                        face_max_ff_deriv = std::max(face_max_ff_deriv, ff_deriv);
+                        if (face_flux[face] != 0.0) {
+                            double ff_deriv = ff_diff[phase]/(upwind_sat[phase] - fluid_data_.saturation[downwind_cell][phase]);
+                            ASSERT(ff_deriv >= 0.0);
+                            face_max_ff_deriv = std::max(face_max_ff_deriv, ff_deriv);
+                        }
                     }
+//                     if (std::fabs(mob_diff[phase]) > 1e-10) {
+//                         if (max_face_gf_out != 0.0) {
+//                             double mob_deriv = mob_diff[phase]/(upwind_sat[phase] - fluid_data_.saturation[downwind_cell][phase]);
+//                             ASSERT(mob_deriv >= 0.0);
+//                             face_max_mob_deriv = std::max(face_max_mob_deriv, mob_deriv);
+//                         }
+//                     }
                 }
             }
 
@@ -459,6 +490,9 @@ private: // Methods
             if (totflux_upwind_cell >= 0) {
                 cell_outflux[totflux_upwind_cell] += std::fabs(face_flux[face]);
             }
+//             if (max_face_gf_out > 0.0) {
+//                 cell_gravflux[c[0]] += max_face_gf_out;
+//             }
             for (int ix = 0; ix < 2; ++ix) {
                 if (c[ix] >= 0) {
                     if (ix == 0) {
@@ -467,6 +501,7 @@ private: // Methods
                         comp_change[c[ix]] += change;
                     }
                     cell_max_ff_deriv[c[ix]] = std::max(cell_max_ff_deriv[c[ix]], face_max_ff_deriv);
+//                     cell_max_mob_deriv[c[ix]] = std::max(cell_max_mob_deriv[c[ix]], face_max_mob_deriv);
                 }
             }
         }
