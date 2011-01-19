@@ -23,43 +23,14 @@
 
 
 
-//#include <dune/common/array.hh>
-//#include <dune/common/mpihelper.hh>
-
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
-
-// #include <dune/grid/CpGrid.hpp>
-// #include <dune/common/EclipseGridParser.hpp>
-// #include <dune/common/EclipseGridInspector.hpp>
-// #include <dune/common/StopWatch.hpp>
 #include <dune/common/Units.hpp>
-// #include <dune/common/param/ParameterGroup.hpp>
-
-// #include <dune/porsol/common/fortran.hpp>
-// #include <dune/porsol/common/blas_lapack.hpp>
-// #include <dune/porsol/common/Matrix.hpp>
-// #include <dune/porsol/common/GridInterfaceEuler.hpp>
-// #include <dune/porsol/common/Rock.hpp>
+#include <dune/common/EclipseGridParser.hpp>
+#include <dune/common/param/ParameterGroup.hpp>
 #include <dune/porsol/common/BoundaryConditions.hpp>
-// #include <dune/porsol/common/SimulatorUtilities.hpp>
-// #include <dune/porsol/common/setupGridAndProps.hpp>
-// #include <dune/porsol/common/Wells.hpp>
-
-// #include <dune/porsol/mimetic/TpfaCompressible.hpp>
-
-// #include <dune/porsol/blackoil/BlackoilWells.hpp>
-// #include <dune/porsol/blackoil/fluid/FluidMatrixInteractionBlackoil.hpp>
-// #include <dune/porsol/blackoil/BlackoilFluid.hpp>
-// #include <dune/porsol/blackoil/BlackoilSimulator.hpp>
-// #include <dune/porsol/blackoil/ComponentTransport.hpp>
-
 #include <boost/filesystem/convenience.hpp>
 #include <boost/lexical_cast.hpp>
-// #include <boost/static_assert.hpp>
-
-//#include <algorithm>
 #include <iostream>
-//#include <iomanip>
 #include <string>
 #include <vector>
 
@@ -71,28 +42,85 @@ namespace Opm
     class BlackoilSimulator
     {
     public:
-        void simulate(const Grid& grid,
-                      const Rock& rock,
-                      const Fluid& fluid,
-                      Wells& wells,
-                      FlowSolver& flow_solver,
-                      TransportSolver& transport_solver,
-                      const double total_time,
-                      const double initial_stepsize,
-                      const bool do_impes,
-                      const std::string& output_dir,
-                      bool gravity_test,
-                      bool newcode);
+        void init(const Dune::parameter::ParameterGroup& param);
+        void simulate();
 
     private:
-        void output(const Grid& grid,
-                    const std::vector<typename Fluid::PhaseVec>& cell_pressure,
-                    const std::vector<typename Fluid::CompVec>& z,
-                    const std::vector<double>& face_flux,
-                    const int step,
-                    const std::string& filebase) const;
+        Grid grid_;
+        Rock rock_;
+        Fluid fluid_;
+        Wells wells_;
+        FlowSolver flow_solver_;
+        TransportSolver transport_solver_;
+        double total_time_;
+        double initial_stepsize_;
+        bool do_impes_;
+        std::string output_dir_;
+        bool gravity_test_;
+        bool newcode_;
+
+        static void output(const Grid& grid,
+                           const std::vector<typename Fluid::PhaseVec>& cell_pressure,
+                           const std::vector<typename Fluid::CompVec>& z,
+                           const std::vector<double>& face_flux,
+                           const int step,
+                           const std::string& filebase);
 
     };
+
+
+
+
+    // Method implementations below.
+
+
+template<class Grid, class Rock, class Fluid, class Wells, class FlowSolver, class TransportSolver>
+void
+BlackoilSimulator<Grid, Rock, Fluid, Wells, FlowSolver, TransportSolver>::
+init(const Dune::parameter::ParameterGroup& param)
+{
+    using namespace Dune;
+    std::string fileformat = param.getDefault<std::string>("fileformat", "cartesian");
+    if (fileformat == "eclipse") {
+        Dune::EclipseGridParser parser(param.get<std::string>("filename"));
+        double z_tolerance = param.getDefault<double>("z_tolerance", 0.0);
+        bool periodic_extension = param.getDefault<bool>("periodic_extension", false);
+        bool turn_normals = param.getDefault<bool>("turn_normals", false);
+        grid_.processEclipseFormat(parser, z_tolerance, periodic_extension, turn_normals);
+        double perm_threshold_md = param.getDefault("perm_threshold_md", 0.0);
+        double perm_threshold = Dune::unit::convert::from(perm_threshold_md, Dune::prefix::milli*Dune::unit::darcy);
+        rock_.init(parser, grid_.globalCell(), perm_threshold);
+        fluid_.init(parser);
+        wells_.init(parser);
+    } else if (fileformat == "cartesian") {
+        Dune::array<int, 3> dims = {{ param.getDefault<int>("nx", 1),
+                                      param.getDefault<int>("ny", 1),
+                                      param.getDefault<int>("nz", 1) }};
+        Dune::array<double, 3> cellsz = {{ param.getDefault<double>("dx", 1.0),
+                                           param.getDefault<double>("dy", 1.0),
+                                           param.getDefault<double>("dz", 1.0) }};
+        grid_.createCartesian(dims, cellsz);
+        double default_poro = param.getDefault("default_poro", 1.0);
+        double default_perm_md = param.getDefault("default_perm_md", 100.0);
+        double default_perm = unit::convert::from(default_perm_md, prefix::milli*unit::darcy);
+        MESSAGE("Warning: For generated cartesian grids, we use uniform rock properties.");
+        rock_.init(grid_.size(0), default_poro, default_perm);
+        EclipseGridParser parser(param.get<std::string>("filename")); // Need a parser for the fluids anyway.
+        fluid_.init(parser);
+        wells_.init(parser);
+    } else {
+        THROW("Unknown file format string: " << fileformat);
+    }
+    flow_solver_.init(param);
+    transport_solver_.init(param);
+    total_time_ = param.getDefault("total_time", 30*unit::day);
+    initial_stepsize_ = param.getDefault("initial_stepsize", 1.0*unit::day);
+    do_impes_ = param.getDefault("do_impes", false);
+    output_dir_ = param.getDefault<std::string>("output_dir", "output");
+    gravity_test_ = param.getDefault("gravity_test", false);
+    newcode_ = param.getDefault("newcode", true);
+}
+
 
 
 
@@ -101,43 +129,32 @@ namespace Opm
 template<class Grid, class Rock, class Fluid, class Wells, class FlowSolver, class TransportSolver>
 void
 BlackoilSimulator<Grid, Rock, Fluid, Wells, FlowSolver, TransportSolver>::
-simulate(const Grid& grid,
-         const Rock& rock,
-         const Fluid& fluid,
-         Wells& wells,  // Will change after pressure updates.
-         FlowSolver& flow_solver,
-         TransportSolver& transport_solver,
-         const double total_time,
-         const double initial_stepsize,
-         const bool do_impes,
-         const std::string& output_dir,
-         bool gravity_test,
-         bool newcode)
+simulate()
 {
     // Boundary conditions.
     typedef Dune::FlowBC BC;
     typedef Dune::BasicBoundaryConditions<true, false>  FBC;
     FBC flow_bc(7);
-    if (!gravity_test) {
+    if (!gravity_test_) {
         flow_bc.flowCond(1) = BC(BC::Dirichlet, 300.0*Dune::unit::barsa);
         flow_bc.flowCond(2) = BC(BC::Dirichlet, 100.0*Dune::unit::barsa); // WELLS
     }
 
     // Gravity.
     typename Grid::Vector gravity(0.0);
-    if (gravity_test) {
+    if (gravity_test_) {
         // gravity[2] = Dune::unit::gravity;
         gravity[2] = 10;
     }
 
     // Flow solver setup.
-    flow_solver.setup(grid, rock, fluid, wells, gravity, flow_bc);
+    flow_solver_.setup(grid_, rock_, fluid_, wells_, gravity, flow_bc);
 
     // Transport solver setup.
-    transport_solver.setup(grid, rock, fluid, wells, flow_solver.faceTransmissibilities(), gravity);
+    transport_solver_.setup(grid_, rock_, fluid_, wells_, flow_solver_.faceTransmissibilities(), gravity);
 
     // Source terms.
-    std::vector<double> src(grid.numCells(), 0.0);
+    std::vector<double> src(grid_.numCells(), 0.0);
 //     if (g.numberOfCells() > 1) {
 //         src[0]     = 1.0;
 //         src.back() = -1.0;
@@ -147,25 +164,25 @@ simulate(const Grid& grid,
     typedef typename Fluid::CompVec CompVec;
     typedef typename Fluid::PhaseVec PhaseVec;
     CompVec init_z(0.0);
-    if (gravity_test) {
+    if (gravity_test_) {
         init_z[Fluid::Oil] = 0.5;
         init_z[Fluid::Water] = 0.5;
     } else {
         init_z[Fluid::Oil] = 1.0;
     }
-    CompVec bdy_z = flow_solver.inflowMixture();
-    if (gravity_test) {
+    CompVec bdy_z = flow_solver_.inflowMixture();
+    if (gravity_test_) {
         bdy_z = -1e100;
     }
-    std::vector<CompVec> cell_z(grid.numCells(), init_z);
+    std::vector<CompVec> cell_z(grid_.numCells(), init_z);
     MESSAGE("******* Assuming zero capillary pressures *******");
     PhaseVec init_p(100.0*Dune::unit::barsa);
-    std::vector<PhaseVec> cell_pressure(grid.numCells(), init_p);
-    if (gravity_test) {
-        double ref_gravpot = grid.cellCentroid(0)*gravity;
-        double rho = init_z*fluid.surfaceDensities();  // Assuming incompressible, and constant initial z.
-        for (int cell = 1; cell < grid.numCells(); ++cell) {
-            double press = rho*(grid.cellCentroid(cell)*gravity - ref_gravpot) + cell_pressure[0][0];
+    std::vector<PhaseVec> cell_pressure(grid_.numCells(), init_p);
+    if (gravity_test_) {
+        double ref_gravpot = grid_.cellCentroid(0)*gravity;
+        double rho = init_z*fluid_.surfaceDensities();  // Assuming incompressible, and constant initial z.
+        for (int cell = 1; cell < grid_.numCells(); ++cell) {
+            double press = rho*(grid_.cellCentroid(cell)*gravity - ref_gravpot) + cell_pressure[0][0];
             cell_pressure[cell] = PhaseVec(press);
         }
     }
@@ -173,20 +190,20 @@ simulate(const Grid& grid,
     // PhaseVec bdy_p(100.0*Dune::unit::barsa); // WELLS
     // Rescale z values so that pore volume is filled exactly
     // (to get zero initial volume discrepancy).
-    for (int cell = 0; cell < grid.numCells(); ++cell) {
-        double pore_vol = grid.cellVolume(cell)*rock.porosity(cell);
-        typename Fluid::FluidState state = fluid.computeState(cell_pressure[cell], cell_z[cell]);
+    for (int cell = 0; cell < grid_.numCells(); ++cell) {
+        double pore_vol = grid_.cellVolume(cell)*rock_.porosity(cell);
+        typename Fluid::FluidState state = fluid_.computeState(cell_pressure[cell], cell_z[cell]);
         double fluid_vol = state.total_phase_volume_;
         cell_z[cell] *= pore_vol/fluid_vol;
     }
-    int num_faces = grid.numFaces();
+    int num_faces = grid_.numFaces();
     std::vector<PhaseVec> face_pressure(num_faces);
     for (int face = 0; face < num_faces; ++face) {
-        int bid = grid.boundaryId(face);
+        int bid = grid_.boundaryId(face);
         if (flow_bc.flowCond(bid).isDirichlet()) {
             face_pressure[face] = flow_bc.flowCond(bid).pressure();
         } else {
-            int c[2] = { grid.faceCell(face, 0), grid.faceCell(face, 1) };
+            int c[2] = { grid_.faceCell(face, 0), grid_.faceCell(face, 1) };
             face_pressure[face] = 0.0;
             int num = 0;
             for (int j = 0; j < 2; ++j) {
@@ -198,8 +215,8 @@ simulate(const Grid& grid,
             face_pressure[face] /= double(num);
         }
     }
-    double voldisclimit = flow_solver.volumeDiscrepancyLimit();
-    double stepsize = initial_stepsize;
+    double voldisclimit = flow_solver_.volumeDiscrepancyLimit();
+    double stepsize = initial_stepsize_;
     double current_time = 0.0;
     int step = -1;
     std::vector<double> face_flux;
@@ -208,26 +225,26 @@ simulate(const Grid& grid,
     std::vector<PhaseVec> cell_pressure_start;
     std::vector<PhaseVec> face_pressure_start;
     std::vector<CompVec> cell_z_start;
-    while (current_time < total_time) {
+    while (current_time < total_time_) {
         cell_pressure_start = cell_pressure;
         face_pressure_start = face_pressure;
         cell_z_start = cell_z;
 
-        // Do not run past total_time.
-        if (current_time + stepsize > total_time) {
-            stepsize = total_time - current_time;
+        // Do not run past total_time_.
+        if (current_time + stepsize > total_time_) {
+            stepsize = total_time_ - current_time;
         }
         ++step;
         std::cout << "\n\n================    Simulation step number " << step
                   << "    ==============="
                   << "\n      Current time (days)     " << Dune::unit::convert::to(current_time, Dune::unit::day)
                   << "\n      Current stepsize (days) " << Dune::unit::convert::to(stepsize, Dune::unit::day)
-                  << "\n      Total time (days)       " << Dune::unit::convert::to(total_time, Dune::unit::day)
+                  << "\n      Total time (days)       " << Dune::unit::convert::to(total_time_, Dune::unit::day)
                   << "\n" << std::endl;
 
         // Solve flow system.
         enum FlowSolver::ReturnCode result
-            = flow_solver.solve(cell_pressure, face_pressure, cell_z, face_flux, well_pressure, well_flux, src, stepsize, do_impes);
+            = flow_solver_.solve(cell_pressure, face_pressure, cell_z, face_flux, well_pressure, well_flux, src, stepsize, do_impes_);
 
         // Check if the flow solver succeeded.
         if (result != FlowSolver::SolveOk) {
@@ -235,14 +252,14 @@ simulate(const Grid& grid,
         }
 
         // Update wells with new perforation pressures and fluxes.
-        wells.update(grid.numCells(), well_pressure, well_flux);
+        wells_.update(grid_.numCells(), well_pressure, well_flux);
 
 
 
 
 
 
-        if (gravity_test) {
+        if (gravity_test_) {
             std::fill(face_flux.begin(), face_flux.end(), 0.0);
         }
 
@@ -252,14 +269,14 @@ simulate(const Grid& grid,
 
         // Transport and check volume discrepancy.
         bool voldisc_ok = true;
-        if (!do_impes) {
+        if (!do_impes_) {
             double actual_computed_time
-                = transport_solver.transport(bdy_p, bdy_z,
+                = transport_solver_.transport(bdy_p, bdy_z,
                                              face_flux, cell_pressure, face_pressure,
-                                             stepsize, voldisclimit, cell_z, newcode);
+                                             stepsize, voldisclimit, cell_z, newcode_);
             voldisc_ok = (actual_computed_time == stepsize);
         } else {
-            voldisc_ok = flow_solver.volumeDiscrepancyAcceptable(cell_pressure, face_pressure, cell_z, stepsize);
+            voldisc_ok = flow_solver_.volumeDiscrepancyAcceptable(cell_pressure, face_pressure, cell_z, stepsize);
         }
 
         // If discrepancy too large, redo entire pressure step.
@@ -274,8 +291,8 @@ simulate(const Grid& grid,
         }
 
         // Output.
-        std::string output_name = output_dir + "/" + "blackoil-output";
-        output(grid, cell_pressure, cell_z, face_flux, step, output_name);
+        std::string output_name = output_dir_ + "/" + "blackoil-output";
+        output(grid_, cell_pressure, cell_z, face_flux, step, output_name);
 
         // Adjust time.
         current_time += stepsize;
@@ -287,6 +304,9 @@ simulate(const Grid& grid,
 
 
 
+
+
+
 template<class Grid, class Rock, class Fluid, class Wells, class FlowSolver, class TransportSolver>
 void
 BlackoilSimulator<Grid, Rock, Fluid, Wells, FlowSolver, TransportSolver>::
@@ -295,7 +315,7 @@ output(const Grid& grid,
        const std::vector<typename Fluid::CompVec>& z,
        const std::vector<double>& face_flux,
        const int step,
-       const std::string& filebase) const
+       const std::string& filebase)
 {
     // Ensure directory exists.
     boost::filesystem::path fpath(filebase);
@@ -347,6 +367,9 @@ output(const Grid& grid,
         dump << '\n';
     }
 }
+
+
+
 
 
 } // namespace Opm

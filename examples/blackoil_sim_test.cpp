@@ -53,63 +53,14 @@ int main(int argc, char** argv)
     Dune::parameter::ParameterGroup param(argc, argv);
     Dune::MPIHelper::instance(argc,argv);
 
-    // Make a grid and props.
-    Grid grid;
-    Rock rock;
-    Fluid fluid;
-    Wells wells;
-    FlowSolver flow_solver;
-    TransportSolver transport_solver;
-
-    using namespace Dune;
-
-    // Initialization.
-    std::string fileformat = param.getDefault<std::string>("fileformat", "cartesian");
-    if (fileformat == "eclipse") {
-        Dune::EclipseGridParser parser(param.get<std::string>("filename"));
-        double z_tolerance = param.getDefault<double>("z_tolerance", 0.0);
-        bool periodic_extension = param.getDefault<bool>("periodic_extension", false);
-        bool turn_normals = param.getDefault<bool>("turn_normals", false);
-        grid.processEclipseFormat(parser, z_tolerance, periodic_extension, turn_normals);
-        double perm_threshold_md = param.getDefault("perm_threshold_md", 0.0);
-        double perm_threshold = Dune::unit::convert::from(perm_threshold_md, Dune::prefix::milli*Dune::unit::darcy);
-        rock.init(parser, grid.globalCell(), perm_threshold);
-        fluid.init(parser);
-        wells.init(parser);
-    } else if (fileformat == "cartesian") {
-        Dune::array<int, 3> dims = {{ param.getDefault<int>("nx", 1),
-                                      param.getDefault<int>("ny", 1),
-                                      param.getDefault<int>("nz", 1) }};
-        Dune::array<double, 3> cellsz = {{ param.getDefault<double>("dx", 1.0),
-                                           param.getDefault<double>("dy", 1.0),
-                                           param.getDefault<double>("dz", 1.0) }};
-        grid.createCartesian(dims, cellsz);
-        double default_poro = param.getDefault("default_poro", 1.0);
-        double default_perm_md = param.getDefault("default_perm_md", 100.0);
-        double default_perm = unit::convert::from(default_perm_md, prefix::milli*unit::darcy);
-        MESSAGE("Warning: For generated cartesian grids, we use uniform rock properties.");
-        rock.init(grid.size(0), default_poro, default_perm);
-        EclipseGridParser parser(param.get<std::string>("filename")); // Need a parser for the fluids anyway.
-        fluid.init(parser);
-        wells.init(parser);
-    } else {
-        THROW("Unknown file format string: " << fileformat);
-    }
-    flow_solver.init(param);
-    transport_solver.init(param);
-    double total_time = param.getDefault("total_time", 30*unit::day);
-    double initial_stepsize = param.getDefault("initial_stepsize", 1.0*unit::day);
-    bool do_impes = param.getDefault("do_impes", false);
-    std::string output_dir = param.getDefault<std::string>("output_dir", "output");
-    bool gravity_test = param.getDefault("gravity_test", false);
-    bool newcode = param.getDefault("newcode", true);
+    // Initialize.
+    Simulator sim;
+    sim.init(param);
 
     // Run simulation.
     Dune::time::StopWatch clock;
     clock.start();
-    Simulator sim;
-    sim.simulate(grid, rock, fluid, wells, flow_solver, transport_solver,
-                 total_time, initial_stepsize, do_impes, output_dir, gravity_test, newcode);
+    sim.simulate();
     clock.stop();
     std::cout << "\n\nSimulation clock time (secs): " << clock.secsSinceStart() << std::endl;
 }
