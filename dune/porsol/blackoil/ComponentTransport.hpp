@@ -506,7 +506,6 @@ private: // Methods
             }
         }
 
-        /*
         // Done with all faces, now deal with well perforations.
         int num_perf = perf_cells_.size();
         for (int perf = 0; perf < num_perf; ++perf) {
@@ -530,7 +529,6 @@ private: // Methods
             }
             comp_change[cell] += change;
         }
-        */
     }
 
 
