@@ -154,7 +154,7 @@ namespace Opm
 	if (!(parser.hasField("WCONINJE") || parser.hasField("WCONPROD")) ) {
 	    THROW("Needed field is missing in file");
 	}
-       
+        using namespace Dune;
 	const WELSPECS& welspecs = parser.getWELSPECS();
 	const int num_welspecs   = welspecs.welspecs.size();
 
@@ -181,9 +181,9 @@ namespace Opm
 
 	// Get COMPDAT data   
 	for (int kw=0; kw<num_compdats; ++kw) {
-	    string name = compdats.compdat[kw].well_;
-	    string::size_type len = name.find('*');
-	    if (len != string::npos) {
+	    std::string name = compdats.compdat[kw].well_;
+	    std::string::size_type len = name.find('*');
+	    if (len != std::string::npos) {
 		name = name.substr(0, len);
 	    }
 
@@ -192,7 +192,7 @@ namespace Opm
 	    const boost::array<int, 3>& cpgdim = grid.logicalCartesianSize();
 	    std::map<int,int> cartesian_to_compressed;
 	    for (int i=0; i<int(global_cell.size()); ++i) {
-		cartesian_to_compressed.insert(make_pair(global_cell[i], i));
+		cartesian_to_compressed.insert(std::make_pair(global_cell[i], i));
 	    }
 	    bool found = false;
 	    for (int wix=0; wix<num_welspecs; ++wix) {
@@ -225,9 +225,9 @@ namespace Opm
 
 	// Get WCONINJE data
 	for (int kw=0; kw<num_wconinjes; ++kw) {
-	    string name = wconinjes.wconinje[kw].well_;
-	    string::size_type len = name.find('*');
-	    if (len != string::npos) {
+	    std::string name = wconinjes.wconinje[kw].well_;
+	    std::string::size_type len = name.find('*');
+	    if (len != std::string::npos) {
 		name = name.substr(0, len);
 	    }
 
@@ -269,9 +269,9 @@ namespace Opm
 
 	// Get WCONPROD data   
 	for (int kw=0; kw<num_wconprods; ++kw) {
-	    string name = wconprods.wconprod[kw].well_;
-	    string::size_type len = name.find('*');
-	    if (len != string::npos) {
+	    std::string name = wconprods.wconprod[kw].well_;
+	    std::string::size_type len = name.find('*');
+	    if (len != std::string::npos) {
 		name = name.substr(0, len);
 	    }
 
@@ -326,9 +326,9 @@ namespace Opm
 
 	// Get WELTARG data   
 	for (int kw=0; kw<num_weltargs; ++kw) {
-	    string name = weltargs.weltarg[kw].well_;
-	    string::size_type len = name.find('*');
-	    if (len != string::npos) {
+	    std::string name = weltargs.weltarg[kw].well_;
+	    std::string::size_type len = name.find('*');
+	    if (len != std::string::npos) {
 		name = name.substr(0, len);
 	    }
 
