@@ -175,6 +175,8 @@ namespace Opm
 	well_data_.reserve(num_welspecs);
 	for (int i=0; i<num_welspecs; ++i) {
 	    well_names_.push_back(welspecs.welspecs[i].name_);
+	    WellData wd;
+	    well_data_.push_back(wd);
 	}
 
 	// Get COMPDAT data   
