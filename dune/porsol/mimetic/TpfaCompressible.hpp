@@ -283,10 +283,13 @@ namespace Dune
                     }
                 }
 
+                std::vector<double> wellperfA, phasemobwellperf, wellperf_gpot;
+
                 // Assemble system matrix and rhs.
                 psolver_.assemble(src, bctypes_, bcvalues_, dt,
-                                  fp_.totcompr, initial_voldiscr, fp_.cellA, fp_.faceA, fp_.phasemobf,
-                                  cell_pressure_scalar, &(pfluid_->surfaceDensities()[0]));
+                                  fp_.totcompr, initial_voldiscr, fp_.cellA, fp_.faceA,
+                                  wellperfA, fp_.phasemobf, phasemobwellperf,
+                                  cell_pressure_scalar, wellperf_gpot, &(pfluid_->surfaceDensities()[0]));
                 // Solve system.
                 PressureSolver::LinearSystem s;
                 psolver_.linearSystem(s);
