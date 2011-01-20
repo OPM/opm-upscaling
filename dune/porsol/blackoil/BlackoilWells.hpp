@@ -23,6 +23,7 @@
 #include <dune/porsol/blackoil/fluid/BlackoilDefs.hpp>
 #include <dune/common/ErrorMacros.hpp>
 #include <dune/common/SparseTable.hpp>
+#include <dune/common/Rock.hpp>
 #include <dune/common/fvector.hh>
 #include <vector>
 
@@ -75,12 +76,46 @@ int inje_control_mode(const std::string& control)
 	THROW("Unknown well control mode = " << control << " in input file");
     }
 }
+
+
+template<class grid_t>
+const boost::array<double,3> getCubeDim(const grid_t& grid, int cell){
+    typename grid_t::stencil_t& stencil = grid.getCellPointStencil(cell);
+    boost::array<double, 3> cube;
+    typedef typename grid_t::point_t point_t;
+    point_t left;
+    point_t right;
+    point_t dist;
+    // first dimension
+    left = grid.getPoint(stencil[0])+ grid.getPoint(stencil[2])
+	+ grid.getPoint(stencil[4]) + grid.getPoint(stencil[6]);
+    right = grid.getPoint(stencil[1])+ grid.getPoint(stencil[3])
+	+ grid.getPoint(stencil[5]) + grid.getPoint(stencil[7]);
+    dist = right-left;
+    cube[0] = dist.length();
+
+    left = grid.getPoint(stencil[0])+ grid.getPoint(stencil[1])
+	+ grid.getPoint(stencil[4]) + grid.getPoint(stencil[5]);
+    right = grid.getPoint(stencil[2])+ grid.getPoint(stencil[3])
+	+ grid.getPoint(stencil[6]) + grid.getPoint(stencil[7]);
+    dist = right-left;
+    cube[1] = dist.length();
+    
+    left = grid.getPoint(stencil[0])+ grid.getPoint(stencil[1])
+	+ grid.getPoint(stencil[2]) + grid.getPoint(stencil[3]);
+    right = grid.getPoint(stencil[4])+ grid.getPoint(stencil[5])
+	+ grid.getPoint(stencil[6]) + grid.getPoint(stencil[7]);
+    dist = right-left;
+    cube[2] = dist.length();
+    return cube;
+}    
+
 } // anon namespace
 
 namespace Opm
 {
 
-
+    //    typedef ???  matrix_t;    
 
     /// A class designed to encapsulate a set of rate- or
     /// pressure-controlled wells in the black-oil setting.
@@ -113,7 +148,11 @@ namespace Opm
         Dune::FieldVector<double, 3> injectionMixture(int cell) const;
 
     private:
-        struct WellData { WellType type; WellControl control; double target; };
+	// Use the Peaceman well model to compute well indices
+	double computeWellIndex(double radius, const boost::array<double,3>& cubical,
+				const matrix_t& permeability, double skin_factor) const;
+
+	struct WellData { WellType type; WellControl control; double target; };
         std::vector<WellData> well_data_;
         struct PerfData { int cell; double well_index; double pdelta; };
         Dune::SparseTable<PerfData> perf_data_;
@@ -140,9 +179,11 @@ namespace Opm
     //     injection_mixture_ = 0.0;
     //     injection_mixture_[Gas] = 1.0;
     // }
+	
 
-    inline void BlackoilWells::init(const Dune::EclipseGridParser& parser,
-				    const Dune::CpGrid& grid)
+    inline double BlackoilWells::init(const Dune::EclipseGridParser& parser,
+				      const Dune::CpGrid& grid,
+				      const Dune::Rock& rock) 
     {
 	std::vector<std::string> keywords;
 	keywords.push_back("WELSPECS");
@@ -204,11 +245,22 @@ namespace Opm
 		    std::map<int, int>::const_iterator cgit = 
 			cartesian_to_compressed.find(cart_grid_indx);
 		    if (cgit != cartesian_to_compressed.end()) {
+			int cell = cgit->second;
+			double radius = 0.5*compdats.compdat[kw].diameter_;
+			if (radius <= 0.0) { // @bsp ???
+			    radius = 0.222;
+			    MESSAGE("Warning: Well bore internal radius set to 0.222");
+			};
+			cubical = getCubeDim(grid, cell);        // @bsp
+			// PermTensor permeability = rock.getPermealibilty(cell);   // @bsp
 			PerfData pd;
-			pd.cell       = cgit->second;
+			pd.cell       = cell;
 			pd.well_index = 1.e20;
-			pd.pdelta     = 0.0;
-			perf_data_.appendRow(&pd, &pd + 1);
+			//pd.well_index = computeWellIndex(radius, cubical, permeability,
+			//				 compdats.compdat[kw].skin_factor_);
+			pd.pdelta     = 0.0;    // @bsp ???
+			perf_data_.appendRow(&pd, &pd + 1));
+			pd.well_index = 1.e20;
 		    } else {
 			THROW("Cell with i,j,k indices " << ix << ' ' << jy << ' '
 			      << kz << " not found!");
@@ -436,6 +488,49 @@ namespace Opm
     inline Dune::FieldVector<double, 3> BlackoilWells::injectionMixture(int cell) const
     {
         return injection_mixture_;
+    }
+
+    inline double BlackoilWells::computeWellIndex(double radius,
+						  const boost::array<double, 3>& cubical,
+						  const PermTensor& permeability,
+						  double skin_factor)
+    {
+	// Use the Peaceman well model to compute well indices.
+	// radius is the radius of the well.
+	// cubical contains [dx, dy, dz] of the cell.
+	// (Note that the well model asumes that each cell is a cuboid).
+	// permeability is the permeability of the given cell.
+	// returns the well index of the cell.
+
+	// sse: Using the Peaceman modell.
+	// NOTE: The formula is valid for cartesian grids, so the result can be a bit
+	// (in worst case: there is no upper bound for the error) off the mark.
+	double effective_perm = sqrt(permeability(0,0) * permeability(1,1));
+	// sse: The formula for r_0 can be found on page 39 of
+	// "Well Models for Mimetic Finite Differerence Methods and Improved Representation
+	//  of Wells in Multiscale Methods" by Ingeborg Skjelkvåle Ligaarden.
+	assert(permeability(0,0) > 0.0);
+	assert(permeability(1,1) > 0.0);
+	double kxoy = permeability(0,0) / permeability(1,1);
+	double kyox = permeability(1,1) / permeability(0,0);
+	double r0_denominator = pow(kyox, 0.25) + pow(kxoy, 0.25);
+	double r0_numerator = sqrt((sqrt(kyox)*cubical[0]*cubical[0]) +
+				   (sqrt(kxoy)*cubical[1]*cubical[1]));
+	assert(r0_denominator > 0.0);
+	double r0 = 0.28 * r0_numerator / r0_denominator;
+	assert(radius > 0.0);
+	assert(r0 > 0.0);
+	if (r0 < radius) {
+	    std::cout << "ERROR: Too big well radius detected.";
+	    std::cout << "Specified well radius is " << radius
+		      << " while r0 is " << r0 << ".\n";
+	    double wi_denominator = log(r0 / radius) + skin_factor;
+	    double wi_numerator = 2 * M_PI * cubical[2];
+	    assert(wi_denominator > 0.0);
+	    double wi = effective_perm * wi_numerator / wi_denominator;
+	    assert(wi > 0.0);
+	    return wi;
+	}
     }
 
 } // namespace Opm
