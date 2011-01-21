@@ -104,7 +104,7 @@ init(const Dune::parameter::ParameterGroup& param)
         double perm_threshold = Dune::unit::convert::from(perm_threshold_md, Dune::prefix::milli*Dune::unit::darcy);
         rock_.init(parser, grid_.globalCell(), perm_threshold);
         fluid_.init(parser);
-        wells_.init(parser);
+        wells_.init(parser, grid_);
     } else if (fileformat == "cartesian") {
         Dune::array<int, 3> dims = {{ param.getDefault<int>("nx", 1),
                                       param.getDefault<int>("ny", 1),
@@ -120,7 +120,7 @@ init(const Dune::parameter::ParameterGroup& param)
         rock_.init(grid_.size(0), default_poro, default_perm);
         EclipseGridParser parser(param.get<std::string>("filename")); // Need a parser for the fluids anyway.
         fluid_.init(parser);
-        wells_.init(parser);
+        wells_.init(parser, grid_);
     } else {
         THROW("Unknown file format string: " << fileformat);
     }

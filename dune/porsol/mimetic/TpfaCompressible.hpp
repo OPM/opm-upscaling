@@ -27,6 +27,7 @@
 #include <dune/common/SparseTable.hpp>
 #include <dune/porsol/common/LinearSolverISTL.hpp>
 
+#include <tr1/array>
 
 namespace Dune
 {
@@ -35,6 +36,7 @@ namespace Dune
     template <class GridInterface,
               class RockInterface,
               class FluidInterface,
+              class WellsInterface,
               class BCInterface>
     class TpfaCompressible
     {
@@ -117,7 +119,6 @@ namespace Dune
         /// @param [in] bc
         ///    Boundary conditions.
         ///
-        template <class WellsInterface>
         void setup(const GridInterface&         grid,
                    const RockInterface&         rock,
                    const FluidInterface&        fluid,
@@ -128,6 +129,7 @@ namespace Dune
             pgrid_ = &grid;
             prock_ = &rock;
             pfluid_ = &fluid;
+            pwells_ = &wells;
 
             // Extract perm tensors.
             const double* perm = &(rock.permeability(0)(0,0));
@@ -284,6 +286,19 @@ namespace Dune
                 }
 
                 std::vector<double> wellperfA, phasemobwellperf, wellperf_gpot;
+                int num_perf = perf_cells_.size();
+                wellperfA.resize(num_perf*numComponents*numPhases);
+                phasemobwellperf.resize(num_perf*numPhases);
+                wellperf_gpot.resize(num_perf);
+                for (int perf = 0; perf < num_perf; ++perf) {
+                    std::copy(&perf_props_[perf].phase_to_comp[0][0],
+                              &perf_props_[perf].phase_to_comp[0][0] + numComponents*numPhases,
+                              &wellperfA[perf*numComponents*numPhases]);
+                    std::copy(perf_props_[perf].mobility.begin(),
+                              perf_props_[perf].mobility.end(),
+                              &phasemobwellperf[perf*numPhases]);
+                    wellperf_gpot[perf] = 0.0; // \TODO = \rho g h
+                }
 
                 // Assemble system matrix and rhs.
                 psolver_.assemble(src, bctypes_, bcvalues_, dt,
@@ -348,17 +363,10 @@ namespace Dune
 
 
     private:
-        void computeFluidProps(const std::vector<typename FluidInterface::PhaseVec>& phase_pressure,
-                               const std::vector<typename FluidInterface::PhaseVec>& phase_pressure_face,
-                               const std::vector<typename FluidInterface::CompVec>& cell_z,
-                               const double dt)
-        {
-            fp_.compute(*pgrid_, *prock_, *pfluid_, phase_pressure, phase_pressure_face, cell_z, inflow_mixture_, dt);
-        }
-
         const GridInterface* pgrid_;
         const RockInterface* prock_;
         const FluidInterface* pfluid_;
+        const WellsInterface* pwells_;
         typename FluidInterface::FluidData fp_;
         std::vector<double> poro_;
         PressureSolver psolver_;
@@ -370,6 +378,76 @@ namespace Dune
         double flux_rel_tol_;
         int max_num_iter_;
         double max_relative_voldiscr_;
+
+        typedef typename FluidInterface::PhaseVec PhaseVec;
+        typedef typename FluidInterface::CompVec CompVec;
+        enum { numPhases = FluidInterface::numPhases,
+               numComponents = FluidInterface::numComponents };
+
+        struct TransportFluidData
+        {
+            PhaseVec saturation;
+            PhaseVec mobility;
+            PhaseVec fractional_flow;
+            std::tr1::array<CompVec, numPhases> phase_to_comp;
+            PhaseVec relperm;
+            PhaseVec viscosity;
+        };
+        std::vector<int> perf_cells_;
+        std::vector<TransportFluidData> perf_props_;
+
+
+
+        TransportFluidData computeProps(const PhaseVec& pressure,
+                                        const CompVec& composition)
+        {
+            typename FluidInterface::FluidState state = pfluid_->computeState(pressure, composition);
+            TransportFluidData data;
+            data.saturation = state.saturation_;
+            data.mobility = state.mobility_;
+            double total_mobility = 0.0;
+            for (int phase = 0; phase < numPhases; ++phase) {
+                total_mobility += state.mobility_[phase];
+            }
+            data.fractional_flow = state.mobility_;
+            data.fractional_flow /= total_mobility;
+            std::copy(state.phase_to_comp_, state.phase_to_comp_ + numComponents*numPhases,
+                      &data.phase_to_comp[0][0]);
+            data.relperm = state.relperm_;
+            data.viscosity = state.viscosity_;
+            return data;
+        }
+
+
+
+        void computeFluidProps(const std::vector<typename FluidInterface::PhaseVec>& phase_pressure,
+                               const std::vector<typename FluidInterface::PhaseVec>& phase_pressure_face,
+                               const std::vector<typename FluidInterface::CompVec>& cell_z,
+                               const double dt)
+        {
+            fp_.compute(*pgrid_, *prock_, *pfluid_, phase_pressure, phase_pressure_face, cell_z, inflow_mixture_, dt);
+            // Properties at well perforations.
+            // \TODO only need to recompute this once per pressure update.
+            // No, that is false, at production perforations the cell z is
+            // used, which may change every step.
+            perf_cells_.clear();
+            perf_props_.clear();
+            int num_wells = pwells_->numWells();
+            for (int well = 0; well < num_wells; ++well) {
+                bool inj = pwells_->type(well) == WellsInterface::Injector;
+                int num_perf = pwells_->numPerforations(well);
+                for (int perf = 0; perf < num_perf; ++perf) {
+                    int cell = pwells_->wellCell(well, perf);
+                    perf_cells_.push_back(cell);
+                    // \TODO handle capillary in perforation pressure below?
+                    PhaseVec well_pressure = inj ? PhaseVec(pwells_->perforationPressure(cell)) : phase_pressure[cell];
+                    CompVec well_mixture = inj ? pwells_->injectionMixture(cell) : cell_z[cell];
+                    perf_props_.push_back(computeProps(well_pressure, well_mixture));
+                }
+            }
+        }
+
+
     };
 
 
