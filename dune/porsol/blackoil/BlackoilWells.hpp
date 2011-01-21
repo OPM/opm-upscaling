@@ -149,7 +149,8 @@ namespace Opm
 	keywords.push_back("COMPDAT");
 	keywords.push_back("WELTARG");
 	if (!parser.hasFields(keywords)) {
-	    THROW("Needed field is missing in file");
+	    MESSAGE("Missing well keywords in deck, initializing no wells.");
+            return;
 	}
 	if (!(parser.hasField("WCONINJE") || parser.hasField("WCONPROD")) ) {
 	    THROW("Needed field is missing in file");
