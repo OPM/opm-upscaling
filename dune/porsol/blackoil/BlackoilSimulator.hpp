@@ -69,7 +69,6 @@ namespace Opm
         double initial_stepsize_;
         bool do_impes_;
         std::string output_dir_;
-        bool gravity_test_;
         bool newcode_;
 
         static void output(const Grid& grid,
@@ -130,21 +129,26 @@ init(const Dune::parameter::ParameterGroup& param)
     initial_stepsize_ = param.getDefault("initial_stepsize", 1.0*unit::day);
     do_impes_ = param.getDefault("do_impes", false);
     output_dir_ = param.getDefault<std::string>("output_dir", "output");
-    gravity_test_ = param.getDefault("gravity_test", false);
     newcode_ = param.getDefault("newcode", true);
 
     // Boundary conditions.
     typedef Dune::FlowBC BC;
     flow_bc_.resize(7);
-    if (!gravity_test_) {
-        flow_bc_.flowCond(1) = BC(BC::Dirichlet, 300.0*Dune::unit::barsa);
-        flow_bc_.flowCond(2) = BC(BC::Dirichlet, 100.0*Dune::unit::barsa); // WELLS
+    bool bdy_dirichlet = param.getDefault("bdy_dirichlet", false);
+    if (bdy_dirichlet) {
+        flow_bc_.flowCond(1) = BC(BC::Dirichlet, param.get<double>("bdy_pressure_left"));
+        flow_bc_.flowCond(2) = BC(BC::Dirichlet, param.get<double>("bdy_pressure_right"));
     }
 
     // Gravity.
     gravity_ = 0.0;
-    if (gravity_test_) {
-        gravity_[2] = Dune::unit::gravity;
+    if (param.has("gravity")) {
+        std::string g = param.get<std::string>("gravity");
+        if (g == "standard") {
+            gravity_[2] = Dune::unit::gravity;
+        } else {
+            gravity_[2] = boost::lexical_cast<double>(g);
+        }
     }
 
     // Flow solver setup.
@@ -157,24 +161,22 @@ init(const Dune::parameter::ParameterGroup& param)
     src_.resize(grid_.numCells(), 0.0);
 
 
-
     // Initial state.
     CompVec init_z(0.0);
-    if (gravity_test_) {
-        init_z[Fluid::Oil] = 0.5;
-        init_z[Fluid::Water] = 0.5;
-    } else {
-        init_z[Fluid::Oil] = 1.0;
-    }
+    double initial_mixture_gas = param.getDefault("initial_mixture_gas", 0.0);
+    double initial_mixture_oil = param.getDefault("initial_mixture_oil", 1.0);
+    double initial_mixture_water = param.getDefault("initial_mixture_water", 0.0);
+    init_z[Fluid::Water] = initial_mixture_water;
+    init_z[Fluid::Gas] = initial_mixture_gas;
+    init_z[Fluid::Oil] = initial_mixture_oil;
+
     bdy_z_ = flow_solver_.inflowMixture();
-    if (gravity_test_) {
-        bdy_z_ = -1e100;
-    }
+
     cell_z_.resize(grid_.numCells(), init_z);
     MESSAGE("******* Assuming zero capillary pressures *******");
     PhaseVec init_p(100.0*Dune::unit::barsa);
     cell_pressure_.resize(grid_.numCells(), init_p);
-    if (gravity_test_) {
+    if (gravity_.two_norm() != 0.0) {
         double ref_gravpot = grid_.cellCentroid(0)*gravity_;
         double rho = init_z*fluid_.surfaceDensities();  // Assuming incompressible, and constant initial z.
         for (int cell = 1; cell < grid_.numCells(); ++cell) {
@@ -268,19 +270,6 @@ simulate()
 
         // Update wells with new perforation pressures and fluxes.
         wells_.update(grid_.numCells(), well_pressure, well_flux);
-
-
-
-
-
-
-        if (gravity_test_) {
-            std::fill(face_flux.begin(), face_flux.end(), 0.0);
-        }
-
-
-
-
 
         // Transport and check volume discrepancy.
         bool voldisc_ok = true;
