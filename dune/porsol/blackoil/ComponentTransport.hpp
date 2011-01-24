@@ -403,7 +403,7 @@ private: // Methods
             // double gravity_flux = gravity_*pgrid_->faceNormal(face)*pgrid_->faceArea(face);
             typename Grid::Vector centroid_diff = pgrid_->cellCentroid(c[0]);
             centroid_diff -= c[1] >= 0 ? pgrid_->cellCentroid(c[1]) : pgrid_->faceCentroid(face);
-            double gravity_flux = gravity_*centroid_diff;
+            double gravity_flux = gravity_*centroid_diff*ptrans_->operator[](face);
             PhaseVec rho_star(phase_dens);
             process_face(&(d[0].mobility[0]), &(d[1].mobility[0]),
                          &vstar[0], gravity_flux, numPhases, &rho_star[0], upwind_dir);
@@ -424,9 +424,8 @@ private: // Methods
             if (gravity_flux != 0.0 && c[0] >= 0 && c[1] >= 0) {
                 // Gravity contribution.
                 double omega = ff*phase_dens;
-                double trans = ptrans_->operator[](face);
                 for (int phase = 0; phase < numPhases; ++phase) {
-                    double gf = (phase_dens[phase] - omega)*trans*gravity_flux;
+                    double gf = (phase_dens[phase] - omega)*gravity_flux;
 //                     max_face_gf_out = std::max(max_face_gf_out, gf);
                     phase_flux[phase] -= phase_mob[phase]*gf;
                 }
