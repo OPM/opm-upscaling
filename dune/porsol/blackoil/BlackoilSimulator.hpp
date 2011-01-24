@@ -162,26 +162,50 @@ init(const Dune::parameter::ParameterGroup& param)
 
 
     // Initial state.
-    CompVec init_z(0.0);
-    double initial_mixture_gas = param.getDefault("initial_mixture_gas", 0.0);
-    double initial_mixture_oil = param.getDefault("initial_mixture_oil", 1.0);
-    double initial_mixture_water = param.getDefault("initial_mixture_water", 0.0);
-    init_z[Fluid::Water] = initial_mixture_water;
-    init_z[Fluid::Gas] = initial_mixture_gas;
-    init_z[Fluid::Oil] = initial_mixture_oil;
+    if (param.getDefault("heterogenous_initial_mix", false)) {
+        CompVec init_oil(0.0);
+        init_oil[Fluid::Oil] = 1.0;
+        CompVec init_water(0.0);
+        init_water[Fluid::Water] = 1.0;
 
-    bdy_z_ = flow_solver_.inflowMixture();
+        bdy_z_ = flow_solver_.inflowMixture();
 
-    cell_z_.resize(grid_.numCells(), init_z);
-    MESSAGE("******* Assuming zero capillary pressures *******");
-    PhaseVec init_p(100.0*Dune::unit::barsa);
-    cell_pressure_.resize(grid_.numCells(), init_p);
-    if (gravity_.two_norm() != 0.0) {
-        double ref_gravpot = grid_.cellCentroid(0)*gravity_;
-        double rho = init_z*fluid_.surfaceDensities();  // Assuming incompressible, and constant initial z.
-        for (int cell = 1; cell < grid_.numCells(); ++cell) {
-            double press = rho*(grid_.cellCentroid(cell)*gravity_ - ref_gravpot) + cell_pressure_[0][0];
-            cell_pressure_[cell] = PhaseVec(press);
+        cell_z_.resize(grid_.numCells());
+        std::fill(cell_z_.begin(), cell_z_.begin() + cell_z_.size()/2, init_oil);
+        std::fill(cell_z_.begin() + cell_z_.size()/2, cell_z_.end(), init_water);
+        MESSAGE("******* Assuming zero capillary pressures *******");
+        PhaseVec init_p(100.0*Dune::unit::barsa);
+        cell_pressure_.resize(grid_.numCells(), init_p);
+//         if (gravity_.two_norm() != 0.0) {
+//             double ref_gravpot = grid_.cellCentroid(0)*gravity_;
+//             double rho = init_z*fluid_.surfaceDensities();  // Assuming incompressible, and constant initial z.
+//             for (int cell = 1; cell < grid_.numCells(); ++cell) {
+//                 double press = rho*(grid_.cellCentroid(cell)*gravity_ - ref_gravpot) + cell_pressure_[0][0];
+//                 cell_pressure_[cell] = PhaseVec(press);
+//             }
+//         }
+    } else {
+        CompVec init_z(0.0);
+        double initial_mixture_gas = param.getDefault("initial_mixture_gas", 0.0);
+        double initial_mixture_oil = param.getDefault("initial_mixture_oil", 1.0);
+        double initial_mixture_water = param.getDefault("initial_mixture_water", 0.0);
+        init_z[Fluid::Water] = initial_mixture_water;
+        init_z[Fluid::Gas] = initial_mixture_gas;
+        init_z[Fluid::Oil] = initial_mixture_oil;
+
+        bdy_z_ = flow_solver_.inflowMixture();
+
+        cell_z_.resize(grid_.numCells(), init_z);
+        MESSAGE("******* Assuming zero capillary pressures *******");
+        PhaseVec init_p(100.0*Dune::unit::barsa);
+        cell_pressure_.resize(grid_.numCells(), init_p);
+        if (gravity_.two_norm() != 0.0) {
+            double ref_gravpot = grid_.cellCentroid(0)*gravity_;
+            double rho = init_z*fluid_.surfaceDensities();  // Assuming incompressible, and constant initial z.
+            for (int cell = 1; cell < grid_.numCells(); ++cell) {
+                double press = rho*(grid_.cellCentroid(cell)*gravity_ - ref_gravpot) + cell_pressure_[0][0];
+                cell_pressure_[cell] = PhaseVec(press);
+            }
         }
     }
     bdy_pressure_ = 300.0*Dune::unit::barsa;
