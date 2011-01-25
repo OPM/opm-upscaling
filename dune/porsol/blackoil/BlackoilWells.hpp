@@ -516,8 +516,11 @@ namespace Opm
 	    std::cout << "Specified well radius is " << radius
 		      << " while r0 is " << r0 << ".\n";
 	}
+
+        const double two_pi = 6.2831853071795864769252867665590057683943387987502116419498;
+
 	double wi_denominator = log(r0 / radius) + skin_factor;
-	double wi_numerator = 2 * M_PI * cubical[2];
+	double wi_numerator = two_pi * cubical[2];
 	assert(wi_denominator > 0.0);
 	double wi = effective_perm * wi_numerator / wi_denominator;
 	assert(wi > 0.0);
