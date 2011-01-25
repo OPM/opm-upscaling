@@ -518,13 +518,13 @@ namespace Opm
 	    std::cout << "ERROR: Too big well radius detected.";
 	    std::cout << "Specified well radius is " << radius
 		      << " while r0 is " << r0 << ".\n";
-	    double wi_denominator = log(r0 / radius) + skin_factor;
-	    double wi_numerator = 2 * M_PI * cubical[2];
-	    assert(wi_denominator > 0.0);
-	    double wi = effective_perm * wi_numerator / wi_denominator;
-	    assert(wi > 0.0);
-	    return wi;
 	}
+	double wi_denominator = log(r0 / radius) + skin_factor;
+	double wi_numerator = 2 * M_PI * cubical[2];
+	assert(wi_denominator > 0.0);
+	double wi = effective_perm * wi_numerator / wi_denominator;
+	assert(wi > 0.0);
+	return wi;
     }
 
 } // namespace Opm
