@@ -21,9 +21,11 @@
 #define OPM_BLACKOILWELLS_HEADER_INCLUDED
 
 #include <dune/porsol/blackoil/fluid/BlackoilDefs.hpp>
+#include <dune/common/EclipseGridParser.hpp>
+#include <dune/grid/CpGrid.hpp>
 #include <dune/common/ErrorMacros.hpp>
 #include <dune/common/SparseTable.hpp>
-#include <dune/common/Rock.hpp>
+#include <dune/porsol/common/Rock.hpp>
 #include <dune/common/fvector.hh>
 #include <vector>
 
@@ -79,51 +81,42 @@ int inje_control_mode(const std::string& control)
 
 
 template<class grid_t>
-const boost::array<double,3> getCubeDim(const grid_t& grid, int cell){
-    typename grid_t::stencil_t& stencil = grid.getCellPointStencil(cell);
-    boost::array<double, 3> cube;
-    typedef typename grid_t::point_t point_t;
-    point_t left;
-    point_t right;
-    point_t dist;
-    // first dimension
-    left = grid.getPoint(stencil[0])+ grid.getPoint(stencil[2])
-	+ grid.getPoint(stencil[4]) + grid.getPoint(stencil[6]);
-    right = grid.getPoint(stencil[1])+ grid.getPoint(stencil[3])
-	+ grid.getPoint(stencil[5]) + grid.getPoint(stencil[7]);
-    dist = right-left;
-    cube[0] = dist.length();
-
-    left = grid.getPoint(stencil[0])+ grid.getPoint(stencil[1])
-	+ grid.getPoint(stencil[4]) + grid.getPoint(stencil[5]);
-    right = grid.getPoint(stencil[2])+ grid.getPoint(stencil[3])
-	+ grid.getPoint(stencil[6]) + grid.getPoint(stencil[7]);
-    dist = right-left;
-    cube[1] = dist.length();
-    
-    left = grid.getPoint(stencil[0])+ grid.getPoint(stencil[1])
-	+ grid.getPoint(stencil[2]) + grid.getPoint(stencil[3]);
-    right = grid.getPoint(stencil[4])+ grid.getPoint(stencil[5])
-	+ grid.getPoint(stencil[6]) + grid.getPoint(stencil[7]);
-    dist = right-left;
-    cube[2] = dist.length();
+const Dune::FieldVector<double,3> getCubeDim(const grid_t& grid, int cell)
+{
+    Dune::FieldVector<double, 3> cube;
+    int num_local_faces = grid.numCellFaces(cell);
+    std::vector<double> x(num_local_faces);
+    std::vector<double> y(num_local_faces);
+    std::vector<double> z(num_local_faces);
+    for (int lf=0; lf<num_local_faces; ++ lf) {
+	int face = grid.cellFace(cell,lf);
+	const Dune::FieldVector<double,3>& centroid = 
+	    grid.faceCentroid(face);
+	x[lf] = centroid[0];
+	y[lf] = centroid[1];
+	z[lf] = centroid[2];
+    }
+    cube[0] = *max_element(x.begin(), x.end()) -
+	*min_element(x.begin(), x.end());
+    cube[1] = *max_element(y.begin(), y.end()) -
+	*min_element(y.begin(), y.end());
+    cube[2] = *max_element(z.begin(), z.end()) -
+	*min_element(z.begin(), z.end());
     return cube;
-}    
+}
 
 } // anon namespace
 
 namespace Opm
 {
-
-    //    typedef ???  matrix_t;    
-
     /// A class designed to encapsulate a set of rate- or
     /// pressure-controlled wells in the black-oil setting.
     class BlackoilWells : public BlackoilDefs
     {
     public:
         void init(const Dune::EclipseGridParser& parser,
-		  const Dune::CpGrid& grid);
+		  const Dune::CpGrid& grid,
+		  const Dune::Rock<3>& rock);
 
         // Well-centric interface. Mostly used by pressure solver.
         int numWells() const;
@@ -145,12 +138,12 @@ namespace Opm
         // Cell-centric interface. Mostly used by transport solver.
         double perforationPressure(int cell) const;
         double wellToReservoirFlux(int cell) const;
-        Dune::FieldVector<double, 3> injectionMixture(int cell) const;
+        CompVec injectionMixture(int cell) const;
 
     private:
 	// Use the Peaceman well model to compute well indices
-	double computeWellIndex(double radius, const boost::array<double,3>& cubical,
-				const matrix_t& permeability, double skin_factor) const;
+	double computeWellIndex(double radius, const Dune::FieldVector<double, 3>& cubical,
+				const Dune::Rock<3>::PermTensor& permeability, double skin_factor) const;
 
 	struct WellData { WellType type; WellControl control; double target; };
         std::vector<WellData> well_data_;
@@ -181,9 +174,9 @@ namespace Opm
     // }
 	
 
-    inline double BlackoilWells::init(const Dune::EclipseGridParser& parser,
-				      const Dune::CpGrid& grid,
-				      const Dune::Rock& rock) 
+    inline void BlackoilWells::init(const Dune::EclipseGridParser& parser,
+				    const Dune::CpGrid& grid,
+				    const Dune::Rock<3>& rock) 
     {
 	std::vector<std::string> keywords;
 	keywords.push_back("WELSPECS");
@@ -250,17 +243,15 @@ namespace Opm
 			if (radius <= 0.0) { // @bsp ???
 			    radius = 0.222;
 			    MESSAGE("Warning: Well bore internal radius set to 0.222");
-			};
-			cubical = getCubeDim(grid, cell);        // @bsp
-			// PermTensor permeability = rock.getPermealibilty(cell);   // @bsp
+			}
+			Dune::FieldVector<double, 3> cubical = getCubeDim(grid, cell);
+			const Rock<3>::PermTensor permeability = rock.permeability(cell);   // @bsp
 			PerfData pd;
 			pd.cell       = cell;
-			pd.well_index = 1.e20;
-			//pd.well_index = computeWellIndex(radius, cubical, permeability,
-			//				 compdats.compdat[kw].skin_factor_);
+			pd.well_index = computeWellIndex(radius, cubical, permeability,
+			compdats.compdat[kw].skin_factor_);
 			pd.pdelta     = 0.0;    // @bsp ???
-			perf_data_.appendRow(&pd, &pd + 1));
-			pd.well_index = 1.e20;
+			perf_data_.appendRow(&pd, &pd + 1);
 		    } else {
 			THROW("Cell with i,j,k indices " << ix << ' ' << jy << ' '
 			      << kz << " not found!");
@@ -274,9 +265,9 @@ namespace Opm
 		      << " in COMPDAT");
 	    }
 	}	
-
+    
 	// Get WCONINJE data
-	for (int kw=0; kw<num_wconinjes; ++kw) {
+        for (int kw=0; kw<num_wconinjes; ++kw) {
 	    std::string name = wconinjes.wconinje[kw].well_;
 	    std::string::size_type len = name.find('*');
 	    if (len != std::string::npos) {
@@ -320,7 +311,7 @@ namespace Opm
 	}	
 
 	// Get WCONPROD data   
-	for (int kw=0; kw<num_wconprods; ++kw) {
+        for (int kw=0; kw<num_wconprods; ++kw) {
 	    std::string name = wconprods.wconprod[kw].well_;
 	    std::string::size_type len = name.find('*');
 	    if (len != std::string::npos) {
@@ -397,6 +388,8 @@ namespace Opm
 		      << " in WELTARG");
 	    }
 	}
+	injection_mixture_ = 0.0;
+	injection_mixture_[Gas] = 1.0;
 
 	std::cout << "\t WELL DATA" << std::endl;
 	for(int i=0; i< int(well_data_.size()); ++i) {
@@ -491,9 +484,9 @@ namespace Opm
     }
 
     inline double BlackoilWells::computeWellIndex(double radius,
-						  const boost::array<double, 3>& cubical,
-						  const PermTensor& permeability,
-						  double skin_factor)
+						  const Dune::FieldVector<double, 3>& cubical,
+						  const Dune::Rock<3>::PermTensor& permeability,
+						  double skin_factor) const
     {
 	// Use the Peaceman well model to compute well indices.
 	// radius is the radius of the well.
