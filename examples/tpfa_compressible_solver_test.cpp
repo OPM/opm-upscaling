@@ -158,7 +158,7 @@ typedef Dune::CpGrid Grid;
 typedef Dune::Rock<Grid::dimension> Rock;
 typedef Opm::BlackoilFluid Fluid;
 typedef Dune::BasicBoundaryConditions<true, false>  FBC;
-typedef Dune::TpfaCompressible<Grid, Rock, Fluid, FBC> FlowSolver;
+typedef Dune::TpfaCompressible<Grid, Rock, Fluid, Opm::Wells, FBC> FlowSolver;
 
 int main(int argc, char** argv)
 {

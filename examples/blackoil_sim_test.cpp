@@ -30,18 +30,18 @@
 #include <dune/porsol/common/Rock.hpp>
 #include <dune/porsol/mimetic/TpfaCompressible.hpp>
 #include <dune/common/StopWatch.hpp>
-#include <dune/porsol/common/Wells.hpp>
 #include <dune/porsol/blackoil/BlackoilFluid.hpp>
+#include <dune/porsol/blackoil/BlackoilWells.hpp>
 #include <dune/porsol/blackoil/ComponentTransport.hpp>
+
 
 
 typedef Dune::CpGrid Grid;
 typedef Dune::Rock<Grid::dimension> Rock;
 typedef Opm::BlackoilFluid Fluid;
-// typedef Opm::BlackoilWells Wells; // WELLS
-typedef Opm::Wells Wells;
+typedef Opm::BlackoilWells Wells;
 typedef Dune::BasicBoundaryConditions<true, false>  FBC;
-typedef Dune::TpfaCompressible<Grid, Rock, Fluid, FBC> FlowSolver;
+typedef Dune::TpfaCompressible<Grid, Rock, Fluid, Wells, FBC> FlowSolver;
 typedef Opm::ExplicitCompositionalTransport<Grid, Rock, Fluid, Wells> TransportSolver;
 
 
