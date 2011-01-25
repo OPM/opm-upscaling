@@ -25,14 +25,14 @@
 int main(int argc, char** argv)
 {
     // Parser.
-    std::string ecl_file("filename");
+    const std::string ecl_file("SPE9.DATA");
     Dune::EclipseGridParser parser(ecl_file);
 
     // Grid
     Dune::CpGrid grid;
     Dune::array<int, 3> dims;
     Dune::array<double, 3> cellsize;
-    std::fill(dims.begin(), dims.end(), 2);
+    std::fill(dims.begin(), dims.end(), 3);
     cellsize[0] = 2.0;
     cellsize[1] = 3.0;
     cellsize[2] = 4.0;
