@@ -158,22 +158,6 @@ namespace Opm
 
     // ------------ Method implementations --------------
 
-    // inline void BlackoilWells::init(const Dune::EclipseGridParser& parser)
-    // {
-    //     // Temporary test hack.
-    //     WellData w1 = { Injector, Pressure, 2e7 };
-    //     WellData w2 = { Producer, Pressure, 1e7 };
-    //     well_data_.push_back(w1);
-    //     well_data_.push_back(w2);
-    //     PerfData p1 = { 0, 1e-11, 0.0 };
-    //     PerfData p2 = { 99, 1e-11, 0.0 };
-    //     perf_data_.appendRow(&p1, &p1 + 1);
-    //     perf_data_.appendRow(&p2, &p2 + 1);
-    //     injection_mixture_ = 0.0;
-    //     injection_mixture_[Gas] = 1.0;
-    // }
-	
-
     inline void BlackoilWells::init(const Dune::EclipseGridParser& parser,
 				    const Dune::CpGrid& grid,
 				    const Dune::Rock<3>& rock) 
@@ -181,7 +165,7 @@ namespace Opm
 	std::vector<std::string> keywords;
 	keywords.push_back("WELSPECS");
 	keywords.push_back("COMPDAT");
-	keywords.push_back("WELTARG");
+// 	keywords.push_back("WELTARG");
 	if (!parser.hasFields(keywords)) {
 	    MESSAGE("Missing well keywords in deck, initializing no wells.");
             return;
@@ -195,9 +179,6 @@ namespace Opm
 
 	const COMPDAT& compdats = parser.getCOMPDAT();
 	const int num_compdats  = compdats.compdat.size();
-
-	const WELTARG& weltargs = parser.getWELTARG();
-	const int num_weltargs  = weltargs.weltarg.size();	
 
 	const WCONINJE& wconinjes = parser.getWCONINJE();
 	const int num_wconinjes   = wconinjes.wconinje.size();
@@ -242,8 +223,8 @@ namespace Opm
 			int cell = cgit->second;
 			double radius = 0.5*compdats.compdat[kw].diameter_;
 			if (radius <= 0.0) { // @bsp ???
-			    radius = 0.222;
-			    MESSAGE("Warning: Well bore internal radius set to 0.222");
+			    radius = 0.5*unit::feet;
+			    MESSAGE("Warning: Well bore internal radius set to " << radius);
 			}
 			Dune::FieldVector<double, 3> cubical = getCubeDim(grid, cell);
 			const Rock<3>::PermTensor permeability = rock.permeability(cell);   // @bsp
@@ -289,11 +270,15 @@ namespace Opm
 			break;
 		    case 1:  // BHP
 			well_data_[wix].control = Pressure;
-			well_data_[wix].target = wconinjes.wconinje[kw].BHP_limit_;
+			well_data_[wix].target
+                            = Dune::unit::convert::from(wconinjes.wconinje[kw].BHP_limit_, parser.units().pressure);
+
 			break;
 		    case 2:  // THP
 			well_data_[wix].control = Pressure;
-			well_data_[wix].target = wconinjes.wconinje[kw].THP_limit_;
+			well_data_[wix].target
+                            = Dune::unit::convert::from(wconinjes.wconinje[kw].THP_limit_, parser.units().pressure);
+
 			break;
 		    case 3:  // GRUP 
 			well_data_[wix].control = Rate;   // @bsp ???
@@ -349,11 +334,13 @@ namespace Opm
 			break;
 		    case 5:  // BHP
 			well_data_[wix].control = Pressure; 
-			well_data_[wix].target = wconprods.wconprod[kw].BHP_limit_;
+			well_data_[wix].target
+                            = Dune::unit::convert::from(wconprods.wconprod[kw].BHP_limit_, parser.units().pressure);
 			break;
 		    case 6:  // THP 
 			well_data_[wix].control = Pressure;
-			well_data_[wix].target = wconprods.wconprod[kw].THP_limit_;
+			well_data_[wix].target
+                            = Dune::unit::convert::from(wconprods.wconprod[kw].THP_limit_, parser.units().pressure);
 			break;
 		    default:
 			THROW("Unknown well control mode; WCONPROD  = "
@@ -368,30 +355,36 @@ namespace Opm
 	    }
 	}	
 
-	// Get WELTARG data   
-	for (int kw=0; kw<num_weltargs; ++kw) {
-	    std::string name = weltargs.weltarg[kw].well_;
-	    std::string::size_type len = name.find('*');
-	    if (len != std::string::npos) {
-		name = name.substr(0, len);
-	    }
+	// Get WELTARG data
+        if (parser.hasField("WELTARG")) {
+            const WELTARG& weltargs = parser.getWELTARG();
+            const int num_weltargs  = weltargs.weltarg.size();	
+            for (int kw=0; kw<num_weltargs; ++kw) {
+                std::string name = weltargs.weltarg[kw].well_;
+                std::string::size_type len = name.find('*');
+                if (len != std::string::npos) {
+                    name = name.substr(0, len);
+                }
+                bool well_found = false;
+                for (int wix=0; wix<num_welspecs; ++wix) {
+                    if (well_names_[wix].compare(0,len, name) == 0) { //equal
+                        well_found = true;
+                        well_data_[wix].target = weltargs.weltarg[kw].new_value_;
+                        break;
+                    }
+                }
+                if (!well_found) {
+                    THROW("Undefined well name: " << weltargs.weltarg[kw].well_
+                          << " in WELTARG");
+                }
+            }
+        }
 
-	    bool well_found = false;
-	    for (int wix=0; wix<num_welspecs; ++wix) {
-		if (well_names_[wix].compare(0,len, name) == 0) { //equal
-		    well_found = true;
-		    well_data_[wix].target = weltargs.weltarg[kw].new_value_;
-		    break;
-		}
-	    }
-	    if (!well_found) {
-		THROW("Undefined well name: " << weltargs.weltarg[kw].well_
-		      << " in WELTARG");
-	    }
-	}
+        // Set injection mixture.
 	injection_mixture_ = 0.0;
 	injection_mixture_[Gas] = 1.0;
 
+        // Debug outpu.
 	std::cout << "\t WELL DATA" << std::endl;
 	for(int i=0; i< int(well_data_.size()); ++i) {
 	    std::cout << i << ": " << well_data_[i].type << "  "
@@ -407,6 +400,10 @@ namespace Opm
 			  << perf_data_[i][j].pdelta << std::endl;
 	    }
 	}
+
+        // Ensuring that they have the right size.
+        well_pressure_.resize(grid.numCells(), -1e100);
+        well_flux_.resize(grid.numCells(), 0.0);
     }
 
     inline int BlackoilWells::numWells() const
