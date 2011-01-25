@@ -221,17 +221,21 @@ namespace Opm
 			cartesian_to_compressed.find(cart_grid_indx);
 		    if (cgit != cartesian_to_compressed.end()) {
 			int cell = cgit->second;
-			double radius = 0.5*compdats.compdat[kw].diameter_;
-			if (radius <= 0.0) { // @bsp ???
-			    radius = 0.5*unit::feet;
-			    MESSAGE("Warning: Well bore internal radius set to " << radius);
-			}
-			Dune::FieldVector<double, 3> cubical = getCubeDim(grid, cell);
-			const Rock<3>::PermTensor permeability = rock.permeability(cell);   // @bsp
 			PerfData pd;
-			pd.cell       = cell;
-			pd.well_index = computeWellIndex(radius, cubical, permeability,
-			compdats.compdat[kw].skin_factor_);
+			pd.cell = cell;
+			if (compdats.compdat[kw].connect_transmil_fac_ > 0.0) {
+			    pd.well_index = compdats.compdat[kw].connect_transmil_fac_;
+			} else {
+			    double radius = 0.5*compdats.compdat[kw].diameter_;
+			    if (radius <= 0.0) {
+				radius = 0.5*unit::feet;
+				MESSAGE("Warning: Well bore internal radius set to " << radius);
+			    }
+			    Dune::FieldVector<double, 3> cubical = getCubeDim(grid, cell);
+			    const Rock<3>::PermTensor permeability = rock.permeability(cell);  
+			    pd.well_index = computeWellIndex(radius, cubical, permeability,
+							     compdats.compdat[kw].skin_factor_);
+			}
 			pd.pdelta     = 0.0;    // @bsp ???
 			perf_data_.appendRow(&pd, &pd + 1);
 		    } else {
