@@ -260,15 +260,16 @@ namespace Dune
 
             // Assemble and solve.
             int num_cells = cell_z.size();
-            std::vector<double> cell_pressure_scalar(num_cells);
+            std::vector<double> cell_pressure_scalar_initial(num_cells);
             // Set initial pressure to Liquid phase pressure. \TODO what is correct with capillary pressure?
             for (int cell = 0; cell < num_cells; ++cell) {
-                cell_pressure_scalar[cell] = cell_pressure[cell][FluidInterface::Liquid];
+                cell_pressure_scalar_initial[cell] = cell_pressure[cell][FluidInterface::Liquid];
             }
+            std::vector<double> cell_pressure_scalar = cell_pressure_scalar_initial;
             std::vector<double> initial_voldiscr;
             std::vector<double> face_pressure_scalar;
             std::vector<double> start_face_flux;
-            std::vector<double> start_face_press;
+            std::vector<double> start_cell_press;
             face_flux.clear();
             face_flux.resize(num_faces, 0.0);
             face_pressure_scalar.clear();
@@ -276,7 +277,7 @@ namespace Dune
             bool converged = false;
             for (int i = 0; i < max_num_iter_; ++i) {
                 start_face_flux = face_flux;
-                start_face_press = face_pressure_scalar;
+                start_cell_press = cell_pressure_scalar;
                 // (Re-)compute fluid properties.
                 computeFluidProps(cell_pressure, face_pressure, cell_z, dt);
                 if (i == 0) {
@@ -292,7 +293,7 @@ namespace Dune
                 int num_perf = perf_cells_.size();
                 wellperfA.resize(num_perf*numComponents*numPhases);
                 phasemobwellperf.resize(num_perf*numPhases);
-                wellperf_gpot.resize(num_perf);
+                wellperf_gpot.resize(num_perf*numPhases);
                 for (int perf = 0; perf < num_perf; ++perf) {
                     std::copy(&perf_props_[perf].phase_to_comp[0][0],
                               &perf_props_[perf].phase_to_comp[0][0] + numComponents*numPhases,
@@ -300,14 +301,16 @@ namespace Dune
                     std::copy(perf_props_[perf].mobility.begin(),
                               perf_props_[perf].mobility.end(),
                               &phasemobwellperf[perf*numPhases]);
-                    wellperf_gpot[perf] = 0.0; // \TODO = \rho g h
+                    for (int phase = 0; phase < numPhases; ++phase) {
+                        wellperf_gpot[numPhases*perf + phase] = 0.0; // \TODO = \rho g h
+                    }
                 }
 
                 // Assemble system matrix and rhs.
                 psolver_.assemble(src, bctypes_, bcvalues_, dt,
                                   fp_.totcompr, initial_voldiscr, fp_.cellA, fp_.faceA,
                                   wellperfA, fp_.phasemobf, phasemobwellperf,
-                                  cell_pressure_scalar, wellperf_gpot, &(pfluid_->surfaceDensities()[0]));
+                                  cell_pressure_scalar_initial, wellperf_gpot, &(pfluid_->surfaceDensities()[0]));
                 // Solve system.
                 PressureSolver::LinearSystem s;
                 psolver_.linearSystem(s);
@@ -330,15 +333,17 @@ namespace Dune
                 // Test for convergence.
                 double max_flux = std::max(std::fabs(*std::min_element(face_flux.begin(), face_flux.end())),
                                            std::fabs(*std::max_element(face_flux.begin(), face_flux.end())));
-                double max_press = std::max(std::fabs(*std::min_element(face_pressure_scalar.begin(), face_pressure_scalar.end())),
-                                            std::fabs(*std::max_element(face_pressure_scalar.begin(), face_pressure_scalar.end())));
+                double max_press = std::max(std::fabs(*std::min_element(cell_pressure_scalar.begin(), cell_pressure_scalar.end())),
+                                            std::fabs(*std::max_element(cell_pressure_scalar.begin(), cell_pressure_scalar.end())));
                 double flux_change_infnorm = 0.0;
                 double press_change_infnorm = 0.0;
                 for (int face = 0; face < num_faces; ++face) {
                     flux_change_infnorm = std::max(flux_change_infnorm,
                                                    std::fabs(face_flux[face] - start_face_flux[face]));
+                }
+                for (int cell = 0; cell < num_cells; ++cell) {
                     press_change_infnorm = std::max(press_change_infnorm,
-                                                    std::fabs(face_pressure_scalar[face] - start_face_press[face]));
+                                                    std::fabs(cell_pressure_scalar[cell] - start_cell_press[cell]));
                 }
                 double flux_rel_difference = flux_change_infnorm/max_flux;
                 double press_rel_difference = press_change_infnorm/max_press;
