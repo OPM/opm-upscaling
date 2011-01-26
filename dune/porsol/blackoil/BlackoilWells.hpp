@@ -157,8 +157,8 @@ namespace Opm
 			int cell = cgit->second;
 			PerfData pd;
 			pd.cell = cell;
-			if (compdats.compdat[kw].connect_transmil_fac_ > 0.0) {
-			    pd.well_index = compdats.compdat[kw].connect_transmil_fac_;
+			if (compdats.compdat[kw].connect_trans_fac_ > 0.0) {
+			    pd.well_index = compdats.compdat[kw].connect_trans_fac_;
 			} else {
 			    double radius = 0.5*compdats.compdat[kw].diameter_;
 			    if (radius <= 0.0) {
