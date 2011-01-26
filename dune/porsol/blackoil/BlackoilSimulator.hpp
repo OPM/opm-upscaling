@@ -238,7 +238,18 @@ init(const Dune::parameter::ParameterGroup& param)
         }
     }
 
-
+    // Set initial well perforation pressures equal to cell pressures,
+    // and perforation fluxes equal to zero.
+    std::vector<double> perf_press;
+    for (int well = 0; well < wells_.numWells(); ++well) {
+        int num_perf = wells_.numPerforations(well);
+        for (int perf = 0; perf < num_perf; ++perf) {
+            int cell = wells_.wellCell(well, perf);
+            perf_press.push_back(cell_pressure_[cell][Fluid::Liquid]);
+        }
+    }
+    std::vector<double> perf_flux(perf_press.size(), 0.0);
+    wells_.update(grid_.numCells(), perf_press, perf_flux);
 }
 
 
