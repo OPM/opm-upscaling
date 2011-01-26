@@ -29,83 +29,6 @@
 #include <dune/common/fvector.hh>
 #include <vector>
 
-// Forward declaration.
-namespace Dune
-{
-    class EclipseGridParser;
-}
-
-namespace
-{
-
-int prod_control_mode(const std::string& control){
-    const int num_prod_control_modes = 7;
-    static std::string prod_control_modes[num_prod_control_modes] =
-	{std::string("ORAT"), std::string("WRAT"), std::string("GRAT"),
-	 std::string("LRAT"), std::string("RESV"), std::string("BHP"),
-	 std::string("THP") };   //  @bsp missing GRUP
-    int m = -1;
-    for (int i=0; i<num_prod_control_modes; ++i) {
-	if (control[0] == prod_control_modes[i][0]) {
-	    m = i;
-	    break;
-	}
-    }
-    if (m >= 0) {
-	return m;
-    } else {
-	THROW("Unknown well control mode = " << control << " in input file");
-    }
-}
-
-int inje_control_mode(const std::string& control)
-{
-    const int num_inje_control_modes = 4;
-    static std::string inje_control_modes[num_inje_control_modes] =
-	{std::string("RATE"), std::string("BHP"), std::string("THP"),
-	 std::string("GRUP") };   //  @bsp missing"RESV" ??? 
-    int m = -1;
-    for (int i=0; i<num_inje_control_modes; ++i) {
-	if (control[0] == inje_control_modes[i][0]) {
-	    m = i;
-	    break;
-	}
-    }
- 
-    if (m >= 0) {
-	return m;
-    } else {
-	THROW("Unknown well control mode = " << control << " in input file");
-    }
-}
-
-
-template<class grid_t>
-const Dune::FieldVector<double,3> getCubeDim(const grid_t& grid, int cell)
-{
-    Dune::FieldVector<double, 3> cube;
-    int num_local_faces = grid.numCellFaces(cell);
-    std::vector<double> x(num_local_faces);
-    std::vector<double> y(num_local_faces);
-    std::vector<double> z(num_local_faces);
-    for (int lf=0; lf<num_local_faces; ++ lf) {
-	int face = grid.cellFace(cell,lf);
-	const Dune::FieldVector<double,3>& centroid = 
-	    grid.faceCentroid(face);
-	x[lf] = centroid[0];
-	y[lf] = centroid[1];
-	z[lf] = centroid[2];
-    }
-    cube[0] = *max_element(x.begin(), x.end()) -
-	*min_element(x.begin(), x.end());
-    cube[1] = *max_element(y.begin(), y.end()) -
-	*min_element(y.begin(), y.end());
-    cube[2] = *max_element(z.begin(), z.end()) -
-	*min_element(z.begin(), z.end());
-    return cube;
-}
-
-} // anon namespace
 
 namespace Opm
 {
@@ -157,6 +80,17 @@ namespace Opm
 
 
     // ------------ Method implementations --------------
+
+
+    // Forward declaration of some helper functions.
+    namespace
+    {
+        int prod_control_mode(const std::string& control);
+        int inje_control_mode(const std::string& control);
+        template<class grid_t>
+        const Dune::FieldVector<double,3> getCubeDim(const grid_t& grid, int cell);
+
+    } // anon namespace
 
     inline void BlackoilWells::init(const Dune::EclipseGridParser& parser,
 				    const Dune::CpGrid& grid,
@@ -530,6 +464,82 @@ namespace Opm
 	assert(wi > 0.0);
 	return wi;
     }
+
+
+
+    // ------------- Helper functions for init() --------------
+
+    namespace
+    {
+
+        int prod_control_mode(const std::string& control){
+            const int num_prod_control_modes = 7;
+            static std::string prod_control_modes[num_prod_control_modes] =
+                {std::string("ORAT"), std::string("WRAT"), std::string("GRAT"),
+                 std::string("LRAT"), std::string("RESV"), std::string("BHP"),
+                 std::string("THP") };   //  @bsp missing GRUP
+            int m = -1;
+            for (int i=0; i<num_prod_control_modes; ++i) {
+                if (control[0] == prod_control_modes[i][0]) {
+                    m = i;
+                    break;
+                }
+            }
+            if (m >= 0) {
+                return m;
+            } else {
+                THROW("Unknown well control mode = " << control << " in input file");
+            }
+        }
+
+        int inje_control_mode(const std::string& control)
+        {
+            const int num_inje_control_modes = 4;
+            static std::string inje_control_modes[num_inje_control_modes] =
+                {std::string("RATE"), std::string("BHP"), std::string("THP"),
+                 std::string("GRUP") };   //  @bsp missing"RESV" ??? 
+            int m = -1;
+            for (int i=0; i<num_inje_control_modes; ++i) {
+                if (control[0] == inje_control_modes[i][0]) {
+                    m = i;
+                    break;
+                }
+            }
+ 
+            if (m >= 0) {
+                return m;
+            } else {
+                THROW("Unknown well control mode = " << control << " in input file");
+            }
+        }
+
+
+        template<class grid_t>
+        const Dune::FieldVector<double,3> getCubeDim(const grid_t& grid, int cell)
+        {
+            Dune::FieldVector<double, 3> cube;
+            int num_local_faces = grid.numCellFaces(cell);
+            std::vector<double> x(num_local_faces);
+            std::vector<double> y(num_local_faces);
+            std::vector<double> z(num_local_faces);
+            for (int lf=0; lf<num_local_faces; ++ lf) {
+                int face = grid.cellFace(cell,lf);
+                const Dune::FieldVector<double,3>& centroid = 
+                    grid.faceCentroid(face);
+                x[lf] = centroid[0];
+                y[lf] = centroid[1];
+                z[lf] = centroid[2];
+            }
+            cube[0] = *max_element(x.begin(), x.end()) -
+                *min_element(x.begin(), x.end());
+            cube[1] = *max_element(y.begin(), y.end()) -
+                *min_element(y.begin(), y.end());
+            cube[2] = *max_element(z.begin(), z.end()) -
+                *min_element(z.begin(), z.end());
+            return cube;
+        }
+
+    } // anon namespace
 
 } // namespace Opm
 
