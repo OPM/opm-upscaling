@@ -69,7 +69,6 @@ namespace Opm
         double initial_stepsize_;
         bool do_impes_;
         std::string output_dir_;
-        bool newcode_;
 
         static void output(const Grid& grid,
                            const std::vector<typename Fluid::PhaseVec>& cell_pressure,
@@ -129,7 +128,6 @@ init(const Dune::parameter::ParameterGroup& param)
     initial_stepsize_ = param.getDefault("initial_stepsize", 1.0*unit::day);
     do_impes_ = param.getDefault("do_impes", false);
     output_dir_ = param.getDefault<std::string>("output_dir", "output");
-    newcode_ = param.getDefault("newcode", true);
 
     // Boundary conditions.
     typedef Dune::FlowBC BC;
@@ -312,7 +310,7 @@ simulate()
             double actual_computed_time
                 = transport_solver_.transport(bdy_pressure_, bdy_z_,
                                              face_flux, cell_pressure_, face_pressure_,
-                                             stepsize, voldisclimit, cell_z_, newcode_);
+                                             stepsize, voldisclimit, cell_z_);
             voldisc_ok = (actual_computed_time == stepsize);
         } else {
             voldisc_ok = flow_solver_.volumeDiscrepancyAcceptable(cell_pressure_, face_pressure_, cell_z_, stepsize);

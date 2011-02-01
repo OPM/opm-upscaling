@@ -77,8 +77,7 @@ public:
                      const std::vector<PhaseVec>& face_pressure,
                      const double dt,
                      const double voldisclimit,
-                     std::vector<CompVec>& cell_z,
-                     bool newcode = false)
+                     std::vector<CompVec>& cell_z)
     {
         int num_cells = pgrid_->numCells();
         std::vector<CompVec> comp_change;
@@ -95,11 +94,7 @@ public:
         std::vector<CompVec> cell_z_start;
         while (cur_time < dt) {
             cell_z_start = cell_z;
-            if (newcode) {
-                computeChangeNew(face_flux, comp_change, cell_outflux, cell_max_ff_deriv);
-            } else {
-                computeChange(face_flux, comp_change, cell_outflux, cell_max_ff_deriv);
-            }
+            computeChange(face_flux, comp_change, cell_outflux, cell_max_ff_deriv);
             double min_time = 1e100;
             for (int cell = 0; cell < num_cells; ++cell) {
                 double pvol = prock_->porosity(cell)*pgrid_->cellVolume(cell);
@@ -253,6 +248,8 @@ private: // Methods
     }
 
 
+
+
     void computeChange(const std::vector<double>& face_flux,
                        std::vector<CompVec>& comp_change,
                        std::vector<double>& cell_outflux,
@@ -266,116 +263,6 @@ private: // Methods
         cell_outflux.resize(num_cells, 0.0);
         cell_max_ff_deriv.clear();
         cell_max_ff_deriv.resize(num_cells, 0.0);
-        CompVec surf_dens = pfluid_->surfaceDensities();
-        for (int face = 0; face < pgrid_->numFaces(); ++face) {
-            if (face_flux[face] == 0.0) {
-                // This only happens (probably) on no-flow boundaries.
-                continue;
-            }
-            // Set up needed quantities.
-            int c0 = pgrid_->faceCell(face, 0);
-            int c1 = pgrid_->faceCell(face, 1);
-            int upwind_cell = (face_flux[face] > 0.0) ? c0 : c1;
-            int downwind_cell = (face_flux[face] > 0.0) ? c1 : c0;
-            PhaseVec upwind_sat = upwind_cell < 0 ? bdy_.saturation : fluid_data_.saturation[upwind_cell];
-            PhaseVec upwind_relperm = upwind_cell < 0 ? bdy_.relperm : fluid_data_.rel_perm[upwind_cell];
-            PhaseVec upwind_viscosity = upwind_cell < 0 ? bdy_.viscosity : fluid_data_.viscosity[upwind_cell];
-            PhaseVec upwind_ff = upwind_cell < 0 ? bdy_.fractional_flow : fluid_data_.frac_flow[upwind_cell];
-            PhaseVec phase_flux(upwind_ff);
-            phase_flux *= face_flux[face];
-            CompVec change(0.0);
-
-            // Estimate max derivative of ff.
-            double face_max_ff_deriv = 0.0;
-            if (downwind_cell >= 0) { // Only contribution on inflow and internal faces.
-                // Evaluating all functions at upwind viscosity.
-                PhaseVec downwind_mob(0.0);
-                double downwind_totmob = 0.0;
-                for (int phase = 0; phase < numPhases; ++phase) {
-                    downwind_mob[phase] = fluid_data_.rel_perm[downwind_cell][phase]/upwind_viscosity[phase];
-                    downwind_totmob += downwind_mob[phase];
-                }
-                PhaseVec downwind_ff = downwind_mob;
-                downwind_ff /= downwind_totmob;
-                PhaseVec ff_diff = upwind_ff;
-                ff_diff -= downwind_ff;
-                for (int phase = 0; phase < numPhases; ++phase) {
-                    if (std::fabs(ff_diff[phase]) > 1e-10) {
-                        double ff_deriv = ff_diff[phase]/(upwind_sat[phase] - fluid_data_.saturation[downwind_cell][phase]);
-                        ASSERT(ff_deriv >= 0.0);
-                        face_max_ff_deriv = std::max(face_max_ff_deriv, ff_deriv);
-                    }
-                }
-            }
-
-            // Compute z change.
-            for (int phase = 0; phase < numPhases; ++phase) {
-                CompVec z_in_phase = bdy_.phase_to_comp[phase];
-                if (upwind_cell >= 0) {
-                    for (int comp = 0; comp < numComponents; ++comp) {
-                        z_in_phase[comp] = fluid_data_.cellA[numPhases*numComponents*upwind_cell + numComponents*phase + comp];
-                    }
-                }
-                z_in_phase *= phase_flux[phase];
-                change += z_in_phase;
-            }
-
-            // Update output variables.
-            if (upwind_cell >= 0) {
-                cell_outflux[upwind_cell] += std::fabs(face_flux[face]);
-            }
-            if (c0 >= 0) {
-                comp_change[c0] -= change;
-                cell_max_ff_deriv[c0] = std::max(cell_max_ff_deriv[c0], face_max_ff_deriv);
-            }
-            if (c1 >= 0) {
-                comp_change[c1] += change;
-                cell_max_ff_deriv[c1] = std::max(cell_max_ff_deriv[c1], face_max_ff_deriv);
-            }
-        }
-
-        // Done with all faces, now deal with well perforations.
-        int num_perf = perf_cells_.size();
-        for (int perf = 0; perf < num_perf; ++perf) {
-            int cell = perf_cells_[perf];
-            double flow = perf_flow_[perf];
-            ASSERT(flow != 0.0);
-            const TransportFluidData& fl = perf_props_[perf];
-            // For injection, phase volumes depend on fractional
-            // flow of injection perforation, for production we
-            // use the fractional flow of the producing cell.
-            PhaseVec phase_flux = flow > 0.0 ? fl.fractional_flow : fluid_data_.frac_flow[cell];
-            phase_flux *= flow;
-            // Conversion to mass flux is given at perforation state
-            // if injector, cell state if producer (this is ensured by
-            // updateFluidProperties()).
-            CompVec change(0.0);
-            for (int phase = 0; phase < numPhases; ++phase) {
-                CompVec z_in_phase = fl.phase_to_comp[phase];
-                z_in_phase *= phase_flux[phase];
-                change += z_in_phase;
-            }
-            comp_change[cell] += change;
-        }
-    }
-
-    void computeChangeNew(const std::vector<double>& face_flux,
-                          std::vector<CompVec>& comp_change,
-                          std::vector<double>& cell_outflux,
-                          std::vector<double>& cell_max_ff_deriv)
-    {
-        int num_cells = pgrid_->numCells();
-        comp_change.clear();
-        CompVec zero(0.0);
-        comp_change.resize(num_cells, zero);
-        cell_outflux.clear();
-        cell_outflux.resize(num_cells, 0.0);
-        cell_max_ff_deriv.clear();
-        cell_max_ff_deriv.resize(num_cells, 0.0);
-//         cell_gravflux.clear();
-//         cell_gravflux.resize(num_cells, 0.0);
-//         cell_max_mob_deriv.clear();
-//         cell_max_mob_deriv.resize(num_cells, 0.0);
         CompVec surf_dens = pfluid_->surfaceDensities();
         for (int face = 0; face < pgrid_->numFaces(); ++face) {
             // Compute phase densities on face.
@@ -420,26 +307,22 @@ private: // Methods
             PhaseVec phase_flux = ff;
             phase_flux *= face_flux[face];
             // Until we have proper bcs for transport, assume no gravity flow across bdys.
-//             double max_face_gf_out = 0.0;
             if (gravity_flux != 0.0 && c[0] >= 0 && c[1] >= 0) {
                 // Gravity contribution.
                 double omega = ff*phase_dens;
                 for (int phase = 0; phase < numPhases; ++phase) {
                     double gf = (phase_dens[phase] - omega)*gravity_flux;
-//                     max_face_gf_out = std::max(max_face_gf_out, gf);
                     phase_flux[phase] -= phase_mob[phase]*gf;
                 }
             }
 
             // Estimate max derivative of ff.
             double face_max_ff_deriv = 0.0;
-//             double face_max_mob_deriv = 0.0;
             // Only using total flux upwinding for this purpose.
             // Aim is to reproduce old results first. \TODO fix, include gravity.
             int downwind_cell = c[upwind_dir[0]%2]; // Keep in mind that upwind_dir[] \in {1, 2}
             if (downwind_cell >= 0) { // Only contribution on inflow and internal faces.
                 // Evaluating all functions at upwind viscosity.
-
                 // Added for this version.
                 PhaseVec upwind_viscosity = d[upwind_dir[0] - 1].viscosity;
                 PhaseVec upwind_sat = d[upwind_dir[0] - 1].saturation;
@@ -455,8 +338,6 @@ private: // Methods
                 downwind_ff /= downwind_totmob;
                 PhaseVec ff_diff = upwind_ff;
                 ff_diff -= downwind_ff;
-//                 PhaseVec mob_diff = phase_mob;
-//                 mob_diff -= downwind_mob;
                 for (int phase = 0; phase < numPhases; ++phase) {
                     if (std::fabs(ff_diff[phase]) > 1e-10) {
                         if (face_flux[face] != 0.0) {
@@ -465,13 +346,6 @@ private: // Methods
                             face_max_ff_deriv = std::max(face_max_ff_deriv, ff_deriv);
                         }
                     }
-//                     if (std::fabs(mob_diff[phase]) > 1e-10) {
-//                         if (max_face_gf_out != 0.0) {
-//                             double mob_deriv = mob_diff[phase]/(upwind_sat[phase] - fluid_data_.saturation[downwind_cell][phase]);
-//                             ASSERT(mob_deriv >= 0.0);
-//                             face_max_mob_deriv = std::max(face_max_mob_deriv, mob_deriv);
-//                         }
-//                     }
                 }
             }
 
@@ -489,9 +363,6 @@ private: // Methods
             if (totflux_upwind_cell >= 0) {
                 cell_outflux[totflux_upwind_cell] += std::fabs(face_flux[face]);
             }
-//             if (max_face_gf_out > 0.0) {
-//                 cell_gravflux[c[0]] += max_face_gf_out;
-//             }
             for (int ix = 0; ix < 2; ++ix) {
                 if (c[ix] >= 0) {
                     if (ix == 0) {
@@ -500,7 +371,6 @@ private: // Methods
                         comp_change[c[ix]] += change;
                     }
                     cell_max_ff_deriv[c[ix]] = std::max(cell_max_ff_deriv[c[ix]], face_max_ff_deriv);
-//                     cell_max_mob_deriv[c[ix]] = std::max(cell_max_mob_deriv[c[ix]], face_max_mob_deriv);
                 }
             }
         }
