@@ -130,6 +130,7 @@ namespace Opm
 	}
 
 	// Get COMPDAT data   
+        std::vector<std::vector<PerfData> > wellperf_data(num_welspecs);
 	for (int kw=0; kw<num_compdats; ++kw) {
 	    std::string name = compdats.compdat[kw].well_;
 	    std::string::size_type len = name.find('*');
@@ -171,7 +172,7 @@ namespace Opm
 							     compdats.compdat[kw].skin_factor_);
 			}
 			pd.pdelta     = 0.0;    // @bsp ???
-			perf_data_.appendRow(&pd, &pd + 1);
+			wellperf_data[wix].push_back(pd);
 		    } else {
 			THROW("Cell with i,j,k indices " << ix << ' ' << jy << ' '
 			      << kz << " not found!");
@@ -179,12 +180,15 @@ namespace Opm
 		    found = true;
 		    break;
 		}
-	    }
+            }
 	    if (!found) {
 		THROW("Undefined well name: " << compdats.compdat[kw].well_
 		      << " in COMPDAT");
 	    }
-	}	
+	}
+        for (int w = 0; w < num_welspecs; ++w) {
+            perf_data_.appendRow(wellperf_data[w].begin(), wellperf_data[w].end());
+        }
     
 	// Get WCONINJE data
         for (int kw=0; kw<num_wconinjes; ++kw) {
