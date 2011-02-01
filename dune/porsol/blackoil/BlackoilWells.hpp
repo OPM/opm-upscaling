@@ -191,6 +191,7 @@ namespace Opm
         }
     
 	// Get WCONINJE data
+        int injector_component = -1;
         for (int kw=0; kw<num_wconinjes; ++kw) {
 	    std::string name = wconinjes.wconinje[kw].well_;
 	    std::string::size_type len = name.find('*');
@@ -230,13 +231,32 @@ namespace Opm
 			      << wconinjes.wconinje[kw].control_mode_
 			      << " in input file");
 		    }
+                    int itp = -1;
+                    if (wconinjes.wconinje[kw].injector_type_ == "WATER") {
+                        itp = Water;
+                    } else if (wconinjes.wconinje[kw].injector_type_ == "OIL") {
+                        itp = Oil;
+                    } else if (wconinjes.wconinje[kw].injector_type_ == "GAS") {
+                        itp = Gas;
+                    }
+                    if (itp == -1 || (injector_component != -1 && itp != injector_component)) {
+                        if (itp == -1) {
+                            THROW("Error in injector specification, found no known fluid type.");
+                        } else {
+                            THROW("Error in injector specification, we can only handle a single injection fluid.");
+                        }
+                    } else {
+                        injector_component = itp;
+                    }
 		}
 	    }
 	    if (!well_found) {
 		THROW("Undefined well name: " << wconinjes.wconinje[kw].well_
 		      << " in WCONINJE");
 	    }
-	}	
+	}
+        injection_mixture_ = 0.0;
+        injection_mixture_[injector_component] = 1.0;
 
 	// Get WCONPROD data   
         for (int kw=0; kw<num_wconprods; ++kw) {
@@ -321,10 +341,6 @@ namespace Opm
                 }
             }
         }
-
-        // Set injection mixture.
-	injection_mixture_ = 0.0;
-	injection_mixture_[Gas] = 1.0;
 
         // Debug outpu.
 	std::cout << "\t WELL DATA" << std::endl;
