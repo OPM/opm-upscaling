@@ -81,6 +81,7 @@ namespace Dune
             press_rel_tol_ = param.getDefault("press_rel_tol", 1e-5);
             max_num_iter_ = param.getDefault("max_num_iter", 15);
             max_relative_voldiscr_ = param.getDefault("max_relative_voldiscr", 0.15);
+            relax_time_voldiscr_ = param.getDefault("relax_time_voldiscr", 1.0);
         }
 
 
@@ -287,6 +288,10 @@ namespace Dune
                         std::cout << "    Relative volume discrepancy too large: " << rel_voldiscr << std::endl;
                         return VolumeDiscrepancyTooLarge;
                     }
+                    
+                    double relax = std::min(1.0,dt/relax_time_voldiscr_);
+                    std::transform(initial_voldiscr.begin(), initial_voldiscr.end(), initial_voldiscr.begin(),
+                                   std::binder1st<std::multiplies<double> >(std::multiplies<double>() , relax));
                 }
 
                 std::vector<double> wellperfA, phasemobwellperf, wellperf_gpot;
@@ -396,6 +401,7 @@ namespace Dune
         double press_rel_tol_;
         int max_num_iter_;
         double max_relative_voldiscr_;
+        double relax_time_voldiscr_;
 
         typedef typename FluidInterface::PhaseVec PhaseVec;
         typedef typename FluidInterface::CompVec CompVec;
