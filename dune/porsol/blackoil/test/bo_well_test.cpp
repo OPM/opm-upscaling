@@ -25,8 +25,24 @@
 int main(int argc, char** argv)
 {
     // Parser.
-    const std::string ecl_file("SPE9.DATA");
+    //const std::string ecl_file("SPE9.DATA");
+    const std::string ecl_file("SPJ8.DATA");
     Dune::EclipseGridParser parser(ecl_file);
+    if (parser.hasField("WELSPECS")) {
+	parser.getWELSPECS().write(std::cout);    
+    }
+    if (parser.hasField("COMPDAT")) {
+	parser.getCOMPDAT().write(std::cout);    
+    }
+    if (parser.hasField("WCONINJE")) {
+	parser.getWCONINJE().write(std::cout);    
+    }
+    if (parser.hasField("WCONPROD")) {
+	parser.getWCONPROD().write(std::cout);
+    }
+    if (parser.hasField("WELTARG")) {
+	parser.getWELTARG().write(std::cout);    
+    }
 
     // Grid
     Dune::CpGrid grid;
@@ -41,7 +57,7 @@ int main(int argc, char** argv)
     // Rock
     Dune::Rock<3> rock;
     rock.init(grid.numCells(), 1.0,
-    	      100.0*Dune::prefix::milli*Dune::unit::darcy);
+	      100.0*Dune::prefix::milli*Dune::unit::darcy);
 
     // Test the BlackoilWells class.
     Opm::BlackoilWells wells;
