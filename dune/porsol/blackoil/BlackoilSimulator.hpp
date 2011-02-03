@@ -33,6 +33,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <numeric>
 
 
 namespace Opm
@@ -67,8 +68,10 @@ namespace Opm
 
         double total_time_;
         double initial_stepsize_;
+        std::vector<double> report_times_;
         bool do_impes_;
         std::string output_dir_;
+
 
         static void output(const Grid& grid,
                            const std::vector<typename Fluid::PhaseVec>& cell_pressure,
@@ -124,8 +127,20 @@ init(const Dune::parameter::ParameterGroup& param)
     }
     flow_solver_.init(param);
     transport_solver_.init(param);
-    total_time_ = param.getDefault("total_time", 30*unit::day);
-    initial_stepsize_ = param.getDefault("initial_stepsize", 1.0*unit::day);
+    if (param.has("timestep_file")) {
+        std::ifstream is(param.get<std::string>("timestep_file").c_str());
+        std::istream_iterator<double> beg(is);
+        std::istream_iterator<double> end;
+        report_times_.assign(beg, end);
+        // File contains deltas, we want accumulated times.
+        std::partial_sum(report_times_.begin(), report_times_.end(), report_times_.begin());
+        ASSERT(!report_times_.empty());
+        total_time_ = report_times_.back();
+        initial_stepsize_ = report_times_.front();
+    } else {
+        total_time_ = param.getDefault("total_time", 30*unit::day);
+        initial_stepsize_ = param.getDefault("initial_stepsize", 1.0*unit::day);
+    }
     do_impes_ = param.getDefault("do_impes", false);
     output_dir_ = param.getDefault<std::string>("output_dir", "output");
 
@@ -268,13 +283,14 @@ simulate()
     double voldisclimit = flow_solver_.volumeDiscrepancyLimit();
     double stepsize = initial_stepsize_;
     double current_time = 0.0;
-    int step = -1;
+    int step = 0;
     std::vector<double> face_flux;
     std::vector<double> well_pressure;
     std::vector<double> well_flux;
     std::vector<PhaseVec> cell_pressure_start;
     std::vector<PhaseVec> face_pressure_start;
     std::vector<CompVec> cell_z_start;
+    std::string output_name = output_dir_ + "/" + "blackoil-output";
     while (current_time < total_time_) {
         cell_pressure_start = cell_pressure_;
         face_pressure_start = face_pressure_;
@@ -284,7 +300,6 @@ simulate()
         if (current_time + stepsize > total_time_) {
             stepsize = total_time_ - current_time;
         }
-        ++step;
         std::cout << "\n\n================    Simulation step number " << step
                   << "    ==============="
                   << "\n      Current time (days)     " << Dune::unit::convert::to(current_time, Dune::unit::day)
@@ -320,21 +335,31 @@ simulate()
         if (!voldisc_ok) {
             std::cout << "********* Shortening (pressure) stepsize, redoing step number " << step <<" **********" << std::endl;
             stepsize *= 0.5;
-            --step;
             cell_pressure_ = cell_pressure_start;
             face_pressure_ = face_pressure_start;
             cell_z_ = cell_z_start;
             continue;
         }
 
-        // Output.
-        std::string output_name = output_dir_ + "/" + "blackoil-output";
-        output(grid_, cell_pressure_, cell_z_, face_flux, step, output_name);
-
         // Adjust time.
         current_time += stepsize;
         if (voldisc_ok) {
             // stepsize *= 1.5;
+        }
+
+        // If using given timesteps, set stepsize to match.
+        if (!report_times_.empty()) {
+            if (current_time >= report_times_[step]) {
+                output(grid_, cell_pressure_, cell_z_, face_flux, step, output_name);
+                ++step;
+                if (step == int(report_times_.size())) {
+                    break;
+                }
+            }
+            stepsize = report_times_[step] - current_time;
+        } else {
+            output(grid_, cell_pressure_, cell_z_, face_flux, step, output_name);
+            ++step;
         }
     }
 }
