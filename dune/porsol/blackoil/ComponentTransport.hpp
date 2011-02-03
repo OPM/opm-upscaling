@@ -326,24 +326,29 @@ private: // Methods
                 // Added for this version.
                 PhaseVec upwind_viscosity = d[upwind_dir[0] - 1].viscosity;
                 PhaseVec upwind_sat = d[upwind_dir[0] - 1].saturation;
-                PhaseVec upwind_ff = ff;
-
+                PhaseVec upwind_relperm = d[upwind_dir[0] - 1].relperm;
                 PhaseVec downwind_mob(0.0);
+                PhaseVec upwind_mob(0.0);
                 double downwind_totmob = 0.0;
+                double upwind_totmob = 0.0;
                 for (int phase = 0; phase < numPhases; ++phase) {
                     downwind_mob[phase] = fluid_data_.rel_perm[downwind_cell][phase]/upwind_viscosity[phase];
                     downwind_totmob += downwind_mob[phase];
+                    upwind_mob[phase] = upwind_relperm[phase]/upwind_viscosity[phase];
+                    upwind_totmob += upwind_mob[phase];
                 }
                 PhaseVec downwind_ff = downwind_mob;
                 downwind_ff /= downwind_totmob;
+                PhaseVec upwind_ff = upwind_mob;
+                upwind_ff /= upwind_totmob;
                 PhaseVec ff_diff = upwind_ff;
                 ff_diff -= downwind_ff;
                 for (int phase = 0; phase < numPhases; ++phase) {
                     if (std::fabs(ff_diff[phase]) > 1e-10) {
                         if (face_flux[face] != 0.0) {
                             double ff_deriv = ff_diff[phase]/(upwind_sat[phase] - fluid_data_.saturation[downwind_cell][phase]);
-                            ASSERT(ff_deriv >= 0.0);
-                            face_max_ff_deriv = std::max(face_max_ff_deriv, ff_deriv);
+                            // ASSERT(ff_deriv >= 0.0);
+                            face_max_ff_deriv = std::max(face_max_ff_deriv, std::fabs(ff_deriv));
                         }
                     }
                 }
