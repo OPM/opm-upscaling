@@ -376,7 +376,7 @@ namespace Dune
             }
 
             if (transport) {
-                psolver_.explicitTransport(dt, &cell_pressure_scalar[0], &(cell_z[0][0]));
+                psolver_.explicitTransport(dt, &(cell_z[0][0]));
             }
 
             return SolveOk;
