@@ -45,5 +45,5 @@ BOOST_AUTO_TEST_CASE(copy_assignment_tests)
     SharedCMatrix m4(1,1,storage_m4);
     m4 = m3;
     BOOST_CHECK(m3 == m4);
-    BOOST_CHECK_EQUAL(m4.data(), storage_m4);
+    BOOST_CHECK_EQUAL(m4.data(), storage_m3); // Note this behaviour!
 }
