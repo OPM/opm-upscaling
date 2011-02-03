@@ -45,5 +45,9 @@ BOOST_AUTO_TEST_CASE(copy_assignment_tests)
     SharedCMatrix m4(1,1,storage_m4);
     m4 = m3;
     BOOST_CHECK(m3 == m4);
-    BOOST_CHECK_EQUAL(m4.data(), storage_m3); // Note this behaviour!
+    BOOST_CHECK_EQUAL(m4.data(), storage_m3); // Note this behaviour (identical types)...
+    double storage_m5[1];
+    SharedFortranMatrix m5(1,1,storage_m5);
+    m5 = m3;
+    BOOST_CHECK_EQUAL(m5.data(), storage_m5); // ... compared to this (different types).
 }
