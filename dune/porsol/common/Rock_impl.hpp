@@ -169,8 +169,7 @@ namespace Dune
 
                 for (int i = 0; i < dim; ++i) {
                     for (int j = 0; j < dim; ++j, ++kix) {
-                        K(i,j) = unit::convert::from((*tensor[kmap[kix]])[glob],
-                                                     prefix::milli*unit::darcy);
+                        K(i,j) = (*tensor[kmap[kix]])[glob];
                     }
                     K(i,i) = std::max(K(i,i), perm_threshold);
                 }

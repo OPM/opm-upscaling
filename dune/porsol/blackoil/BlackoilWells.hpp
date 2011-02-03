@@ -159,13 +159,9 @@ namespace Opm
 			PerfData pd;
 			pd.cell = cell;
 			if (compdats.compdat[kw].connect_trans_fac_ > 0.0) {
-			    pd.well_index =
-				Dune::unit::convert::from(compdats.compdat[kw].connect_trans_fac_,
-							  parser.units().transmissibility);
+			    pd.well_index = compdats.compdat[kw].connect_trans_fac_;
 			} else {
-			    double radius = 
-				0.5*Dune::unit::convert::from(compdats.compdat[kw].diameter_,
-							      parser.units().length);			      
+			    double radius = 0.5*compdats.compdat[kw].diameter_;
 			    if (radius <= 0.0) {
 				radius = 0.5*unit::feet;
 				MESSAGE("Warning: Well bore internal radius set to " << radius);
@@ -194,10 +190,6 @@ namespace Opm
             perf_data_.appendRow(wellperf_data[w].begin(), wellperf_data[w].end());
         }
  
-	double lrat =  parser.units().liqvol_s/parser.units().time;
-	double grat =  parser.units().gasvol_s/parser.units().time;
-	double resv =  parser.units().liqvol_r/parser.units().time;
-   
 	// Get WCONINJE data
         int injector_component = -1;
         for (int kw=0; kw<num_wconinjes; ++kw) {
@@ -216,25 +208,15 @@ namespace Opm
 		    switch(m) {
 		    case 0:  // RATE
 			well_data_[wix].control = Rate;
-			if (wconinjes.wconinje[kw].injector_type_[0] == 'G') {  // GAS
-			    well_data_[wix].target = Dune::unit::convert::from
-				(wconinjes.wconinje[kw].surface_flow_max_rate_, grat);
-			} else {                                    // WATER,OIL
-			    well_data_[wix].target = Dune::unit::convert::from
-				(wconinjes.wconinje[kw].surface_flow_max_rate_, lrat);
-			}
+			well_data_[wix].target = wconinjes.wconinje[kw].surface_flow_max_rate_;
 			break;
 		    case 1:  // BHP
 			well_data_[wix].control = Pressure;
-			well_data_[wix].target
-                            = Dune::unit::convert::from(wconinjes.wconinje[kw].BHP_limit_, parser.units().pressure);
-
+			well_data_[wix].target = wconinjes.wconinje[kw].BHP_limit_;
 			break;
 		    case 2:  // THP
 			well_data_[wix].control = Pressure;
-			well_data_[wix].target
-                            = Dune::unit::convert::from(wconinjes.wconinje[kw].THP_limit_, parser.units().pressure);
-
+			well_data_[wix].target = wconinjes.wconinje[kw].THP_limit_;
 			break;
 		    case 3:  // GRUP 
 			well_data_[wix].control = Rate;   // @bsp ???
@@ -288,38 +270,31 @@ namespace Opm
 		    switch(m) {
 		    case 0:  // ORAT
 			well_data_[wix].control = Rate;
-			well_data_[wix].target = Dune::unit::convert::from
-			    (wconprods.wconprod[kw].oil_max_rate_, lrat);
+			well_data_[wix].target = wconprods.wconprod[kw].oil_max_rate_;
 			break;
 		    case 1:  // WRAT
 			well_data_[wix].control = Rate;
-			well_data_[wix].target = Dune::unit::convert::from
-			    (wconprods.wconprod[kw].water_max_rate_, lrat);
+			well_data_[wix].target = wconprods.wconprod[kw].water_max_rate_;
 			break;
 		    case 2:  // GRAT
 			well_data_[wix].control = Rate;
-			well_data_[wix].target = Dune::unit::convert::from
-			    (wconprods.wconprod[kw].gas_max_rate_, grat);
+			well_data_[wix].target = wconprods.wconprod[kw].gas_max_rate_;
 			break;
 		    case 3:  // LRAT
 			well_data_[wix].control = Rate;
-			well_data_[wix].target = Dune::unit::convert::from
-			    (wconprods.wconprod[kw].liquid_max_rate_, lrat);
+			well_data_[wix].target = wconprods.wconprod[kw].liquid_max_rate_;
 			break;
 		    case 4:  // RESV 
 			well_data_[wix].control = Rate;
-			well_data_[wix].target = Dune::unit::convert::from
-			    (wconprods.wconprod[kw].fluid_volume_max_rate_, resv);
+			well_data_[wix].target = wconprods.wconprod[kw].fluid_volume_max_rate_;
 			break;
 		    case 5:  // BHP
 			well_data_[wix].control = Pressure; 
-			well_data_[wix].target
-                            = Dune::unit::convert::from(wconprods.wconprod[kw].BHP_limit_, parser.units().pressure);
+			well_data_[wix].target = wconprods.wconprod[kw].BHP_limit_;
 			break;
 		    case 6:  // THP 
 			well_data_[wix].control = Pressure;
-			well_data_[wix].target
-                            = Dune::unit::convert::from(wconprods.wconprod[kw].THP_limit_, parser.units().pressure);
+			well_data_[wix].target = wconprods.wconprod[kw].THP_limit_;
 			break;
 		    default:
 			THROW("Unknown well control mode; WCONPROD  = "
@@ -349,9 +324,6 @@ namespace Opm
                     if (well_names_[wix].compare(0,len, name) == 0) { //equal
                         well_found = true;
                         well_data_[wix].target = weltargs.weltarg[kw].new_value_;
-                        //well_data_[wix].target = Dune::unit::convert::from
-			//    (weltargs.weltarg[kw].new_value_, unit???);
-			// unit depends on weltargs.weltarg[kw].control_change_
                         break;
                     }
                 }
@@ -517,7 +489,7 @@ namespace Opm
             static std::string prod_control_modes[num_prod_control_modes] =
                 {std::string("ORAT"), std::string("WRAT"), std::string("GRAT"),
                  std::string("LRAT"), std::string("RESV"), std::string("BHP"),
-                 std::string("THP") };   //  @bsp missing GRUP
+                 std::string("THP") };
             int m = -1;
             for (int i=0; i<num_prod_control_modes; ++i) {
                 if (control[0] == prod_control_modes[i][0]) {
