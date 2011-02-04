@@ -143,6 +143,7 @@ int main(int argc, char** argv)
 			false);
 		try {
 		    Dune::EclipseGridParser subparser = ch.subparser();
+                    subparser.convertToSI(); // Because the upscaler expects SI units.
 		    Dune::SinglePhaseUpscaler upscaler;
 		    upscaler.init(subparser, Dune::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
 				  residual_tolerance, linsolver_verbosity, linsolver_type, false);

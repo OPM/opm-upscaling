@@ -338,7 +338,7 @@ int main(int varnum, char** vararg)
 
    if (isMaster) cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... ";
    flush(cout);   start = clock();
-   EclipseGridParser eclParser(ECLIPSEFILENAME);
+   EclipseGridParser eclParser(ECLIPSEFILENAME, false);
    finish = clock();   timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
    if (isMaster) cout << " (" << timeused <<" secs)" << endl;
 
@@ -639,6 +639,7 @@ int main(int varnum, char** vararg)
    int linsolver_verbosity = atoi(options["linsolver_verbosity"].c_str());
    int linsolver_type = atoi(options["linsolver_type"].c_str());
    bool twodim_hack = false;
+   eclParser.convertToSI();
    upscaler.init(eclParser, boundaryCondition,
                  unit::convert::from(minPerm, prefix::milli*unit::darcy),
                  ztol, linsolver_tolerance, linsolver_verbosity, linsolver_type, twodim_hack);

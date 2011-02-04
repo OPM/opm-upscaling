@@ -127,7 +127,7 @@ int main(int argc, char** argv)
         try { /* The upscaling may fail to converge on icky grids, lets just pass by those */
             if (upscale) {
                 Dune::EclipseGridParser subparser = ch.subparser();
-                
+                subparser.convertToSI();
                 Dune::SinglePhaseUpscaler upscaler;
                 upscaler.init(subparser, Dune::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
                               residual_tolerance, linsolver_verbosity, linsolver_type, false);

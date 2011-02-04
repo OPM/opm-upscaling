@@ -157,7 +157,7 @@ int main(int argc, char** argv)
         ch.chop(istart_1, istart_1 + ilen, jstart_1, jstart_1 + jlen, zstart_1, zstart_1 + zlen, false);
 	
         Dune::EclipseGridParser subparser_1 = ch.subparser();
-        
+        subparser_1.convertToSI();
         Dune::SinglePhaseUpscaler upscaler_1;
         upscaler_1.init(subparser_1, Dune::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
 			residual_tolerance, linsolver_verbosity, linsolver_type, false);
@@ -180,7 +180,7 @@ int main(int argc, char** argv)
         ch.chop(istart_2, istart_2 + ilen, jstart_2, jstart_2 + jlen, zstart_2, zstart_2 + zlen, false);
 	
         Dune::EclipseGridParser subparser_2 = ch.subparser();
-	
+	subparser_2.convertToSI();
         Dune::SinglePhaseUpscaler upscaler_2;
         upscaler_2.init(subparser_2, Dune::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
 			residual_tolerance, linsolver_verbosity, linsolver_type, false);
