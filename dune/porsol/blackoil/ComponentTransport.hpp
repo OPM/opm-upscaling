@@ -44,12 +44,16 @@ public:
     /// @brief
     ///    Default constructor. Does nothing.
     ExplicitCompositionalTransport()
-        : pgrid_(0), prock_(0), pfluid_(0)
+        : pgrid_(0), prock_(0), pfluid_(0), pwells_(0), ptrans_(0),
+          min_surfvol_threshold_(0.0),
+          single_step_only_(false)
     {
     }
 
     void init(const Dune::parameter::ParameterGroup& param)
     {
+        min_surfvol_threshold_ = param.getDefault("min_surfvol_threshold", min_surfvol_threshold_);
+        single_step_only_ = param.getDefault("single_step_only", single_step_only_);
     }
 
     void setup(const Grid& grid,
@@ -103,8 +107,13 @@ public:
                 double max_nonzero_time = 1e100;
                 for (int comp = 0; comp < numComponents; ++comp) {
                     if (comp_change[cell][comp] < 0.0) {
-                        max_nonzero_time = std::min(max_nonzero_time,
-                                                    -cell_z[cell][comp]*prock_->porosity(cell)/comp_change[cell][comp]);
+                        if (cell_z[cell][comp] > min_surfvol_threshold_) {
+                            max_nonzero_time = std::min(max_nonzero_time,
+                                                        -cell_z[cell][comp]*prock_->porosity(cell)/comp_change[cell][comp]);
+                        } else {
+                            comp_change[cell][comp] = 0.0;
+                            cell_z[cell][comp] = 0.0;
+                        }
                     }
                 }
                 double time = std::min(std::min(vtime, gtime), max_nonzero_time);
@@ -118,7 +127,9 @@ public:
             } else {
                 cur_time = dt;
             }
-            std::cout << "Taking step in explicit transport solver: " << step_time << std::endl;
+            std::cout << "Taking step in explicit transport solver: " << step_time 
+                      << "  (" << dt - cur_time << ")"
+                      << std::endl;
             for (int cell = 0; cell < num_cells; ++cell) {
                 comp_change[cell] *= (step_time/prock_->porosity(cell));
                 cell_z[cell] += comp_change[cell];
@@ -131,6 +142,9 @@ public:
                 // Roll back to last ok step.
                 cell_z = cell_z_start;
                 cur_time -= step_time;
+                return cur_time;
+            }
+            if (single_step_only_) {
                 return cur_time;
             }
         }
@@ -159,6 +173,8 @@ private: // Data
     std::vector<int> perf_cells_;
     std::vector<double> perf_flow_;
     std::vector<TransportFluidData> perf_props_;
+    double min_surfvol_threshold_;
+    bool single_step_only_;
 
 private: // Methods
 
