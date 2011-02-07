@@ -78,8 +78,9 @@ namespace Opm
         static void output(const Grid& grid,
                            const std::vector<typename Fluid::PhaseVec>& cell_pressure,
                            const std::vector<typename Fluid::CompVec>& z,
-                           const std::vector<typename Fluid::PhaseVec>& s,
                            const std::vector<double>& face_flux,
+                           const std::vector<typename Fluid::PhaseVec>& sat, 
+                           const std::vector<typename Fluid::CompVec>& mass_frac,
                            const int step,
                            const std::string& filebase);
 
@@ -357,17 +358,22 @@ simulate()
             // stepsize *= 1.5;
         }
 
-        // Compute saturations for output purposes.
+        // Compute saturations and mass fractions for output purposes.
         int num_cells = grid_.numCells();
         std::vector<typename Fluid::PhaseVec> saturation(num_cells);
+        std::vector<typename Fluid::PhaseVec> mass_frac(num_cells); 
         for (int cell = 0; cell < num_cells; ++cell) {
             saturation[cell] = fluid_.computeState(cell_pressure_[cell], cell_z_[cell]).saturation_;
+            double totMass = cell_z_[cell]*fluid_.surfaceDensities();
+            mass_frac[cell][Fluid::Water] = cell_z_[cell][Fluid::Water]*fluid_.surfaceDensities()[Fluid::Water]/totMass;
+            mass_frac[cell][Fluid::Oil] = cell_z_[cell][Fluid::Oil]*fluid_.surfaceDensities()[Fluid::Oil]/totMass;
+            mass_frac[cell][Fluid::Gas] = cell_z_[cell][Fluid::Gas]*fluid_.surfaceDensities()[Fluid::Gas]/totMass;
         }
 
         // If using given timesteps, set stepsize to match.
         if (!report_times_.empty()) {
             if (current_time >= report_times_[step]) {
-                output(grid_, cell_pressure_, cell_z_, saturation, face_flux, step, output_name);
+                output(grid_, cell_pressure_, cell_z_, face_flux, saturation, mass_frac, step, output_name);
                 ++step;
                 if (step == int(report_times_.size())) {
                     break;
@@ -375,7 +381,7 @@ simulate()
             }
             stepsize = report_times_[step] - current_time;
         } else {
-            output(grid_, cell_pressure_, cell_z_, saturation, face_flux, step, output_name);
+            output(grid_, cell_pressure_, cell_z_, face_flux, saturation, mass_frac, step, output_name);
             ++step;
         }
     }
@@ -392,8 +398,9 @@ BlackoilSimulator<Grid, Rock, Fluid, Wells, FlowSolver, TransportSolver>::
 output(const Grid& grid,
        const std::vector<typename Fluid::PhaseVec>& cell_pressure,
        const std::vector<typename Fluid::CompVec>& z,
-       const std::vector<typename Fluid::PhaseVec>& s,
        const std::vector<double>& face_flux,
+       const std::vector<typename Fluid::PhaseVec>& sat, 
+       const std::vector<typename Fluid::CompVec>& mass_frac,
        const int step,
        const std::string& filebase)
 {
@@ -413,10 +420,16 @@ output(const Grid& grid,
                                            &*cell_velocity.back().end());
     std::vector<double> z_flat(&*z.front().begin(),
                                &*z.back().end());
+    std::vector<double> sat_flat(&*sat.front().begin(),
+                                 &*sat.back().end());
+    std::vector<double> mass_frac_flat(&*mass_frac.front().begin(),
+                                       &*mass_frac.back().end());
     Dune::VTKWriter<typename Grid::LeafGridView> vtkwriter(grid.leafView());
     vtkwriter.addCellData(cell_pressure_flat, "pressure", Fluid::numPhases);
     vtkwriter.addCellData(cell_velocity_flat, "velocity", Grid::dimension);
     vtkwriter.addCellData(z_flat, "z", Fluid::numComponents);
+    vtkwriter.addCellData(sat_flat, "sat", Fluid::numPhases);
+    vtkwriter.addCellData(mass_frac_flat, "massFrac", Fluid::numComponents);
     vtkwriter.write(filebase + '-' + boost::lexical_cast<std::string>(step),
                     Dune::VTKOptions::ascii);
 
@@ -432,7 +445,7 @@ output(const Grid& grid,
     for (int phase = 0; phase < Fluid::numPhases; ++phase) {
         sv[phase].resize(grid.numCells());
         for (int cell = 0; cell < grid.numCells(); ++cell) {
-            sv[phase][cell] = s[cell][phase];
+            sv[phase][cell] = sat[cell][phase];
         }
     }
     std::string matlabdumpname(filebase + "-");
