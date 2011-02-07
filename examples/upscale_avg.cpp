@@ -147,7 +147,7 @@ int main(int varnum, char** vararg) {
     // eclParser_p is here a pointer to an object of type EclipseGridParser
     // (this pointer trick is necessary for the try-catch-clause to work)
     
-    EclipseGridParser eclParser(ECLIPSEFILENAME);
+    EclipseGridParser eclParser(ECLIPSEFILENAME, false);
 
     EclipseGridInspector eclInspector(eclParser);
 
