@@ -96,6 +96,9 @@ public:
             return 0.0;
         }
         std::vector<CompVec> cell_z_start;
+        std::cout << "Transport solver target time: " << dt << std::endl;
+        std::cout << "   Step               Stepsize           Remaining time\n";
+        int count = 0;
         while (cur_time < dt) {
             cell_z_start = cell_z;
             computeChange(face_flux, comp_change, cell_outflux, cell_max_ff_deriv);
@@ -127,9 +130,11 @@ public:
             } else {
                 cur_time = dt;
             }
-            std::cout << "Taking step in explicit transport solver: " << step_time 
-                      << "  (" << dt - cur_time << ")"
-                      << std::endl;
+            std::cout.precision(10);
+            std::cout << std::setw(6) << count++
+                      << std::setw(24) << step_time
+                      << std::setw(24) << dt - cur_time << std::endl;
+            std::cout.precision(16);
             for (int cell = 0; cell < num_cells; ++cell) {
                 comp_change[cell] *= (step_time/prock_->porosity(cell));
                 cell_z[cell] += comp_change[cell];

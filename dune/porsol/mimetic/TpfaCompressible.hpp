@@ -354,10 +354,17 @@ namespace Dune
                 double flux_rel_difference = flux_change_infnorm/max_flux;
                 double press_rel_difference = press_change_infnorm/max_press;
 
-                std::cout << "    Iteration in pressure solver complete. Relative flux change: " << flux_rel_difference
-                          << " Relative pressure change: " << press_rel_difference << std::endl;
+                if (i == 0) {
+                    std::cout << "Iteration      Rel. flux change     Rel. pressure change\n";
+                }
+                std::cout.precision(5);
+                std::cout << std::setw(6) << i
+                          << std::setw(24) << flux_rel_difference
+                          << std::setw(24) << press_rel_difference << std::endl;
+                std::cout.precision(16);
+
                 if (flux_rel_difference < flux_rel_tol_ || press_rel_difference < press_rel_tol_) {
-                    std::cout << "    Pressure solver converged. Number of iterations: " << i + 1 << std::endl;
+                    std::cout << "Pressure solver converged. Number of iterations: " << i + 1 << '\n' << std::endl;
                     converged = true;
                     break;
                 }
