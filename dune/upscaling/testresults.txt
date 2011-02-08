@@ -308,6 +308,12 @@ real	0m25.807s
 user	0m25.117s
 sys	0m0.621s
 
+[again, Feb. 8 2011 - changes made to Eclipse parser etc.]
+
+real	0m25.789s
+user	0m25.096s
+sys	0m0.637s
+
 
 -------------------8<------------------------------8<-------------------
 
@@ -473,3 +479,9 @@ real	0m27.263s
 user	0m26.707s
 sys	0m0.471s
 
+
+[again, Feb. 8 2011]
+
+real	0m27.264s
+user	0m26.648s
+sys	0m0.529s
