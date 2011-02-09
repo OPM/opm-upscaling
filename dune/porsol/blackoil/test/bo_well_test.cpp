@@ -17,49 +17,92 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <iostream>
 #include <dune/common/Units.hpp>
 #include <dune/porsol/blackoil/BlackoilWells.hpp>
 #include <dune/porsol/common/Rock.hpp>
+#include <iterator>
 
+// Forward declaration
+void write_fields(std::ostream& os, const Dune::EclipseGridParser& parser);
+
+// Program for test of reading newly implemented keywords.
+// Writes field data with and without unit conversion.
 
 int main(int argc, char** argv)
 {
-    // Parser.
-    //const std::string ecl_file("SPE9.DATA");
-    const std::string ecl_file("SPJ8.DATA");
-    Dune::EclipseGridParser parser(ecl_file);
+    // Parser. 
+    const std::string ecl_file = (argc == 1) ? "SPE9.DATA" : argv[1];
+    std::cout << "Parsing file " << ecl_file << std::endl;
+
+    Dune::EclipseGridParser parser1(ecl_file, false);
+    
+    // Stored fieldnames
+    std::cout << "\nStored fieldnames.\n";
+    std::vector<std::string> names = parser1.fieldNames();
+    copy(names.begin(), names.end(),
+	 std::ostream_iterator<std::string>(std::cout, "\n"));
+    std::cout << std::endl;
+    
+    // Write data values for some of the keywords
+    std::cout << "\nUnits are not converted to SI-units.\n";
+    write_fields(std::cout, parser1);
+    
+    Dune::EclipseGridParser parser2(ecl_file);
+    std::cout << "\nUnits are converted to SI-units.\n";
+    write_fields(std::cout, parser2);
+    
+    return 0;
+}
+
+void write_fields(std::ostream& os, const Dune::EclipseGridParser& parser)
+{
     if (parser.hasField("WELSPECS")) {
-	parser.getWELSPECS().write(std::cout);    
+	parser.getWELSPECS().write(os);    
     }
     if (parser.hasField("COMPDAT")) {
-	parser.getCOMPDAT().write(std::cout);    
+	parser.getCOMPDAT().write(os);    
     }
     if (parser.hasField("WCONINJE")) {
-	parser.getWCONINJE().write(std::cout);    
+	parser.getWCONINJE().write(os);    
     }
     if (parser.hasField("WCONPROD")) {
-	parser.getWCONPROD().write(std::cout);
+	parser.getWCONPROD().write(os);
     }
     if (parser.hasField("WELTARG")) {
-	parser.getWELTARG().write(std::cout);    
+	parser.getWELTARG().write(os);    
     }
-
-    // Grid
-    Dune::CpGrid grid;
-    Dune::array<int, 3> dims;
-    Dune::array<double, 3> cellsize;
-    std::fill(dims.begin(), dims.end(), 3);
-    cellsize[0] = 2.0;
-    cellsize[1] = 3.0;
-    cellsize[2] = 4.0;
-    grid.createCartesian(dims, cellsize);
-    
-    // Rock
-    Dune::Rock<3> rock;
-    rock.init(grid.numCells(), 1.0,
-	      100.0*Dune::prefix::milli*Dune::unit::darcy);
-
-    // Test the BlackoilWells class.
-    Opm::BlackoilWells wells;
-    wells.init(parser, grid, rock);
+    if (parser.hasField("EQUIL")) {
+	parser.getEQUIL().write(os);    
+    }
+    if (parser.hasField("DENSITY")) {
+	parser.getDENSITY().write(os);    
+    }
+    if (parser.hasField("PRESSURE")) {
+	const std::vector<double>& pressure = 
+	    parser.getFloatingPointValue("PRESSURE");
+	os << "\nPRESSURE" << std::endl;
+	copy(pressure.begin(), pressure.end(),
+	     std::ostream_iterator<double>(os, " "));
+	os << std::endl;
+    }
+    if (parser.hasField("SGAS")) {
+	const std::vector<double>& sgas = 
+	    parser.getFloatingPointValue("SGAS");
+	os << "\nSGAS" << std::endl;
+	copy(sgas.begin(), sgas.end(),
+	     std::ostream_iterator<double>(os, " "));
+	os << std::endl;
+    }
+    if (parser.hasField("SWAT")) {
+	const std::vector<double>& swat = 
+	    parser.getFloatingPointValue("SWAT");
+	os << "\nSWAT" << std::endl;
+	copy(swat.begin(), swat.end(),
+	     std::ostream_iterator<double>(os, " "));
+	os << std::endl;
+    }
+    if (parser.hasField("PVCDO")) {
+	parser.getPVCDO().write(os);    
+    }
 }
