@@ -47,10 +47,10 @@ namespace Dune
         typedef MatrixAdapter<Mat,Vector,Vector> Operator;
 
         LinearSolverISTL::LinearSolverResults
-        solveCG_ILU0(const Mat& A, Vector& x, Vector& b, double tolerance, int verbosity);
+        solveCG_ILU0(const Mat& A, Vector& x, Vector& b, double tolerance, int maxit, int verbosity);
 
         LinearSolverISTL::LinearSolverResults
-        solveCG_AMG(const Mat& A, Vector& x, Vector& b, double tolerance, int verbosity);
+        solveCG_AMG(const Mat& A, Vector& x, Vector& b, double tolerance, int maxit, int verbosity);
 
     } // anonymous namespace
 
@@ -61,7 +61,8 @@ namespace Dune
         : linsolver_residual_tolerance_(1e-8),
           linsolver_verbosity_(0),
           linsolver_type_(CG_AMG),
-          linsolver_save_system_(false)
+          linsolver_save_system_(false),
+          linsolver_max_iterations_(0)
     {
     }
 
@@ -84,6 +85,7 @@ namespace Dune
         if (linsolver_save_system_) {
             linsolver_save_filename_ = param.getDefault("linsolver_save_filename", std::string("linsys"));
         }
+        linsolver_max_iterations_ = param.getDefault("linsolver_max_iterations", linsolver_max_iterations_);
     }
 
 
@@ -126,14 +128,19 @@ namespace Dune
             std::copy(b.begin(), b.end(),
                       std::ostream_iterator<VectorBlockType>(rhsf, "\n"));
         }
+        
+        int maxit = linsolver_max_iterations_;
+        if (maxit == 0) {
+            maxit = A.N();
+        }
 
         LinearSolverResults res;
         switch (linsolver_type_) {
         case CG_ILU0:
-            res = solveCG_ILU0(A, x, b, linsolver_residual_tolerance_, linsolver_verbosity_);
+            res = solveCG_ILU0(A, x, b, linsolver_residual_tolerance_, maxit, linsolver_verbosity_);
             break;
         case CG_AMG:
-            res = solveCG_AMG(A, x, b, linsolver_residual_tolerance_, linsolver_verbosity_);
+            res = solveCG_AMG(A, x, b, linsolver_residual_tolerance_, maxit, linsolver_verbosity_);
             break;
         default:
             std::cerr << "Unknown linsolver_type: " << int(linsolver_type_) << '\n';
@@ -148,7 +155,7 @@ namespace Dune
     {
 
     LinearSolverISTL::LinearSolverResults
-    solveCG_ILU0(const Mat& A, Vector& x, Vector& b, double tolerance, int verbosity)
+    solveCG_ILU0(const Mat& A, Vector& x, Vector& b, double tolerance, int maxit, int verbosity)
     {
         Operator opA(A);
 
@@ -156,7 +163,7 @@ namespace Dune
         SeqILU0<Mat,Vector,Vector> precond(A, 1.0);
 
         // Construct linear solver.
-        CGSolver<Vector> linsolve(opA, precond, tolerance, A.N(), verbosity);
+        CGSolver<Vector> linsolve(opA, precond, tolerance, maxit, verbosity);
 
         // Solve system.
         InverseOperatorResult result;
@@ -174,7 +181,7 @@ namespace Dune
 
 
     LinearSolverISTL::LinearSolverResults
-    solveCG_AMG(const Mat& A, Vector& x, Vector& b, double tolerance, int verbosity)
+    solveCG_AMG(const Mat& A, Vector& x, Vector& b, double tolerance, int maxit, int verbosity)
     {
         // Solve with AMG solver.
 #define FIRST_DIAGONAL 1
@@ -216,7 +223,7 @@ namespace Dune
         Precond precond(opA, criterion, smootherArgs);
 
         // Construct linear solver.
-        CGSolver<Vector> linsolve(opA, precond, tolerance, A.N(), verbosity);
+        CGSolver<Vector> linsolve(opA, precond, tolerance, maxit, verbosity);
 
         // Solve system.
         InverseOperatorResult result;

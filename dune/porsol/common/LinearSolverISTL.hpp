@@ -58,6 +58,7 @@ namespace Dune
         LinsolverType linsolver_type_;
         bool linsolver_save_system_;
         std::string linsolver_save_filename_;
+        int linsolver_max_iterations_;
     };
 
 
