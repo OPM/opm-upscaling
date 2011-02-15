@@ -50,6 +50,7 @@ namespace Opm
         enum WellControl { Rate, Pressure };
         WellControl control(int wellnum) const;
         double target(int wellnum) const;
+        double referenceDepth(int wellnum) const;
         int numPerforations(int wellnum) const;
         int wellCell(int wellnum, int perfnum) const;
         double wellIndex(int wellnum, int perfnum) const;
@@ -66,7 +67,7 @@ namespace Opm
         Dune::FieldVector<double, 3> injectionMixture(int cell) const;
 
     private:
-        struct WellData { WellType type; WellControl control; double target; };
+	struct WellData { WellType type; WellControl control; double target; double reference_bhp_depth; };
         std::vector<WellData> well_data_;
         struct PerfData { int cell; double well_index; double pdelta; };
         Dune::SparseTable<PerfData> perf_data_;
@@ -97,6 +98,11 @@ namespace Opm
     inline double Wells::target(int wellnum) const
     {
         return well_data_[wellnum].target;
+    }
+
+    inline double Wells::referenceDepth(int wellnum) const
+    {
+        return well_data_[wellnum].reference_bhp_depth;
     }
 
     inline int Wells::numPerforations(int wellnum) const

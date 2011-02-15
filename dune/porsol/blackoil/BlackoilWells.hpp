@@ -48,15 +48,15 @@ namespace Opm
         enum WellControl { Rate, Pressure };
         WellControl control(int wellnum) const;
         double target(int wellnum) const;
+        double referenceDepth(int wellnum) const;
         int numPerforations(int wellnum) const;
         int wellCell(int wellnum, int perfnum) const;
         double wellIndex(int wellnum, int perfnum) const;
-        double pressureDelta(int wellnum, int perfnum) const;
 
         // Updating rates and pressures after pressure solve.
         void update(int num_cells,
-                    const std::vector<double>& well_pressures,
-                    const std::vector<double>& well_fluxes);
+                    const std::vector<double>& well_perf_pressures,
+                    const std::vector<double>& well_perf_fluxes);
 
         // Cell-centric interface. Mostly used by transport solver.
         double perforationPressure(int cell) const;
@@ -68,12 +68,12 @@ namespace Opm
 	double computeWellIndex(double radius, const Dune::FieldVector<double, 3>& cubical,
 				const Dune::Rock<3>::PermTensor& permeability, double skin_factor) const;
 
-	struct WellData { WellType type; WellControl control; double target; };
+	struct WellData { WellType type; WellControl control; double target; double reference_bhp_depth; };
         std::vector<WellData> well_data_;
-        struct PerfData { int cell; double well_index; double pdelta; };
+        struct PerfData { int cell; double well_index; };
         Dune::SparseTable<PerfData> perf_data_;
-        std::vector<double> well_flux_;
-        std::vector<double> well_pressure_;
+        std::vector<double> well_cell_flux_;
+        std::vector<double> well_cell_pressure_;
         Dune::FieldVector<double, 3> injection_mixture_;
 	std::vector<std::string> well_names_;
     };
@@ -127,7 +127,11 @@ namespace Opm
 	    well_names_.push_back(welspecs.welspecs[i].name_);
 	    WellData wd;
 	    well_data_.push_back(wd);
-	}
+            well_data_.back().reference_bhp_depth = welspecs.welspecs[i].datum_depth_BHP_;
+            if (welspecs.welspecs[i].datum_depth_BHP_ < 0.0) {
+                THROW("You must specify a datum depth BHP in WELSPECS.");
+            }
+        }
 
 	// Get COMPDAT data   
         std::vector<std::vector<PerfData> > wellperf_data(num_welspecs);
@@ -171,7 +175,6 @@ namespace Opm
 			    pd.well_index = computeWellIndex(radius, cubical, permeability,
 							     compdats.compdat[kw].skin_factor_);
 			}
-			pd.pdelta     = 0.0;    // @bsp ???
 			wellperf_data[wix].push_back(pd);
 		    } else {
 			THROW("Cell with i,j,k indices " << ix << ' ' << jy << ' '
@@ -210,16 +213,17 @@ namespace Opm
 			well_data_[wix].control = Rate;
 			well_data_[wix].target = wconinjes.wconinje[kw].surface_flow_max_rate_;
 			break;
-		    case 1:  // BHP
+		    case 1:  // RESV
+			well_data_[wix].control = Rate;
+			well_data_[wix].target = wconinjes.wconinje[kw].fluid_volume_max_rate_;
+			break;
+		    case 2:  // BHP
 			well_data_[wix].control = Pressure;
 			well_data_[wix].target = wconinjes.wconinje[kw].BHP_limit_;
 			break;
-		    case 2:  // THP
+		    case 3:  // THP
 			well_data_[wix].control = Pressure;
 			well_data_[wix].target = wconinjes.wconinje[kw].THP_limit_;
-			break;
-		    case 3:  // GRUP 
-			well_data_[wix].control = Rate;   // @bsp ???
 			break;
 		    default:
 			THROW("Unknown well control mode; WCONIJE  = "
@@ -346,14 +350,13 @@ namespace Opm
 	for(int i=0; i< int(perf_data_.size()); ++i) {
 	    for(int j=0; j< int(perf_data_[i].size()); ++j) {
 		std::cout << i << ": " << perf_data_[i][j].cell << "  "
-			  << perf_data_[i][j].well_index << "  "
-			  << perf_data_[i][j].pdelta << std::endl;
+			  << perf_data_[i][j].well_index << std::endl;
 	    }
 	}
 
         // Ensuring that they have the right size.
-        well_pressure_.resize(grid.numCells(), -1e100);
-        well_flux_.resize(grid.numCells(), 0.0);
+        well_cell_pressure_.resize(grid.numCells(), -1e100);
+        well_cell_flux_.resize(grid.numCells(), 0.0);
     }
 
     inline int BlackoilWells::numWells() const
@@ -376,6 +379,11 @@ namespace Opm
         return well_data_[wellnum].target;
     }
 
+    inline double BlackoilWells::referenceDepth(int wellnum) const
+    {
+        return well_data_[wellnum].reference_bhp_depth;
+    }
+
     inline int BlackoilWells::numPerforations(int wellnum) const
     {
         return perf_data_[wellnum].size();
@@ -391,25 +399,20 @@ namespace Opm
         return perf_data_[wellnum][perfnum].well_index;
     }
 
-    inline double BlackoilWells::pressureDelta(int wellnum, int perfnum) const
-    {
-        return perf_data_[wellnum][perfnum].pdelta;
-    }
-
     inline void BlackoilWells::update(int num_cells,
-                                      const std::vector<double>& well_pressures,
-                                      const std::vector<double>& well_fluxes)
+                                      const std::vector<double>& well_perf_pressures,
+                                      const std::vector<double>& well_perf_fluxes)
     {
         // Input is per perforation, data members store for all cells.
-        ASSERT(perf_data_.dataSize() == int(well_pressures.size()));
-        well_pressure_.resize(num_cells, -1e100);
-        well_flux_.resize(num_cells, 0.0);
+        ASSERT(perf_data_.dataSize() == int(well_perf_pressures.size()));
+        well_cell_pressure_.resize(num_cells, -1e100);
+        well_cell_flux_.resize(num_cells, 0.0);
         int pcount = 0;
         for (int w = 0; w < numWells(); ++w) {
             for (int perf = 0; perf < numPerforations(w); ++perf) {
                 int cell = wellCell(w, perf);
-                well_pressure_[cell] = well_pressures[pcount];
-                well_flux_[cell] = well_fluxes[pcount];
+                well_cell_pressure_[cell] = well_perf_pressures[pcount];
+                well_cell_flux_[cell] = well_perf_fluxes[pcount];
                 ++pcount;
             }
         }
@@ -418,12 +421,12 @@ namespace Opm
 
     inline double BlackoilWells::wellToReservoirFlux(int cell) const
     {
-        return well_flux_[cell];
+        return well_cell_flux_[cell];
     }
 
     inline double BlackoilWells::perforationPressure(int cell) const
     {
-        return well_pressure_[cell];
+        return well_cell_pressure_[cell];
     }
 
     inline Dune::FieldVector<double, 3> BlackoilWells::injectionMixture(int cell) const
@@ -485,14 +488,14 @@ namespace Opm
     {
 
         int prod_control_mode(const std::string& control){
-            const int num_prod_control_modes = 7;
+            const int num_prod_control_modes = 8;
             static std::string prod_control_modes[num_prod_control_modes] =
                 {std::string("ORAT"), std::string("WRAT"), std::string("GRAT"),
                  std::string("LRAT"), std::string("RESV"), std::string("BHP"),
-                 std::string("THP") };
+                 std::string("THP"), std::string("GRUP") };
             int m = -1;
             for (int i=0; i<num_prod_control_modes; ++i) {
-                if (control[0] == prod_control_modes[i][0]) {
+                if (control == prod_control_modes[i]) {
                     m = i;
                     break;
                 }
@@ -506,13 +509,13 @@ namespace Opm
 
         int inje_control_mode(const std::string& control)
         {
-            const int num_inje_control_modes = 4;
+            const int num_inje_control_modes = 5;
             static std::string inje_control_modes[num_inje_control_modes] =
-                {std::string("RATE"), std::string("BHP"), std::string("THP"),
-                 std::string("GRUP") };   //  @bsp missing"RESV" ??? 
+                {std::string("RATE"), std::string("RESV"), std::string("BHP"),
+                 std::string("THP"), std::string("GRUP") };
             int m = -1;
             for (int i=0; i<num_inje_control_modes; ++i) {
-                if (control[0] == inje_control_modes[i][0]) {
+                if (control == inje_control_modes[i]) {
                     m = i;
                     break;
                 }
