@@ -62,8 +62,8 @@ namespace Opm
         typedef typename Fluid::PhaseVec PhaseVec;
         std::vector<PhaseVec> cell_pressure_;
         std::vector<PhaseVec> face_pressure_;
-        std::vector<double> well_pressure_;
-        std::vector<double> well_flux_;
+        std::vector<double> well_perf_pressure_;
+        std::vector<double> well_perf_flux_;
         std::vector<CompVec> cell_z_;
         PhaseVec bdy_pressure_;
         CompVec bdy_z_;
@@ -187,7 +187,8 @@ init(const Dune::parameter::ParameterGroup& param)
     // Initial state.
     if (param.getDefault("spe9_init", false)) {
         
-        const double zeroDepth = 2743.2;
+        // const double zeroDepth = 2743.2;
+        const double zeroDepth = 0.0;
         
         int nx = param.getDefault<int>("nx", 24);
         int ny = param.getDefault<int>("ny", 25);
@@ -342,17 +343,17 @@ init(const Dune::parameter::ParameterGroup& param)
 
     // Set initial well perforation pressures equal to cell pressures,
     // and perforation fluxes equal to zero.
-    well_pressure_.clear();
+    well_perf_pressure_.clear();
     for (int well = 0; well < wells_.numWells(); ++well) {
         int num_perf = wells_.numPerforations(well);
         for (int perf = 0; perf < num_perf; ++perf) {
             int cell = wells_.wellCell(well, perf);
-            well_pressure_.push_back(cell_pressure_[cell][Fluid::Liquid]);
+            well_perf_pressure_.push_back(cell_pressure_[cell][Fluid::Liquid]);
         }
     }
-    well_flux_.clear();
-    well_flux_.resize(well_pressure_.size(), 0.0);
-    wells_.update(grid_.numCells(), well_pressure_, well_flux_);
+    well_perf_flux_.clear();
+    well_perf_flux_.resize(well_perf_pressure_.size(), 0.0);
+    wells_.update(grid_.numCells(), well_perf_pressure_, well_perf_flux_);
 }
 
 
@@ -375,8 +376,8 @@ simulate()
     double current_time = 0.0;
     int step = 0;
     std::vector<double> face_flux;
-    std::vector<double> well_pressure_start;
-    std::vector<double> well_flux_start;
+    std::vector<double> well_perf_pressure_start;
+    std::vector<double> well_perf_flux_start;
     std::vector<PhaseVec> cell_pressure_start;
     std::vector<PhaseVec> face_pressure_start;
     std::vector<CompVec> cell_z_start;
@@ -384,8 +385,8 @@ simulate()
     while (current_time < total_time_) {
         cell_pressure_start = cell_pressure_;
         face_pressure_start = face_pressure_;
-        well_pressure_start = well_pressure_;
-        well_flux_start = well_flux_;
+        well_perf_pressure_start = well_perf_pressure_;
+        well_perf_flux_start = well_perf_flux_;
         cell_z_start = cell_z_;
 
         // Do not run past total_time_.
@@ -402,7 +403,7 @@ simulate()
         // Solve flow system.
         enum FlowSolver::ReturnCode result
             = flow_solver_.solve(cell_pressure_, face_pressure_, cell_z_, face_flux,
-                                 well_pressure_, well_flux_, src_, stepsize, do_impes_);
+                                 well_perf_pressure_, well_perf_flux_, src_, stepsize, do_impes_);
 
         // Check if the flow solver succeeded.
         if (result != FlowSolver::SolveOk) {
@@ -410,7 +411,7 @@ simulate()
         }
 
         // Update wells with new perforation pressures and fluxes.
-        wells_.update(grid_.numCells(), well_pressure_, well_flux_);
+        wells_.update(grid_.numCells(), well_perf_pressure_, well_perf_flux_);
 
         // Transport and check volume discrepancy.
         bool voldisc_ok = true;
@@ -430,10 +431,10 @@ simulate()
             stepsize *= 0.5;
             cell_pressure_ = cell_pressure_start;
             face_pressure_ = face_pressure_start;
-            well_pressure_ = well_pressure_start;
-            well_flux_ = well_flux_start;
+            well_perf_pressure_ = well_perf_pressure_start;
+            well_perf_flux_ = well_perf_flux_start;
             cell_z_ = cell_z_start;
-            wells_.update(grid_.numCells(), well_pressure_, well_flux_);
+            wells_.update(grid_.numCells(), well_perf_pressure_, well_perf_flux_);
             continue;
         }
 
