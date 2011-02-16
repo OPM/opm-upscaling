@@ -129,7 +129,8 @@ namespace Opm
 	    well_data_.push_back(wd);
             well_data_.back().reference_bhp_depth = welspecs.welspecs[i].datum_depth_BHP_;
             if (welspecs.welspecs[i].datum_depth_BHP_ < 0.0) {
-                THROW("You must specify a datum depth BHP in WELSPECS.");
+                well_data_.back().reference_bhp_depth = 0.0;
+                MESSAGE("You should specify a datum depth BHP in WELSPECS. Defaulting to 0.0.");
             }
         }
 
@@ -154,35 +155,37 @@ namespace Opm
 		if (well_names_[wix].compare(0,len, name) == 0) { //equal
 		    int ix = compdats.compdat[kw].grid_ind_[0] - 1;
 		    int jy = compdats.compdat[kw].grid_ind_[1] - 1;
-		    int kz = compdats.compdat[kw].grid_ind_[2] - 1;
-		    int cart_grid_indx = ix + cpgdim[0]*(jy + cpgdim[1]*kz);
-		    std::map<int, int>::const_iterator cgit = 
-			cartesian_to_compressed.find(cart_grid_indx);
-		    if (cgit != cartesian_to_compressed.end()) {
-			int cell = cgit->second;
-			PerfData pd;
-			pd.cell = cell;
-			if (compdats.compdat[kw].connect_trans_fac_ > 0.0) {
-			    pd.well_index = compdats.compdat[kw].connect_trans_fac_;
-			} else {
-			    double radius = 0.5*compdats.compdat[kw].diameter_;
-			    if (radius <= 0.0) {
-				radius = 0.5*unit::feet;
-				MESSAGE("Warning: Well bore internal radius set to " << radius);
-			    }
-			    Dune::FieldVector<double, 3> cubical = getCubeDim(grid, cell);
-			    const Rock<3>::PermTensor permeability = rock.permeability(cell);  
-			    pd.well_index = computeWellIndex(radius, cubical, permeability,
-							     compdats.compdat[kw].skin_factor_);
-			}
-			wellperf_data[wix].push_back(pd);
-		    } else {
-			THROW("Cell with i,j,k indices " << ix << ' ' << jy << ' '
-			      << kz << " not found!");
-		    }
-		    found = true;
-		    break;
-		}
+		    int kz1 = compdats.compdat[kw].grid_ind_[2] - 1;
+                    int kz2 = compdats.compdat[kw].grid_ind_[3] - 1;
+                    for (int kz = kz1; kz <= kz2; ++kz) {
+                        int cart_grid_indx = ix + cpgdim[0]*(jy + cpgdim[1]*kz);
+                        std::map<int, int>::const_iterator cgit = 
+                            cartesian_to_compressed.find(cart_grid_indx);
+                        if (cgit == cartesian_to_compressed.end()) {
+                            THROW("Cell with i,j,k indices " << ix << ' ' << jy << ' '
+                                  << kz << " not found!");
+                        }
+                        int cell = cgit->second;
+                        PerfData pd;
+                        pd.cell = cell;
+                        if (compdats.compdat[kw].connect_trans_fac_ > 0.0) {
+                            pd.well_index = compdats.compdat[kw].connect_trans_fac_;
+                        } else {
+                            double radius = 0.5*compdats.compdat[kw].diameter_;
+                            if (radius <= 0.0) {
+                                radius = 0.5*unit::feet;
+                                MESSAGE("Warning: Well bore internal radius set to " << radius);
+                            }
+                            Dune::FieldVector<double, 3> cubical = getCubeDim(grid, cell);
+                            const Rock<3>::PermTensor permeability = rock.permeability(cell);  
+                            pd.well_index = computeWellIndex(radius, cubical, permeability,
+                                                             compdats.compdat[kw].skin_factor_);
+                        }
+                        wellperf_data[wix].push_back(pd);
+                    }
+                    found = true;
+                    break;
+                }
             }
 	    if (!found) {
 		THROW("Undefined well name: " << compdats.compdat[kw].well_
