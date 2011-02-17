@@ -423,9 +423,10 @@ namespace Dune
             int num_perf = perf_cells_.size();
             for (int perf = 0; perf < num_perf; ++perf) {
                 well_perf_pressures[perf] = well_bhp[perf_wells_[perf]];
+                PhaseVec sat = perf_props_[perf].saturation;
                 for (int phase = 0; phase < numPhases; ++phase) {
                     well_perf_pressures[perf]
-                        += wellperf_gpot[numPhases*perf + phase];
+                        += sat[phase]*wellperf_gpot[numPhases*perf + phase];
                 }
             }
 
