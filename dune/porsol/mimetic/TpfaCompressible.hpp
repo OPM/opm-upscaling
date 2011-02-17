@@ -419,11 +419,28 @@ namespace Dune
                 psolver_.explicitTransport(dt, &(cell_z[0][0]));
             }
 
-            // Compute well_perf_pressures
+            // Compute averaged saturations for each well. This code
+            // assumes that flow is either in or out of any single
+            // well, not both.
             int num_perf = perf_cells_.size();
+            std::vector<PhaseVec> well_sat(pwells_->numWells(), PhaseVec(0.0));
+            std::vector<double> well_flux(pwells_->numWells(), 0.0);
+            for (int perf = 0; perf < num_perf; ++perf) {
+                int well = perf_wells_[perf];
+                double flux = well_perf_fluxes[perf];
+                well_flux[well] += flux;
+                PhaseVec tmp = perf_props_[perf].saturation;
+                tmp *= flux;
+                well_sat[well] += tmp;
+            }
+            for (int well = 0; well < pwells_->numWells(); ++well) {
+                well_sat[well] *= 1.0/well_flux[well];
+            }
+
+            // Compute well_perf_pressures
             for (int perf = 0; perf < num_perf; ++perf) {
                 well_perf_pressures[perf] = well_bhp[perf_wells_[perf]];
-                PhaseVec sat = perf_props_[perf].saturation;
+                PhaseVec sat = well_sat[perf_wells_[perf]];
                 for (int phase = 0; phase < numPhases; ++phase) {
                     well_perf_pressures[perf]
                         += sat[phase]*wellperf_gpot[numPhases*perf + phase];
