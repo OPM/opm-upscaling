@@ -129,8 +129,10 @@ namespace Opm
 	    well_data_.push_back(wd);
             well_data_.back().reference_bhp_depth = welspecs.welspecs[i].datum_depth_BHP_;
             if (welspecs.welspecs[i].datum_depth_BHP_ < 0.0) {
-                well_data_.back().reference_bhp_depth = 0.0;
-                MESSAGE("You should specify a datum depth BHP in WELSPECS. Defaulting to 0.0.");
+                // Set refdepth to a marker value, will be changed
+                // after getting perforation data to the centroid of
+                // the cell of the top well perforation.
+                well_data_.back().reference_bhp_depth = -1e100;
             }
         }
 
@@ -194,6 +196,16 @@ namespace Opm
 	}
         for (int w = 0; w < num_welspecs; ++w) {
             perf_data_.appendRow(wellperf_data[w].begin(), wellperf_data[w].end());
+            if (well_data_[w].reference_bhp_depth == -1e100) {
+                // It was defaulted. Set reference depth to minimum perforation depth.
+                double min_depth = 1e100;
+                int num_wperfs = wellperf_data[w].size();
+                for (int perf = 0; perf < num_wperfs; ++perf) {
+                    double depth = grid.cellCentroid(wellperf_data[w][perf].cell)[2];
+                    min_depth = std::min(min_depth, depth);
+                }
+                well_data_[w].reference_bhp_depth = min_depth;
+            }
         }
  
 	// Get WCONINJE data
