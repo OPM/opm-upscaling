@@ -170,6 +170,21 @@ namespace Dune
                     THROW("Unhandled boundary condition type.");
                 }
             }
+
+            // Setup unchanging well data structures.
+            perf_wells_.clear();
+            perf_cells_.clear();
+            perf_props_.clear();
+            int num_wells = pwells_->numWells();
+            for (int well = 0; well < num_wells; ++well) {
+                int num_perf = pwells_->numPerforations(well);
+                for (int perf = 0; perf < num_perf; ++perf) {
+                    int cell = pwells_->wellCell(well, perf);
+                    perf_wells_.push_back(well);
+                    perf_cells_.push_back(cell);
+                }
+            }
+            perf_props_.reserve(perf_wells_.size());
         }
 
 
@@ -526,8 +541,6 @@ namespace Dune
             // \TODO only need to recompute this once per pressure update.
             // No, that is false, at production perforations the cell z is
             // used, which may change every step.
-            perf_wells_.clear();
-            perf_cells_.clear();
             perf_props_.clear();
             int num_wells = pwells_->numWells();
             for (int well = 0; well < num_wells; ++well) {
@@ -535,14 +548,13 @@ namespace Dune
                 int num_perf = pwells_->numPerforations(well);
                 for (int perf = 0; perf < num_perf; ++perf) {
                     int cell = pwells_->wellCell(well, perf);
-                    perf_wells_.push_back(well);
-                    perf_cells_.push_back(cell);
                     // \TODO handle capillary in perforation pressure below?
                     PhaseVec well_pressure = inj ? PhaseVec(pwells_->perforationPressure(cell)) : phase_pressure[cell];
                     CompVec well_mixture = inj ? pwells_->injectionMixture(cell) : cell_z[cell];
                     perf_props_.push_back(computeProps(well_pressure, well_mixture));
                 }
             }
+            ASSERT(perf_props_.size() == perf_wells_.size());
         }
 
 
