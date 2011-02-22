@@ -300,7 +300,7 @@ init(const Dune::parameter::ParameterGroup& param)
 
         cell_z_.resize(grid_.numCells(), init_z);
         MESSAGE("******* Assuming zero capillary pressures *******");
-        PhaseVec init_p(100.0*Dune::unit::barsa);
+        PhaseVec init_p(param.getDefault("initial_pressure", 100.0*Dune::unit::barsa));
         cell_pressure_.resize(grid_.numCells(), init_p);
         if (gravity_.two_norm() != 0.0) {
             double ref_gravpot = grid_.cellCentroid(0)*gravity_;
