@@ -108,19 +108,10 @@ namespace Opm
 	    THROW("Needed field is missing in file");
 	}
         using namespace Dune;
-	const WELSPECS& welspecs = parser.getWELSPECS();
-	const int num_welspecs   = welspecs.welspecs.size();
-
-	const COMPDAT& compdats = parser.getCOMPDAT();
-	const int num_compdats  = compdats.compdat.size();
-
-	const WCONINJE& wconinjes = parser.getWCONINJE();
-	const int num_wconinjes   = wconinjes.wconinje.size();
-
-	const WCONPROD& wconprods = parser.getWCONPROD();
-	const int num_wconprods   = wconprods.wconprod.size();
 
 	// Get WELLSPECS data
+	const WELSPECS& welspecs = parser.getWELSPECS();
+	const int num_welspecs   = welspecs.welspecs.size();
 	well_names_.reserve(num_welspecs);
 	well_data_.reserve(num_welspecs);
 	for (int i=0; i<num_welspecs; ++i) {
@@ -137,6 +128,8 @@ namespace Opm
         }
 
 	// Get COMPDAT data   
+	const COMPDAT& compdats = parser.getCOMPDAT();
+	const int num_compdats  = compdats.compdat.size();
         std::vector<std::vector<PerfData> > wellperf_data(num_welspecs);
 	for (int kw=0; kw<num_compdats; ++kw) {
 	    std::string name = compdats.compdat[kw].well_;
@@ -209,124 +202,134 @@ namespace Opm
         }
  
 	// Get WCONINJE data
-        int injector_component = -1;
-        for (int kw=0; kw<num_wconinjes; ++kw) {
-	    std::string name = wconinjes.wconinje[kw].well_;
-	    std::string::size_type len = name.find('*');
-	    if (len != std::string::npos) {
-		name = name.substr(0, len);
-	    }
-
-	    bool well_found = false;
-	    for (int wix=0; wix<num_welspecs; ++wix) {
-		if (well_names_[wix].compare(0,len, name) == 0) { //equal
-		    well_found = true;
-		    well_data_[wix].type = Injector;
-		    int m = inje_control_mode(wconinjes.wconinje[kw].control_mode_);
-		    switch(m) {
-		    case 0:  // RATE
-			well_data_[wix].control = Rate;
-			well_data_[wix].target = wconinjes.wconinje[kw].surface_flow_max_rate_;
-			break;
-		    case 1:  // RESV
-			well_data_[wix].control = Rate;
-			well_data_[wix].target = wconinjes.wconinje[kw].fluid_volume_max_rate_;
-			break;
-		    case 2:  // BHP
-			well_data_[wix].control = Pressure;
-			well_data_[wix].target = wconinjes.wconinje[kw].BHP_limit_;
-			break;
-		    case 3:  // THP
-			well_data_[wix].control = Pressure;
-			well_data_[wix].target = wconinjes.wconinje[kw].THP_limit_;
-			break;
-		    default:
-			THROW("Unknown well control mode; WCONIJE  = "
-			      << wconinjes.wconinje[kw].control_mode_
-			      << " in input file");
-		    }
-                    int itp = -1;
-                    if (wconinjes.wconinje[kw].injector_type_ == "WATER") {
-                        itp = Water;
-                    } else if (wconinjes.wconinje[kw].injector_type_ == "OIL") {
-                        itp = Oil;
-                    } else if (wconinjes.wconinje[kw].injector_type_ == "GAS") {
-                        itp = Gas;
-                    }
-                    if (itp == -1 || (injector_component != -1 && itp != injector_component)) {
-                        if (itp == -1) {
-                            THROW("Error in injector specification, found no known fluid type.");
-                        } else {
-                            THROW("Error in injector specification, we can only handle a single injection fluid.");
-                        }
-                    } else {
-                        injector_component = itp;
-                    }
-		}
-	    }
-	    if (!well_found) {
-		THROW("Undefined well name: " << wconinjes.wconinje[kw].well_
-		      << " in WCONINJE");
-	    }
-	}
         injection_mixture_ = 0.0;
-        injection_mixture_[injector_component] = 1.0;
+        if (parser.hasField("WCONINJE")) {
+            const WCONINJE& wconinjes = parser.getWCONINJE();
+            const int num_wconinjes = wconinjes.wconinje.size();
+            int injector_component = -1;
+            for (int kw=0; kw<num_wconinjes; ++kw) {
+                std::string name = wconinjes.wconinje[kw].well_;
+                std::string::size_type len = name.find('*');
+                if (len != std::string::npos) {
+                    name = name.substr(0, len);
+                }
 
-	// Get WCONPROD data   
-        for (int kw=0; kw<num_wconprods; ++kw) {
-	    std::string name = wconprods.wconprod[kw].well_;
-	    std::string::size_type len = name.find('*');
-	    if (len != std::string::npos) {
-		name = name.substr(0, len);
-	    }
+                bool well_found = false;
+                for (int wix=0; wix<num_welspecs; ++wix) {
+                    if (well_names_[wix].compare(0,len, name) == 0) { //equal
+                        well_found = true;
+                        well_data_[wix].type = Injector;
+                        int m = inje_control_mode(wconinjes.wconinje[kw].control_mode_);
+                        switch(m) {
+                        case 0:  // RATE
+                            well_data_[wix].control = Rate;
+                            well_data_[wix].target = wconinjes.wconinje[kw].surface_flow_max_rate_;
+                            break;
+                        case 1:  // RESV
+                            well_data_[wix].control = Rate;
+                            well_data_[wix].target = wconinjes.wconinje[kw].fluid_volume_max_rate_;
+                            break;
+                        case 2:  // BHP
+                            well_data_[wix].control = Pressure;
+                            well_data_[wix].target = wconinjes.wconinje[kw].BHP_limit_;
+                            break;
+                        case 3:  // THP
+                            well_data_[wix].control = Pressure;
+                            well_data_[wix].target = wconinjes.wconinje[kw].THP_limit_;
+                            break;
+                        default:
+                            THROW("Unknown well control mode; WCONIJE  = "
+                                  << wconinjes.wconinje[kw].control_mode_
+                                  << " in input file");
+                        }
+                        int itp = -1;
+                        if (wconinjes.wconinje[kw].injector_type_ == "WATER") {
+                            itp = Water;
+                        } else if (wconinjes.wconinje[kw].injector_type_ == "OIL") {
+                            itp = Oil;
+                        } else if (wconinjes.wconinje[kw].injector_type_ == "GAS") {
+                            itp = Gas;
+                        }
+                        if (itp == -1 || (injector_component != -1 && itp != injector_component)) {
+                            if (itp == -1) {
+                                THROW("Error in injector specification, found no known fluid type.");
+                            } else {
+                                THROW("Error in injector specification, we can only handle a single injection fluid.");
+                            }
+                        } else {
+                            injector_component = itp;
+                        }
+                    }
+                }
+                if (!well_found) {
+                    THROW("Undefined well name: " << wconinjes.wconinje[kw].well_
+                          << " in WCONINJE");
+                }
+            }
+            if (injector_component != -1) {
+                injection_mixture_[injector_component] = 1.0;
+            }
+        }
 
-	    bool well_found = false;
-	    for (int wix=0; wix<num_welspecs; ++wix) {
-		if (well_names_[wix].compare(0,len, name) == 0) { //equal
-		    well_found = true;
-		    well_data_[wix].type = Producer;
-		    int m = prod_control_mode(wconprods.wconprod[kw].control_mode_);
-		    switch(m) {
-		    case 0:  // ORAT
-			well_data_[wix].control = Rate;
-			well_data_[wix].target = wconprods.wconprod[kw].oil_max_rate_;
-			break;
-		    case 1:  // WRAT
-			well_data_[wix].control = Rate;
-			well_data_[wix].target = wconprods.wconprod[kw].water_max_rate_;
-			break;
-		    case 2:  // GRAT
-			well_data_[wix].control = Rate;
-			well_data_[wix].target = wconprods.wconprod[kw].gas_max_rate_;
-			break;
-		    case 3:  // LRAT
-			well_data_[wix].control = Rate;
-			well_data_[wix].target = wconprods.wconprod[kw].liquid_max_rate_;
-			break;
-		    case 4:  // RESV 
-			well_data_[wix].control = Rate;
-			well_data_[wix].target = wconprods.wconprod[kw].fluid_volume_max_rate_;
-			break;
-		    case 5:  // BHP
-			well_data_[wix].control = Pressure; 
-			well_data_[wix].target = wconprods.wconprod[kw].BHP_limit_;
-			break;
-		    case 6:  // THP 
-			well_data_[wix].control = Pressure;
-			well_data_[wix].target = wconprods.wconprod[kw].THP_limit_;
-			break;
-		    default:
-			THROW("Unknown well control mode; WCONPROD  = "
-			      << wconprods.wconprod[kw].control_mode_
-			      << " in input file");
-		    }
-		}
-	    }
-	    if (!well_found) {
-		THROW("Undefined well name: " << wconprods.wconprod[kw].well_
-		      << " in WCONPROD");
-	    }
-	}	
+	// Get WCONPROD data
+        if (parser.hasField("WCONPROD")) {
+            const WCONPROD& wconprods = parser.getWCONPROD();
+            const int num_wconprods   = wconprods.wconprod.size();
+            for (int kw=0; kw<num_wconprods; ++kw) {
+                std::string name = wconprods.wconprod[kw].well_;
+                std::string::size_type len = name.find('*');
+                if (len != std::string::npos) {
+                    name = name.substr(0, len);
+                }
+
+                bool well_found = false;
+                for (int wix=0; wix<num_welspecs; ++wix) {
+                    if (well_names_[wix].compare(0,len, name) == 0) { //equal
+                        well_found = true;
+                        well_data_[wix].type = Producer;
+                        int m = prod_control_mode(wconprods.wconprod[kw].control_mode_);
+                        switch(m) {
+                        case 0:  // ORAT
+                            well_data_[wix].control = Rate;
+                            well_data_[wix].target = wconprods.wconprod[kw].oil_max_rate_;
+                            break;
+                        case 1:  // WRAT
+                            well_data_[wix].control = Rate;
+                            well_data_[wix].target = wconprods.wconprod[kw].water_max_rate_;
+                            break;
+                        case 2:  // GRAT
+                            well_data_[wix].control = Rate;
+                            well_data_[wix].target = wconprods.wconprod[kw].gas_max_rate_;
+                            break;
+                        case 3:  // LRAT
+                            well_data_[wix].control = Rate;
+                            well_data_[wix].target = wconprods.wconprod[kw].liquid_max_rate_;
+                            break;
+                        case 4:  // RESV 
+                            well_data_[wix].control = Rate;
+                            well_data_[wix].target = wconprods.wconprod[kw].fluid_volume_max_rate_;
+                            break;
+                        case 5:  // BHP
+                            well_data_[wix].control = Pressure; 
+                            well_data_[wix].target = wconprods.wconprod[kw].BHP_limit_;
+                            break;
+                        case 6:  // THP 
+                            well_data_[wix].control = Pressure;
+                            well_data_[wix].target = wconprods.wconprod[kw].THP_limit_;
+                            break;
+                        default:
+                            THROW("Unknown well control mode; WCONPROD  = "
+                                  << wconprods.wconprod[kw].control_mode_
+                                  << " in input file");
+                        }
+                    }
+                }
+                if (!well_found) {
+                    THROW("Undefined well name: " << wconprods.wconprod[kw].well_
+                          << " in WCONPROD");
+                }
+            }
+        }
 
 	// Get WELTARG data
         if (parser.hasField("WELTARG")) {
