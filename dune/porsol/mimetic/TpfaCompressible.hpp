@@ -174,6 +174,7 @@ namespace Dune
             // Setup unchanging well data structures.
             perf_wells_.clear();
             perf_cells_.clear();
+            perf_pressure_.clear();
             perf_props_.clear();
             int num_wells = pwells_->numWells();
             for (int well = 0; well < num_wells; ++well) {
@@ -182,6 +183,7 @@ namespace Dune
                     int cell = pwells_->wellCell(well, perf);
                     perf_wells_.push_back(well);
                     perf_cells_.push_back(cell);
+                    perf_pressure_.push_back(pwells_->perforationPressure(cell));
                 }
             }
             perf_props_.reserve(perf_wells_.size());
@@ -304,6 +306,8 @@ namespace Dune
                 start_cell_press = cell_pressure_scalar;
                 // (Re-)compute fluid properties.
                 computeFluidProps(cell_pressure, face_pressure, cell_z, dt);
+
+                // Initialization for the first iteration only.
                 int num_perf = perf_cells_.size();
                 if (i == 0) {
                     initial_voldiscr = fp_.voldiscr;
@@ -328,7 +332,7 @@ namespace Dune
                         int well = perf_wells_[perf];
                         int cell = perf_cells_[perf];
                         bool inj = pwells_->type(well) == WellsInterface::Injector;
-                        PhaseVec well_pressure = inj ? PhaseVec(pwells_->perforationPressure(cell)) : cell_pressure[cell];
+                        PhaseVec well_pressure = inj ? PhaseVec(perf_pressure_[perf]) : cell_pressure[cell];
                         CompVec well_mixture = inj ? pwells_->injectionMixture(cell) : cell_z[cell];
                         typename GridInterface::Vector pos = pgrid_->cellCentroid(cell);
                         // With wells, we assume that gravity is in the z-direction.
@@ -384,6 +388,37 @@ namespace Dune
                     face_pressure[face] = face_pressure_scalar[face];
                 }
 
+
+                // Compute averaged saturations for each well. This code
+                // assumes that flow is either in or out of any single
+                // well, not both.
+                std::vector<PhaseVec> well_sat(pwells_->numWells(), PhaseVec(0.0));
+                std::vector<double> well_flux(pwells_->numWells(), 0.0);
+                for (int perf = 0; perf < num_perf; ++perf) {
+                    int well = perf_wells_[perf];
+                    double flux = well_perf_fluxes[perf];
+                    well_flux[well] += flux;
+                    PhaseVec tmp = perf_props_[perf].saturation;
+                    tmp *= flux;
+                    well_sat[well] += tmp;
+                }
+                for (int well = 0; well < pwells_->numWells(); ++well) {
+                    well_sat[well] *= 1.0/well_flux[well];
+                }
+
+                // Compute well_perf_pressures
+                for (int perf = 0; perf < num_perf; ++perf) {
+                    well_perf_pressures[perf] = well_bhp[perf_wells_[perf]];
+                    PhaseVec sat = well_sat[perf_wells_[perf]];
+                    for (int phase = 0; phase < numPhases; ++phase) {
+                        well_perf_pressures[perf]
+                            += sat[phase]*wellperf_gpot[numPhases*perf + phase];
+                    }
+                }
+
+                // Update internal well pressure vector.
+                perf_pressure_ = well_perf_pressures;
+
                 // Test for convergence.
                 double max_flux = std::max(std::fabs(*std::min_element(face_flux.begin(), face_flux.end())),
                                            std::fabs(*std::max_element(face_flux.begin(), face_flux.end())));
@@ -434,35 +469,6 @@ namespace Dune
                 psolver_.explicitTransport(dt, &(cell_z[0][0]));
             }
 
-            // Compute averaged saturations for each well. This code
-            // assumes that flow is either in or out of any single
-            // well, not both.
-            int num_perf = perf_cells_.size();
-            std::vector<PhaseVec> well_sat(pwells_->numWells(), PhaseVec(0.0));
-            std::vector<double> well_flux(pwells_->numWells(), 0.0);
-            for (int perf = 0; perf < num_perf; ++perf) {
-                int well = perf_wells_[perf];
-                double flux = well_perf_fluxes[perf];
-                well_flux[well] += flux;
-                PhaseVec tmp = perf_props_[perf].saturation;
-                tmp *= flux;
-                well_sat[well] += tmp;
-            }
-            for (int well = 0; well < pwells_->numWells(); ++well) {
-                well_sat[well] *= 1.0/well_flux[well];
-            }
-
-            // Compute well_perf_pressures
-            for (int perf = 0; perf < num_perf; ++perf) {
-                well_perf_pressures[perf] = well_bhp[perf_wells_[perf]];
-                PhaseVec sat = well_sat[perf_wells_[perf]];
-                for (int phase = 0; phase < numPhases; ++phase) {
-                    well_perf_pressures[perf]
-                        += sat[phase]*wellperf_gpot[numPhases*perf + phase];
-                }
-            }
-
-
             return SolveOk;
         }
 
@@ -505,6 +511,7 @@ namespace Dune
         };
         std::vector<int> perf_wells_;
         std::vector<int> perf_cells_;
+        std::vector<double> perf_pressure_;
         std::vector<TransportFluidData> perf_props_;
 
 
@@ -549,7 +556,7 @@ namespace Dune
                 for (int perf = 0; perf < num_perf; ++perf) {
                     int cell = pwells_->wellCell(well, perf);
                     // \TODO handle capillary in perforation pressure below?
-                    PhaseVec well_pressure = inj ? PhaseVec(pwells_->perforationPressure(cell)) : phase_pressure[cell];
+                    PhaseVec well_pressure = inj ? PhaseVec(perf_pressure_[perf]) : phase_pressure[cell];
                     CompVec well_mixture = inj ? pwells_->injectionMixture(cell) : cell_z[cell];
                     perf_props_.push_back(computeProps(well_pressure, well_mixture));
                 }
