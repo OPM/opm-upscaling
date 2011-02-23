@@ -115,7 +115,6 @@ void usage()
         "corresponds to the first rock type defined in the eclipsefile's SATNUM. The" << endl <<
         "second correspond to the second rock type and so on. If just one Jfunc is" << endl <<
         "given, this is used for all rock types" << endl;
-    cout << "$Rev: 500 $" << endl;
 }
 
 void usageandexit() {
@@ -401,12 +400,12 @@ int main(int varnum, char** vararg)
    }
    else if (varnum == JFindex + 1) {
       for (int i=0; i < stone_types; ++i) {
-        const char* ROCKFILENAME = vararg[JFindex+i];
+        const char* ROCKFILENAME = vararg[JFindex];
          // Check if rock file exists and is readable:
          ifstream rockfile(ROCKFILENAME, ios::in);
          if (rockfile.fail()) {
              if (isMaster) cerr << "Error: Filename " << ROCKFILENAME << " not found or not readable." << endl;
-            usageandexit();
+	     usageandexit();
          }
          rockfile.close(); 
 
@@ -992,7 +991,7 @@ int main(int varnum, char** vararg)
        outputtmp << "######################################################################" << endl;
        outputtmp << "# Results from upscaling resistivity."<< endl;
        outputtmp << "#" << endl;
-       outputtmp << "# Version: $Id: upscale_cond.C 500 2010-05-12 06:52:47Z havb $" << endl;
+       outputtmp << "# OPM version" << endl;
 #if USEMPI
        outputtmp << "#          (MPI-version)" << endl;
 #endif
