@@ -215,7 +215,7 @@ int main(int varnum, char** vararg)
      Extra options for CT-experiments. If you encounter a rock with more than 6
      rocktypes, additional lines only need to be added here, the rest of the code adapts.
    */
-   options.insert(make_pair("waterresistivity", "0")); // If this is set non-zero, some options above are ignored.
+   options.insert(make_pair("waterresistivity", "1.32")); // Formation water resistivity in Ohm meters.
    options.insert(make_pair("rock1cemexp", "0")); // Cementation exponent for SATNUM 1
    options.insert(make_pair("rock1satexp", "0")); // Saturation exponent for SATNUM 1
    options.insert(make_pair("rock2cemexp", "0")); // etc..
