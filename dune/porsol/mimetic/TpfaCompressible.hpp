@@ -301,7 +301,7 @@ namespace Dune
 
             // ------------  Main iteration loop -------------
             bool converged = false;
-            for (int i = 0; i < max_num_iter_; ++i) {
+            for (int iter = 0; iter < max_num_iter_; ++iter) {
                 start_face_flux = face_flux;
                 start_cell_press = cell_pressure_scalar;
                 // (Re-)compute fluid properties.
@@ -309,7 +309,7 @@ namespace Dune
 
                 // Initialization for the first iteration only.
                 int num_perf = perf_cells_.size();
-                if (i == 0) {
+                if (iter == 0) {
                     initial_voldiscr = fp_.voldiscr;
                     double rel_voldiscr = *std::max_element(fp_.relvoldiscr.begin(), fp_.relvoldiscr.end());
                     if (rel_voldiscr > max_relative_voldiscr_) {
@@ -437,28 +437,20 @@ namespace Dune
                 double flux_rel_difference = flux_change_infnorm/max_flux;
                 double press_rel_difference = press_change_infnorm/max_press;
 
-                if (i == 0) {
+                if (iter == 0) {
                     std::cout << "Iteration      Rel. flux change     Rel. pressure change\n";
                 }
                 std::cout.precision(5);
-                std::cout << std::setw(6) << i
+                std::cout << std::setw(6) << iter
                           << std::setw(24) << flux_rel_difference
                           << std::setw(24) << press_rel_difference << std::endl;
                 std::cout.precision(16);
 
                 if (flux_rel_difference < flux_rel_tol_ || press_rel_difference < press_rel_tol_) {
-                    std::cout << "Pressure solver converged. Number of iterations: " << i + 1 << '\n' << std::endl;
+                    std::cout << "Pressure solver converged. Number of iterations: " << iter + 1 << '\n' << std::endl;
                     converged = true;
                     break;
                 }
-
-                // DUMP HACK
-//                 std::string fname("facepress-");
-//                 fname += boost::lexical_cast<std::string>(i);
-//                 std::ofstream f(fname.c_str());
-//                 f.precision(15);
-//                 std::copy(face_pressure_scalar.begin(), face_pressure_scalar.end(),
-//                           std::ostream_iterator<double>(f, "\n"));
             }
 
             if (!converged) {
