@@ -82,6 +82,7 @@ namespace Dune
             max_num_iter_ = param.getDefault("max_num_iter", 15);
             max_relative_voldiscr_ = param.getDefault("max_relative_voldiscr", 0.15);
             relax_time_voldiscr_ = param.getDefault("relax_time_voldiscr", 0.0);
+            relax_weight_pressure_iteration_ = param.getDefault("relax_weight_pressure_iteration", 1.0);
         }
 
 
@@ -286,6 +287,7 @@ namespace Dune
             std::vector<double> initial_voldiscr;
             std::vector<double> face_pressure_scalar;
             std::vector<double> start_face_flux;
+            std::vector<double> start_face_pressure;
             std::vector<double> start_cell_press;
             std::vector<double> well_bhp;
             int num_faces = pgrid_->numFaces();
@@ -302,6 +304,7 @@ namespace Dune
             bool converged = false;
             for (int iter = 0; iter < max_num_iter_; ++iter) {
                 start_face_flux = face_flux;
+                start_face_pressure = face_pressure_scalar;
                 start_cell_press = cell_pressure_scalar;
                 // (Re-)compute fluid properties.
                 computeFluidProps(cell_pressure, face_pressure, cell_z, dt);
@@ -379,6 +382,39 @@ namespace Dune
                 psolver_.computePressuresAndFluxes(cell_pressure_scalar, face_pressure_scalar, face_flux,
                                                    well_bhp, well_perf_fluxes);
 
+                // Compute relative changes for pressure and flux
+                double max_flux = std::max(std::fabs(*std::min_element(face_flux.begin(), face_flux.end())),
+                                           std::fabs(*std::max_element(face_flux.begin(), face_flux.end())));
+                double max_press = std::max(std::fabs(*std::min_element(cell_pressure_scalar.begin(), cell_pressure_scalar.end())),
+                                            std::fabs(*std::max_element(cell_pressure_scalar.begin(), cell_pressure_scalar.end())));
+                double flux_change_infnorm = 0.0;
+                double press_change_infnorm = 0.0;
+                for (int face = 0; face < num_faces; ++face) {
+                    flux_change_infnorm = std::max(flux_change_infnorm,
+                                                   std::fabs(face_flux[face] - start_face_flux[face]));
+                }
+                for (int cell = 0; cell < num_cells; ++cell) {
+                    press_change_infnorm = std::max(press_change_infnorm,
+                                                    std::fabs(cell_pressure_scalar[cell] - start_cell_press[cell]));
+                }
+                double flux_rel_difference = flux_change_infnorm/max_flux;
+                double press_rel_difference = press_change_infnorm/max_press;
+                
+                
+                // Relaxation
+                if (relax_weight_pressure_iteration_ != 1.0) {
+                    double ww = relax_weight_pressure_iteration_;
+                    for (int cell = 0; cell < num_cells; ++cell) {
+                        cell_pressure_scalar[cell] = ww*cell_pressure_scalar[cell] + (1.0-ww)*start_cell_press[cell];
+                    }
+                    if (iter > 0) {
+                        for (int face = 0; face < num_faces; ++face) {
+                            face_pressure_scalar[face] = ww*face_pressure_scalar[face] + (1.0-ww)*start_face_pressure[face];
+                            face_flux[face] = ww*face_flux[face] + (1.0-ww)*start_face_flux[face];
+                        }
+                    }
+                }
+                             
                 // Copy to phase pressures. \TODO handle capillary pressure.
                 for (int cell = 0; cell < num_cells; ++cell) {
                     cell_pressure[cell] = cell_pressure_scalar[cell];
@@ -419,23 +455,6 @@ namespace Dune
                 perf_pressure_ = well_perf_pressures;
 
                 // Test for convergence.
-                double max_flux = std::max(std::fabs(*std::min_element(face_flux.begin(), face_flux.end())),
-                                           std::fabs(*std::max_element(face_flux.begin(), face_flux.end())));
-                double max_press = std::max(std::fabs(*std::min_element(cell_pressure_scalar.begin(), cell_pressure_scalar.end())),
-                                            std::fabs(*std::max_element(cell_pressure_scalar.begin(), cell_pressure_scalar.end())));
-                double flux_change_infnorm = 0.0;
-                double press_change_infnorm = 0.0;
-                for (int face = 0; face < num_faces; ++face) {
-                    flux_change_infnorm = std::max(flux_change_infnorm,
-                                                   std::fabs(face_flux[face] - start_face_flux[face]));
-                }
-                for (int cell = 0; cell < num_cells; ++cell) {
-                    press_change_infnorm = std::max(press_change_infnorm,
-                                                    std::fabs(cell_pressure_scalar[cell] - start_cell_press[cell]));
-                }
-                double flux_rel_difference = flux_change_infnorm/max_flux;
-                double press_rel_difference = press_change_infnorm/max_press;
-
                 if (iter == 0) {
                     std::cout << "Iteration      Rel. flux change     Rel. pressure change\n";
                 }
@@ -485,6 +504,7 @@ namespace Dune
         int max_num_iter_;
         double max_relative_voldiscr_;
         double relax_time_voldiscr_;
+        double relax_weight_pressure_iteration_;
 
         typedef typename FluidInterface::PhaseVec PhaseVec;
         typedef typename FluidInterface::CompVec CompVec;
