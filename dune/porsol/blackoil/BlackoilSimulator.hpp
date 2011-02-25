@@ -70,6 +70,9 @@ namespace Opm
 
         double total_time_;
         double initial_stepsize_;
+        bool increase_stepsize_;
+        double stepsize_increase_factor_;
+        double maximum_stepsize_;
         std::vector<double> report_times_;
         bool do_impes_;
         std::string output_dir_;
@@ -150,6 +153,14 @@ init(const Dune::parameter::ParameterGroup& param)
     } else {
         total_time_ = param.getDefault("total_time", 30*unit::day);
         initial_stepsize_ = param.getDefault("initial_stepsize", 1.0*unit::day);
+        increase_stepsize_ = param.getDefault("increase_stepsize", false);
+        if (increase_stepsize_) {
+            stepsize_increase_factor_ = param.getDefault("stepsize_increase_factor", 1.5);
+            maximum_stepsize_ = param.getDefault("maximum_stepsize", 1.0*unit::day);
+        } else {
+            stepsize_increase_factor_ = 1.0;
+            maximum_stepsize_ = 1e100;
+        }
     }
     do_impes_ = param.getDefault("do_impes", false);
     output_dir_ = param.getDefault<std::string>("output_dir", "output");
@@ -187,14 +198,13 @@ init(const Dune::parameter::ParameterGroup& param)
     // Initial state.
     if (param.getDefault("spe9_init", false)) {
         
-        // const double zeroDepth = 2743.2;
-        const double zeroDepth = 0.0;
+        double zeroDepth = param.getDefault("zero_depth", 2743.2);
         
         int nx = param.getDefault<int>("nx", 24);
         int ny = param.getDefault<int>("ny", 25);
         int nz = param.getDefault<int>("nz", 15);
         
-        double datum_depth = param.getDefault<double>("datum_depth", 2753.87) - zeroDepth;
+        // double datum_depth = param.getDefault<double>("datum_depth", 2753.87) - zeroDepth;
         double datum_pressure_barsa = param.getDefault<double>("datum_pressure", 248.22);
         double datum_pressure = unit::convert::from(datum_pressure_barsa, Dune::unit::barsa);
         double wo_contact_depth = param.getDefault<double>("wo_contact_depth", 3032.76) - zeroDepth;
@@ -427,7 +437,7 @@ simulate()
 
         // If discrepancy too large, redo entire pressure step.
         if (!voldisc_ok) {
-            std::cout << "********* Shortening (pressure) stepsize, redoing step number " << step <<" **********" << std::endl;
+            std::cout << "********* Too large volume discrepancy:  Shortening (pressure) stepsize, redoing step number " << step <<" **********" << std::endl;
             stepsize *= 0.5;
             cell_pressure_ = cell_pressure_start;
             face_pressure_ = face_pressure_start;
@@ -436,12 +446,6 @@ simulate()
             cell_z_ = cell_z_start;
             wells_.update(grid_.numCells(), well_perf_pressure_, well_perf_flux_);
             continue;
-        }
-
-        // Adjust time.
-        current_time += stepsize;
-        if (voldisc_ok) {
-            // stepsize *= 1.5;
         }
 
         // Compute saturations and mass fractions for output purposes.
@@ -456,6 +460,12 @@ simulate()
             mass_frac[cell][Fluid::Gas] = cell_z_[cell][Fluid::Gas]*fluid_.surfaceDensities()[Fluid::Gas]/totMass;
         }
 
+        // Adjust time.
+        current_time += stepsize;
+        if (voldisc_ok && increase_stepsize_ && stepsize < maximum_stepsize_) {
+            stepsize *= stepsize_increase_factor_;
+            stepsize = std::min(maximum_stepsize_, stepsize);
+        }
         // If using given timesteps, set stepsize to match.
         if (!report_times_.empty()) {
             if (current_time >= report_times_[step]) {
