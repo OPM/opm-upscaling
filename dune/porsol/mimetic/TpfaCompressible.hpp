@@ -274,10 +274,8 @@ namespace Dune
                          const double dt,
                          bool transport = false)
         {
-            // Set starting pressures.
-            int num_faces = pgrid_->numFaces();
+            perf_pressure_ = well_perf_pressures;
 
-            // Assemble and solve.
             int num_cells = cell_z.size();
             std::vector<double> cell_pressure_scalar_initial(num_cells);
             // Set initial pressure to Liquid phase pressure. \TODO what is correct with capillary pressure?
@@ -290,6 +288,7 @@ namespace Dune
             std::vector<double> start_face_flux;
             std::vector<double> start_cell_press;
             std::vector<double> well_bhp;
+            int num_faces = pgrid_->numFaces();
             face_flux.clear();
             face_flux.resize(num_faces, 0.0);
             face_pressure_scalar.clear();
