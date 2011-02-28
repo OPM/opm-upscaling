@@ -127,7 +127,7 @@ int main(int argc, char** argv)
     // Construct new ZCORN for regular grid
     std::vector<double> zcorn_c;
     for (int zidx_c=0; zidx_c < zres; ++zidx_c) {
-	zcorn_c.push_back(zidx_c * (zmax-zmin)/zres);
+	zcorn_c.push_back(zmin + zidx_c * (zmax-zmin)/zres);
     }
     zcorn_c.push_back(zmax);
     
