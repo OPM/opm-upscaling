@@ -500,7 +500,7 @@ int main(int varnum, char** vararg)
    const double oilDensity         = atof(options["oilDensity"].c_str());
    const bool includeGravity       = (fabs(gravity) > DBL_MIN); // true for non-zero gravity
    const int outputprecision       = atoi(options["outputprecision"].c_str());
-   cout << "includegravity: " << includeGravity << endl;
+
    // Handle two command line input formats, either one J-function for all stone types
    // or one each. If there is only one stone type, both code blocks below are equivalent.
    
@@ -661,16 +661,15 @@ int main(int varnum, char** vararg)
    if (includeGravity) {
        // height of model is calculated as the average of the z-values at the top layer
        // This calculation makes assumption on the indexing of cells in the grid, going from bottom to top.
-       cout << "gravity included " << gravity << endl;
        double modelHeight = 0;
        for (uint zIdx = (4 * x_res * y_res * (2*z_res-1)); zIdx < zcorns.size(); ++zIdx) {
            modelHeight += zcorns[zIdx] / (4*x_res*y_res);
        }
-       cout << "modelheight in cm: " << modelHeight << endl; 
+       
        // We assume that the spatial units in the grid file is in centimetres, 
        // so we divide by 100 to get to metres.
        modelHeight = modelHeight/100.0; 
-       cout << "modelheight in meters: " << modelHeight << endl;
+
        // Input water and oil density is given in g/cm3, we convert it to kg/m3 (SI) 
        // by multiplying with 1000.
        double dRho = (waterDensity-oilDensity) * 1000; // SI unit (kg/m3)
@@ -712,7 +711,7 @@ int main(int varnum, char** vararg)
            // assume distances in grid are given in cm. 
            dPmin = min(dPmin,dP[cellIdx]); 
            dPmax = max(dPmax,dP[cellIdx]);
-           cout << "dpmin: " << dPmin << " dpmax: " << dPmax << endl; 
+           
        }
    }
 
