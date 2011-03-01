@@ -6,6 +6,7 @@ noinst_PROGRAMS = upscale_perm \
                   upscale_relperm \
                   upscale_avg  \
                   upscale_cond \
+                  upscale_cap \
                   cpchop \
                   exp_variogram \
                   cpregularize
@@ -17,6 +18,8 @@ upscale_relperm_SOURCES = upscale_relperm.cpp
 upscale_cond_SOURCES = upscale_cond.cpp
 
 upscale_avg_SOURCES = upscale_avg.cpp
+
+upscale_cap_SOURCES = upscale_cap.cpp
 
 cpchop_SOURCES = cpchop.cpp
 
