@@ -9,7 +9,8 @@ noinst_PROGRAMS = upscale_perm \
                   upscale_cap \
                   cpchop \
                   exp_variogram \
-                  cpregularize
+                  cpregularize \
+                  cpchop_depthtrend
 
 upscale_perm_SOURCES = upscale_perm.cpp
 
@@ -26,6 +27,8 @@ cpchop_SOURCES = cpchop.cpp
 exp_variogram_SOURCES = exp_variogram.cpp
 
 cpregularize_SOURCES = cpregularize.cpp
+
+cpchop_depthtrend_SOURCES = cpchop_depthtrend.cpp
 
 AM_CPPFLAGS += $(DUNEMPICPPFLAGS) $(BOOST_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 AM_LDFLAGS  += $(DUNEMPILDFLAGS) $(BOOST_LDFLAGS) $(SUPERLU_LDFLAGS)
