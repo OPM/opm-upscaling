@@ -643,13 +643,7 @@ int main(int varnum, char** vararg)
    upscaler.init(eclParser, boundaryCondition,
                  unit::convert::from(minPerm, prefix::milli*unit::darcy),
                  ztol, linsolver_tolerance, linsolver_verbosity, linsolver_type, twodim_hack);
-//    CellStructure LFgrid; 
-//    LFgrid = CellStructure(eclParser.getFloatingPointValue("COORD"),  
-//                           eclParser.getFloatingPointValue("ZCORN"),  
-//                           eclParser.getIntegerValue("SPECGRID")[0],  
-//                           eclParser.getIntegerValue("SPECGRID")[1],  
-//                           eclParser.getIntegerValue("SPECGRID")[2],  
-//                           isPeriodic);   
+
    finish = clock();   timeused_tesselation = (double(finish)-double(start))/CLOCKS_PER_SEC;
    if (isMaster) cout << " (" << timeused_tesselation <<" secs)" << endl;
 
@@ -759,7 +753,7 @@ int main(int varnum, char** vararg)
    for (; c != upscaler.grid().leafend<0>(); ++c) {
        uint cell_idx = ecl_idx[c->index()];
        if (satnums[cell_idx] > 0) { // Satnum zero is "no rock"
-	   //                cellVolumes[cell_idx] = LFgrid.cellVolumeEclipseIdx(cell_idx);
+
 	   cellVolumes[cell_idx] = c->geometry().volume();
 	   cellPoreVolumes[cell_idx] = cellVolumes[cell_idx] * poros[cell_idx];
 	   
@@ -890,8 +884,6 @@ int main(int varnum, char** vararg)
        }
        
        double waterVolume = 0.0;
-//        for (uint cell_idx = 0; cell_idx < satnums.size(); ++cell_idx) {
-//            if (LFgrid.getCellIndex(cell_idx) != EMPTY) {
        for (uint i = 0; i < ecl_idx.size(); ++i) {
            uint cell_idx = ecl_idx[i];
                double waterSaturationCell = 0.0;
@@ -916,8 +908,6 @@ int main(int varnum, char** vararg)
                }
                waterVolume += waterSaturationCell  * cellPoreVolumes[cell_idx];
        }
-//            }
-//        }
        WaterSaturationVsCapPressure.addPair(Ptestvalue, waterVolume/poreVolume);
    }
    //   cout << WaterSaturationVsCapPressure.toString();
@@ -968,28 +958,19 @@ int main(int varnum, char** vararg)
            uint cell_idx = ecl_idx[i];
            zero(cellperm);
            if (! anisotropic_input) {
-//                LFgrid.setEclipseCellPermeability(cell_idx, max(permxs[cell_idx], minSinglePhasePerm));
                double kval = max(permxs[cell_idx], minSinglePhasePerm);
                cellperm(0,0) = kval;
                cellperm(1,1) = kval;
                cellperm(2,2) = kval;
            }
            else {
-//                double permVoigt[9] = {max(minSinglePhasePerm, permxs[cell_idx]),
-//                                       max(minSinglePhasePerm, permys[cell_idx]),
-//                                       max(minSinglePhasePerm, permzs[cell_idx]),
-//                                       0.0, 0.0, 0.0,   0.0, 0.0, 0.0};
-//                LFgrid.setEclipseCellPermeabilityVoigt(cell_idx, permVoigt);
                cellperm(0,0) = max(minSinglePhasePerm, permxs[cell_idx]);
                cellperm(1,1) = max(minSinglePhasePerm, permys[cell_idx]);
                cellperm(2,2) = max(minSinglePhasePerm, permzs[cell_idx]);
            }
            upscaler.setPermeability(i, cellperm);
        }
-//        compute_upscaled_permeability(LFgrid, permTensor, boundaryCondition);
        permTensor = upscaler.upscaleSinglePhase();
-       //cout << endl;
-       //cout << permTensor;
        permTensorInv = permTensor;
        invert(permTensorInv);
    }
@@ -1081,7 +1062,6 @@ int main(int varnum, char** vararg)
            waterVolumeLF = 0.0;
            for (uint i = 0; i < ecl_idx.size(); ++i) {
                uint cell_idx = ecl_idx[i];
-//                if (LFgrid.getCellIndex(cell_idx) != EMPTY) {
                    double cellPhasePerm = minPerm;
                    vector<double>  cellPhasePermDiag;
                    cellPhasePermDiag.push_back(minPerm);
@@ -1149,7 +1129,6 @@ int main(int varnum, char** vararg)
            Matrix cellperm = zeroMatrix;
            for (uint i = 0; i < ecl_idx.size(); ++i) {
                uint cell_idx = ecl_idx[i];
-//                if (LFgrid.getCellIndex(cell_idx) != EMPTY) {
                zero(cellperm);
                if (! anisotropic_input) {
                    double cellPhasePerm = max(minPhasePerm, phasePermValues[cell_idx]);
@@ -1158,7 +1137,6 @@ int main(int varnum, char** vararg)
                    cellperm(0,0) = kval;
                    cellperm(1,1) = kval;
                    cellperm(2,2) = kval;
-                   // LFgrid.setEclipseCellPermeability(cell_idx, max(minPhasePerm, cellPhasePerm));
                }
                else { // anisotropic_input
                    // Truncate values lower than minPhasePerm upwards.
@@ -1166,21 +1144,18 @@ int main(int varnum, char** vararg)
                    phasePermValuesDiag[cell_idx][1] = max(minPhasePerm, phasePermValuesDiag[cell_idx][1]);
                    phasePermValuesDiag[cell_idx][2] = max(minPhasePerm, phasePermValuesDiag[cell_idx][2]);
                    accPhasePerm += phasePermValuesDiag[cell_idx][0]; // not correct anyway                   
-                   // LFgrid.setEclipseCellPermeabilityVoigt(cell_idx, phasePermValuesDiag[cell_idx]);
                    cellperm(0,0) = phasePermValuesDiag[cell_idx][0];
                    cellperm(1,1) = phasePermValuesDiag[cell_idx][1];
                    cellperm(2,2) = phasePermValuesDiag[cell_idx][2];
                }
                upscaler.setPermeability(i, cellperm);
-//                }
            }
            
            // Output average phase perm, this is just a reality check so that we are not way off.
            //cout << ", Arith. mean phase perm = " << accPhasePerm/float(tesselatedCells) << " mD, ";
            
-           //  Call upscaling code (SINTEF/FRAUNHOFER)
+           //  Call single-phase upscaling code 
            Matrix phasePermTensor = upscaler.upscaleSinglePhase();
-           //compute_upscaled_permeability(LFgrid, phasePermTensor, boundaryCondition);
            
            //cout << phasePermTensor << endl;
            
