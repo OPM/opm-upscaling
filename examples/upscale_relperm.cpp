@@ -755,50 +755,44 @@ int main(int varnum, char** vararg)
    double Sworvolume = 0;
    // cell_idx is the eclipse index.
    const std::vector<int>& ecl_idx = upscaler.grid().globalCell();
-//    for (uint cell_idx = 0; cell_idx < satnums.size(); ++cell_idx) {
-//        if (LFgrid.getCellIndex(cell_idx) != EMPTY) {
    CpGrid::Codim<0>::LeafIterator c = upscaler.grid().leafbegin<0>();
    for (; c != upscaler.grid().leafend<0>(); ++c) {
        uint cell_idx = ecl_idx[c->index()];
-           if (satnums[cell_idx] > 0) { // Satnum zero is "no rock"
-//                cellVolumes[cell_idx] = LFgrid.cellVolumeEclipseIdx(cell_idx);
-               cellVolumes[cell_idx] = c->geometry().volume();
-               cellPoreVolumes[cell_idx] = cellVolumes[cell_idx] * poros[cell_idx];
+       if (satnums[cell_idx] > 0) { // Satnum zero is "no rock"
+	   //                cellVolumes[cell_idx] = LFgrid.cellVolumeEclipseIdx(cell_idx);
+	   cellVolumes[cell_idx] = c->geometry().volume();
+	   cellPoreVolumes[cell_idx] = cellVolumes[cell_idx] * poros[cell_idx];
+	   
+	   double Pcmincandidate, Pcmaxcandidate, minSw, maxSw;
+           
+	   if (! anisotropic_input) {
+	       Pcmincandidate = InvJfunctions[int(satnums[cell_idx])-1].getMinimumX().first
+		   / sqrt(permxs[cell_idx] * milliDarcyToSqMetre / poros[cell_idx]) * surfaceTension;
+	       Pcmaxcandidate = InvJfunctions[int(satnums[cell_idx])-1].getMaximumX().first
+		   / sqrt(permxs[cell_idx] * milliDarcyToSqMetre/poros[cell_idx]) * surfaceTension;
+	       minSw = InvJfunctions[int(satnums[cell_idx])-1].getMinimumF().second;
+	       maxSw = InvJfunctions[int(satnums[cell_idx])-1].getMaximumF().second;
+	   }
+	   else { // anisotropic input, we do not to J-function scaling
+	       Pcmincandidate = SwPcfunctions[int(satnums[cell_idx])-1].getMinimumX().first;
+	       Pcmaxcandidate = SwPcfunctions[int(satnums[cell_idx])-1].getMaximumX().first;
                
-               double Pcmincandidate, Pcmaxcandidate, minSw, maxSw;
-               
-               if (! anisotropic_input) {
-                   Pcmincandidate = InvJfunctions[int(satnums[cell_idx])-1].getMinimumX().first
-                       / sqrt(permxs[cell_idx] * milliDarcyToSqMetre / poros[cell_idx]) * surfaceTension;
-                   Pcmaxcandidate = InvJfunctions[int(satnums[cell_idx])-1].getMaximumX().first
-                       / sqrt(permxs[cell_idx] * milliDarcyToSqMetre/poros[cell_idx]) * surfaceTension;
-                   minSw = InvJfunctions[int(satnums[cell_idx])-1].getMinimumF().second;
-                   maxSw = InvJfunctions[int(satnums[cell_idx])-1].getMaximumF().second;
-               }
-               else { // anisotropic input, we do not to J-function scaling
-                   Pcmincandidate = SwPcfunctions[int(satnums[cell_idx])-1].getMinimumX().first;
-                   Pcmaxcandidate = SwPcfunctions[int(satnums[cell_idx])-1].getMaximumX().first;
-                   
-                   minSw = SwPcfunctions[int(satnums[cell_idx])-1].getMinimumF().second;
-                   maxSw = SwPcfunctions[int(satnums[cell_idx])-1].getMaximumF().second;
-               }
-               Pcmin = min(Pcmincandidate, Pcmin);
-               Pcmax = max(Pcmaxcandidate, Pcmax);
-               
-               maxSinglePhasePerm = max( maxSinglePhasePerm, permxs[cell_idx]);
-               
-               //cout << "minSwc: " << minSw << endl;
-               //cout << "maxSwc: " << maxSw << endl;
-               
-               // Add irreducible water saturation volume
-               Swirvolume += minSw * cellPoreVolumes[cell_idx];
-               Sworvolume += maxSw * cellPoreVolumes[cell_idx];
-           }
-           ++tesselatedCells; // keep count.
-//        }
-//        else {
-//            // cellVolumes and CellPoreVolumes are already  zero for these indexes.
-//        }
+	       minSw = SwPcfunctions[int(satnums[cell_idx])-1].getMinimumF().second;
+	       maxSw = SwPcfunctions[int(satnums[cell_idx])-1].getMaximumF().second;
+	   }
+	   Pcmin = min(Pcmincandidate, Pcmin);
+	   Pcmax = max(Pcmaxcandidate, Pcmax);
+           
+	   maxSinglePhasePerm = max( maxSinglePhasePerm, permxs[cell_idx]);
+           
+	   //cout << "minSwc: " << minSw << endl;
+	   //cout << "maxSwc: " << maxSw << endl;
+           
+	   // Add irreducible water saturation volume
+	   Swirvolume += minSw * cellPoreVolumes[cell_idx];
+	   Sworvolume += maxSw * cellPoreVolumes[cell_idx];
+       }
+       ++tesselatedCells; // keep count.
    }
    double minSinglePhasePerm = max(maxSinglePhasePerm/maxPermContrast, minPerm);
    
