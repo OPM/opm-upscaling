@@ -66,8 +66,8 @@ int main(int argc, char** argv)
     double zmax = param.getDefault("zmax", ch.zLimits().second);
     int ilen = param.getDefault("ilen", imax - imin);
     int jlen = param.getDefault("jlen", jmax - jmin);
-    double zlen = param.getDefault("zlen", zmax - zmin);
     double zresolution = param.getDefault("zresolution", 1.0);
+    double zlen = param.getDefault("zlen", zresolution);
     bool upscale = param.getDefault("upscale", true);
     bool resettoorigin = param.getDefault("resettoorigin", true);
     boost::mt19937::result_type userseed = param.getDefault("seed", 0);
