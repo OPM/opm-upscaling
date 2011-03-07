@@ -168,7 +168,7 @@ int main(int argc, char** argv)
         std::stringstream outputtmp;
         
         outputtmp << "################################################################################################" << std::endl;
-        outputtmp << "# Results from depth thrend analysis on subsamples" << std::endl;
+        outputtmp << "# Results from depth trend analysis on subsamples" << std::endl;
         outputtmp << "#" << std::endl;
         time_t now = time(NULL);
         outputtmp << "# Finished: " << asctime(localtime(&now));
