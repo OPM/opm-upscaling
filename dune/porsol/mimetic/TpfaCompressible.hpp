@@ -290,6 +290,7 @@ namespace Dune
             std::vector<double> start_face_pressure;
             std::vector<double> start_cell_press;
             std::vector<double> well_bhp;
+            std::vector<double> start_perf_flux;
             int num_faces = pgrid_->numFaces();
             face_flux.clear();
             face_flux.resize(num_faces, 0.0);
@@ -306,6 +307,7 @@ namespace Dune
                 start_face_flux = face_flux;
                 start_face_pressure = face_pressure_scalar;
                 start_cell_press = cell_pressure_scalar;
+                start_perf_flux = well_perf_fluxes;
                 // (Re-)compute fluid properties.
                 computeFluidProps(cell_pressure, face_pressure, cell_z, dt);
 
@@ -383,8 +385,12 @@ namespace Dune
                                                    well_bhp, well_perf_fluxes);
 
                 // Compute relative changes for pressure and flux
-                double max_flux = std::max(std::fabs(*std::min_element(face_flux.begin(), face_flux.end())),
-                                           std::fabs(*std::max_element(face_flux.begin(), face_flux.end())));
+                double max_flux_face = std::max(std::fabs(*std::min_element(face_flux.begin(), face_flux.end())),
+                                                std::fabs(*std::max_element(face_flux.begin(), face_flux.end())));
+                double max_flux_perf = num_perf == 0 ? 0.0
+                    : std::max(std::fabs(*std::min_element(well_perf_fluxes.begin(), well_perf_fluxes.end())),
+                               std::fabs(*std::max_element(well_perf_fluxes.begin(), well_perf_fluxes.end())));
+                double max_flux = std::max(max_flux_face, max_flux_perf);
                 double max_press = std::max(std::fabs(*std::min_element(cell_pressure_scalar.begin(), cell_pressure_scalar.end())),
                                             std::fabs(*std::max_element(cell_pressure_scalar.begin(), cell_pressure_scalar.end())));
                 double flux_change_infnorm = 0.0;
@@ -392,6 +398,10 @@ namespace Dune
                 for (int face = 0; face < num_faces; ++face) {
                     flux_change_infnorm = std::max(flux_change_infnorm,
                                                    std::fabs(face_flux[face] - start_face_flux[face]));
+                }
+                for (int perf = 0; perf < num_perf; ++perf) {
+                    flux_change_infnorm = std::max(flux_change_infnorm,
+                                                   std::fabs(well_perf_fluxes[perf] - start_perf_flux[perf]));
                 }
                 for (int cell = 0; cell < num_cells; ++cell) {
                     press_change_infnorm = std::max(press_change_infnorm,
