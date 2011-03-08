@@ -2,9 +2,10 @@
 # $Revision$
 
 check_PROGRAMS =
-noinst_PROGRAMS = bo_fluid_test bo_well_test
+noinst_PROGRAMS = bo_fluid_test bo_well_test bo_fluid_pressuredeps
 
 bo_fluid_test_SOURCES = bo_fluid_test.cpp
+bo_fluid_pressuredeps_SOURCES = bo_fluid_pressuredeps.cpp
 bo_well_test_SOURCES = bo_well_test.cpp
 
 
