@@ -38,3 +38,4 @@ missing
 
 # Ignoring executables
 *_test
+bo_fluid_pressuredeps
