@@ -32,7 +32,11 @@ missing
 
 # Ignoring executables
 *_test
-examples/cpchop*
+examples/cpchop
+examples/cpchop_depthtrend
 examples/cpregularize
 examples/exp_variogram
-examples/upscale_*
+examples/upscale_cap
+examples/upscale_cond
+examples/upscale_perm
+examples/upscale_relperm
