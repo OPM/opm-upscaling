@@ -46,7 +46,8 @@ public:
     ExplicitCompositionalTransport()
         : pgrid_(0), prock_(0), pfluid_(0), pwells_(0), ptrans_(0),
           min_surfvol_threshold_(0.0),
-          single_step_only_(false)
+          single_step_only_(false),
+          min_vtime_(0.0)
     {
     }
 
@@ -54,6 +55,7 @@ public:
     {
         min_surfvol_threshold_ = param.getDefault("min_surfvol_threshold", min_surfvol_threshold_);
         single_step_only_ = param.getDefault("single_step_only", single_step_only_);
+        min_vtime_ = param.getDefault("min_vtime",  min_vtime_);
     }
 
     void setup(const Grid& grid,
@@ -119,6 +121,7 @@ public:
                         }
                     }
                 }
+                vtime = std::max(vtime,min_vtime_);
                 double time = std::min(std::min(vtime, gtime), max_nonzero_time);
                 min_time = std::min(time, min_time);
             }
@@ -180,6 +183,7 @@ private: // Data
     std::vector<TransportFluidData> perf_props_;
     double min_surfvol_threshold_;
     bool single_step_only_;
+    double min_vtime_;
 
 private: // Methods
 
