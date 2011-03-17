@@ -269,6 +269,14 @@ namespace Opm
             if (injector_component != -1) {
                 injection_mixture_[injector_component] = 1.0;
             }
+        } else {
+            // No WCONINJE.
+            // This default is only invoked if production wells
+            // start injecting, (and only if there are no injection wells).
+            // In other words, only if we have a primary production type scenario.
+            // In this case we expect the flow to be very small, and not affect
+            // the simulation in any significant way.
+            injection_mixture_[Oil] = 1.0;
         }
 
 	// Get WCONPROD data
