@@ -46,7 +46,8 @@ public:
     ExplicitCompositionalTransport()
         : pgrid_(0), prock_(0), pfluid_(0), pwells_(0), ptrans_(0),
           min_surfvol_threshold_(0.0),
-          single_step_only_(false)
+          single_step_only_(false),
+          min_vtime_(0.0)
     {
     }
 
@@ -54,6 +55,7 @@ public:
     {
         min_surfvol_threshold_ = param.getDefault("min_surfvol_threshold", min_surfvol_threshold_);
         single_step_only_ = param.getDefault("single_step_only", single_step_only_);
+        min_vtime_ = param.getDefault("min_vtime",  min_vtime_);
     }
 
     void setup(const Grid& grid,
@@ -119,6 +121,7 @@ public:
                         }
                     }
                 }
+                vtime = std::max(vtime,min_vtime_);
                 double time = std::min(std::min(vtime, gtime), max_nonzero_time);
                 min_time = std::min(time, min_time);
             }
@@ -180,6 +183,7 @@ private: // Data
     std::vector<TransportFluidData> perf_props_;
     double min_surfvol_threshold_;
     bool single_step_only_;
+    double min_vtime_;
 
 private: // Methods
 
@@ -270,13 +274,12 @@ private: // Methods
 
 
 
-
     void computeChange(const std::vector<double>& face_flux,
                        std::vector<CompVec>& comp_change,
                        std::vector<double>& cell_outflux,
                        std::vector<double>& cell_max_ff_deriv)
     {
-        int num_cells = pgrid_->numCells();
+        const int num_cells = pgrid_->numCells();
         comp_change.clear();
         CompVec zero(0.0);
         comp_change.resize(num_cells, zero);
@@ -285,7 +288,11 @@ private: // Methods
         cell_max_ff_deriv.clear();
         cell_max_ff_deriv.resize(num_cells, 0.0);
         CompVec surf_dens = pfluid_->surfaceDensities();
-        for (int face = 0; face < pgrid_->numFaces(); ++face) {
+	const int num_faces = pgrid_->numFaces();
+	std::vector<CompVec> face_change(num_faces);
+	std::vector<double> faces_max_ff_deriv(num_faces);
+#pragma omp parallel for
+        for (int face = 0; face < num_faces; ++face) {
             // Compute phase densities on face.
             PhaseVec phase_dens(0.0);
             for (int phase = 0; phase < 3; ++phase) {
@@ -309,6 +316,7 @@ private: // Methods
             int upwind_dir[numPhases] = { 0, 0, 0 };
             PhaseVec vstar(face_flux[face]);
             // double gravity_flux = gravity_*pgrid_->faceNormal(face)*pgrid_->faceArea(face);
+
             typename Grid::Vector centroid_diff = pgrid_->cellCentroid(c[0]);
             centroid_diff -= c[1] >= 0 ? pgrid_->cellCentroid(c[1]) : pgrid_->faceCentroid(face);
             double gravity_flux = gravity_*centroid_diff*ptrans_->operator[](face);
@@ -374,6 +382,7 @@ private: // Methods
                     }
                 }
             }
+	    faces_max_ff_deriv[face] = face_max_ff_deriv;
 
             // Compute z change.
             CompVec change(0.0);
@@ -383,23 +392,30 @@ private: // Methods
                 z_in_phase *= phase_flux[phase];
                 change += z_in_phase;
             }
+	    face_change[face] = change;
+	}
 
-            // Update output variables.
-            int totflux_upwind_cell = face_flux[face] >= 0.0 ? c[0] : c[1];
-            if (totflux_upwind_cell >= 0) {
-                cell_outflux[totflux_upwind_cell] += std::fabs(face_flux[face]);
-            }
-            for (int ix = 0; ix < 2; ++ix) {
-                if (c[ix] >= 0) {
-                    if (ix == 0) {
-                        comp_change[c[ix]] -= change;
-                    } else {
-                        comp_change[c[ix]] += change;
-                    }
-                    cell_max_ff_deriv[c[ix]] = std::max(cell_max_ff_deriv[c[ix]], face_max_ff_deriv);
-                }
-            }
-        }
+	// Update output variables
+#pragma omp parallel for
+	for (int cell = 0; cell < num_cells; ++cell) {
+	    const int num_local_faces = pgrid_->numCellFaces(cell);
+	    for (int local = 0; local < num_local_faces; ++local) {
+		int face = pgrid_->cellFace(cell,local);
+		if (cell == pgrid_->faceCell(face, 0)) {
+		    comp_change[cell] -= face_change[face];
+		    if (face_flux[face] >= 0.0) {
+			cell_outflux[cell] += std::fabs(face_flux[face]);
+		    }
+		} else if (cell == pgrid_->faceCell(face, 1)) {
+		    comp_change[cell] += face_change[face];
+		    if (face_flux[face] < 0.0) {
+			cell_outflux[cell] += std::fabs(face_flux[face]);
+		    }
+		}
+		cell_max_ff_deriv[cell] = std::max(cell_max_ff_deriv[cell],
+						   faces_max_ff_deriv[face]);
+	    }
+	}
 
         // Done with all faces, now deal with well perforations.
         int num_perf = perf_cells_.size();

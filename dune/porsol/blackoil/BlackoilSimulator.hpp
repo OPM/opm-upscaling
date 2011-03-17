@@ -297,6 +297,46 @@ init(const Dune::parameter::ParameterGroup& param)
 //                 cell_pressure_[cell] = PhaseVec(press);
 //             }
 //         }
+    } else if (param.getDefault("unstable_initial_mix", false)) {
+        CompVec init_oil(0.0);
+        init_oil[Fluid::Oil] = 1.0;
+        init_oil[Fluid::Gas] = 0.0;
+        CompVec init_water(0.0);
+        init_water[Fluid::Water] = 1.0;
+        CompVec init_gas(0.0);
+        init_gas[Fluid::Gas] = 150.0;
+        bdy_z_ = flow_solver_.inflowMixture();
+        cell_z_.resize(grid_.numCells());
+        std::fill(cell_z_.begin()                       , cell_z_.begin() + cell_z_.size()/3    , init_water);
+        std::fill(cell_z_.begin() + cell_z_.size()/3    , cell_z_.begin() + 2*(cell_z_.size()/3), init_oil);
+        std::fill(cell_z_.begin() + 2*(cell_z_.size()/3), cell_z_.end()                         , init_gas);
+        MESSAGE("******* Assuming zero capillary pressures *******");
+        PhaseVec init_p(100.0*Dune::unit::barsa);
+        cell_pressure_.resize(grid_.numCells(), init_p);
+
+        if (gravity_.two_norm() != 0.0) {
+            
+            typename Fluid::FluidState state = fluid_.computeState(cell_pressure_[0], cell_z_[0]);
+            cell_z_[0] *= grid_.cellVolume(0)*rock_.porosity(0)/state.total_phase_volume_;
+            for (int cell = 1; cell < grid_.numCells(); ++cell) {
+                double pore_vol = grid_.cellVolume(cell)*rock_.porosity(cell);
+                double fluid_vol;
+                int cnt =0;    
+                do {
+                    double rho = 0.5*((cell_z_[cell]+cell_z_[cell-1])*fluid_.surfaceDensities());
+                    double press = rho*((grid_.cellCentroid(cell) - grid_.cellCentroid(cell-1))*gravity_) + cell_pressure_[cell-1][0];
+                    cell_pressure_[cell] = PhaseVec(press);
+                    typename Fluid::FluidState state = fluid_.computeState(cell_pressure_[cell], cell_z_[cell]);
+                    fluid_vol = state.total_phase_volume_;
+                    cell_z_[cell] *= pore_vol/fluid_vol;
+                    ++cnt;
+                } while (std::fabs((fluid_vol-pore_vol)/pore_vol) > 1.0e-8 && cnt < 10);
+                
+            }  
+        } else {
+            std::cout << "---- Exit - BlackoilSimulator.hpp: No gravity, no fun ... ----" << std::endl;
+            exit(-1);
+        }       
     } else {
         CompVec init_z(0.0);
         double initial_mixture_gas = param.getDefault("initial_mixture_gas", 0.0);
