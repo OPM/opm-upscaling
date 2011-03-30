@@ -243,7 +243,7 @@ int main(int varnum, char** vararg)
         Set to minPerm if zero or less than minPerm.
       - Check maximum number of SATNUM values (can be number of rock types present)
    */
-   for (uint i = 0; i < satnums.size(); ++i) {
+   for (unsigned int i = 0; i < satnums.size(); ++i) {
        if (satnums[i] < 0 || satnums[i] > 1000) { 
            cerr << "satnums[" << i << "] = " << satnums[i] << ", not sane, quitting." << endl;
            usageandexit();
@@ -430,7 +430,7 @@ int main(int varnum, char** vararg)
    const std::vector<int>& ecl_idx = upscaler.grid().globalCell();
    CpGrid::Codim<0>::LeafIterator c = upscaler.grid().leafbegin<0>();
    for (; c != upscaler.grid().leafend<0>(); ++c) {
-       uint cell_idx = ecl_idx[c->index()];
+       unsigned int cell_idx = ecl_idx[c->index()];
        if (satnums[cell_idx] > 0) { // Satnum zero is "no rock"
 
 	   cellVolumes[cell_idx] = c->geometry().volume();
@@ -511,7 +511,7 @@ int main(int varnum, char** vararg)
    double Ptestvalue = Pcmax;
 
    vector<MonotCubicInterpolator> watersaturation_rocktype;
-   for (uint satidx=0; satidx <= maxSatnum; ++satidx) {
+   for (unsigned int satidx=0; satidx <= maxSatnum; ++satidx) {
        MonotCubicInterpolator tmp;
        watersaturation_rocktype.push_back(tmp);
    }
@@ -550,12 +550,12 @@ int main(int varnum, char** vararg)
        }
 
        // Reset array to zero.
-       for (uint satidx = 0; satidx <= maxSatnum; ++satidx) {
+       for (unsigned int satidx = 0; satidx <= maxSatnum; ++satidx) {
            watervolume_rocktype[satidx] = 0.0;
        }
      
        double waterVolume = 0.0;
-       for (uint cell_idx = 0; cell_idx < satnums.size(); ++cell_idx) {
+       for (unsigned int cell_idx = 0; cell_idx < satnums.size(); ++cell_idx) {
            if (cellVolumes[cell_idx] > emptycellvolumecutoff) {
                double waterSaturationCell = 0.0;
                if (satnums[cell_idx] > 0) { // handle "no rock" cells with satnum zero
@@ -574,7 +574,7 @@ int main(int varnum, char** vararg)
        }
        WaterSaturationVsCapPressure.addPair(Ptestvalue, waterVolume/poreVolume);
        //       cout << "Ptestvalue " << Ptestvalue << " sat: " << waterVolume/poreVolume << endl;
-       for (uint satidx = 1; satidx <= maxSatnum; ++satidx) {
+       for (unsigned int satidx = 1; satidx <= maxSatnum; ++satidx) {
            // cout << "satidx "<< satidx << " " << watervolume_rocktype[satidx]/cellporevolume_rocktype[satidx] << endl;
            //cout << "watvol: " << watervolume_rocktype[satidx] << " porevol " << cellporevolume_rocktype[satidx] << endl;
            watersaturation_rocktype[satidx].addPair(Ptestvalue, watervolume_rocktype[satidx]/cellporevolume_rocktype[satidx]);
@@ -609,7 +609,7 @@ int main(int varnum, char** vararg)
    vector<vector<double> > watersaturation_rocktype_values;
    vector<double> tmp;
    watersaturation_rocktype_values.push_back(tmp); // dummy zero index element
-   for (uint satidx=1; satidx <= maxSatnum; ++satidx) {
+   for (unsigned int satidx=1; satidx <= maxSatnum; ++satidx) {
        watersaturation_rocktype_values.push_back(watersaturation_rocktype[satidx].get_fVector());
    }
 
@@ -652,7 +652,7 @@ int main(int varnum, char** vararg)
        // Find min and max for saturation values
        double xmin = +DBL_MAX;
        double xmax = -DBL_MAX;
-       for (uint i = 0; i < Satvalues.size(); ++i) {
+       for (unsigned int i = 0; i < Satvalues.size(); ++i) {
            if (Satvalues[i] < xmin) {
                xmin = Satvalues[i];
            }
@@ -688,7 +688,7 @@ int main(int varnum, char** vararg)
 
 
    const int fieldwidth = outputprecision + 8;
-   for (uint i=0; i < Satvalues.size(); ++i) {
+   for (unsigned int i=0; i < Satvalues.size(); ++i) {
        outputtmp << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Pvalues[i]; 
        outputtmp << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Satvalues[i]; 
        
