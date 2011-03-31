@@ -317,7 +317,7 @@ private: // Methods
             PhaseVec vstar(face_flux[face]);
             // double gravity_flux = gravity_*pgrid_->faceNormal(face)*pgrid_->faceArea(face);
 
-            typename Grid::Vector centroid_diff = pgrid_->cellCentroid(c[0]);
+            typename Grid::Vector centroid_diff = c[0] >= 0 ? pgrid_->cellCentroid(c[0]) : pgrid_->faceCentroid(face);
             centroid_diff -= c[1] >= 0 ? pgrid_->cellCentroid(c[1]) : pgrid_->faceCentroid(face);
             double gravity_flux = gravity_*centroid_diff*ptrans_->operator[](face);
             PhaseVec rho_star(phase_dens);
