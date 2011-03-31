@@ -88,7 +88,7 @@ int main(int varnum, char** vararg) {
     
     map<string,string> options;
     options.insert(make_pair("output", "")); // If this is set, output goes to screen and to this file 
-    options.insert(make_pair("bc",     "f")); // Fixeed boundary conditions are default    
+    options.insert(make_pair("bc",     "f")); // Fixed boundary conditions are default    
     options.insert(make_pair("minPerm", "1e-9")); // Minimum allowable permeability value (for diagonal tensor entries)
     
     // Parse options from command line
@@ -111,8 +111,6 @@ int main(int varnum, char** vararg) {
 
     const char* ECLIPSEFILENAME(vararg[eclipseindex]);
 
-    // Including this (here noop-)line causes different output. Memory issue?
-    // EclipseGridParser eclparser(ECLIPSEFILENAME); 
    
     // Test if filename exists and is readable
     ifstream eclipsefile(ECLIPSEFILENAME, ios::in);
@@ -172,7 +170,6 @@ int main(int varnum, char** vararg) {
    
 
     /***********************************************************************
-    * Step X
     * Load geometry and data from Eclipse file
     */
     cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... ";
@@ -200,8 +197,7 @@ int main(int varnum, char** vararg) {
 
 
     /*****************************************************************
-     * Step X
-     * Tesselate grid (Sintef code)
+     * Tesselate grid 
      * 
      * Possibly twice because, the grid must be massaged slightly
      * (crop top and bottom) for periodic boundary conditions. These
@@ -239,7 +235,6 @@ int main(int varnum, char** vararg) {
     
     
     /*********************************************************************
-     * Step X:
      * Do porosity upscaling
      *
      * This is an added feature. It is done since does not cost anything
@@ -255,8 +250,7 @@ int main(int varnum, char** vararg) {
     }
  
     /*********************************************************************
-     * Step X:
-     * Do upscaling (Sintef code)
+     * Do single-phase permeability upscaling 
      */
     
     if (isFixed)  {
@@ -298,8 +292,9 @@ int main(int varnum, char** vararg) {
         cout << endl;
     }     
     
-    
-    //  Output results to stdout or optionally to file
+    /***********************************************************************
+     * Output results to stdout or optionally to file
+     */
     
     stringstream outputtmp;
     
