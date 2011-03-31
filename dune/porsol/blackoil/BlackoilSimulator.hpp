@@ -156,7 +156,7 @@ init(const Dune::parameter::ParameterGroup& param)
         increase_stepsize_ = param.getDefault("increase_stepsize", false);
         if (increase_stepsize_) {
             stepsize_increase_factor_ = param.getDefault("stepsize_increase_factor", 1.5);
-            maximum_stepsize_ = param.getDefault("maximum_stepsize", 1.0*unit::day);
+            maximum_stepsize_ = param.getDefault("maximum_stepsize", 1.0e100);
         } else {
             stepsize_increase_factor_ = 1.0;
             maximum_stepsize_ = 1e100;
