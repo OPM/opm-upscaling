@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
         exit(1);
     } 
     Dune::parameter::ParameterGroup param(argc, argv);
- 
+    
     std::string gridfilename = param.get<std::string>("gridfilename");
     double minCellVolume = param.getDefault("mincellvolume", 1e-8);
     bool skipTopBottom = param.getDefault("skiptopbottom", true);
@@ -58,17 +58,17 @@ int main(int argc, char** argv) {
     
     //eclParser_p = new Dune::EclipseGridParser(gridfilename);
     //Dune::EclipseGridParser& eclParser = *eclParser_p;
-
+    
     Dune::EclipseGridParser eclParser(gridfilename);
-
+    
     Dune::EclipseGridInspector gridinspector(eclParser);
- 
+    
     // Check that we have the information we need from the eclipse file, we will check PERM-fields later
     if (! (eclParser.hasField("SPECGRID") && eclParser.hasField("COORD") && eclParser.hasField("ZCORN"))) {  
         cerr << "Error: Did not find SPECGRID, COORD and ZCORN in Eclipse file " << gridfilename << endl;  
         exit(1);  
     }
-
+    
     /***************************
      * Find dips for every cell.
      */
@@ -76,34 +76,34 @@ int main(int argc, char** argv) {
     vector<int>  griddims = eclParser.getSPECGRID().dimensions;
     vector<double> xdips, ydips, cellvolumes;
     vector<int> cellidxs_i, cellidxs_j, cellidxs_k;
-   
+    
     int ignoredCellCount = 0; 
     for (int k=0; k < griddims[2]; ++k) {
-      for (int j=0; j < griddims[1]; ++j) {
-        for (int i=0; i < griddims[0]; ++i) { 
-          double cellVolume = gridinspector.cellVolumeVerticalPillars(i, j, k);
-          if (cellVolume > minCellVolume) {
-            std::pair<double,double> xydip = gridinspector.cellDips(i, j, k);
-            xdips.push_back(xydip.first);
-            ydips.push_back(xydip.second);
-            cellvolumes.push_back(cellVolume);
-            cellidxs_i.push_back(i);
-            cellidxs_j.push_back(j);
-            cellidxs_k.push_back(k);
-          }
-          else {
-            ignoredCellCount++;
-          }
-        }
-      }
+	for (int j=0; j < griddims[1]; ++j) {
+	    for (int i=0; i < griddims[0]; ++i) { 
+		double cellVolume = gridinspector.cellVolumeVerticalPillars(i, j, k);
+		if (cellVolume > minCellVolume) {
+		    std::pair<double,double> xydip = gridinspector.cellDips(i, j, k);
+		    xdips.push_back(xydip.first);
+		    ydips.push_back(xydip.second);
+		    cellvolumes.push_back(cellVolume);
+		    cellidxs_i.push_back(i);
+		    cellidxs_j.push_back(j);
+		    cellidxs_k.push_back(k);
+		}
+		else {
+		    ignoredCellCount++;
+		}
+	    }
+	}
     }
-  
+    
     // Average xdips and ydips 
     double xdipaverage = accumulate(xdips.begin(), xdips.end(), 0.0)/xdips.size();
     double ydipaverage = accumulate(ydips.begin(), ydips.end(), 0.0)/ydips.size();
-
+    
     stringstream outputtmp;
-
+    
     // Print a table of all computed values:
     outputtmp << "###############################################################################" << endl;
     outputtmp << "# Results from upscaling dips."<< endl;
@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
     time_t now = time(NULL);
     outputtmp << "# Finished: " << asctime(localtime(&now));
     utsname hostname; uname(&hostname);
-
+    
     outputtmp << "#" << endl;
     outputtmp << "# Eclipse file: " << gridfilename << endl;
     outputtmp << "#" << endl;
@@ -122,14 +122,14 @@ int main(int argc, char** argv) {
     outputtmp << "# Cells smaller than mincellvolume: " << ignoredCellCount << endl;
     outputtmp << "###########################################################" << endl;
     if (listallcells) {
-      outputtmp << "# i j k xdip ydip  cellvolume" << endl;
-      for (unsigned int i=0; i < xdips.size(); ++i) {
-         outputtmp << cellidxs_i[i] << " " << cellidxs_j[i] << " " << cellidxs_k[i] << "\t" << xdips[i] << "\t" << ydips[i] << "\t" << cellvolumes[i] << endl;
-      } 
+	outputtmp << "# i j k xdip ydip  cellvolume" << endl;
+	for (unsigned int i=0; i < xdips.size(); ++i) {
+	    outputtmp << cellidxs_i[i] << " " << cellidxs_j[i] << " " << cellidxs_k[i] << "\t" << xdips[i] << "\t" << ydips[i] << "\t" << cellvolumes[i] << endl;
+	} 
     }
     else { 
-      outputtmp << "x_dip_average " << xdipaverage << endl;
-      outputtmp << "y_dip_average " << ydipaverage << endl;
+	outputtmp << "x_dip_average " << xdipaverage << endl;
+	outputtmp << "y_dip_average " << ydipaverage << endl;
     } 
     
     cout << endl << outputtmp.str();
@@ -140,6 +140,6 @@ int main(int argc, char** argv) {
         outfile << outputtmp.str();
         outfile.close();
     }
-     return 0;
+    return 0;
     
 };
