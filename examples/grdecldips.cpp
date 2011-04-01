@@ -44,7 +44,7 @@ using namespace std;
 
 int main(int argc, char** argv) {        
     if (argc ==  1) { // If no arguments supplied 
-        cout << "Usage: grdecldips gridfilename=foo.grdecl [mincellvolume=1e-8] [skiptopbottom=true]" << endl;
+        cout << "Usage: grdecldips gridfilename=foo.grdecl [mincellvolume=1e-8] " << endl;
         cout << "       [listallcells=false] [output=filename.txt]" << endl;
         exit(1);
     } 
@@ -52,7 +52,6 @@ int main(int argc, char** argv) {
     
     std::string gridfilename = param.get<std::string>("gridfilename");
     double minCellVolume = param.getDefault("mincellvolume", 1e-8);
-    bool skipTopBottom = param.getDefault("skiptopbottom", true);
     bool listallcells = param.getDefault("listallcells", false);
     std::string outputfilename = param.getDefault<std::string>("output", "");
     
