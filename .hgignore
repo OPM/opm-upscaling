@@ -40,3 +40,4 @@ examples/upscale_cap
 examples/upscale_cond
 examples/upscale_perm
 examples/upscale_relperm
+examples/grdecldips
