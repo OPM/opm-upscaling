@@ -51,6 +51,13 @@
 
 int main(int argc, char** argv)
 {
+   if (argc == 1) {
+        std::cout << "Usage: cpchop_depthtrend gridfilename=filename.grdecl [zresolution=1] [zlen=1] [ilen=5] [jlen=5] " << std::endl;
+        std::cout << "       [zlen=5] [imin=] [imax=] [jmin=] [jmax=] [upscale=true] [resettoorigin=true]" << std::endl;
+        std::cout << "       [seed=111] [z_tolerance=0.0] [minperm=1e-9] " << std::endl;
+        exit(1);
+    }
+
     Dune::parameter::ParameterGroup param(argc, argv);
     std::string gridfilename = param.get<std::string>("gridfilename");
     Dune::CornerPointChopper ch(gridfilename);

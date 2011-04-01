@@ -51,6 +51,14 @@
 
 int main(int argc, char** argv)
 {
+   if (argc == 1) {
+        std::cout << "Usage: cpregularize gridfilename=filename.grdecl [ires=5] [jres=5] [zres=5] " << std::endl;
+        std::cout << "       [imin=] [imax=] [jmin=] [jmax=] [zmin=] [zmax=] " << std::endl;
+        std::cout << "       [z_tolerance=0.0] [minperm=1e-9] " << std::endl;
+        std::cout << "       [resultgrid=regularizedgrid.grdecl]" << std::endl;
+        exit(1);
+    }
+  
     Dune::parameter::ParameterGroup param(argc, argv);
     std::string gridfilename = param.get<std::string>("gridfilename");
     Dune::CornerPointChopper ch(gridfilename);
