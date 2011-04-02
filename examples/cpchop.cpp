@@ -43,6 +43,7 @@ int main(int argc, char** argv)
 	std::cout << "Usage: cpchop gridfilename=filename.grdecl [subsamples=10] [ilen=5] [jlen=5] " << std::endl;
 	std::cout << "       [zlen=5] [imin=] [imax=] [jmin=] [jmax=] [upscale=true] [resettoorigin=true]" << std::endl;
         std::cout << "       [seed=111] [z_tolerance=0.0] [minperm=1e-9] " << std::endl;
+	std::cout << "       [dips=false] [mincellvolume=1e-9]" << std::endl;
         std::cout << "       [filebase=] [resultfile=]" << std::endl;
         exit(1);
     }
@@ -74,21 +75,25 @@ int main(int argc, char** argv)
     double minperm = param.getDefault("minperm", 1e-9);
     double minpermSI = Dune::unit::convert::from(minperm, Dune::prefix::milli*Dune::unit::darcy);
 
+    // Following two options are for dip upscaling (slope of cell top and bottom edges)
+    bool dips = param.getDefault("dips", false);  // whether to do dip averaging
+    double mincellvolume = param.getDefault("mincellvolume", 1e-9); // ignore smaller cells for dip calculations
+
     double z_tolerance = param.getDefault("z_tolerance", 0.0);
     double residual_tolerance = param.getDefault("residual_tolerance", 1e-8);
     double linsolver_verbosity = param.getDefault("linsolver_verbosity", 0);
     double linsolver_type = param.getDefault("linsolver_type", 1);
 
-    // Check that we do not have any user input 
+    // Check that we do not have any user input
     // that goes outside the coordinates described in
     // the cornerpoint file (runtime-exception will be thrown in case of error)
-    ch.verifyInscribedShoebox(imin, ilen, imax, 
+    ch.verifyInscribedShoebox(imin, ilen, imax,
 			      jmin, jlen, jmax,
 			      zmin, zlen, zmax);
 
     // Random number generator from boost.
     boost::mt19937 gen;
-    
+
     // Seed the random number generators with the current time, unless specified on command line
     // Warning: Current code does not allow 0 for the seed!!
     if (userseed == 0) {
@@ -97,7 +102,7 @@ int main(int argc, char** argv)
     else {
         gen.seed(userseed);
     }
-        
+
 
     // Note that end is included in interval for uniform_int.
     boost::uniform_int<> disti(imin, imax - ilen);
@@ -106,13 +111,15 @@ int main(int argc, char** argv)
     boost::variate_generator<boost::mt19937&, boost::uniform_int<> > ri(gen, disti);
     boost::variate_generator<boost::mt19937&, boost::uniform_int<> > rj(gen, distj);
     boost::variate_generator<boost::mt19937&, boost::uniform_real<> > rz(gen, distz);
-    
+
     // Storage for results
     std::vector<double> porosities;
     std::vector<double> permxs;
     std::vector<double> permys;
     std::vector<double> permzs;
+    std::vector<double> xdips, ydips;
 
+    int finished_subsamples = 0; // keep explicit count of successful subsamples
     for (int sample = 1; sample <= subsamples; ++sample) {
         int istart = ri();
         int jstart = rj();
@@ -138,67 +145,108 @@ int main(int argc, char** argv)
                 Dune::SinglePhaseUpscaler upscaler;
                 upscaler.init(subparser, Dune::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
                               residual_tolerance, linsolver_verbosity, linsolver_type, false);
-                
+
                 Dune::SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
                 upscaled_K *= (1.0/(Dune::prefix::milli*Dune::unit::darcy));
-                
-                
+
+
                 porosities.push_back(upscaler.upscalePorosity());
                 permxs.push_back(upscaled_K(0,0));
                 permys.push_back(upscaled_K(1,1));
                 permzs.push_back(upscaled_K(2,2));
-                
-            }   
+
+            }
+	    if (dips) {
+		Dune::EclipseGridParser subparser = ch.subparser();
+		std::vector<int>  griddims =subparser.getSPECGRID().dimensions;
+		std::vector<double> xdips_subsample, ydips_subsample, cellvolumes;
+		std::vector<int> cellidxs_i, cellidxs_j, cellidxs_k;
+
+		Dune::EclipseGridInspector gridinspector(subparser);
+		for (int k=0; k < griddims[2]; ++k) {
+		    for (int j=0; j < griddims[1]; ++j) {
+			for (int i=0; i < griddims[0]; ++i) {
+			    if (gridinspector.cellVolumeVerticalPillars(i, j, k) > mincellvolume) {
+				std::pair<double,double> xydip = gridinspector.cellDips(i, j, k);
+				xdips_subsample.push_back(xydip.first);
+				ydips_subsample.push_back(xydip.second);
+			    }
+			}
+		    }
+		}
+
+		// Average xdips and ydips
+		double xdipaverage = accumulate(xdips_subsample.begin(), xdips_subsample.end(), 0.0)/xdips_subsample.size();
+		double ydipaverage = accumulate(ydips_subsample.begin(), ydips_subsample.end(), 0.0)/ydips_subsample.size();
+		xdips.push_back(xdipaverage);
+		ydips.push_back(ydipaverage);
+	    }
+
+	    finished_subsamples++;
         }
         catch (...) {
             std::cerr << "Warning: Upscaling chopped subsample nr. " << sample << "failed, proceeding to next subsample\n";
         }
-        
+
     }
-     
+
+    // Make stream of output data, to be outputted to screen and optionally to file
+    std::stringstream outputtmp;
+
+    outputtmp << "################################################################################################" << std::endl;
+    outputtmp << "# Results from property analysis on subsamples" << std::endl;
+    outputtmp << "#" << std::endl;
+    time_t now = time(NULL);
+    outputtmp << "# Finished: " << asctime(localtime(&now));
+
+    utsname hostname;   uname(&hostname);
+    outputtmp << "# Hostname: " << hostname.nodename << std::endl;
+    outputtmp << "#" << std::endl;
+    outputtmp << "# Options used:" << std::endl;
+    outputtmp << "#     gridfilename: " << gridfilename << std::endl;
+    outputtmp << "#   i; min,len,max: " << imin << " " << ilen << " " << imax << std::endl;
+    outputtmp << "#   j; min,len,max: " << jmin << " " << jlen << " " << jmax << std::endl;
+    outputtmp << "#   z; min,len,max: " << zmin << " " << zlen << " " << zmax << std::endl;
+    outputtmp << "#       subsamples: " << subsamples << std::endl;
+    outputtmp << "################################################################################################" << std::endl;
+    outputtmp << "# id";
     if (upscale) {
-        
-        // Make stream of output data, to be outputted to screen and optionally to file
-        std::stringstream outputtmp;
-        
-        outputtmp << "################################################################################################" << std::endl;
-        outputtmp << "# Results from property analysis on subsamples" << std::endl;
-        outputtmp << "#" << std::endl;
-        time_t now = time(NULL);
-        outputtmp << "# Finished: " << asctime(localtime(&now));
-        
-        utsname hostname;   uname(&hostname);
-        outputtmp << "# Hostname: " << hostname.nodename << std::endl;
-        outputtmp << "#" << std::endl;
-        outputtmp << "# Options used:" << std::endl;
-        outputtmp << "#     gridfilename: " << gridfilename << std::endl;
-        outputtmp << "#   i; min,len,max: " << imin << " " << ilen << " " << imax << std::endl;
-        outputtmp << "#   j; min,len,max: " << jmin << " " << jlen << " " << jmax << std::endl;
-        outputtmp << "#   z; min,len,max: " << zmin << " " << zlen << " " << zmax << std::endl;
-        outputtmp << "#       subsamples: " << subsamples << std::endl;
-        outputtmp << "################################################################################################" << std::endl;
-        outputtmp << "# id          porosity                 permx                   permy                   permz" << std::endl;
-        
-        const int fieldwidth = outputprecision + 8;
-        for (size_t sample = 1; sample <= porosities.size(); ++sample) {
-            outputtmp << sample << '\t' <<
-                std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << porosities[sample-1] << '\t' <<
-                std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permxs[sample-1] << '\t' <<
-                std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permys[sample-1] << '\t' <<
-                std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permzs[sample-1] << '\t' <<
-                std::endl;
-        }
-        
-        if (resultfile != "") {
-            std::cout << "Writing results to " << resultfile << std::endl;
-            std::ofstream outfile;
-            outfile.open(resultfile.c_str(), std::ios::out | std::ios::trunc);
-            outfile << outputtmp.str();
-            outfile.close();      
-        }
-        
-        
-        
-        std::cout << outputtmp.str();
+	outputtmp << "          porosity                 permx                   permy                   permz";
+
     }
+    if (dips) {
+	outputtmp << "              xdip              ydip";
+    }
+    outputtmp << std::endl;
+
+    const int fieldwidth = outputprecision + 8;
+    for (size_t sample = 1; sample <= finished_subsamples; ++sample) {
+	outputtmp << sample << '\t';
+	if (upscale) {
+	    outputtmp <<
+		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << porosities[sample-1] << '\t' <<
+		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permxs[sample-1] << '\t' <<
+		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permys[sample-1] << '\t' <<
+		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permzs[sample-1] << '\t';
+	}
+	if (dips) {
+	    outputtmp <<
+		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << xdips[sample-1] << '\t' <<
+		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << ydips[sample-1];
+	}
+	outputtmp <<  std::endl;
+    }
+
+    if (resultfile != "") {
+	std::cout << "Writing results to " << resultfile << std::endl;
+	std::ofstream outfile;
+	outfile.open(resultfile.c_str(), std::ios::out | std::ios::trunc);
+	outfile << outputtmp.str();
+            outfile.close();
+    }
+
+
+
+    std::cout << outputtmp.str();
 }
+
