@@ -221,6 +221,7 @@ namespace Dune
                 std::cout << "    Relative volume discrepancy too large: " << rel_voldiscr << std::endl;
                 return false;
             } else {
+                std::cout << "    Relative volume discrepancy ok: " << rel_voldiscr << std::endl;
                 return true;
             }
         }
@@ -539,7 +540,18 @@ namespace Dune
             }
 
             if (transport) {
-                psolver_.explicitTransport(dt, &(cell_z[0][0]));
+                double max_dt = psolver_.explicitTimestepLimit(fp_.expjacterm,
+                                                               initial_voldiscr,
+                                                               fp_.cellA,
+                                                               fp_.faceA,
+                                                               fp_.phasemobf,
+                                                               fp_.phasemobf_deriv,
+                                                               &(pfluid_->surfaceDensities()[0]));
+                if (dt < max_dt) {
+                    psolver_.explicitTransport(dt, &(cell_z[0][0]));
+                } else {
+                    THROW("Too long timestep for IMPES. Please implement a control routine...");
+                }
             }
 
             return SolveOk;
