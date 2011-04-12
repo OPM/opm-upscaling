@@ -274,8 +274,7 @@ namespace Dune
                          std::vector<double>& well_perf_pressures,
                          std::vector<double>& well_perf_fluxes,
                          const std::vector<double>& src,
-                         const double dt,
-                         bool transport = false)
+                         const double dt)
         {
             perf_pressure_ = well_perf_pressures;
 
@@ -539,22 +538,27 @@ namespace Dune
                 THROW("Pressure solver failed to converge after " << max_num_iter_ << " iterations.");
             }
 
-            if (transport) {
-                double max_dt = psolver_.explicitTimestepLimit(fp_.expjacterm,
-                                                               initial_voldiscr,
-                                                               fp_.cellA,
-                                                               fp_.faceA,
-                                                               fp_.phasemobf,
-                                                               fp_.phasemobf_deriv,
-                                                               &(pfluid_->surfaceDensities()[0]));
-                if (dt < max_dt) {
-                    psolver_.explicitTransport(dt, &(cell_z[0][0]));
-                } else {
-                    THROW("Too long timestep for IMPES. Please implement a control routine...");
-                }
-            }
-
             return SolveOk;
+        }
+
+
+
+        /// Call this function after solve().
+        double stableStepIMPES()
+        {
+            return psolver_.explicitTimestepLimit(fp_.faceA,
+                                                  fp_.phasemobf,
+                                                  fp_.phasemobf_deriv,
+                                                  &(pfluid_->surfaceDensities()[0]));
+        }
+
+
+
+
+        void doStepIMPES(std::vector<typename FluidInterface::CompVec>& cell_z,
+                         const double dt)
+        {
+            psolver_.explicitTransport(dt, &(cell_z[0][0]));
         }
 
 

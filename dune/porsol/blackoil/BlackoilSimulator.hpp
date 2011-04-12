@@ -72,6 +72,7 @@ namespace Opm
         double initial_stepsize_;
         bool increase_stepsize_;
         double stepsize_increase_factor_;
+        double minimum_stepsize_;
         double maximum_stepsize_;
         std::vector<double> report_times_;
         bool do_impes_;
@@ -90,6 +91,7 @@ namespace Opm
                            const std::vector<double>& face_flux,
                            const std::vector<typename Fluid::PhaseVec>& sat, 
                            const std::vector<typename Fluid::CompVec>& mass_frac,
+                           const std::vector<double>& total_fluid_volume,
                            const int step,
                            const std::string& filebase);
 
@@ -156,12 +158,13 @@ init(const Dune::parameter::ParameterGroup& param)
         increase_stepsize_ = param.getDefault("increase_stepsize", false);
         if (increase_stepsize_) {
             stepsize_increase_factor_ = param.getDefault("stepsize_increase_factor", 1.5);
-            maximum_stepsize_ = param.getDefault("maximum_stepsize", 1.0e100);
+            maximum_stepsize_ = param.getDefault("maximum_stepsize", 1.0*unit::day);
         } else {
             stepsize_increase_factor_ = 1.0;
             maximum_stepsize_ = 1e100;
         }
     }
+    minimum_stepsize_ = param.getDefault("minimum_stepsize", 0.0);
     do_impes_ = param.getDefault("do_impes", false);
     output_dir_ = param.getDefault<std::string>("output_dir", "output");
 
@@ -453,7 +456,7 @@ simulate()
         // Solve flow system.
         enum FlowSolver::ReturnCode result
             = flow_solver_.solve(cell_pressure_, face_pressure_, cell_z_, face_flux,
-                                 well_perf_pressure_, well_perf_flux_, src_, stepsize, do_impes_);
+                                 well_perf_pressure_, well_perf_flux_, src_, stepsize);
 
         // Check if the flow solver succeeded.
         if (result != FlowSolver::SolveOk) {
@@ -472,7 +475,24 @@ simulate()
                                              stepsize, voldisclimit, cell_z_);
             voldisc_ok = (actual_computed_time == stepsize);
         } else {
-            voldisc_ok = flow_solver_.volumeDiscrepancyAcceptable(cell_pressure_, face_pressure_, cell_z_, stepsize);
+            // First check IMPES stepsize.
+            double max_dt = flow_solver_.stableStepIMPES();
+            std::cout << "Timestep was " << stepsize << " and max stepsize was " << max_dt << std::endl;
+            if (stepsize < max_dt || stepsize <= minimum_stepsize_) {
+                flow_solver_.doStepIMPES(cell_z_, stepsize);
+                voldisc_ok = flow_solver_.volumeDiscrepancyAcceptable(cell_pressure_, face_pressure_, cell_z_, stepsize);
+            } else {
+                // Restarting step.
+                stepsize = max_dt/1.5;
+                std::cout << "Restarting pressure step with new timestep " << stepsize << std::endl;
+                cell_pressure_ = cell_pressure_start;
+                face_pressure_ = face_pressure_start;
+                well_perf_pressure_ = well_perf_pressure_start;
+                well_perf_flux_ = well_perf_flux_start;
+                // cell_z_ = cell_z_start; // Not needed, unchanged.
+                wells_.update(grid_.numCells(), well_perf_pressure_, well_perf_flux_);
+                continue;
+            }
         }
 
         // If discrepancy too large, redo entire pressure step.
@@ -491,9 +511,12 @@ simulate()
         // Compute saturations and mass fractions for output purposes.
         int num_cells = grid_.numCells();
         std::vector<typename Fluid::PhaseVec> saturation(num_cells);
-        std::vector<typename Fluid::PhaseVec> mass_frac(num_cells); 
+        std::vector<typename Fluid::PhaseVec> mass_frac(num_cells);
+        std::vector<double> totflvol(num_cells);
         for (int cell = 0; cell < num_cells; ++cell) {
-            saturation[cell] = fluid_.computeState(cell_pressure_[cell], cell_z_[cell]).saturation_;
+            typename Fluid::FluidState state = fluid_.computeState(cell_pressure_[cell], cell_z_[cell]);
+            saturation[cell] = state.saturation_;
+            totflvol[cell] = state.total_phase_volume_;
             double totMass = cell_z_[cell]*fluid_.surfaceDensities();
             mass_frac[cell][Fluid::Water] = cell_z_[cell][Fluid::Water]*fluid_.surfaceDensities()[Fluid::Water]/totMass;
             mass_frac[cell][Fluid::Oil] = cell_z_[cell][Fluid::Oil]*fluid_.surfaceDensities()[Fluid::Oil]/totMass;
@@ -509,7 +532,7 @@ simulate()
         // If using given timesteps, set stepsize to match.
         if (!report_times_.empty()) {
             if (current_time >= report_times_[step]) {
-                output(grid_, cell_pressure_, cell_z_, face_flux, saturation, mass_frac, step, output_name);
+                output(grid_, cell_pressure_, cell_z_, face_flux, saturation, mass_frac, totflvol, step, output_name);
                 ++step;
                 if (step == int(report_times_.size())) {
                     break;
@@ -517,7 +540,7 @@ simulate()
             }
             stepsize = report_times_[step] - current_time;
         } else {
-            output(grid_, cell_pressure_, cell_z_, face_flux, saturation, mass_frac, step, output_name);
+            output(grid_, cell_pressure_, cell_z_, face_flux, saturation, mass_frac, totflvol, step, output_name);
             ++step;
         }
     }
@@ -599,6 +622,7 @@ output(const Grid& grid,
        const std::vector<double>& face_flux,
        const std::vector<typename Fluid::PhaseVec>& sat, 
        const std::vector<typename Fluid::CompVec>& mass_frac,
+       const std::vector<double>& total_fluid_volume,
        const int step,
        const std::string& filebase)
 {
@@ -628,6 +652,7 @@ output(const Grid& grid,
     vtkwriter.addCellData(z_flat, "z", Fluid::numComponents);
     vtkwriter.addCellData(sat_flat, "sat", Fluid::numPhases);
     vtkwriter.addCellData(mass_frac_flat, "massFrac", Fluid::numComponents);
+    vtkwriter.addCellData(total_fluid_volume, "total fl. vol.");
     vtkwriter.write(filebase + '-' + boost::lexical_cast<std::string>(step),
                     Dune::VTKOptions::ascii);
 
@@ -656,19 +681,26 @@ output(const Grid& grid,
     for (int cell = 0; cell < num_cells; ++cell) {
         liq_press[cell] = cell_pressure[cell][Fluid::Liquid];
     }
+    // Liquid phase pressure.
     std::copy(liq_press.begin(), liq_press.end(),
               std::ostream_iterator<double>(dump, " "));
     dump << '\n';
+    // z (3 components)
     for (int comp = 0; comp < Fluid::numComponents; ++comp) {
         std::copy(zv[comp].begin(), zv[comp].end(),
                   std::ostream_iterator<double>(dump, " "));
         dump << '\n';
     }
+    // s (3 components)
     for (int phase = 0; phase < Fluid::numPhases; ++phase) {
         std::copy(sv[phase].begin(), sv[phase].end(),
                   std::ostream_iterator<double>(dump, " "));
         dump << '\n';
     }
+    // Total fluid volume
+    std::copy(total_fluid_volume.begin(), total_fluid_volume.end(),
+              std::ostream_iterator<double>(dump, " "));
+    dump << '\n';
 }
 
 
