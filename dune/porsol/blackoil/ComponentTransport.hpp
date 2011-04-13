@@ -114,7 +114,7 @@ public:
                     if (comp_change[cell][comp] < 0.0) {
                         if (cell_z[cell][comp] > min_surfvol_threshold_) {
                             max_nonzero_time = std::min(max_nonzero_time,
-                                                        -cell_z[cell][comp]*prock_->porosity(cell)/comp_change[cell][comp]);
+                                                        -cell_z[cell][comp]*pvol/comp_change[cell][comp]);
                         } else {
                             comp_change[cell][comp] = 0.0;
                             cell_z[cell][comp] = 0.0;
@@ -139,7 +139,8 @@ public:
                       << std::setw(24) << dt - cur_time << std::endl;
             std::cout.precision(16);
             for (int cell = 0; cell < num_cells; ++cell) {
-                comp_change[cell] *= (step_time/prock_->porosity(cell));
+                double pv = pgrid_->cellVolume(cell)*prock_->porosity(cell);
+                comp_change[cell] *= (step_time/pv);
                 cell_z[cell] += comp_change[cell];
             }
             // After changing z, we recompute fluid properties.

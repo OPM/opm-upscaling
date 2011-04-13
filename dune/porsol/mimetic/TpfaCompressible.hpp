@@ -397,7 +397,7 @@ namespace Dune
                     // appear in the new formulation and adding the new terms.
                     for (int cell = 0; cell < num_cells; ++cell) {
                         double dres = fp_.totcompr[cell]*(cell_pressure_scalar[cell] - cell_pressure_scalar_initial[cell]);
-                        dres -= 1.0 - fp_.totphasevol[cell]/pgrid_->cellVolume(cell);
+                        dres -= 1.0 - fp_.totphasevol_density[cell];
                         dres *= pgrid_->cellVolume(cell)*prock_->porosity(cell)/dt;
                         res[cell] -= dres;
                     }

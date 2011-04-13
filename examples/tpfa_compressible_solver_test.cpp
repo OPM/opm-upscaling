@@ -100,10 +100,9 @@ void test_flowsolver(const Grid& grid,
     // Rescale z values so that pore volume is filled exactly
     // (to get zero initial volume discrepancy).
     for (int cell = 0; cell < grid.numCells(); ++cell) {
-        double pore_vol = grid.cellVolume(cell)*rock.porosity(cell);
         typename Fluid::FluidState state = fluid.computeState(cell_pressure[cell], z[cell]);
-        double fluid_vol = state.total_phase_volume_;
-        z[cell] *= pore_vol/fluid_vol;
+        double fluid_vol = state.total_phase_volume_density_;
+        z[cell] *= 1.0/fluid_vol;
     }
     std::vector<PhaseVec> face_pressure(num_faces);
     for (int face = 0; face < num_faces; ++face) {
