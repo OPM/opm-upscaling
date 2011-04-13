@@ -557,10 +557,10 @@ computeCellState(int iCell, int iRef, double wo_contact_depth, double go_contact
    const int maxCnt = 30;
    const double eps = 1.0e-8;
    
-   double pore_vol_ref = grid_.cellVolume(iRef)*rock_.porosity(iRef);
-   double pore_vol = grid_.cellVolume(iCell)*rock_.porosity(iCell);    	
+//    double pore_vol_ref = grid_.cellVolume(iRef)*rock_.porosity(iRef);
+//    double pore_vol = grid_.cellVolume(iCell)*rock_.porosity(iCell);    	
    cell_z_[iCell] = cell_z_[iRef];
-   cell_z_[iCell] *= pore_vol/pore_vol_ref;
+   // cell_z_[iCell] *= pore_vol/pore_vol_ref;
    bool waterOnly = false;
    if (grid_.cellCentroid(iCell)[2] > wo_contact_depth) { // Maybe a too crude??
        cell_z_[iCell][Fluid::Oil] = 0.0;
@@ -569,23 +569,25 @@ computeCellState(int iCell, int iRef, double wo_contact_depth, double go_contact
    }
    double gZ = (grid_.cellCentroid(iCell) - grid_.cellCentroid(iRef))*gravity_;
    double fluid_vol_dens;
-   double pv_ref_inv = 1.0/pore_vol_ref;
-   double pv_inv = 1.0/pore_vol;
+//    double pv_ref_inv = 1.0/pore_vol_ref;
+//    double pv_inv = 1.0/pore_vol;
    int cnt =0;    
-   do {    
-       double rho = 0.5*(pv_inv*(cell_z_[iCell]*fluid_.surfaceDensities())+pv_ref_inv*(cell_z_[iRef]*fluid_.surfaceDensities()));
+   do {
+       double rho = 0.5*(cell_z_[iCell]*fluid_.surfaceDensities()
+                         + cell_z_[iRef]*fluid_.surfaceDensities());
        double press = rho*gZ + cell_pressure_[iRef][0];
        cell_pressure_[iCell] = PhaseVec(press);
        typename Fluid::FluidState state = fluid_.computeState(cell_pressure_[iCell], cell_z_[iCell]);
        fluid_vol_dens = state.total_phase_volume_density_;
-       double oil_vol = state.phase_volume_[Fluid::Liquid] + state.phase_volume_[Fluid::Vapour];
-       double wat_vol = state.phase_volume_[Fluid::Aqua];
+       double oil_vol_dens = state.phase_volume_density_[Fluid::Liquid]
+           + state.phase_volume_density_[Fluid::Vapour];
+       double wat_vol_dens = state.phase_volume_density_[Fluid::Aqua];
        if (waterOnly) {
-           cell_z_[iCell][Fluid::Water] *= pore_vol/wat_vol;
+           cell_z_[iCell][Fluid::Water] *= 1.0/wat_vol_dens;
        } else {
-           cell_z_[iCell][Fluid::Oil] *= (1.0-connate_water_saturation)*pore_vol/oil_vol;
-           cell_z_[iCell][Fluid::Gas] *= (1.0-connate_water_saturation)*pore_vol/oil_vol;
-           cell_z_[iCell][Fluid::Water] *= connate_water_saturation*pore_vol/wat_vol;
+           cell_z_[iCell][Fluid::Oil] *= (1.0-connate_water_saturation)/oil_vol_dens;
+           cell_z_[iCell][Fluid::Gas] *= (1.0-connate_water_saturation)/oil_vol_dens;
+           cell_z_[iCell][Fluid::Water] *= connate_water_saturation/wat_vol_dens;
        }       
        ++cnt;
    } while (std::fabs(fluid_vol_dens-1.0) > eps && cnt < maxCnt);
