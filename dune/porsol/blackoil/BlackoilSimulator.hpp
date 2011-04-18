@@ -470,7 +470,8 @@ simulate()
                 = transport_solver_.transport(bdy_pressure_, bdy_z_,
                                              face_flux, cell_pressure_, face_pressure_,
                                              stepsize, voldisclimit, cell_z_);
-            voldisc_ok = (actual_computed_time == stepsize);
+            // voldisc_ok = (actual_computed_time == stepsize); // This is sufficient, below is for output uniformity.
+            voldisc_ok = flow_solver_.volumeDiscrepancyAcceptable(cell_pressure_, face_pressure_, cell_z_, stepsize);
         } else {
             // First check IMPES stepsize.
             double max_dt = flow_solver_.stableStepIMPES();
