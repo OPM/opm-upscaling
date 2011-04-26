@@ -456,9 +456,20 @@ simulate()
                                  well_perf_pressure_, well_perf_flux_, src_, stepsize);
 
         // Check if the flow solver succeeded.
-        if (result != FlowSolver::SolveOk) {
+        if (result == FlowSolver::VolumeDiscrepancyTooLarge) {
             THROW("Flow solver refused to run due to too large volume discrepancy.");
+        } else if (result == FlowSolver::FailedToConverge) {
+            std::cout << "********* Nonlinear convergence failure: Shortening (pressure) stepsize, redoing step number " << step <<" **********" << std::endl;
+            stepsize *= 0.5;
+            cell_pressure_ = cell_pressure_start;
+            face_pressure_ = face_pressure_start;
+            well_perf_pressure_ = well_perf_pressure_start;
+            well_perf_flux_ = well_perf_flux_start;
+            cell_z_ = cell_z_start;
+            wells_.update(grid_.numCells(), well_perf_pressure_, well_perf_flux_);
+            continue;
         }
+        ASSERT(result == FlowSolver::SolveOk);
 
         // Update wells with new perforation pressures and fluxes.
         wells_.update(grid_.numCells(), well_perf_pressure_, well_perf_flux_);

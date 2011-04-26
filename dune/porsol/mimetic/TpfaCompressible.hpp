@@ -226,7 +226,7 @@ namespace Dune
             }
         }
 
-        enum ReturnCode { SolveOk, VolumeDiscrepancyTooLarge };
+        enum ReturnCode { SolveOk, VolumeDiscrepancyTooLarge, FailedToConverge };
 
 
         /// @brief
@@ -535,7 +535,7 @@ namespace Dune
             }
 
             if (!converged) {
-                THROW("Pressure solver failed to converge after " << max_num_iter_ << " iterations.");
+                return FailedToConverge;
             }
 
             return SolveOk;
