@@ -1357,7 +1357,7 @@ namespace Dune {
             Dune::SeqILU0<Matrix,Vector,Vector> precond(S_, 1.0);
 
             // Construct solver for system of linear equations.
-            Dune::BiCGSTABSolver<Vector> linsolve(opS, precond, residTol,
+            Dune::CGSolver<Vector> linsolve(opS, precond, residTol,
                                                   S_.N(), verbosity_level);
 
             Dune::InverseOperatorResult result;
