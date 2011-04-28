@@ -115,6 +115,8 @@ void usage()
         "corresponds to the first rock type defined in the eclipsefile's SATNUM. The" << endl <<
         "second correspond to the second rock type and so on. If just one Jfunc is" << endl <<
         "given, this is used for all rock types" << endl;
+    // "minPoro" intentionally left undocumented
+
 }
 
 void usageandexit() {
@@ -205,6 +207,7 @@ int main(int varnum, char** vararg)
    options.insert(make_pair("surfaceTension",         "11"    )); // Surface tension given in dynes/cm
    options.insert(make_pair("interpolate",            "0"     )); // default is not to interpolate  
    options.insert(make_pair("minPerm",                "1e-12" )); // minimum modelled permeability (for saturation distr)
+   options.insert(make_pair("minPoro",            "0.0001")); // this limit is necessary for pcmin/max computation
 
    // dune-cornerpoint specific options
    options.insert(make_pair("linsolver_tolerance", "1e-8"));  // residual tolerance for linear solver
@@ -347,6 +350,8 @@ int main(int varnum, char** vararg)
    vector<double> poros  = eclParser.getFloatingPointValue("PORO");
    vector<double> permxs = eclParser.getFloatingPointValue("PERMX");
    const double minPerm = atof(options["minPerm"].c_str()); 
+   const double minPoro = atof(options["minPoro"].c_str());
+
 
    // Read in J-functions for all stone-types.
    // Number of stone-types is max(satnums):
@@ -468,6 +473,7 @@ int main(int varnum, char** vararg)
    /* Sanity check/fix on input for each cell:
       - Check that SATNUM are set sensibly, that is => 0 and < 1000, error if not.
       - Check that porosity is between 0 and 1, error if not.
+        Set to minPoro if zero or less than minPoro (due to pcmin/max computation)
       - Check that permeability is zero or positive. Error if negative. Set to minPerm if
         zero and less than minPerm.
       - Check maximum number of SATNUM values (can be number of rock types present)
@@ -479,6 +485,9 @@ int main(int varnum, char** vararg)
        }
        if (satnums[i] > maxSatnum) {
            maxSatnum = satnums[i];
+       }
+       if ((poros[i] >= 0) && (poros[i] < minPoro)) { // Truncate porosity from below
+           poros[i] = minPoro;
        }
        if (poros[i] < 0 || poros[i] > 1) {
            if (isMaster) cerr << "poros[" << i <<"] = " << poros[i] << ", not sane, quitting." << endl;
@@ -1037,6 +1046,9 @@ int main(int varnum, char** vararg)
        outputtmp << "#             mud2rocktype: " << options["mud2rocktype"] << endl;
        outputtmp << "#           jFunctionCurve: " << options["jFunctionCurve"] << endl;
        outputtmp << "#           surfaceTension: " << options["surfaceTension"] << " dynes/cm" << endl;
+       outputtmp << "#                 minPerm: " << options["minPerm"] << endl;
+       outputtmp << "#                 minPoro: " << options["minPoro"] << endl;
+
        if (doInterpolate) { 
            outputtmp << "#              interpolate: " << options["interpolate"] << " points" << endl; 
        }
