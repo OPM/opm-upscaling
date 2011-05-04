@@ -88,13 +88,6 @@ namespace Opm
         std::vector<double> report_times_;
         bool do_impes_;
         std::string output_dir_;
-        
-        bool computeCellState(int iCell, 
-                              int iRef,
-                              double wo_contact_depth,
-                              double go_contact_depth, 
-                              double connate_water_saturation);
-
 
         static void output(const Grid& grid,
                            const std::vector<typename Fluid::PhaseVec>& cell_pressure,
@@ -292,10 +285,6 @@ init(const Dune::parameter::ParameterGroup& param)
 
 
 
-
-
-
-
 template<class Grid, class Rock, class Fluid, class Wells, class FlowSolver, class TransportSolver>
 void
 BlackoilSimulator<Grid, Rock, Fluid, Wells, FlowSolver, TransportSolver>::
@@ -437,70 +426,6 @@ simulate()
         }
     }
 }
-
-
-
-
-
-
-
-template<class Grid, class Rock, class Fluid, class Wells, class FlowSolver, class TransportSolver>
-bool
-BlackoilSimulator<Grid, Rock, Fluid, Wells, FlowSolver, TransportSolver>::
-computeCellState(int iCell, int iRef, double wo_contact_depth, double go_contact_depth, double connate_water_saturation)
-{
-   const int maxCnt = 30;
-   const double eps = 1.0e-8;
-   
-//    double pore_vol_ref = grid_.cellVolume(iRef)*rock_.porosity(iRef);
-//    double pore_vol = grid_.cellVolume(iCell)*rock_.porosity(iCell);    	
-   state_.cell_z_[iCell] = state_.cell_z_[iRef];
-   // state_.cell_z_[iCell] *= pore_vol/pore_vol_ref;
-   bool waterOnly = false;
-   if (grid_.cellCentroid(iCell)[2] > wo_contact_depth) { // Maybe a too crude??
-       state_.cell_z_[iCell][Fluid::Oil] = 0.0;
-       state_.cell_z_[iCell][Fluid::Gas] = 0.0;
-       waterOnly = true;
-   }
-   double gZ = (grid_.cellCentroid(iCell) - grid_.cellCentroid(iRef))*gravity_;
-   double fluid_vol_dens;
-//    double pv_ref_inv = 1.0/pore_vol_ref;
-//    double pv_inv = 1.0/pore_vol;
-   int cnt =0;    
-   do {
-       double rho = 0.5*(state_.cell_z_[iCell]*fluid_.surfaceDensities()
-                         + state_.cell_z_[iRef]*fluid_.surfaceDensities());
-       double press = rho*gZ + state_.cell_pressure_[iRef][0];
-       state_.cell_pressure_[iCell] = PhaseVec(press);
-       typename Fluid::FluidState state = fluid_.computeState(state_.cell_pressure_[iCell], state_.cell_z_[iCell]);
-       fluid_vol_dens = state.total_phase_volume_density_;
-       double oil_vol_dens = state.phase_volume_density_[Fluid::Liquid]
-           + state.phase_volume_density_[Fluid::Vapour];
-       double wat_vol_dens = state.phase_volume_density_[Fluid::Aqua];
-       if (waterOnly) {
-           state_.cell_z_[iCell][Fluid::Water] *= 1.0/wat_vol_dens;
-       } else {
-           state_.cell_z_[iCell][Fluid::Oil] *= (1.0-connate_water_saturation)/oil_vol_dens;
-           state_.cell_z_[iCell][Fluid::Gas] *= (1.0-connate_water_saturation)/oil_vol_dens;
-           state_.cell_z_[iCell][Fluid::Water] *= connate_water_saturation/wat_vol_dens;
-       }       
-       ++cnt;
-   } while (std::fabs(fluid_vol_dens-1.0) > eps && cnt < maxCnt);
-   
-   if (cnt == maxCnt) {    
-       std::cout << "z_cell_[" << iCell << "]: " << state_.cell_z_[iCell]
-                 << "  pressure: " << state_.cell_pressure_[iCell][Fluid::Liquid]
-                 <<  " cnt: " << cnt 
-                 << "  eps: " << std::fabs(fluid_vol_dens-1.0) << std::endl;
-   }
-                      
-   return (cnt < maxCnt);
-}
-
-
-
-
-
 
 
 
