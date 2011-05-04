@@ -1,0 +1,10 @@
+<?xml version = '1.0' encoding = 'ISO-8859-1'?>
+
+<ParameterGroup name="root">
+  <MergeWithFile value="spe9.xml"/>
+  <Parameter name="maximum_stepsize" type="double" value="86400.0"/>
+  <Parameter name="total_time" type="double" value="561600000.0"/>
+  <Parameter name="press_rel_tol" type="double" value="5e-4"/>
+  <Parameter name="relax_weight_pressure_iteration" type="double" value="0.9"/>
+  <Parameter name="single_step_only" type="bool" value="false"/>
+</ParameterGroup>
