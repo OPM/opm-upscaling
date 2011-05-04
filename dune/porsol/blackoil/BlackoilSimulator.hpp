@@ -90,15 +90,11 @@ namespace Opm
         std::string output_dir_;
 
         static void output(const Grid& grid,
-                           const std::vector<typename Fluid::PhaseVec>& cell_pressure,
-                           const std::vector<typename Fluid::CompVec>& z,
+                           const Fluid& fluid,
+                           const State& simstate,
                            const std::vector<double>& face_flux,
-                           const std::vector<typename Fluid::PhaseVec>& sat, 
-                           const std::vector<typename Fluid::CompVec>& mass_frac,
-                           const std::vector<double>& total_fluid_volume_density,
                            const int step,
                            const std::string& filebase);
-
     };
 
 
@@ -295,18 +291,10 @@ simulate()
     double current_time = 0.0;
     int step = 0;
     std::vector<double> face_flux;
-    std::vector<double> well_perf_pressure_start;
-    std::vector<double> well_perf_flux_start;
-    std::vector<PhaseVec> cell_pressure_start;
-    std::vector<PhaseVec> face_pressure_start;
-    std::vector<CompVec> cell_z_start;
+    State start_state;
     std::string output_name = output_dir_ + "/" + "blackoil-output";
     while (current_time < total_time_) {
-        cell_pressure_start = state_.cell_pressure_;
-        face_pressure_start = state_.face_pressure_;
-        well_perf_pressure_start = state_.well_perf_pressure_;
-        well_perf_flux_start = state_.well_perf_flux_;
-        cell_z_start = state_.cell_z_;
+        start_state = state_;
 
         // Do not run past total_time_.
         if (current_time + stepsize > total_time_) {
@@ -330,11 +318,7 @@ simulate()
         } else if (result == FlowSolver::FailedToConverge) {
             std::cout << "********* Nonlinear convergence failure: Shortening (pressure) stepsize, redoing step number " << step <<" **********" << std::endl;
             stepsize *= 0.5;
-            state_.cell_pressure_ = cell_pressure_start;
-            state_.face_pressure_ = face_pressure_start;
-            state_.well_perf_pressure_ = well_perf_pressure_start;
-            state_.well_perf_flux_ = well_perf_flux_start;
-            state_.cell_z_ = cell_z_start;
+            state_ = start_state;
             wells_.update(grid_.numCells(), state_.well_perf_pressure_, state_.well_perf_flux_);
             continue;
         }
@@ -366,11 +350,7 @@ simulate()
                 // Restarting step.
                 stepsize = max_dt/1.5;
                 std::cout << "Restarting pressure step with new timestep " << stepsize << std::endl;
-                state_.cell_pressure_ = cell_pressure_start;
-                state_.face_pressure_ = face_pressure_start;
-                state_.well_perf_pressure_ = well_perf_pressure_start;
-                state_.well_perf_flux_ = well_perf_flux_start;
-                // state_.cell_z_ = cell_z_start; // Not needed, unchanged.
+                state_ = start_state;
                 wells_.update(grid_.numCells(), state_.well_perf_pressure_, state_.well_perf_flux_);
                 continue;
             }
@@ -380,28 +360,9 @@ simulate()
         if (!voldisc_ok) {
             std::cout << "********* Too large volume discrepancy:  Shortening (pressure) stepsize, redoing step number " << step <<" **********" << std::endl;
             stepsize *= 0.5;
-            state_.cell_pressure_ = cell_pressure_start;
-            state_.face_pressure_ = face_pressure_start;
-            state_.well_perf_pressure_ = well_perf_pressure_start;
-            state_.well_perf_flux_ = well_perf_flux_start;
-            state_.cell_z_ = cell_z_start;
+            state_ = start_state;
             wells_.update(grid_.numCells(), state_.well_perf_pressure_, state_.well_perf_flux_);
             continue;
-        }
-
-        // Compute saturations and mass fractions for output purposes.
-        int num_cells = grid_.numCells();
-        std::vector<typename Fluid::PhaseVec> saturation(num_cells);
-        std::vector<typename Fluid::PhaseVec> mass_frac(num_cells);
-        std::vector<double> totflvol_dens(num_cells);
-        for (int cell = 0; cell < num_cells; ++cell) {
-            typename Fluid::FluidState state = fluid_.computeState(state_.cell_pressure_[cell], state_.cell_z_[cell]);
-            saturation[cell] = state.saturation_;
-            totflvol_dens[cell] = state.total_phase_volume_density_;
-            double totMass_dens = state_.cell_z_[cell]*fluid_.surfaceDensities();
-            mass_frac[cell][Fluid::Water] = state_.cell_z_[cell][Fluid::Water]*fluid_.surfaceDensities()[Fluid::Water]/totMass_dens;
-            mass_frac[cell][Fluid::Oil] = state_.cell_z_[cell][Fluid::Oil]*fluid_.surfaceDensities()[Fluid::Oil]/totMass_dens;
-            mass_frac[cell][Fluid::Gas] = state_.cell_z_[cell][Fluid::Gas]*fluid_.surfaceDensities()[Fluid::Gas]/totMass_dens;
         }
 
         // Adjust time.
@@ -413,7 +374,7 @@ simulate()
         // If using given timesteps, set stepsize to match.
         if (!report_times_.empty()) {
             if (current_time >= report_times_[step]) {
-                output(grid_, state_.cell_pressure_, state_.cell_z_, face_flux, saturation, mass_frac, totflvol_dens, step, output_name);
+                output(grid_, fluid_, state_, face_flux, step, output_name);
                 ++step;
                 if (step == int(report_times_.size())) {
                     break;
@@ -421,7 +382,7 @@ simulate()
             }
             stepsize = report_times_[step] - current_time;
         } else {
-            output(grid_, state_.cell_pressure_, state_.cell_z_, face_flux, saturation, mass_frac, totflvol_dens, step, output_name);
+            output(grid_, fluid_, state_, face_flux, step, output_name);
             ++step;
         }
     }
@@ -436,15 +397,27 @@ template<class Grid, class Rock, class Fluid, class Wells, class FlowSolver, cla
 void
 BlackoilSimulator<Grid, Rock, Fluid, Wells, FlowSolver, TransportSolver>::
 output(const Grid& grid,
-       const std::vector<typename Fluid::PhaseVec>& cell_pressure,
-       const std::vector<typename Fluid::CompVec>& z,
+       const Fluid& fluid,
+       const State& simstate,
        const std::vector<double>& face_flux,
-       const std::vector<typename Fluid::PhaseVec>& sat, 
-       const std::vector<typename Fluid::CompVec>& mass_frac,
-       const std::vector<double>& total_fluid_volume,
        const int step,
        const std::string& filebase)
 {
+    // Compute saturations, total fluid volume density and mass fractions.
+    int num_cells = grid.numCells();
+    std::vector<typename Fluid::PhaseVec> sat(num_cells);
+    std::vector<typename Fluid::PhaseVec> mass_frac(num_cells);
+    std::vector<double> totflvol_dens(num_cells);
+    for (int cell = 0; cell < num_cells; ++cell) {
+        typename Fluid::FluidState fstate = fluid.computeState(simstate.cell_pressure_[cell], simstate.cell_z_[cell]);
+        sat[cell] = fstate.saturation_;
+        totflvol_dens[cell] = fstate.total_phase_volume_density_;
+        double totMass_dens = simstate.cell_z_[cell]*fluid.surfaceDensities();
+        mass_frac[cell][Fluid::Water] = simstate.cell_z_[cell][Fluid::Water]*fluid.surfaceDensities()[Fluid::Water]/totMass_dens;
+        mass_frac[cell][Fluid::Oil] = simstate.cell_z_[cell][Fluid::Oil]*fluid.surfaceDensities()[Fluid::Oil]/totMass_dens;
+        mass_frac[cell][Fluid::Gas] = simstate.cell_z_[cell][Fluid::Gas]*fluid.surfaceDensities()[Fluid::Gas]/totMass_dens;
+    }
+
     // Ensure directory exists.
     boost::filesystem::path fpath(filebase);
     if (fpath.has_branch_path()) {
@@ -455,12 +428,12 @@ output(const Grid& grid,
     std::vector<typename Grid::Vector> cell_velocity;
     estimateCellVelocitySimpleInterface(cell_velocity, grid, face_flux);
     // Dune's vtk writer wants multi-component data to be flattened.
-    std::vector<double> cell_pressure_flat(&*cell_pressure.front().begin(),
-                                           &*cell_pressure.back().end());
+    std::vector<double> cell_pressure_flat(&*simstate.cell_pressure_.front().begin(),
+                                           &*simstate.cell_pressure_.back().end());
     std::vector<double> cell_velocity_flat(&*cell_velocity.front().begin(),
                                            &*cell_velocity.back().end());
-    std::vector<double> z_flat(&*z.front().begin(),
-                               &*z.back().end());
+    std::vector<double> z_flat(&*simstate.cell_z_.front().begin(),
+                               &*simstate.cell_z_.back().end());
     std::vector<double> sat_flat(&*sat.front().begin(),
                                  &*sat.back().end());
     std::vector<double> mass_frac_flat(&*mass_frac.front().begin(),
@@ -471,7 +444,7 @@ output(const Grid& grid,
     vtkwriter.addCellData(z_flat, "z", Fluid::numComponents);
     vtkwriter.addCellData(sat_flat, "sat", Fluid::numPhases);
     vtkwriter.addCellData(mass_frac_flat, "massFrac", Fluid::numComponents);
-    vtkwriter.addCellData(total_fluid_volume, "total fl. vol.");
+    vtkwriter.addCellData(totflvol_dens, "total fl. vol.");
     vtkwriter.write(filebase + '-' + boost::lexical_cast<std::string>(step),
                     Dune::VTKOptions::ascii);
 
@@ -480,7 +453,7 @@ output(const Grid& grid,
     for (int comp = 0; comp < Fluid::numComponents; ++comp) {
         zv[comp].resize(grid.numCells());
         for (int cell = 0; cell < grid.numCells(); ++cell) {
-            zv[comp][cell] = z[cell][comp];
+            zv[comp][cell] = simstate.cell_z_[cell][comp];
         }
     }
     std::vector<double> sv[Fluid::numPhases];
@@ -495,10 +468,9 @@ output(const Grid& grid,
     matlabdumpname += ".dat";
     std::ofstream dump(matlabdumpname.c_str());
     dump.precision(15);
-    int num_cells = cell_pressure.size();
     std::vector<double> liq_press(num_cells);
     for (int cell = 0; cell < num_cells; ++cell) {
-        liq_press[cell] = cell_pressure[cell][Fluid::Liquid];
+        liq_press[cell] = simstate.cell_pressure_[cell][Fluid::Liquid];
     }
     // Liquid phase pressure.
     std::copy(liq_press.begin(), liq_press.end(),
@@ -517,7 +489,7 @@ output(const Grid& grid,
         dump << '\n';
     }
     // Total fluid volume
-    std::copy(total_fluid_volume.begin(), total_fluid_volume.end(),
+    std::copy(totflvol_dens.begin(), totflvol_dens.end(),
               std::ostream_iterator<double>(dump, " "));
     dump << '\n';
 }
