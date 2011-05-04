@@ -60,11 +60,18 @@ namespace Opm
 
         typedef typename Fluid::CompVec CompVec;
         typedef typename Fluid::PhaseVec PhaseVec;
-        std::vector<PhaseVec> cell_pressure_;
-        std::vector<PhaseVec> face_pressure_;
-        std::vector<double> well_perf_pressure_;
-        std::vector<double> well_perf_flux_;
-        std::vector<CompVec> cell_z_;
+
+        struct State
+        {
+            std::vector<PhaseVec> cell_pressure_;
+            std::vector<PhaseVec> face_pressure_;
+            std::vector<double> well_perf_pressure_;
+            std::vector<double> well_perf_flux_;
+            std::vector<CompVec> cell_z_;
+        };
+
+        State state_;
+
         PhaseVec bdy_pressure_;
         CompVec bdy_z_;
 
@@ -225,18 +232,18 @@ init(const Dune::parameter::ParameterGroup& param)
         CompVec water_sample(0.0); 
         water_sample[Fluid::Water] = 1.0;
         
-        cell_z_.resize(grid_.numCells());
-        cell_pressure_.resize(grid_.numCells());
+        state_.cell_z_.resize(grid_.numCells());
+        state_.cell_pressure_.resize(grid_.numCells());
         
         // Datum -cell
         // For now, assume that datum_depth corresponds the centroid of cell 0 (reasonable approx)
-        cell_pressure_[0] = datum_pressure;    
-        typename Fluid::FluidState state = fluid_.computeState(cell_pressure_[0],oil_sample);
-        cell_z_[0] = oil_sample;
-        cell_z_[0] *= (1.0-connate_water_saturation)/state.total_phase_volume_density_;
-        state = fluid_.computeState(cell_pressure_[0],water_sample);
-        cell_z_[0][Fluid::Water] = water_sample[Fluid::Water];
-        cell_z_[0][Fluid::Water] *= connate_water_saturation/state.total_phase_volume_density_;
+        state_.cell_pressure_[0] = datum_pressure;    
+        typename Fluid::FluidState state = fluid_.computeState(state_.cell_pressure_[0],oil_sample);
+        state_.cell_z_[0] = oil_sample;
+        state_.cell_z_[0] *= (1.0-connate_water_saturation)/state.total_phase_volume_density_;
+        state = fluid_.computeState(state_.cell_pressure_[0],water_sample);
+        state_.cell_z_[0][Fluid::Water] = water_sample[Fluid::Water];
+        state_.cell_z_[0][Fluid::Water] *= connate_water_saturation/state.total_phase_volume_density_;
         
         // Rest of the cells -- NOTE: Assume uniform cell properties in y-direction
         for (int i=0; i<nx; ++i) {
@@ -251,8 +258,8 @@ init(const Dune::parameter::ParameterGroup& param)
                 // Copy cell properties to y-layers
                 for (int j=1; j<ny; ++j) {
                     int jj = j*nx*nz + kk;
-                    cell_z_[jj] = cell_z_[kk];
-                    cell_pressure_[jj] = cell_pressure_[kk];
+                    state_.cell_z_[jj] = state_.cell_z_[kk];
+                    state_.cell_pressure_[jj] = state_.cell_pressure_[kk];
                 }
             }                
         }
@@ -266,10 +273,10 @@ init(const Dune::parameter::ParameterGroup& param)
             std::cout << std::setw(5) << cell << std::setw(12) << grid_.cellCentroid(cell)[0]
                                               << std::setw(12) << grid_.cellCentroid(cell)[1]
                                               << std::setw(12) << grid_.cellCentroid(cell)[2] 
-                                              << std::setw(20) << cell_pressure_[cell][0]
-                                              << std::setw(15) << cell_z_[cell][0]
-                                              << std::setw(15) << cell_z_[cell][1]
-                                              << std::setw(15) << cell_z_[cell][2]
+                                              << std::setw(20) << state_.cell_pressure_[cell][0]
+                                              << std::setw(15) << state_.cell_z_[cell][0]
+                                              << std::setw(15) << state_.cell_z_[cell][1]
+                                              << std::setw(15) << state_.cell_z_[cell][2]
                                               << std::endl;
             if ((cell+1)%nz == 0) {
                 std::cout << "------------------------------------------------------------------------------------------------------------------" << std::endl;
@@ -285,18 +292,18 @@ init(const Dune::parameter::ParameterGroup& param)
 
         bdy_z_ = flow_solver_.inflowMixture();
 
-        cell_z_.resize(grid_.numCells());
-        std::fill(cell_z_.begin(), cell_z_.begin() + cell_z_.size()/2, init_oil);
-        std::fill(cell_z_.begin() + cell_z_.size()/2, cell_z_.end(), init_water);
+        state_.cell_z_.resize(grid_.numCells());
+        std::fill(state_.cell_z_.begin(), state_.cell_z_.begin() + state_.cell_z_.size()/2, init_oil);
+        std::fill(state_.cell_z_.begin() + state_.cell_z_.size()/2, state_.cell_z_.end(), init_water);
         MESSAGE("******* Assuming zero capillary pressures *******");
         PhaseVec init_p(100.0*Dune::unit::barsa);
-        cell_pressure_.resize(grid_.numCells(), init_p);
+        state_.cell_pressure_.resize(grid_.numCells(), init_p);
 //         if (gravity_.two_norm() != 0.0) {
 //             double ref_gravpot = grid_.cellCentroid(0)*gravity_;
 //             double rho = init_z*fluid_.surfaceDensities();  // Assuming incompressible, and constant initial z.
 //             for (int cell = 1; cell < grid_.numCells(); ++cell) {
-//                 double press = rho*(grid_.cellCentroid(cell)*gravity_ - ref_gravpot) + cell_pressure_[0][0];
-//                 cell_pressure_[cell] = PhaseVec(press);
+//                 double press = rho*(grid_.cellCentroid(cell)*gravity_ - ref_gravpot) + state_.cell_pressure_[0][0];
+//                 state_.cell_pressure_[cell] = PhaseVec(press);
 //             }
 //         }
     } else if (param.getDefault("unstable_initial_mix", false)) {
@@ -308,28 +315,28 @@ init(const Dune::parameter::ParameterGroup& param)
         CompVec init_gas(0.0);
         init_gas[Fluid::Gas] = 150.0;
         bdy_z_ = flow_solver_.inflowMixture();
-        cell_z_.resize(grid_.numCells());
-        std::fill(cell_z_.begin()                       , cell_z_.begin() + cell_z_.size()/3    , init_water);
-        std::fill(cell_z_.begin() + cell_z_.size()/3    , cell_z_.begin() + 2*(cell_z_.size()/3), init_oil);
-        std::fill(cell_z_.begin() + 2*(cell_z_.size()/3), cell_z_.end()                         , init_gas);
+        state_.cell_z_.resize(grid_.numCells());
+        std::fill(state_.cell_z_.begin()                       , state_.cell_z_.begin() + state_.cell_z_.size()/3    , init_water);
+        std::fill(state_.cell_z_.begin() + state_.cell_z_.size()/3    , state_.cell_z_.begin() + 2*(state_.cell_z_.size()/3), init_oil);
+        std::fill(state_.cell_z_.begin() + 2*(state_.cell_z_.size()/3), state_.cell_z_.end()                         , init_gas);
         MESSAGE("******* Assuming zero capillary pressures *******");
         PhaseVec init_p(100.0*Dune::unit::barsa);
-        cell_pressure_.resize(grid_.numCells(), init_p);
+        state_.cell_pressure_.resize(grid_.numCells(), init_p);
 
         if (gravity_.two_norm() != 0.0) {
             
-            typename Fluid::FluidState state = fluid_.computeState(cell_pressure_[0], cell_z_[0]);
-            cell_z_[0] *= 1.0/state.total_phase_volume_density_;
+            typename Fluid::FluidState state = fluid_.computeState(state_.cell_pressure_[0], state_.cell_z_[0]);
+            state_.cell_z_[0] *= 1.0/state.total_phase_volume_density_;
             for (int cell = 1; cell < grid_.numCells(); ++cell) {
                 double fluid_vol_dens;
                 int cnt =0;    
                 do {
-                    double rho = 0.5*((cell_z_[cell]+cell_z_[cell-1])*fluid_.surfaceDensities());
-                    double press = rho*((grid_.cellCentroid(cell) - grid_.cellCentroid(cell-1))*gravity_) + cell_pressure_[cell-1][0];
-                    cell_pressure_[cell] = PhaseVec(press);
-                    typename Fluid::FluidState state = fluid_.computeState(cell_pressure_[cell], cell_z_[cell]);
+                    double rho = 0.5*((state_.cell_z_[cell]+state_.cell_z_[cell-1])*fluid_.surfaceDensities());
+                    double press = rho*((grid_.cellCentroid(cell) - grid_.cellCentroid(cell-1))*gravity_) + state_.cell_pressure_[cell-1][0];
+                    state_.cell_pressure_[cell] = PhaseVec(press);
+                    typename Fluid::FluidState state = fluid_.computeState(state_.cell_pressure_[cell], state_.cell_z_[cell]);
                     fluid_vol_dens = state.total_phase_volume_density_;
-                    cell_z_[cell] *= 1.0/fluid_vol_dens;
+                    state_.cell_z_[cell] *= 1.0/fluid_vol_dens;
                     ++cnt;
                 } while (std::fabs((fluid_vol_dens-1.0)) > 1.0e-8 && cnt < 10);
                 
@@ -349,16 +356,16 @@ init(const Dune::parameter::ParameterGroup& param)
 
         bdy_z_ = flow_solver_.inflowMixture();
 
-        cell_z_.resize(grid_.numCells(), init_z);
+        state_.cell_z_.resize(grid_.numCells(), init_z);
         MESSAGE("******* Assuming zero capillary pressures *******");
         PhaseVec init_p(param.getDefault("initial_pressure", 100.0*Dune::unit::barsa));
-        cell_pressure_.resize(grid_.numCells(), init_p);
+        state_.cell_pressure_.resize(grid_.numCells(), init_p);
         if (gravity_.two_norm() != 0.0) {
             double ref_gravpot = grid_.cellCentroid(0)*gravity_;
             double rho = init_z*fluid_.surfaceDensities();  // Assuming incompressible, and constant initial z.
             for (int cell = 1; cell < grid_.numCells(); ++cell) {
-                double press = rho*(grid_.cellCentroid(cell)*gravity_ - ref_gravpot) + cell_pressure_[0][0];
-                cell_pressure_[cell] = PhaseVec(press);
+                double press = rho*(grid_.cellCentroid(cell)*gravity_ - ref_gravpot) + state_.cell_pressure_[0][0];
+                state_.cell_pressure_[cell] = PhaseVec(press);
             }
         }
     }
@@ -367,43 +374,43 @@ init(const Dune::parameter::ParameterGroup& param)
     // Rescale z values so that pore volume is filled exactly
     // (to get zero initial volume discrepancy).
     for (int cell = 0; cell < grid_.numCells(); ++cell) {
-        typename Fluid::FluidState state = fluid_.computeState(cell_pressure_[cell], cell_z_[cell]);
+        typename Fluid::FluidState state = fluid_.computeState(state_.cell_pressure_[cell], state_.cell_z_[cell]);
         double fluid_vol_dens = state.total_phase_volume_density_;
-        cell_z_[cell] *= 1.0/fluid_vol_dens;
+        state_.cell_z_[cell] *= 1.0/fluid_vol_dens;
     }
     int num_faces = grid_.numFaces();
-    face_pressure_.resize(num_faces);
+    state_.face_pressure_.resize(num_faces);
     for (int face = 0; face < num_faces; ++face) {
         int bid = grid_.boundaryId(face);
         if (flow_bc_.flowCond(bid).isDirichlet()) {
-            face_pressure_[face] = flow_bc_.flowCond(bid).pressure();
+            state_.face_pressure_[face] = flow_bc_.flowCond(bid).pressure();
         } else {
             int c[2] = { grid_.faceCell(face, 0), grid_.faceCell(face, 1) };
-            face_pressure_[face] = 0.0;
+            state_.face_pressure_[face] = 0.0;
             int num = 0;
             for (int j = 0; j < 2; ++j) {
                 if (c[j] >= 0) {
-                    face_pressure_[face] += cell_pressure_[c[j]];
+                    state_.face_pressure_[face] += state_.cell_pressure_[c[j]];
                     ++num;
                 }
             }
-            face_pressure_[face] /= double(num);
+            state_.face_pressure_[face] /= double(num);
         }
     }
 
     // Set initial well perforation pressures equal to cell pressures,
     // and perforation fluxes equal to zero.
-    well_perf_pressure_.clear();
+    state_.well_perf_pressure_.clear();
     for (int well = 0; well < wells_.numWells(); ++well) {
         int num_perf = wells_.numPerforations(well);
         for (int perf = 0; perf < num_perf; ++perf) {
             int cell = wells_.wellCell(well, perf);
-            well_perf_pressure_.push_back(cell_pressure_[cell][Fluid::Liquid]);
+            state_.well_perf_pressure_.push_back(state_.cell_pressure_[cell][Fluid::Liquid]);
         }
     }
-    well_perf_flux_.clear();
-    well_perf_flux_.resize(well_perf_pressure_.size(), 0.0);
-    wells_.update(grid_.numCells(), well_perf_pressure_, well_perf_flux_);
+    state_.well_perf_flux_.clear();
+    state_.well_perf_flux_.resize(state_.well_perf_pressure_.size(), 0.0);
+    wells_.update(grid_.numCells(), state_.well_perf_pressure_, state_.well_perf_flux_);
 }
 
 
@@ -433,11 +440,11 @@ simulate()
     std::vector<CompVec> cell_z_start;
     std::string output_name = output_dir_ + "/" + "blackoil-output";
     while (current_time < total_time_) {
-        cell_pressure_start = cell_pressure_;
-        face_pressure_start = face_pressure_;
-        well_perf_pressure_start = well_perf_pressure_;
-        well_perf_flux_start = well_perf_flux_;
-        cell_z_start = cell_z_;
+        cell_pressure_start = state_.cell_pressure_;
+        face_pressure_start = state_.face_pressure_;
+        well_perf_pressure_start = state_.well_perf_pressure_;
+        well_perf_flux_start = state_.well_perf_flux_;
+        cell_z_start = state_.cell_z_;
 
         // Do not run past total_time_.
         if (current_time + stepsize > total_time_) {
@@ -452,8 +459,8 @@ simulate()
 
         // Solve flow system.
         enum FlowSolver::ReturnCode result
-            = flow_solver_.solve(cell_pressure_, face_pressure_, cell_z_, face_flux,
-                                 well_perf_pressure_, well_perf_flux_, src_, stepsize);
+            = flow_solver_.solve(state_.cell_pressure_, state_.face_pressure_, state_.cell_z_, face_flux,
+                                 state_.well_perf_pressure_, state_.well_perf_flux_, src_, stepsize);
 
         // Check if the flow solver succeeded.
         if (result == FlowSolver::VolumeDiscrepancyTooLarge) {
@@ -461,48 +468,48 @@ simulate()
         } else if (result == FlowSolver::FailedToConverge) {
             std::cout << "********* Nonlinear convergence failure: Shortening (pressure) stepsize, redoing step number " << step <<" **********" << std::endl;
             stepsize *= 0.5;
-            cell_pressure_ = cell_pressure_start;
-            face_pressure_ = face_pressure_start;
-            well_perf_pressure_ = well_perf_pressure_start;
-            well_perf_flux_ = well_perf_flux_start;
-            cell_z_ = cell_z_start;
-            wells_.update(grid_.numCells(), well_perf_pressure_, well_perf_flux_);
+            state_.cell_pressure_ = cell_pressure_start;
+            state_.face_pressure_ = face_pressure_start;
+            state_.well_perf_pressure_ = well_perf_pressure_start;
+            state_.well_perf_flux_ = well_perf_flux_start;
+            state_.cell_z_ = cell_z_start;
+            wells_.update(grid_.numCells(), state_.well_perf_pressure_, state_.well_perf_flux_);
             continue;
         }
         ASSERT(result == FlowSolver::SolveOk);
 
         // Update wells with new perforation pressures and fluxes.
-        wells_.update(grid_.numCells(), well_perf_pressure_, well_perf_flux_);
+        wells_.update(grid_.numCells(), state_.well_perf_pressure_, state_.well_perf_flux_);
 
         // Transport and check volume discrepancy.
         bool voldisc_ok = true;
         if (!do_impes_) {
             double actual_computed_time
                 = transport_solver_.transport(bdy_pressure_, bdy_z_,
-                                             face_flux, cell_pressure_, face_pressure_,
-                                             stepsize, voldisclimit, cell_z_);
+                                             face_flux, state_.cell_pressure_, state_.face_pressure_,
+                                             stepsize, voldisclimit, state_.cell_z_);
             voldisc_ok = (actual_computed_time == stepsize);
             if (voldisc_ok) {
                 // Just for output.
-                flow_solver_.volumeDiscrepancyAcceptable(cell_pressure_, face_pressure_, cell_z_, stepsize);
+                flow_solver_.volumeDiscrepancyAcceptable(state_.cell_pressure_, state_.face_pressure_, state_.cell_z_, stepsize);
             }
         } else {
             // First check IMPES stepsize.
             double max_dt = flow_solver_.stableStepIMPES();
             std::cout << "Timestep was " << stepsize << " and max stepsize was " << max_dt << std::endl;
             if (stepsize < max_dt || stepsize <= minimum_stepsize_) {
-                flow_solver_.doStepIMPES(cell_z_, stepsize);
-                voldisc_ok = flow_solver_.volumeDiscrepancyAcceptable(cell_pressure_, face_pressure_, cell_z_, stepsize);
+                flow_solver_.doStepIMPES(state_.cell_z_, stepsize);
+                voldisc_ok = flow_solver_.volumeDiscrepancyAcceptable(state_.cell_pressure_, state_.face_pressure_, state_.cell_z_, stepsize);
             } else {
                 // Restarting step.
                 stepsize = max_dt/1.5;
                 std::cout << "Restarting pressure step with new timestep " << stepsize << std::endl;
-                cell_pressure_ = cell_pressure_start;
-                face_pressure_ = face_pressure_start;
-                well_perf_pressure_ = well_perf_pressure_start;
-                well_perf_flux_ = well_perf_flux_start;
-                // cell_z_ = cell_z_start; // Not needed, unchanged.
-                wells_.update(grid_.numCells(), well_perf_pressure_, well_perf_flux_);
+                state_.cell_pressure_ = cell_pressure_start;
+                state_.face_pressure_ = face_pressure_start;
+                state_.well_perf_pressure_ = well_perf_pressure_start;
+                state_.well_perf_flux_ = well_perf_flux_start;
+                // state_.cell_z_ = cell_z_start; // Not needed, unchanged.
+                wells_.update(grid_.numCells(), state_.well_perf_pressure_, state_.well_perf_flux_);
                 continue;
             }
         }
@@ -511,12 +518,12 @@ simulate()
         if (!voldisc_ok) {
             std::cout << "********* Too large volume discrepancy:  Shortening (pressure) stepsize, redoing step number " << step <<" **********" << std::endl;
             stepsize *= 0.5;
-            cell_pressure_ = cell_pressure_start;
-            face_pressure_ = face_pressure_start;
-            well_perf_pressure_ = well_perf_pressure_start;
-            well_perf_flux_ = well_perf_flux_start;
-            cell_z_ = cell_z_start;
-            wells_.update(grid_.numCells(), well_perf_pressure_, well_perf_flux_);
+            state_.cell_pressure_ = cell_pressure_start;
+            state_.face_pressure_ = face_pressure_start;
+            state_.well_perf_pressure_ = well_perf_pressure_start;
+            state_.well_perf_flux_ = well_perf_flux_start;
+            state_.cell_z_ = cell_z_start;
+            wells_.update(grid_.numCells(), state_.well_perf_pressure_, state_.well_perf_flux_);
             continue;
         }
 
@@ -526,13 +533,13 @@ simulate()
         std::vector<typename Fluid::PhaseVec> mass_frac(num_cells);
         std::vector<double> totflvol_dens(num_cells);
         for (int cell = 0; cell < num_cells; ++cell) {
-            typename Fluid::FluidState state = fluid_.computeState(cell_pressure_[cell], cell_z_[cell]);
+            typename Fluid::FluidState state = fluid_.computeState(state_.cell_pressure_[cell], state_.cell_z_[cell]);
             saturation[cell] = state.saturation_;
             totflvol_dens[cell] = state.total_phase_volume_density_;
-            double totMass_dens = cell_z_[cell]*fluid_.surfaceDensities();
-            mass_frac[cell][Fluid::Water] = cell_z_[cell][Fluid::Water]*fluid_.surfaceDensities()[Fluid::Water]/totMass_dens;
-            mass_frac[cell][Fluid::Oil] = cell_z_[cell][Fluid::Oil]*fluid_.surfaceDensities()[Fluid::Oil]/totMass_dens;
-            mass_frac[cell][Fluid::Gas] = cell_z_[cell][Fluid::Gas]*fluid_.surfaceDensities()[Fluid::Gas]/totMass_dens;
+            double totMass_dens = state_.cell_z_[cell]*fluid_.surfaceDensities();
+            mass_frac[cell][Fluid::Water] = state_.cell_z_[cell][Fluid::Water]*fluid_.surfaceDensities()[Fluid::Water]/totMass_dens;
+            mass_frac[cell][Fluid::Oil] = state_.cell_z_[cell][Fluid::Oil]*fluid_.surfaceDensities()[Fluid::Oil]/totMass_dens;
+            mass_frac[cell][Fluid::Gas] = state_.cell_z_[cell][Fluid::Gas]*fluid_.surfaceDensities()[Fluid::Gas]/totMass_dens;
         }
 
         // Adjust time.
@@ -544,7 +551,7 @@ simulate()
         // If using given timesteps, set stepsize to match.
         if (!report_times_.empty()) {
             if (current_time >= report_times_[step]) {
-                output(grid_, cell_pressure_, cell_z_, face_flux, saturation, mass_frac, totflvol_dens, step, output_name);
+                output(grid_, state_.cell_pressure_, state_.cell_z_, face_flux, saturation, mass_frac, totflvol_dens, step, output_name);
                 ++step;
                 if (step == int(report_times_.size())) {
                     break;
@@ -552,7 +559,7 @@ simulate()
             }
             stepsize = report_times_[step] - current_time;
         } else {
-            output(grid_, cell_pressure_, cell_z_, face_flux, saturation, mass_frac, totflvol_dens, step, output_name);
+            output(grid_, state_.cell_pressure_, state_.cell_z_, face_flux, saturation, mass_frac, totflvol_dens, step, output_name);
             ++step;
         }
     }
@@ -574,12 +581,12 @@ computeCellState(int iCell, int iRef, double wo_contact_depth, double go_contact
    
 //    double pore_vol_ref = grid_.cellVolume(iRef)*rock_.porosity(iRef);
 //    double pore_vol = grid_.cellVolume(iCell)*rock_.porosity(iCell);    	
-   cell_z_[iCell] = cell_z_[iRef];
-   // cell_z_[iCell] *= pore_vol/pore_vol_ref;
+   state_.cell_z_[iCell] = state_.cell_z_[iRef];
+   // state_.cell_z_[iCell] *= pore_vol/pore_vol_ref;
    bool waterOnly = false;
    if (grid_.cellCentroid(iCell)[2] > wo_contact_depth) { // Maybe a too crude??
-       cell_z_[iCell][Fluid::Oil] = 0.0;
-       cell_z_[iCell][Fluid::Gas] = 0.0;
+       state_.cell_z_[iCell][Fluid::Oil] = 0.0;
+       state_.cell_z_[iCell][Fluid::Gas] = 0.0;
        waterOnly = true;
    }
    double gZ = (grid_.cellCentroid(iCell) - grid_.cellCentroid(iRef))*gravity_;
@@ -588,28 +595,28 @@ computeCellState(int iCell, int iRef, double wo_contact_depth, double go_contact
 //    double pv_inv = 1.0/pore_vol;
    int cnt =0;    
    do {
-       double rho = 0.5*(cell_z_[iCell]*fluid_.surfaceDensities()
-                         + cell_z_[iRef]*fluid_.surfaceDensities());
-       double press = rho*gZ + cell_pressure_[iRef][0];
-       cell_pressure_[iCell] = PhaseVec(press);
-       typename Fluid::FluidState state = fluid_.computeState(cell_pressure_[iCell], cell_z_[iCell]);
+       double rho = 0.5*(state_.cell_z_[iCell]*fluid_.surfaceDensities()
+                         + state_.cell_z_[iRef]*fluid_.surfaceDensities());
+       double press = rho*gZ + state_.cell_pressure_[iRef][0];
+       state_.cell_pressure_[iCell] = PhaseVec(press);
+       typename Fluid::FluidState state = fluid_.computeState(state_.cell_pressure_[iCell], state_.cell_z_[iCell]);
        fluid_vol_dens = state.total_phase_volume_density_;
        double oil_vol_dens = state.phase_volume_density_[Fluid::Liquid]
            + state.phase_volume_density_[Fluid::Vapour];
        double wat_vol_dens = state.phase_volume_density_[Fluid::Aqua];
        if (waterOnly) {
-           cell_z_[iCell][Fluid::Water] *= 1.0/wat_vol_dens;
+           state_.cell_z_[iCell][Fluid::Water] *= 1.0/wat_vol_dens;
        } else {
-           cell_z_[iCell][Fluid::Oil] *= (1.0-connate_water_saturation)/oil_vol_dens;
-           cell_z_[iCell][Fluid::Gas] *= (1.0-connate_water_saturation)/oil_vol_dens;
-           cell_z_[iCell][Fluid::Water] *= connate_water_saturation/wat_vol_dens;
+           state_.cell_z_[iCell][Fluid::Oil] *= (1.0-connate_water_saturation)/oil_vol_dens;
+           state_.cell_z_[iCell][Fluid::Gas] *= (1.0-connate_water_saturation)/oil_vol_dens;
+           state_.cell_z_[iCell][Fluid::Water] *= connate_water_saturation/wat_vol_dens;
        }       
        ++cnt;
    } while (std::fabs(fluid_vol_dens-1.0) > eps && cnt < maxCnt);
    
    if (cnt == maxCnt) {    
-       std::cout << "z_cell_[" << iCell << "]: " << cell_z_[iCell]
-                 << "  pressure: " << cell_pressure_[iCell][Fluid::Liquid]
+       std::cout << "z_cell_[" << iCell << "]: " << state_.cell_z_[iCell]
+                 << "  pressure: " << state_.cell_pressure_[iCell][Fluid::Liquid]
                  <<  " cnt: " << cnt 
                  << "  eps: " << std::fabs(fluid_vol_dens-1.0) << std::endl;
    }
