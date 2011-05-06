@@ -84,6 +84,7 @@ namespace Dune
             relax_time_voldiscr_ = param.getDefault("relax_time_voldiscr", 0.0);
             relax_weight_pressure_iteration_ = param.getDefault("relax_weight_pressure_iteration", 1.0);
             experimental_jacobian_ = param.getDefault("experimental_jacobian", false);
+            output_residual_ = param.getDefault("output_residual", false);
         }
 
 
@@ -401,6 +402,17 @@ namespace Dune
                         dres *= pgrid_->cellVolume(cell)*prock_->porosity(cell)/dt;
                         res[cell] -= dres;
                     }
+                    if (output_residual_) {
+                        // Temporary hack to get output of residual.
+                        static int psolve_iter = -1;
+                        if (iter == 0) {
+                            ++psolve_iter;
+                        }
+                        std::ostringstream oss;
+                        oss << "residual-" << psolve_iter << '-' << iter << ".dat";
+                        std::ofstream outres(oss.str().c_str());
+                        std::copy(res.begin(), res.end(), std::ostream_iterator<double>(outres, "\n"));
+                    }
                     // Change the jacobian by adding/subtracting the necessary terms.
                     for (int cell = 0; cell < num_cells; ++cell) {
                         for (int i = s.ia[cell]; i < s.ia[cell + 1]; ++i) {
@@ -585,6 +597,7 @@ namespace Dune
         double relax_time_voldiscr_;
         double relax_weight_pressure_iteration_;
         bool experimental_jacobian_;
+        bool output_residual_;
 
         typedef typename FluidInterface::PhaseVec PhaseVec;
         typedef typename FluidInterface::CompVec CompVec;
