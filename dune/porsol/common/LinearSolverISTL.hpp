@@ -54,7 +54,7 @@ namespace Dune
     private:
         double linsolver_residual_tolerance_;
         int linsolver_verbosity_;
-        enum LinsolverType { CG_ILU0 = 0, CG_AMG = 1 };
+        enum LinsolverType { CG_ILU0 = 0, CG_AMG = 1, BiCGStab_ILU0 = 2 };
         LinsolverType linsolver_type_;
         bool linsolver_save_system_;
         std::string linsolver_save_filename_;

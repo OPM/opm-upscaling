@@ -52,6 +52,8 @@ namespace Dune
         LinearSolverISTL::LinearSolverResults
         solveCG_AMG(const Mat& A, Vector& x, Vector& b, double tolerance, int maxit, int verbosity);
 
+        LinearSolverISTL::LinearSolverResults
+        solveBiCGStab_ILU0(const Mat& A, Vector& x, Vector& b, double tolerance, int maxit, int verbosity);
     } // anonymous namespace
 
 
@@ -141,6 +143,9 @@ namespace Dune
             break;
         case CG_AMG:
             res = solveCG_AMG(A, x, b, linsolver_residual_tolerance_, maxit, linsolver_verbosity_);
+            break;
+        case BiCGStab_ILU0:
+            res = solveBiCGStab_ILU0(A, x, b, linsolver_residual_tolerance_, maxit, linsolver_verbosity_);
             break;
         default:
             std::cerr << "Unknown linsolver_type: " << int(linsolver_type_) << '\n';
@@ -236,6 +241,34 @@ namespace Dune
         res.reduction = result.reduction;
         return res;
     }
+
+
+
+    LinearSolverISTL::LinearSolverResults
+    solveBiCGStab_ILU0(const Mat& A, Vector& x, Vector& b, double tolerance, int maxit, int verbosity)
+    {
+        Operator opA(A);
+
+        // Construct preconditioner.
+        SeqILU0<Mat,Vector,Vector> precond(A, 1.0);
+
+        // Construct linear solver.
+        BiCGSTABSolver<Vector> linsolve(opA, precond, tolerance, maxit, verbosity);
+
+        // Solve system.
+        InverseOperatorResult result;
+        linsolve.apply(x, b, result);
+
+        // Output results.
+        LinearSolverISTL::LinearSolverResults res;
+        res.converged = result.converged;
+        res.iterations = result.iterations;
+        res.reduction = result.reduction;
+        return res;
+    }
+
+
+
 
     } // anonymous namespace
 
