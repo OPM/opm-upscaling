@@ -370,21 +370,10 @@ namespace Dune
                 }
 
                 // Assemble system matrix and rhs.
-                // if (experimental_jacobian_) {
-                if (false) {
-                    for (int cell = 0; cell < num_cells; ++cell) {
-                        cell_pressure_scalar_initial[cell] = -1.0/fp_.expjacterm[cell];
-                    }
-                    psolver_.assemble(src, bctypes_, bcvalues_, dt,
-                                      fp_.expjacterm, initial_voldiscr, fp_.cellA, fp_.faceA,
-                                      wellperfA, fp_.phasemobf, phasemobwellperf,
-                                      cell_pressure_scalar_initial, wellperf_gpot, &(pfluid_->surfaceDensities()[0]));
-                } else {
-                    psolver_.assemble(src, bctypes_, bcvalues_, dt,
-                                      fp_.totcompr, initial_voldiscr, fp_.cellA, fp_.faceA,
-                                      wellperfA, fp_.phasemobf, phasemobwellperf,
-                                      cell_pressure_scalar_initial, wellperf_gpot, &(pfluid_->surfaceDensities()[0]));
-                }
+                psolver_.assemble(src, bctypes_, bcvalues_, dt,
+                                  fp_.totcompr, initial_voldiscr, fp_.cellA, fp_.faceA,
+                                  wellperfA, fp_.phasemobf, phasemobwellperf,
+                                  cell_pressure_scalar_initial, wellperf_gpot, &(pfluid_->surfaceDensities()[0]));
                 PressureSolver::LinearSystem s;
                 psolver_.linearSystem(s);
                 if (experimental_jacobian_) {
@@ -647,7 +636,7 @@ namespace Dune
                                const std::vector<typename FluidInterface::CompVec>& cell_z,
                                const double dt)
         {
-            fp_.compute(*pgrid_, *prock_, *pfluid_, phase_pressure, phase_pressure_face, cell_z, inflow_mixture_, dt);
+            fp_.compute(*pgrid_, *prock_, *pfluid_, gravity_, phase_pressure, phase_pressure_face, cell_z, inflow_mixture_, dt);
             // Properties at well perforations.
             // \TODO only need to recompute this once per pressure update.
             // No, that is false, at production perforations the cell z is

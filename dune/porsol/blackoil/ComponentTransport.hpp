@@ -216,7 +216,8 @@ private: // Methods
     {
         // Properties in reservoir.
         const double dummy_dt = 1.0;
-        fluid_data_.compute(*pgrid_, *prock_, *pfluid_, cell_pressure, face_pressure, cell_z, external_composition, dummy_dt);
+        fluid_data_.compute(*pgrid_, *prock_, *pfluid_, gravity_,
+                            cell_pressure, face_pressure, cell_z, external_composition, dummy_dt);
 
         // Properties on boundary. \TODO no need to ever recompute this.
         bdy_ = computeProps(external_pressure, external_composition);
