@@ -373,7 +373,8 @@ namespace Dune
                 psolver_.assemble(src, bctypes_, bcvalues_, dt,
                                   fp_.totcompr, initial_voldiscr, fp_.cellA, fp_.faceA,
                                   wellperfA, fp_.phasemobf, phasemobwellperf,
-                                  cell_pressure_scalar_initial, wellperf_gpot, &(pfluid_->surfaceDensities()[0]));
+                                  cell_pressure_scalar_initial, fp_.gravcapf,
+                                  wellperf_gpot, &(pfluid_->surfaceDensities()[0]));
                 PressureSolver::LinearSystem s;
                 psolver_.linearSystem(s);
                 if (experimental_jacobian_) {
