@@ -167,7 +167,8 @@ namespace Dune
                     bctypes_[face] = PressureSolver::FBC_FLUX;
                     bcvalues_[face] = face_bc.outflux(); // TODO: may have to switch sign here depending on orientation.
                     if (bcvalues_[face] != 0.0) {
-                        THROW("Nonzero Neumann conditions not yet properly implemented (signs must be fixed)");
+                        THROW("Nonzero Neumann conditions not yet properly implemented "
+                              "(signs must be fixed, also face pressures are not correctly computed for this case)");
                     }
                 } else {
                     THROW("Unhandled boundary condition type.");
