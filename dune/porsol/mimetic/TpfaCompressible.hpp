@@ -439,32 +439,8 @@ namespace Dune
                     face_pressure[face] = face_pressure_scalar[face];
                 }
 
-                // Compute averaged saturations for each well. This code
-                // assumes that flow is either in or out of any single
-                // well, not both.
-                std::vector<PhaseVec> well_sat(pwells_->numWells(), PhaseVec(0.0));
-                std::vector<double> well_flux(pwells_->numWells(), 0.0);
-                for (int perf = 0; perf < num_perf; ++perf) {
-                    int well = perf_wells_[perf];
-                    double flux = well_perf_fluxes[perf];
-                    well_flux[well] += flux;
-                    PhaseVec tmp = perf_props_[perf].saturation;
-                    tmp *= flux;
-                    well_sat[well] += tmp;
-                }
-                for (int well = 0; well < pwells_->numWells(); ++well) {
-                    well_sat[well] *= 1.0/well_flux[well];
-                }
-
                 // Compute well_perf_pressures
-                for (int perf = 0; perf < num_perf; ++perf) {
-                    well_perf_pressures[perf] = well_bhp[perf_wells_[perf]];
-                    PhaseVec sat = well_sat[perf_wells_[perf]];
-                    for (int phase = 0; phase < numPhases; ++phase) {
-                        well_perf_pressures[perf]
-                            += sat[phase]*wellperf_gpot[numPhases*perf + phase];
-                    }
-                }
+                computeWellPerfPressures(well_perf_fluxes, well_bhp, wellperf_gpot, well_perf_pressures);
 
                 // Update internal well pressure vector.
                 perf_pressure_ = well_perf_pressures;
@@ -633,7 +609,7 @@ namespace Dune
 
         // Compute the well potentials. Assumes that the perforation variables
         // have been set properly: perf_[wells_|cells_|pressure_|props_].
-        void computeWellPotentials(std::vector<double>& wellperf_gpot)
+        void computeWellPotentials(std::vector<double>& wellperf_gpot) const
         {
             int num_perf = perf_cells_.size();
             wellperf_gpot.resize(num_perf*numPhases);
@@ -696,6 +672,43 @@ namespace Dune
             double flux_rel_difference = flux_change_infnorm/max_flux;
             double press_rel_difference = press_change_infnorm/max_press;
             return std::make_pair(flux_rel_difference, press_rel_difference);
+        }
+
+
+
+        // Compute well perforation pressures.
+        void computeWellPerfPressures(const std::vector<double>& well_perf_fluxes,
+                                      const std::vector<double>& well_bhp,
+                                      const std::vector<double>& wellperf_gpot,
+                                      std::vector<double>& well_perf_pressures) const
+        {
+            // Compute averaged saturations for each well. This code
+            // assumes that flow is either in or out of any single
+            // well, not both.
+            int num_perf = well_perf_fluxes.size();
+            std::vector<PhaseVec> well_sat(pwells_->numWells(), PhaseVec(0.0));
+            std::vector<double> well_flux(pwells_->numWells(), 0.0);
+            for (int perf = 0; perf < num_perf; ++perf) {
+                int well = perf_wells_[perf];
+                double flux = well_perf_fluxes[perf];
+                well_flux[well] += flux;
+                PhaseVec tmp = perf_props_[perf].saturation;
+                tmp *= flux;
+                well_sat[well] += tmp;
+            }
+            for (int well = 0; well < pwells_->numWells(); ++well) {
+                well_sat[well] *= 1.0/well_flux[well];
+            }
+
+            // Compute well_perf_pressures
+            for (int perf = 0; perf < num_perf; ++perf) {
+                well_perf_pressures[perf] = well_bhp[perf_wells_[perf]];
+                PhaseVec sat = well_sat[perf_wells_[perf]];
+                for (int phase = 0; phase < numPhases; ++phase) {
+                    well_perf_pressures[perf]
+                        += sat[phase]*wellperf_gpot[numPhases*perf + phase];
+                }
+            }
         }
 
     };
