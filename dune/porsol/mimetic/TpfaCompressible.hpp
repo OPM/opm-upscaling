@@ -657,9 +657,9 @@ namespace Dune
                 if (experimental_jacobian_) {
                     // Compute residual and jacobian.
                     PressureSolver::LinearSystem s;
-                    std::vector<double> res;
+                    std::vector<double> residual;
                     computeResidualJacobian(voldiscr_initial, state.cell_pressure, cell_pressure_initial,
-                                            well_bhp, src, dt, s, res);
+                                            well_bhp, src, dt, s, residual);
 
                     if (output_residual_) {
                         // Temporary hack to get output of residual.
@@ -670,12 +670,12 @@ namespace Dune
                         std::ostringstream oss;
                         oss << "residual-" << psolve_iter << '-' << iter << ".dat";
                         std::ofstream outres(oss.str().c_str());
-                        std::copy(res.begin(), res.end(), std::ostream_iterator<double>(outres, "\n"));
+                        std::copy(residual.begin(), residual.end(), std::ostream_iterator<double>(outres, "\n"));
                     }
 
-                    // Solve system for dp, that is, we use res as the rhs.
+                    // Solve system for dp, that is, we use residual as the rhs.
                     LinearSolverISTL::LinearSolverResults result
-                        = linsolver_.solve(s.n, s.nnz, s.ia, s.ja, s.sa, &res[0], s.x);
+                        = linsolver_.solve(s.n, s.nnz, s.ia, s.ja, s.sa, &residual[0], s.x);
                     if (!result.converged) {
                         THROW("Linear solver failed to converge in " << result.iterations << " iterations.\n"
                               << "Residual reduction achieved is " << result.reduction << '\n');
