@@ -509,7 +509,7 @@ namespace Dune
 
 
         // Compute the well potentials. Assumes that the perforation variables
-        // have been set properly: perf_[wells_|cells_|pressure_|props_].
+        // have been set properly: perf_[wells_|cells_|A_].
         void computeWellPotentials(std::vector<double>& wellperf_gpot) const
         {
             int num_perf = perf_cells_.size();
@@ -648,7 +648,7 @@ namespace Dune
                                        std::binder1st<std::multiplies<double> >(std::multiplies<double>() , relax));
                     }
 
-                    // well_gpot is computed once per pressure solve,
+                    // perf_gpot_ is computed once per pressure solve,
                     // while perf_A_, perf_mob_ are recoomputed
                     // for every iteration.
                     computeWellPotentials(perf_gpot_);
