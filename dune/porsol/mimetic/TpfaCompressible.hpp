@@ -305,8 +305,6 @@ namespace Dune
             face_pressure_scalar.clear();
             face_pressure_scalar.resize(num_faces, 0.0);
 
-            std::vector<double> wellperf_gpot;
-
             // ------------  Main iteration loop -------------
             bool converged = false;
             for (int iter = 0; iter < max_num_iter_; ++iter) {
@@ -334,32 +332,16 @@ namespace Dune
                     // well_gpot is computed once per pressure solve,
                     // while perf_A_, perf_mob_ are recoomputed
                     // for every iteration.
-                    computeWellPotentials(wellperf_gpot);
+                    computeWellPotentials(perf_gpot_);
                 }
 
-                // Assemble system matrix and rhs.
-                psolver_.assemble(src, bctypes_, bcvalues_, dt,
-                                  fp_.totcompr, initial_voldiscr, fp_.cellA, fp_.faceA,
-                                  perf_A_, fp_.phasemobf, perf_mob_,
-                                  cell_pressure_scalar_initial, fp_.gravcapf,
-                                  wellperf_gpot, &(pfluid_->surfaceDensities()[0]));
-                PressureSolver::LinearSystem s;
-                psolver_.linearSystem(s);
                 if (experimental_jacobian_) {
-                    // The linear system is for direct evaluation, we want a residual based approach.
-                    // First we compute the residual for the original code.
-                    std::copy(cell_pressure_scalar.begin(), cell_pressure_scalar.end(), s.x);
-                    std::copy(well_bhp.begin(), well_bhp.end(), s.x + num_cells);
+                    // Compute residual and jacobian.
+                    PressureSolver::LinearSystem s;
                     std::vector<double> res;
-                    computeLinearResidual(s, res);
-                    // Then we compute the residual we actually want by subtracting terms that do not
-                    // appear in the new formulation and adding the new terms.
-                    for (int cell = 0; cell < num_cells; ++cell) {
-                        double dres = fp_.totcompr[cell]*(cell_pressure_scalar[cell] - cell_pressure_scalar_initial[cell]);
-                        dres -= 1.0 - fp_.totphasevol_density[cell];
-                        dres *= pgrid_->cellVolume(cell)*prock_->porosity(cell)/dt;
-                        res[cell] -= dres;
-                    }
+                    computeResidualJacobian(initial_voldiscr, cell_pressure_scalar, cell_pressure_scalar_initial,
+                                            well_bhp, src, dt, s, res);
+
                     if (output_residual_) {
                         // Temporary hack to get output of residual.
                         static int psolve_iter = -1;
@@ -371,15 +353,7 @@ namespace Dune
                         std::ofstream outres(oss.str().c_str());
                         std::copy(res.begin(), res.end(), std::ostream_iterator<double>(outres, "\n"));
                     }
-                    // Change the jacobian by adding/subtracting the necessary terms.
-                    for (int cell = 0; cell < num_cells; ++cell) {
-                        for (int i = s.ia[cell]; i < s.ia[cell + 1]; ++i) {
-                            if  (s.ja[i] == cell) {
-                                s.sa[i] -= fp_.totcompr[cell]*pgrid_->cellVolume(cell)*prock_->porosity(cell)/dt;
-                                s.sa[i] += fp_.expjacterm[cell]*pgrid_->cellVolume(cell)*prock_->porosity(cell)/dt;
-                            }
-                        }
-                    }
+
                     // Solve system for dp, that is, we use res as the rhs.
                     LinearSolverISTL::LinearSolverResults result
                         = linsolver_.solve(s.n, s.nnz, s.ia, s.ja, s.sa, &res[0], s.x);
@@ -396,6 +370,14 @@ namespace Dune
                         s.x[num_cells + well] = well_bhp[well] - s.x[num_cells + well]; 
                     }
                 } else {
+                    // Assemble system matrix and rhs.
+                    psolver_.assemble(src, bctypes_, bcvalues_, dt,
+                                      fp_.totcompr, initial_voldiscr, fp_.cellA, fp_.faceA,
+                                      perf_A_, fp_.phasemobf, perf_mob_,
+                                      cell_pressure_scalar_initial, fp_.gravcapf,
+                                      perf_gpot_, &(pfluid_->surfaceDensities()[0]));
+                    PressureSolver::LinearSystem s;
+                    psolver_.linearSystem(s);
                     // Solve system.
                     LinearSolverISTL::LinearSolverResults res = linsolver_.solve(s.n, s.nnz, s.ia, s.ja, s.sa, s.b, s.x);
                     if (!res.converged) {
@@ -403,6 +385,7 @@ namespace Dune
                               << "Residual reduction achieved is " << res.reduction << '\n');
                     }
                 }
+
                 // Get pressures and face fluxes.
                 psolver_.computePressuresAndFluxes(cell_pressure_scalar, face_pressure_scalar, face_flux,
                                                    well_bhp, well_perf_fluxes);
@@ -430,7 +413,7 @@ namespace Dune
                 }
 
                 // Compute well_perf_pressures
-                computeWellPerfPressures(well_perf_fluxes, well_bhp, wellperf_gpot, well_perf_pressures);
+                computeWellPerfPressures(well_perf_fluxes, well_bhp, perf_gpot_, well_perf_pressures);
 
                 // Update internal well pressure vector.
                 perf_pressure_ = well_perf_pressures;
@@ -465,6 +448,7 @@ namespace Dune
 
             return SolveOk;
         }
+
 
 
 
@@ -529,6 +513,7 @@ namespace Dune
         std::vector<double> perf_A_;   // Flat storage.
         std::vector<double> perf_mob_; // Flat storage.
         std::vector<PhaseVec> perf_sat_;
+        std::vector<double> perf_gpot_; // Flat storage.
 
 
 
@@ -587,6 +572,50 @@ namespace Dune
                 res[row] = -s.b[row];
                 for (int i = s.ia[row]; i < s.ia[row + 1]; ++i) {
                     res[row] += s.sa[i]*s.x[s.ja[i]];
+                }
+            }
+        }
+
+
+
+        // Compute residual and Jacobian of the new formulation.
+        void computeResidualJacobian(const std::vector<double>& initial_voldiscr,
+                                     const std::vector<double>& cell_pressure_scalar,
+                                     const std::vector<double>& cell_pressure_scalar_initial,
+                                     const std::vector<double>& well_bhp,
+                                     const std::vector<double>& src,
+                                     const double dt,
+                                     PressureSolver::LinearSystem& linsys,
+                                     std::vector<double>& res)
+        {
+            // Assemble system matrix and rhs.
+            psolver_.assemble(src, bctypes_, bcvalues_, dt,
+                              fp_.totcompr, initial_voldiscr, fp_.cellA, fp_.faceA,
+                              perf_A_, fp_.phasemobf, perf_mob_,
+                              cell_pressure_scalar_initial, fp_.gravcapf,
+                              perf_gpot_, &(pfluid_->surfaceDensities()[0]));
+            psolver_.linearSystem(linsys);
+            // The linear system is for direct evaluation, we want a residual based approach.
+            // First we compute the residual for the original code.
+            int num_cells = pgrid_->numCells();
+            std::copy(cell_pressure_scalar.begin(), cell_pressure_scalar.end(), linsys.x);
+            std::copy(well_bhp.begin(), well_bhp.end(), linsys.x + num_cells);
+            computeLinearResidual(linsys, res);
+            // Then we compute the residual we actually want by subtracting terms that do not
+            // appear in the new formulation and adding the new terms.
+            for (int cell = 0; cell < num_cells; ++cell) {
+                double dres = fp_.totcompr[cell]*(cell_pressure_scalar[cell] - cell_pressure_scalar_initial[cell]);
+                dres -= 1.0 - fp_.totphasevol_density[cell];
+                dres *= pgrid_->cellVolume(cell)*prock_->porosity(cell)/dt;
+                res[cell] -= dres;
+            }
+            // Change the jacobian by adding/subtracting the necessary terms.
+            for (int cell = 0; cell < num_cells; ++cell) {
+                for (int i = linsys.ia[cell]; i < linsys.ia[cell + 1]; ++i) {
+                    if  (linsys.ja[i] == cell) {
+                        linsys.sa[i] -= fp_.totcompr[cell]*pgrid_->cellVolume(cell)*prock_->porosity(cell)/dt;
+                        linsys.sa[i] += fp_.expjacterm[cell]*pgrid_->cellVolume(cell)*prock_->porosity(cell)/dt;
+                    }
                 }
             }
         }
