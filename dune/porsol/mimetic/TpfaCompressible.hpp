@@ -306,7 +306,6 @@ namespace Dune
             face_pressure_scalar.resize(num_faces, 0.0);
 
             // ------------  Main iteration loop -------------
-            bool converged = false;
             for (int iter = 0; iter < max_num_iter_; ++iter) {
                 start_face_flux = face_flux;
                 start_face_pressure = face_pressure_scalar;
@@ -437,16 +436,11 @@ namespace Dune
 
                 if (flux_rel_difference < flux_rel_tol_ || press_rel_difference < press_rel_tol_) {
                     std::cout << "Pressure solver converged. Number of iterations: " << iter + 1 << '\n' << std::endl;
-                    converged = true;
-                    break;
+                    return SolveOk;
                 }
             }
 
-            if (!converged) {
-                return FailedToConverge;
-            }
-
-            return SolveOk;
+            return FailedToConverge;
         }
 
 
