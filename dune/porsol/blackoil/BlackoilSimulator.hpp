@@ -337,7 +337,8 @@ simulate()
             voldisc_ok = (actual_computed_time == stepsize);
             if (voldisc_ok) {
                 // Just for output.
-                flow_solver_.volumeDiscrepancyAcceptable(state_.cell_pressure_, state_.face_pressure_, state_.cell_z_, stepsize);
+                flow_solver_.volumeDiscrepancyAcceptable(state_.cell_pressure_, state_.face_pressure_,
+                                                         state_.well_perf_pressure_, state_.cell_z_, stepsize);
             }
         } else {
             // First check IMPES stepsize.
@@ -345,7 +346,8 @@ simulate()
             std::cout << "Timestep was " << stepsize << " and max stepsize was " << max_dt << std::endl;
             if (stepsize < max_dt || stepsize <= minimum_stepsize_) {
                 flow_solver_.doStepIMPES(state_.cell_z_, stepsize);
-                voldisc_ok = flow_solver_.volumeDiscrepancyAcceptable(state_.cell_pressure_, state_.face_pressure_, state_.cell_z_, stepsize);
+                voldisc_ok = flow_solver_.volumeDiscrepancyAcceptable(state_.cell_pressure_, state_.face_pressure_,
+                                                                      state_.well_perf_pressure_, state_.cell_z_, stepsize);
             } else {
                 // Restarting step.
                 stepsize = max_dt/1.5;

@@ -178,7 +178,6 @@ namespace Dune
             // Setup unchanging well data structures.
             perf_wells_.clear();
             perf_cells_.clear();
-            perf_pressure_.clear();
             perf_A_.clear();
             perf_mob_.clear();
             perf_sat_.clear();
@@ -189,7 +188,6 @@ namespace Dune
                     int cell = pwells_->wellCell(well, perf);
                     perf_wells_.push_back(well);
                     perf_cells_.push_back(cell);
-                    perf_pressure_.push_back(pwells_->perforationPressure(cell));
                 }
             }
             int num_perf = perf_wells_.size();
@@ -219,10 +217,11 @@ namespace Dune
 
         bool volumeDiscrepancyAcceptable(const std::vector<typename FluidInterface::PhaseVec>& cell_pressure,
                                          const std::vector<typename FluidInterface::PhaseVec>& face_pressure,
+                                         const std::vector<double>& well_perf_pressure,
                                          const std::vector<typename FluidInterface::CompVec>& cell_z,
                                          const double dt)
         {
-            computeFluidProps(cell_pressure, face_pressure, cell_z, dt);
+            computeFluidProps(cell_pressure, face_pressure, well_perf_pressure, cell_z, dt);
             double rel_voldiscr = *std::max_element(fp_.relvoldiscr.begin(), fp_.relvoldiscr.end());
             if (rel_voldiscr > max_relative_voldiscr_) {
                 std::cout << "    Relative volume discrepancy too large: " << rel_voldiscr << std::endl;
@@ -283,8 +282,6 @@ namespace Dune
                          const std::vector<double>& src,
                          const double dt)
         {
-            perf_pressure_ = well_perf_pressures;
-
             int num_cells = cell_z.size();
             std::vector<double> cell_pressure_scalar_initial(num_cells);
             // Set initial pressure to Liquid phase pressure. \TODO what is correct with capillary pressure?
@@ -312,7 +309,7 @@ namespace Dune
                 start_cell_press = cell_pressure_scalar;
                 start_perf_flux = well_perf_fluxes;
                 // (Re-)compute fluid properties.
-                computeFluidProps(cell_pressure, face_pressure, cell_z, dt);
+                computeFluidProps(cell_pressure, face_pressure, well_perf_pressures, cell_z, dt);
 
                 // Initialization for the first iteration only.
                 if (iter == 0) {
@@ -414,9 +411,6 @@ namespace Dune
                 // Compute well_perf_pressures
                 computeWellPerfPressures(well_perf_fluxes, well_bhp, perf_gpot_, well_perf_pressures);
 
-                // Update internal well pressure vector.
-                perf_pressure_ = well_perf_pressures;
-
                 // Compute relative changes for pressure and flux.
                 std::pair<double, double> rel_changes
                     = computeFluxPressChanges(face_flux, well_perf_fluxes, cell_pressure_scalar,
@@ -503,7 +497,6 @@ namespace Dune
         };
         std::vector<int> perf_wells_;
         std::vector<int> perf_cells_;
-        std::vector<double> perf_pressure_;
         std::vector<double> perf_A_;   // Flat storage.
         std::vector<double> perf_mob_; // Flat storage.
         std::vector<PhaseVec> perf_sat_;
@@ -526,6 +519,7 @@ namespace Dune
 
         void computeFluidProps(const std::vector<typename FluidInterface::PhaseVec>& phase_pressure,
                                const std::vector<typename FluidInterface::PhaseVec>& phase_pressure_face,
+                               const std::vector<double>& well_perf_pressure,
                                const std::vector<typename FluidInterface::CompVec>& cell_z,
                                const double dt)
         {
@@ -542,7 +536,7 @@ namespace Dune
                 for (int perf = 0; perf < num_perf; ++perf) {
                     int cell = pwells_->wellCell(well, perf);
                     // \TODO handle capillary in perforation pressure below?
-                    PhaseVec well_pressure = inj ? PhaseVec(perf_pressure_[perf]) : phase_pressure[cell];
+                    PhaseVec well_pressure = inj ? PhaseVec(well_perf_pressure[perf]) : phase_pressure[cell];
                     CompVec well_mixture = inj ? pwells_->injectionMixture(cell) : cell_z[cell];
                     typename FluidInterface::FluidState state = pfluid_->computeState(well_pressure, well_mixture);
                     std::copy(state.phase_to_comp_, state.phase_to_comp_ + numComponents*numPhases,
