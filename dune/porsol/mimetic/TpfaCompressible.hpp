@@ -489,12 +489,6 @@ namespace Dune
         enum { numPhases = FluidInterface::numPhases,
                numComponents = FluidInterface::numComponents };
 
-        struct PrivateFluidData
-        {
-            PhaseVec saturation;
-            PhaseVec mobility;
-            std::tr1::array<double, numPhases*numComponents> A;
-        };
         std::vector<int> perf_wells_;
         std::vector<int> perf_cells_;
         std::vector<double> perf_A_;   // Flat storage.
@@ -502,18 +496,9 @@ namespace Dune
         std::vector<PhaseVec> perf_sat_;
         std::vector<double> perf_gpot_; // Flat storage.
 
-
-
-        PrivateFluidData computeProps(const PhaseVec& pressure,
-                                      const CompVec& composition)
-        {
-            typename FluidInterface::FluidState state = pfluid_->computeState(pressure, composition);
-            PrivateFluidData data;
-            data.saturation = state.saturation_;
-            data.mobility = state.mobility_;
-            std::copy(state.phase_to_comp_, state.phase_to_comp_ + numComponents*numPhases, &data.A[0]);
-            return data;
-        }
+        // Only intended to avoid extra allocations.
+        mutable std::vector<PhaseVec> helper_cell_pressure_;
+        mutable std::vector<PhaseVec> helper_face_pressure_;
 
 
 
@@ -548,6 +533,29 @@ namespace Dune
                 }
             }
             ASSERT(perfcount == perf_wells_.size());
+        }
+
+
+
+        // Convert scalar pressures to phase pressures, then call computeFluidProps().
+        void computeFluidPropsScalarPress(const std::vector<double>& cell_pressure_scalar,
+                                          const std::vector<double>& face_pressure_scalar,
+                                          const std::vector<double>& well_perf_pressure,
+                                          const std::vector<typename FluidInterface::CompVec>& cell_z,
+                                          const double dt)
+        {
+            // Copy to phase pressures. \TODO handle capillary pressure.
+            int num_cells = pgrid_->numCells();
+            int num_faces = pgrid_->numFaces();
+            helper_cell_pressure_.resize(num_cells);
+            helper_face_pressure_.resize(num_faces);
+            for (int cell = 0; cell < num_cells; ++cell) {
+                helper_cell_pressure_[cell] = cell_pressure_scalar[cell];
+            }
+            for (int face = 0; face < num_faces; ++face) {
+                helper_face_pressure_[face] = face_pressure_scalar[face];
+            }
+            computeFluidProps(helper_cell_pressure_, helper_face_pressure_, well_perf_pressure, cell_z, dt);
         }
 
 
