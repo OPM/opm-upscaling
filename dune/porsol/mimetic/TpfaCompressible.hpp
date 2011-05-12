@@ -275,7 +275,7 @@ namespace Dune
         ///
         ReturnCode solve(std::vector<typename FluidInterface::PhaseVec>& cell_pressure,
                          std::vector<typename FluidInterface::PhaseVec>& face_pressure,
-                         std::vector<typename FluidInterface::CompVec>& cell_z,
+                         const std::vector<typename FluidInterface::CompVec>& cell_z,
                          std::vector<double>& face_flux,
                          std::vector<double>& well_perf_pressures,
                          std::vector<double>& well_perf_fluxes,
