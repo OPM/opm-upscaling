@@ -417,14 +417,6 @@ namespace Dune
                 psolver_.computePressuresAndFluxes(cell_pressure_scalar, face_pressure_scalar, face_flux,
                                                    well_bhp, well_perf_fluxes);
 
-                // Compute relative changes for pressure and flux
-                std::pair<double, double> rel_changes
-                    = computeFluxPressChanges(face_flux, well_perf_fluxes, cell_pressure_scalar,
-                                              start_face_flux, start_perf_flux, start_cell_press);
-                double flux_rel_difference = rel_changes.first;
-                double press_rel_difference = rel_changes.second;
-                
-                
                 // Relaxation
                 if (relax_weight_pressure_iteration_ != 1.0) {
                     double ww = relax_weight_pressure_iteration_;
@@ -446,7 +438,6 @@ namespace Dune
                 for (int face = 0; face < num_faces; ++face) {
                     face_pressure[face] = face_pressure_scalar[face];
                 }
-
 
                 // Compute averaged saturations for each well. This code
                 // assumes that flow is either in or out of any single
@@ -477,6 +468,13 @@ namespace Dune
 
                 // Update internal well pressure vector.
                 perf_pressure_ = well_perf_pressures;
+
+                // Compute relative changes for pressure and flux.
+                std::pair<double, double> rel_changes
+                    = computeFluxPressChanges(face_flux, well_perf_fluxes, cell_pressure_scalar,
+                                              start_face_flux, start_perf_flux, start_cell_press);
+                double flux_rel_difference = rel_changes.first;
+                double press_rel_difference = rel_changes.second;
 
                 // Test for convergence.
                 if (iter == 0) {
