@@ -299,7 +299,7 @@ int main(int varnum, char** vararg)
    bool isFixed = false, isLinear = false, isPeriodic = false;
    SinglePhaseUpscaler::BoundaryConditionType boundaryCondition = SinglePhaseUpscaler::Fixed ; 
 
-   int tensorElementCount; // Number of independent elements in resulting tensor
+   int tensorElementCount = 0; // Number of independent elements in resulting tensor
    if (options["bc"].substr(0,1) == "f") {
        isFixed = true; isLinear = isPeriodic = false;
        boundaryCondition = SinglePhaseUpscaler::Fixed; // This refers to the mimetic namespace (Sintef)
@@ -819,7 +819,7 @@ int main(int varnum, char** vararg)
 
    clock_t start_upscale_wallclock = clock();
    
-   double waterVolumeLF;
+   double waterVolumeLF = 0.0;
    // Now loop through the vector of capillary pressure points that
    // this node should compute.
    for (int pointidx = 0; pointidx < points; ++pointidx) {
