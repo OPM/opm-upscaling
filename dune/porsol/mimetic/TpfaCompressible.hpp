@@ -339,8 +339,8 @@ namespace Dune
 
                 // Update wellperfA and phasemobwellperf
                 for (int perf = 0; perf < num_perf; ++perf) {
-                    std::copy(&perf_props_[perf].phase_to_comp[0][0],
-                              &perf_props_[perf].phase_to_comp[0][0] + numComponents*numPhases,
+                    std::copy(perf_props_[perf].A.begin(),
+                              perf_props_[perf].A.end(),
                               &wellperfA[perf*numComponents*numPhases]);
                     std::copy(perf_props_[perf].mobility.begin(),
                               perf_props_[perf].mobility.end(),
@@ -527,39 +527,27 @@ namespace Dune
         enum { numPhases = FluidInterface::numPhases,
                numComponents = FluidInterface::numComponents };
 
-        struct TransportFluidData
+        struct PrivateFluidData
         {
             PhaseVec saturation;
             PhaseVec mobility;
-            PhaseVec fractional_flow;
-            std::tr1::array<CompVec, numPhases> phase_to_comp;
-            PhaseVec relperm;
-            PhaseVec viscosity;
+            std::tr1::array<double, numPhases*numComponents> A;
         };
         std::vector<int> perf_wells_;
         std::vector<int> perf_cells_;
         std::vector<double> perf_pressure_;
-        std::vector<TransportFluidData> perf_props_;
+        std::vector<PrivateFluidData> perf_props_;
 
 
 
-        TransportFluidData computeProps(const PhaseVec& pressure,
-                                        const CompVec& composition)
+        PrivateFluidData computeProps(const PhaseVec& pressure,
+                                      const CompVec& composition)
         {
             typename FluidInterface::FluidState state = pfluid_->computeState(pressure, composition);
-            TransportFluidData data;
+            PrivateFluidData data;
             data.saturation = state.saturation_;
             data.mobility = state.mobility_;
-            double total_mobility = 0.0;
-            for (int phase = 0; phase < numPhases; ++phase) {
-                total_mobility += state.mobility_[phase];
-            }
-            data.fractional_flow = state.mobility_;
-            data.fractional_flow /= total_mobility;
-            std::copy(state.phase_to_comp_, state.phase_to_comp_ + numComponents*numPhases,
-                      &data.phase_to_comp[0][0]);
-            data.relperm = state.relperm_;
-            data.viscosity = state.viscosity_;
+            std::copy(state.phase_to_comp_, state.phase_to_comp_ + numComponents*numPhases, &data.A[0]);
             return data;
         }
 
@@ -622,7 +610,7 @@ namespace Dune
                 double depth_delta = pos[2] - pwells_->referenceDepth(well);
                 double gh = gravity_[2]*depth_delta;
                 // At is already transposed since in Fortran order.
-                const double* At = &perf_props_[perf].phase_to_comp[0][0];
+                const double* At = &perf_props_[perf].A[0];
                 PhaseVec rho = pfluid_->phaseDensities(At);
                 for (int phase = 0; phase < numPhases; ++phase) {
                     // Gravity potential is (by phase) \rho_\alpha g h
