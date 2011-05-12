@@ -418,30 +418,11 @@ namespace Dune
                                                    well_bhp, well_perf_fluxes);
 
                 // Compute relative changes for pressure and flux
-                double max_flux_face = std::max(std::fabs(*std::min_element(face_flux.begin(), face_flux.end())),
-                                                std::fabs(*std::max_element(face_flux.begin(), face_flux.end())));
-                double max_flux_perf = num_perf == 0 ? 0.0
-                    : std::max(std::fabs(*std::min_element(well_perf_fluxes.begin(), well_perf_fluxes.end())),
-                               std::fabs(*std::max_element(well_perf_fluxes.begin(), well_perf_fluxes.end())));
-                double max_flux = std::max(max_flux_face, max_flux_perf);
-                double max_press = std::max(std::fabs(*std::min_element(cell_pressure_scalar.begin(), cell_pressure_scalar.end())),
-                                            std::fabs(*std::max_element(cell_pressure_scalar.begin(), cell_pressure_scalar.end())));
-                double flux_change_infnorm = 0.0;
-                double press_change_infnorm = 0.0;
-                for (int face = 0; face < num_faces; ++face) {
-                    flux_change_infnorm = std::max(flux_change_infnorm,
-                                                   std::fabs(face_flux[face] - start_face_flux[face]));
-                }
-                for (int perf = 0; perf < num_perf; ++perf) {
-                    flux_change_infnorm = std::max(flux_change_infnorm,
-                                                   std::fabs(well_perf_fluxes[perf] - start_perf_flux[perf]));
-                }
-                for (int cell = 0; cell < num_cells; ++cell) {
-                    press_change_infnorm = std::max(press_change_infnorm,
-                                                    std::fabs(cell_pressure_scalar[cell] - start_cell_press[cell]));
-                }
-                double flux_rel_difference = flux_change_infnorm/max_flux;
-                double press_rel_difference = press_change_infnorm/max_press;
+                std::pair<double, double> rel_changes
+                    = computeFluxPressChanges(face_flux, well_perf_fluxes, cell_pressure_scalar,
+                                              start_face_flux, start_perf_flux, start_cell_press);
+                double flux_rel_difference = rel_changes.first;
+                double press_rel_difference = rel_changes.second;
                 
                 
                 // Relaxation
@@ -637,6 +618,7 @@ namespace Dune
         }
 
 
+
         // Compute res = Ax - b.
         void computeLinearResidual(const PressureSolver::LinearSystem& s, std::vector<double>& res)
         {
@@ -650,7 +632,8 @@ namespace Dune
         }
 
 
-        // Computes the well potentials, assumes that the perforation variables
+
+        // Compute the well potentials. Assumes that the perforation variables
         // have been set properly: perf_[wells_|cells_|pressure_|props_].
         void computeWellPotentials(std::vector<double>& wellperf_gpot)
         {
@@ -672,6 +655,49 @@ namespace Dune
                     wellperf_gpot[numPhases*perf + phase] = rho[phase]*gh;
                 }
             }
+        }
+
+
+
+        // Compute the relative changes in fluxes and pressures.
+        static std::pair<double, double>
+        computeFluxPressChanges(const std::vector<double>& face_flux,
+                                const std::vector<double>& well_perf_fluxes,
+                                const std::vector<double>& cell_pressure_scalar,
+                                const std::vector<double>& start_face_flux,
+                                const std::vector<double>& start_perf_flux,
+                                const std::vector<double>& start_cell_press)
+        {
+            int num_faces = face_flux.size();
+            int num_perf = well_perf_fluxes.size();
+            int num_cells = cell_pressure_scalar.size();
+            double max_flux_face = std::max(std::fabs(*std::min_element(face_flux.begin(), face_flux.end())),
+                                            std::fabs(*std::max_element(face_flux.begin(), face_flux.end())));
+            double max_flux_perf = num_perf == 0 ? 0.0
+                : std::max(std::fabs(*std::min_element(well_perf_fluxes.begin(), well_perf_fluxes.end())),
+                           std::fabs(*std::max_element(well_perf_fluxes.begin(), well_perf_fluxes.end())));
+            double max_flux = std::max(max_flux_face, max_flux_perf);
+            double max_press = std::max(std::fabs(*std::min_element(cell_pressure_scalar.begin(),
+                                                                    cell_pressure_scalar.end())),
+                                        std::fabs(*std::max_element(cell_pressure_scalar.begin(),
+                                                                    cell_pressure_scalar.end())));
+            double flux_change_infnorm = 0.0;
+            double press_change_infnorm = 0.0;
+            for (int face = 0; face < num_faces; ++face) {
+                flux_change_infnorm = std::max(flux_change_infnorm,
+                                               std::fabs(face_flux[face] - start_face_flux[face]));
+            }
+            for (int perf = 0; perf < num_perf; ++perf) {
+                flux_change_infnorm = std::max(flux_change_infnorm,
+                                               std::fabs(well_perf_fluxes[perf] - start_perf_flux[perf]));
+            }
+            for (int cell = 0; cell < num_cells; ++cell) {
+                press_change_infnorm = std::max(press_change_infnorm,
+                                                std::fabs(cell_pressure_scalar[cell] - start_cell_press[cell]));
+            }
+            double flux_rel_difference = flux_change_infnorm/max_flux;
+            double press_rel_difference = press_change_infnorm/max_press;
+            return std::make_pair(flux_rel_difference, press_rel_difference);
         }
 
     };
