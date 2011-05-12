@@ -225,11 +225,8 @@ int main(int varnum, char** vararg)
    vector<double>  poros = eclParser.getFloatingPointValue("PORO");  
    vector<double> permxs = eclParser.getFloatingPointValue("PERMX");  
    vector<int>  griddims = eclParser.getSPECGRID().dimensions;
-   int x_res = griddims[0];
-   int y_res = griddims[1];
-   int z_res = griddims[2];
- 
-   int maxSatnum = 0;
+    
+   uint maxSatnum = 0;
    const double maxPermContrast = atof(options["maxPermContrast"].c_str());
    const double minPerm = atof(options["minPerm"].c_str());
    const double minPoro = atof(options["minPoro"].c_str());
@@ -248,7 +245,7 @@ int main(int varnum, char** vararg)
            cerr << "satnums[" << i << "] = " << satnums[i] << ", not sane, quitting." << endl;
            usageandexit();
        }
-       if (satnums[i] > maxSatnum) {
+       if (satnums[i] > (int)maxSatnum) {
            maxSatnum = satnums[i];
        }
        if ((poros[i] >= 0) && (poros[i] < minPoro)) { // Truncate porosity from below
@@ -292,9 +289,6 @@ int main(int varnum, char** vararg)
    std::vector<MonotCubicInterpolator> InvJfunctions; // Holds the inverse of the loaded J-functions.
    
    std::vector<string> JfunctionNames; // Placeholder for the names of the loaded J-functions.
-
-   // This decides whether we are upscaling water or oil relative permeability
-   const int relPermCurve = atoi(options["relPermCurve"].c_str());
 
    // Input for surfaceTension is dynes/cm
    // SI units are Joules/square metre
@@ -462,7 +456,7 @@ int main(int varnum, char** vararg)
        ++tesselatedCells; // keep count.
    }
 
-   double minSinglePhasePerm = max(maxSinglePhasePerm/maxPermContrast, minPerm);
+   //double minSinglePhasePerm = max(maxSinglePhasePerm/maxPermContrast, minPerm);
    
    cout << "Pcmin:    " << Pcmin << endl;
    cout << "Pcmax:    " << Pcmax << endl;
@@ -505,13 +499,12 @@ int main(int varnum, char** vararg)
 
    MonotCubicInterpolator WaterSaturationVsCapPressure;
    
-   int saturationpoints = 0; // for counting
    double largestSaturationInterval = Swor-Swir;
    
    double Ptestvalue = Pcmax;
 
    vector<MonotCubicInterpolator> watersaturation_rocktype;
-   for (unsigned int satidx=0; satidx <= maxSatnum; ++satidx) {
+   for (uint satidx=0; satidx <= maxSatnum; ++satidx) {
        MonotCubicInterpolator tmp;
        watersaturation_rocktype.push_back(tmp);
    }
@@ -674,7 +667,7 @@ int main(int varnum, char** vararg)
        for (int i = 0; i < interpolationPoints; ++i) {
            Pvalues.push_back(PvaluesVsSaturation.evaluate(SatvaluesInterp[i]));
        }
-       for (int satidx = 1; satidx <= maxSatnum; ++satidx) {
+       for (uint satidx = 1; satidx <= maxSatnum; ++satidx) {
            MonotCubicInterpolator WaterSaturationRocktypeVsSaturation(Satvalues, watersaturation_rocktype_values[satidx]);
            watersaturation_rocktype_values[satidx].clear();
            for (int i=0; i < interpolationPoints; ++i) {
@@ -692,7 +685,7 @@ int main(int varnum, char** vararg)
        outputtmp << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Pvalues[i]; 
        outputtmp << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Satvalues[i]; 
        
-       for (int satidx = 1; satidx <= maxSatnum; ++satidx) { 
+       for (uint satidx = 1; satidx <= maxSatnum; ++satidx) { 
            outputtmp << showpoint << setw(fieldwidth) << setprecision(outputprecision) 
                      << watersaturation_rocktype_values[satidx][i]; 
        } 
