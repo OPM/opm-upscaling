@@ -334,30 +334,7 @@ namespace Dune
                     // for every iteration.
                     wellperfA.resize(num_perf*numComponents*numPhases);
                     phasemobwellperf.resize(num_perf*numPhases);
-                    wellperf_gpot.resize(num_perf*numPhases);
-                    for (int perf = 0; perf < num_perf; ++perf) {
-                        int well = perf_wells_[perf];
-                        int cell = perf_cells_[perf];
-                        bool inj = pwells_->type(well) == WellsInterface::Injector;
-                        PhaseVec well_pressure = inj ? PhaseVec(perf_pressure_[perf]) : cell_pressure[cell];
-                        CompVec well_mixture = inj ? pwells_->injectionMixture(cell) : cell_z[cell];
-                        typename GridInterface::Vector pos = pgrid_->cellCentroid(cell);
-                        // With wells, we assume that gravity is in the z-direction.
-                        ASSERT(gravity_[0] == 0.0 && gravity_[1] == 0.0);
-                        double depth_delta = pos[2] - pwells_->referenceDepth(well);
-                        double gh = gravity_[2]*depth_delta;
-                        // At is already transposed since in Fortran order.
-                        const double* At = &perf_props_[perf].phase_to_comp[0][0];
-                        CompVec surf_dens = pfluid_->surfaceDensities();
-                        for (int phase = 0; phase < numPhases; ++phase) {
-                            // Gravity potential is (by phase) \rho_\alpha g h
-                            double rho = 0.0;
-                            for (int comp = 0; comp < 3; ++comp) {
-                                rho += At[3*phase + comp]*surf_dens[comp];
-                            }
-                            wellperf_gpot[numPhases*perf + phase] = rho*gh;
-                        }
-                    }
+                    computeWellPotentials(wellperf_gpot);
                 }
 
                 // Update wellperfA and phasemobwellperf
@@ -668,6 +645,31 @@ namespace Dune
                 res[row] = -s.b[row];
                 for (int i = s.ia[row]; i < s.ia[row + 1]; ++i) {
                     res[row] += s.sa[i]*s.x[s.ja[i]];
+                }
+            }
+        }
+
+
+        // Computes the well potentials, assumes that the perforation variables
+        // have been set properly: perf_[wells_|cells_|pressure_|props_].
+        void computeWellPotentials(std::vector<double>& wellperf_gpot)
+        {
+            int num_perf = perf_cells_.size();
+            wellperf_gpot.resize(num_perf*numPhases);
+            for (int perf = 0; perf < num_perf; ++perf) {
+                int well = perf_wells_[perf];
+                int cell = perf_cells_[perf];
+                typename GridInterface::Vector pos = pgrid_->cellCentroid(cell);
+                // With wells, we assume that gravity is in the z-direction.
+                ASSERT(gravity_[0] == 0.0 && gravity_[1] == 0.0);
+                double depth_delta = pos[2] - pwells_->referenceDepth(well);
+                double gh = gravity_[2]*depth_delta;
+                // At is already transposed since in Fortran order.
+                const double* At = &perf_props_[perf].phase_to_comp[0][0];
+                PhaseVec rho = pfluid_->phaseDensities(At);
+                for (int phase = 0; phase < numPhases; ++phase) {
+                    // Gravity potential is (by phase) \rho_\alpha g h
+                    wellperf_gpot[numPhases*perf + phase] = rho[phase]*gh;
                 }
             }
         }
