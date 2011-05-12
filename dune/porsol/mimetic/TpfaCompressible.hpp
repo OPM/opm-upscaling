@@ -179,7 +179,9 @@ namespace Dune
             perf_wells_.clear();
             perf_cells_.clear();
             perf_pressure_.clear();
-            perf_props_.clear();
+            perf_A_.clear();
+            perf_mob_.clear();
+            perf_sat_.clear();
             int num_wells = pwells_->numWells();
             for (int well = 0; well < num_wells; ++well) {
                 int num_perf = pwells_->numPerforations(well);
@@ -190,7 +192,10 @@ namespace Dune
                     perf_pressure_.push_back(pwells_->perforationPressure(cell));
                 }
             }
-            perf_props_.reserve(perf_wells_.size());
+            int num_perf = perf_wells_.size();
+            perf_A_.resize(num_perf*numPhases*numComponents);
+            perf_mob_.resize(num_perf*numPhases);
+            perf_sat_.resize(num_perf);
         }
 
 
@@ -300,8 +305,6 @@ namespace Dune
             face_pressure_scalar.clear();
             face_pressure_scalar.resize(num_faces, 0.0);
 
-            std::vector<double> wellperfA;
-            std::vector<double> phasemobwellperf;
             std::vector<double> wellperf_gpot;
 
             // ------------  Main iteration loop -------------
@@ -315,7 +318,6 @@ namespace Dune
                 computeFluidProps(cell_pressure, face_pressure, cell_z, dt);
 
                 // Initialization for the first iteration only.
-                int num_perf = perf_cells_.size();
                 if (iter == 0) {
                     initial_voldiscr = fp_.voldiscr;
                     double rel_voldiscr = *std::max_element(fp_.relvoldiscr.begin(), fp_.relvoldiscr.end());
@@ -330,27 +332,15 @@ namespace Dune
                     }
 
                     // well_gpot is computed once per pressure solve,
-                    // while wellperfA, phasemobwellperf are recoomputed
+                    // while perf_A_, perf_mob_ are recoomputed
                     // for every iteration.
-                    wellperfA.resize(num_perf*numComponents*numPhases);
-                    phasemobwellperf.resize(num_perf*numPhases);
                     computeWellPotentials(wellperf_gpot);
-                }
-
-                // Update wellperfA and phasemobwellperf
-                for (int perf = 0; perf < num_perf; ++perf) {
-                    std::copy(perf_props_[perf].A.begin(),
-                              perf_props_[perf].A.end(),
-                              &wellperfA[perf*numComponents*numPhases]);
-                    std::copy(perf_props_[perf].mobility.begin(),
-                              perf_props_[perf].mobility.end(),
-                              &phasemobwellperf[perf*numPhases]);
                 }
 
                 // Assemble system matrix and rhs.
                 psolver_.assemble(src, bctypes_, bcvalues_, dt,
                                   fp_.totcompr, initial_voldiscr, fp_.cellA, fp_.faceA,
-                                  wellperfA, fp_.phasemobf, phasemobwellperf,
+                                  perf_A_, fp_.phasemobf, perf_mob_,
                                   cell_pressure_scalar_initial, fp_.gravcapf,
                                   wellperf_gpot, &(pfluid_->surfaceDensities()[0]));
                 PressureSolver::LinearSystem s;
@@ -536,7 +526,9 @@ namespace Dune
         std::vector<int> perf_wells_;
         std::vector<int> perf_cells_;
         std::vector<double> perf_pressure_;
-        std::vector<PrivateFluidData> perf_props_;
+        std::vector<double> perf_A_;   // Flat storage.
+        std::vector<double> perf_mob_; // Flat storage.
+        std::vector<PhaseVec> perf_sat_;
 
 
 
@@ -563,7 +555,7 @@ namespace Dune
             // \TODO only need to recompute this once per pressure update.
             // No, that is false, at production perforations the cell z is
             // used, which may change every step.
-            perf_props_.clear();
+            unsigned int perfcount = 0;
             int num_wells = pwells_->numWells();
             for (int well = 0; well < num_wells; ++well) {
                 bool inj = pwells_->type(well) == WellsInterface::Injector;
@@ -573,10 +565,16 @@ namespace Dune
                     // \TODO handle capillary in perforation pressure below?
                     PhaseVec well_pressure = inj ? PhaseVec(perf_pressure_[perf]) : phase_pressure[cell];
                     CompVec well_mixture = inj ? pwells_->injectionMixture(cell) : cell_z[cell];
-                    perf_props_.push_back(computeProps(well_pressure, well_mixture));
+                    typename FluidInterface::FluidState state = pfluid_->computeState(well_pressure, well_mixture);
+                    std::copy(state.phase_to_comp_, state.phase_to_comp_ + numComponents*numPhases,
+                              &perf_A_[perfcount*numPhases*numComponents]);
+                    std::copy(state.mobility_.begin(), state.mobility_.end(),
+                              &perf_mob_[perfcount*numPhases]);
+                    perf_sat_[perfcount] = state.saturation_;
+                    ++perfcount;
                 }
             }
-            ASSERT(perf_props_.size() == perf_wells_.size());
+            ASSERT(perfcount == perf_wells_.size());
         }
 
 
@@ -610,7 +608,7 @@ namespace Dune
                 double depth_delta = pos[2] - pwells_->referenceDepth(well);
                 double gh = gravity_[2]*depth_delta;
                 // At is already transposed since in Fortran order.
-                const double* At = &perf_props_[perf].A[0];
+                const double* At = &perf_A_[perf*numPhases*numComponents];
                 PhaseVec rho = pfluid_->phaseDensities(At);
                 for (int phase = 0; phase < numPhases; ++phase) {
                     // Gravity potential is (by phase) \rho_\alpha g h
@@ -680,7 +678,7 @@ namespace Dune
                 int well = perf_wells_[perf];
                 double flux = well_perf_fluxes[perf];
                 well_flux[well] += flux;
-                PhaseVec tmp = perf_props_[perf].saturation;
+                PhaseVec tmp = perf_sat_[perf];
                 tmp *= flux;
                 well_sat[well] += tmp;
             }
