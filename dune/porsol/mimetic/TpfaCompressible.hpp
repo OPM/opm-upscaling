@@ -282,161 +282,44 @@ namespace Dune
                          const std::vector<double>& src,
                          const double dt)
         {
-            int num_cells = cell_z.size();
-            std::vector<double> cell_pressure_scalar_initial(num_cells);
-            // Set initial pressure to Liquid phase pressure. \TODO what is correct with capillary pressure?
+            // Set up initial state.
+            // \TODO We are currently using Liquid phase pressure,
+            //       what is correct with capillary pressure?
+            SolverState state;
+            int num_cells = cell_pressure.size();
+            int num_faces = face_pressure.size();
+            state.cell_pressure.resize(num_cells);
             for (int cell = 0; cell < num_cells; ++cell) {
-                cell_pressure_scalar_initial[cell] = cell_pressure[cell][FluidInterface::Liquid];
+                state.cell_pressure[cell] = cell_pressure[cell][FluidInterface::Liquid];
             }
-            std::vector<double> cell_pressure_scalar = cell_pressure_scalar_initial;
-            std::vector<double> initial_voldiscr;
-            std::vector<double> face_pressure_scalar;
-            std::vector<double> start_face_flux;
-            std::vector<double> start_face_pressure;
-            std::vector<double> start_cell_press;
-            std::vector<double> well_bhp(pwells_->numWells(), 0.0);
-            std::vector<double> start_perf_flux;
-            int num_faces = pgrid_->numFaces();
-            face_flux.clear();
-            face_flux.resize(num_faces, 0.0);
-            face_pressure_scalar.clear();
-            face_pressure_scalar.resize(num_faces, 0.0);
+            state.face_pressure.resize(num_faces);
+            for (int face = 0; face < num_faces; ++face) {
+                state.face_pressure[face] = face_pressure[face][FluidInterface::Liquid];
+            }
+            state.face_flux.clear();
+            state.face_flux.resize(num_faces);
+            state.well_perf_pressure = well_perf_pressures;
+            state.well_perf_flux = well_perf_fluxes;
 
-            // ------------  Main iteration loop -------------
-            for (int iter = 0; iter < max_num_iter_; ++iter) {
-                start_face_flux = face_flux;
-                start_face_pressure = face_pressure_scalar;
-                start_cell_press = cell_pressure_scalar;
-                start_perf_flux = well_perf_fluxes;
-                // (Re-)compute fluid properties.
-                computeFluidProps(cell_pressure, face_pressure, well_perf_pressures, cell_z, dt);
+            // Run solver.
+            ReturnCode retcode = solveImpl(cell_z, src, dt, state);
 
-                // Initialization for the first iteration only.
-                if (iter == 0) {
-                    initial_voldiscr = fp_.voldiscr;
-                    double rel_voldiscr = *std::max_element(fp_.relvoldiscr.begin(), fp_.relvoldiscr.end());
-                    if (rel_voldiscr > max_relative_voldiscr_) {
-                        std::cout << "    Relative volume discrepancy too large: " << rel_voldiscr << std::endl;
-                        return VolumeDiscrepancyTooLarge;
-                    }
-                    if (relax_time_voldiscr_ > 0.0) {
-                        double relax = std::min(1.0,dt/relax_time_voldiscr_);
-                        std::transform(initial_voldiscr.begin(), initial_voldiscr.end(), initial_voldiscr.begin(),
-                                       std::binder1st<std::multiplies<double> >(std::multiplies<double>() , relax));
-                    }
-
-                    // well_gpot is computed once per pressure solve,
-                    // while perf_A_, perf_mob_ are recoomputed
-                    // for every iteration.
-                    computeWellPotentials(perf_gpot_);
-                }
-
-                if (experimental_jacobian_) {
-                    // Compute residual and jacobian.
-                    PressureSolver::LinearSystem s;
-                    std::vector<double> res;
-                    computeResidualJacobian(initial_voldiscr, cell_pressure_scalar, cell_pressure_scalar_initial,
-                                            well_bhp, src, dt, s, res);
-
-                    if (output_residual_) {
-                        // Temporary hack to get output of residual.
-                        static int psolve_iter = -1;
-                        if (iter == 0) {
-                            ++psolve_iter;
-                        }
-                        std::ostringstream oss;
-                        oss << "residual-" << psolve_iter << '-' << iter << ".dat";
-                        std::ofstream outres(oss.str().c_str());
-                        std::copy(res.begin(), res.end(), std::ostream_iterator<double>(outres, "\n"));
-                    }
-
-                    // Solve system for dp, that is, we use res as the rhs.
-                    LinearSolverISTL::LinearSolverResults result
-                        = linsolver_.solve(s.n, s.nnz, s.ia, s.ja, s.sa, &res[0], s.x);
-                    if (!result.converged) {
-                        THROW("Linear solver failed to converge in " << result.iterations << " iterations.\n"
-                              << "Residual reduction achieved is " << result.reduction << '\n');
-                    }
-                    // Set x so that the call to computePressuresAndFluxes() will work.
-                    // Recall that x now contains dp, and we want it to contain p - dp
-                    for (int cell = 0; cell < num_cells; ++cell) {
-                        s.x[cell] = cell_pressure_scalar[cell] - s.x[cell];
-                    }
-                    for (int well = 0; well < pwells_->numWells(); ++well) {
-                        s.x[num_cells + well] = well_bhp[well] - s.x[num_cells + well]; 
-                    }
-                } else {
-                    // Assemble system matrix and rhs.
-                    psolver_.assemble(src, bctypes_, bcvalues_, dt,
-                                      fp_.totcompr, initial_voldiscr, fp_.cellA, fp_.faceA,
-                                      perf_A_, fp_.phasemobf, perf_mob_,
-                                      cell_pressure_scalar_initial, fp_.gravcapf,
-                                      perf_gpot_, &(pfluid_->surfaceDensities()[0]));
-                    PressureSolver::LinearSystem s;
-                    psolver_.linearSystem(s);
-                    // Solve system.
-                    LinearSolverISTL::LinearSolverResults res = linsolver_.solve(s.n, s.nnz, s.ia, s.ja, s.sa, s.b, s.x);
-                    if (!res.converged) {
-                        THROW("Linear solver failed to converge in " << res.iterations << " iterations.\n"
-                              << "Residual reduction achieved is " << res.reduction << '\n');
-                    }
-                }
-
-                // Get pressures and face fluxes.
-                psolver_.computePressuresAndFluxes(cell_pressure_scalar, face_pressure_scalar, face_flux,
-                                                   well_bhp, well_perf_fluxes);
-
-                // Relaxation
-                if (relax_weight_pressure_iteration_ != 1.0) {
-                    double ww = relax_weight_pressure_iteration_;
-                    for (int cell = 0; cell < num_cells; ++cell) {
-                        cell_pressure_scalar[cell] = ww*cell_pressure_scalar[cell] + (1.0-ww)*start_cell_press[cell];
-                    }
-                    if (iter > 0) {
-                        for (int face = 0; face < num_faces; ++face) {
-                            face_pressure_scalar[face] = ww*face_pressure_scalar[face] + (1.0-ww)*start_face_pressure[face];
-                            face_flux[face] = ww*face_flux[face] + (1.0-ww)*start_face_flux[face];
-                        }
-                    }
-                }
-                             
-                // Copy to phase pressures. \TODO handle capillary pressure.
+            // Copy results to output variables.
+            if (retcode == SolveOk) {
+                // \TODO Currently all phase pressures will be equal,
+                //       what is correct with capillary pressure?
                 for (int cell = 0; cell < num_cells; ++cell) {
-                    cell_pressure[cell] = cell_pressure_scalar[cell];
+                    cell_pressure[cell] = state.cell_pressure[cell];
                 }
                 for (int face = 0; face < num_faces; ++face) {
-                    face_pressure[face] = face_pressure_scalar[face];
+                    face_pressure[face] = state.face_pressure[face];
                 }
-
-                // Compute well_perf_pressures
-                computeWellPerfPressures(well_perf_fluxes, well_bhp, perf_gpot_, well_perf_pressures);
-
-                // Compute relative changes for pressure and flux.
-                std::pair<double, double> rel_changes
-                    = computeFluxPressChanges(face_flux, well_perf_fluxes, cell_pressure_scalar,
-                                              start_face_flux, start_perf_flux, start_cell_press);
-                double flux_rel_difference = rel_changes.first;
-                double press_rel_difference = rel_changes.second;
-
-                // Test for convergence.
-                if (iter == 0) {
-                    std::cout << "Iteration      Rel. flux change     Rel. pressure change\n";
-                }
-                std::cout.precision(5);
-                std::cout << std::setw(6) << iter
-                          << std::setw(24) << flux_rel_difference
-                          << std::setw(24) << press_rel_difference << std::endl;
-                std::cout.precision(16);
-
-                if (flux_rel_difference < flux_rel_tol_ || press_rel_difference < press_rel_tol_) {
-                    std::cout << "Pressure solver converged. Number of iterations: " << iter + 1 << '\n' << std::endl;
-                    return SolveOk;
-                }
+                face_flux = state.face_flux;
+                well_perf_pressures = state.well_perf_pressure;
+                well_perf_fluxes = state.well_perf_flux;
             }
-
-            return FailedToConverge;
+            return retcode;
         }
-
 
 
 
@@ -451,13 +334,12 @@ namespace Dune
 
 
 
-
+        /// Do an IMPES step using the facilities of the pressure solver.
         void doStepIMPES(std::vector<typename FluidInterface::CompVec>& cell_z,
                          const double dt)
         {
             psolver_.explicitTransport(dt, &(cell_z[0][0]));
         }
-
 
 
 
@@ -500,6 +382,14 @@ namespace Dune
         mutable std::vector<PhaseVec> helper_cell_pressure_;
         mutable std::vector<PhaseVec> helper_face_pressure_;
 
+        struct SolverState
+        {
+            std::vector<double> cell_pressure;
+            std::vector<double> face_pressure;
+            std::vector<double> face_flux;
+            std::vector<double> well_perf_pressure;
+            std::vector<double> well_perf_flux;
+        };
 
 
         void computeFluidProps(const std::vector<typename FluidInterface::PhaseVec>& phase_pressure,
@@ -721,6 +611,147 @@ namespace Dune
                 }
             }
         }
+
+
+
+
+        // Implements the main nonlinear loop of the pressure solver.
+        ReturnCode solveImpl(const std::vector<typename FluidInterface::CompVec>& cell_z,
+                             const std::vector<double>& src,
+                             const double dt,
+                             SolverState& state)
+        {
+            int num_cells = pgrid_->numCells();
+            int num_faces = pgrid_->numFaces();
+            std::vector<double> cell_pressure_initial = state.cell_pressure;
+            std::vector<double> voldiscr_initial;
+            SolverState start_state;
+            std::vector<double> well_bhp(pwells_->numWells(), 0.0);
+
+            // ------------  Main iteration loop -------------
+            for (int iter = 0; iter < max_num_iter_; ++iter) {
+                start_state = state;
+                // (Re-)compute fluid properties.
+                computeFluidPropsScalarPress(state.cell_pressure, state.face_pressure, state.well_perf_pressure, cell_z, dt);
+
+                // Initialization for the first iteration only.
+                if (iter == 0) {
+                    voldiscr_initial = fp_.voldiscr;
+                    double rel_voldiscr = *std::max_element(fp_.relvoldiscr.begin(), fp_.relvoldiscr.end());
+                    if (rel_voldiscr > max_relative_voldiscr_) {
+                        std::cout << "    Relative volume discrepancy too large: " << rel_voldiscr << std::endl;
+                        return VolumeDiscrepancyTooLarge;
+                    }
+                    if (relax_time_voldiscr_ > 0.0) {
+                        double relax = std::min(1.0,dt/relax_time_voldiscr_);
+                        std::transform(voldiscr_initial.begin(), voldiscr_initial.end(), voldiscr_initial.begin(),
+                                       std::binder1st<std::multiplies<double> >(std::multiplies<double>() , relax));
+                    }
+
+                    // well_gpot is computed once per pressure solve,
+                    // while perf_A_, perf_mob_ are recoomputed
+                    // for every iteration.
+                    computeWellPotentials(perf_gpot_);
+                }
+
+                if (experimental_jacobian_) {
+                    // Compute residual and jacobian.
+                    PressureSolver::LinearSystem s;
+                    std::vector<double> res;
+                    computeResidualJacobian(voldiscr_initial, state.cell_pressure, cell_pressure_initial,
+                                            well_bhp, src, dt, s, res);
+
+                    if (output_residual_) {
+                        // Temporary hack to get output of residual.
+                        static int psolve_iter = -1;
+                        if (iter == 0) {
+                            ++psolve_iter;
+                        }
+                        std::ostringstream oss;
+                        oss << "residual-" << psolve_iter << '-' << iter << ".dat";
+                        std::ofstream outres(oss.str().c_str());
+                        std::copy(res.begin(), res.end(), std::ostream_iterator<double>(outres, "\n"));
+                    }
+
+                    // Solve system for dp, that is, we use res as the rhs.
+                    LinearSolverISTL::LinearSolverResults result
+                        = linsolver_.solve(s.n, s.nnz, s.ia, s.ja, s.sa, &res[0], s.x);
+                    if (!result.converged) {
+                        THROW("Linear solver failed to converge in " << result.iterations << " iterations.\n"
+                              << "Residual reduction achieved is " << result.reduction << '\n');
+                    }
+                    // Set x so that the call to computePressuresAndFluxes() will work.
+                    // Recall that x now contains dp, and we want it to contain p - dp
+                    for (int cell = 0; cell < num_cells; ++cell) {
+                        s.x[cell] = state.cell_pressure[cell] - s.x[cell];
+                    }
+                    for (int well = 0; well < pwells_->numWells(); ++well) {
+                        s.x[num_cells + well] = well_bhp[well] - s.x[num_cells + well]; 
+                    }
+                } else {
+                    // Assemble system matrix and rhs.
+                    psolver_.assemble(src, bctypes_, bcvalues_, dt,
+                                      fp_.totcompr, voldiscr_initial, fp_.cellA, fp_.faceA,
+                                      perf_A_, fp_.phasemobf, perf_mob_,
+                                      cell_pressure_initial, fp_.gravcapf,
+                                      perf_gpot_, &(pfluid_->surfaceDensities()[0]));
+                    PressureSolver::LinearSystem s;
+                    psolver_.linearSystem(s);
+                    // Solve system.
+                    LinearSolverISTL::LinearSolverResults res = linsolver_.solve(s.n, s.nnz, s.ia, s.ja, s.sa, s.b, s.x);
+                    if (!res.converged) {
+                        THROW("Linear solver failed to converge in " << res.iterations << " iterations.\n"
+                              << "Residual reduction achieved is " << res.reduction << '\n');
+                    }
+                }
+
+                // Get pressures and face fluxes.
+                psolver_.computePressuresAndFluxes(state.cell_pressure, state.face_pressure, state.face_flux,
+                                                   well_bhp, state.well_perf_flux);
+
+                // Relaxation
+                if (relax_weight_pressure_iteration_ != 1.0) {
+                    double ww = relax_weight_pressure_iteration_;
+                    for (int cell = 0; cell < num_cells; ++cell) {
+                        state.cell_pressure[cell] = ww*state.cell_pressure[cell] + (1.0-ww)*start_state.cell_pressure[cell];
+                    }
+                    if (iter > 0) {
+                        for (int face = 0; face < num_faces; ++face) {
+                            state.face_pressure[face] = ww*state.face_pressure[face] + (1.0-ww)*start_state.face_pressure[face];
+                            state.face_flux[face] = ww*state.face_flux[face] + (1.0-ww)*start_state.face_flux[face];
+                        }
+                    }
+                }
+
+                // Compute state.well_perf_pressure.
+                computeWellPerfPressures(state.well_perf_flux, well_bhp, perf_gpot_, state.well_perf_pressure);
+
+                // Compute relative changes for pressure and flux.
+                std::pair<double, double> rel_changes
+                    = computeFluxPressChanges(state.face_flux, state.well_perf_flux, state.cell_pressure,
+                                              start_state.face_flux, start_state.well_perf_flux, start_state.cell_pressure);
+                double flux_rel_difference = rel_changes.first;
+                double press_rel_difference = rel_changes.second;
+
+                // Test for convergence.
+                if (iter == 0) {
+                    std::cout << "Iteration      Rel. flux change     Rel. pressure change\n";
+                }
+                std::cout.precision(5);
+                std::cout << std::setw(6) << iter
+                          << std::setw(24) << flux_rel_difference
+                          << std::setw(24) << press_rel_difference << std::endl;
+                std::cout.precision(16);
+
+                if (flux_rel_difference < flux_rel_tol_ || press_rel_difference < press_rel_tol_) {
+                    std::cout << "Pressure solver converged. Number of iterations: " << iter + 1 << '\n' << std::endl;
+                    return SolveOk;
+                }
+            }
+
+            return FailedToConverge;
+        }
+
 
     };
 
