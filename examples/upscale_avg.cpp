@@ -212,11 +212,14 @@ int main(int varnum, char** vararg) {
       griddims[1] << " x " <<
       griddims[2] << ")" << endl;
     int pillars = (griddims[0]+1) * (griddims[1]+1);
-    cout << "                 Pillars:  " << pillars << " (" << griddims[0]+1 << 
+    cout << "                  Pillars: " << pillars << " (" << griddims[0]+1 << 
         " x " << griddims[1]+1 << ")" << endl;
     
-    // Find max and min in x and y-directions
-    // **NOT IMPLEMENTED YET**
+    // Find max and min in x-, y- and z-directions
+    boost::array<double, 6> gridlimits = eclInspector.getGridLimits();
+    cout << "                 x-limits: " << gridlimits[0] << " -- " << gridlimits[1] << endl;
+    cout << "                 y-limits: " << gridlimits[2] << " -- " << gridlimits[3] << endl;
+    cout << "                 z-limits: " << gridlimits[4] << " -- " << gridlimits[5] << endl;
 
     // First do overall statistics
     vector<double> cellVolumes, cellPoreVolumes;
