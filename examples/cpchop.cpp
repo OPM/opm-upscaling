@@ -41,8 +41,8 @@ int main(int argc, char** argv)
 {
     if (argc == 1) {
 	std::cout << "Usage: cpchop gridfilename=filename.grdecl [subsamples=10] [ilen=5] [jlen=5] " << std::endl;
-	std::cout << "       [zlen=5] [imin=] [imax=] [jmin=] [jmax=] [upscale=true] [bc=fixed] [resettoorigin=true]" << std::endl;
-        std::cout << "       [seed=111] [z_tolerance=0.0] [minperm=1e-9] " << std::endl;
+	std::cout << "       [zlen=5] [imin=] [imax=] [jmin=] [jmax=] [upscale=true] [bc=fixed]" << std::endl;
+        std::cout << "       [resettoorigin=true] [seed=111] [z_tolerance=0.0] [minperm=1e-9] " << std::endl;
 	std::cout << "       [dips=false] [mincellvolume=1e-9]" << std::endl;
         std::cout << "       [filebase=] [resultfile=]" << std::endl;
         exit(1);
