@@ -41,7 +41,7 @@ int main(int argc, char** argv)
 {
     if (argc == 1) {
 	std::cout << "Usage: cpchop gridfilename=filename.grdecl [subsamples=10] [ilen=5] [jlen=5] " << std::endl;
-	std::cout << "       [zlen=5] [imin=] [imax=] [jmin=] [jmax=] [upscale=true] [resettoorigin=true]" << std::endl;
+	std::cout << "       [zlen=5] [imin=] [imax=] [jmin=] [jmax=] [upscale=true] [bc=fixed] [resettoorigin=true]" << std::endl;
         std::cout << "       [seed=111] [z_tolerance=0.0] [minperm=1e-9] " << std::endl;
 	std::cout << "       [dips=false] [mincellvolume=1e-9]" << std::endl;
         std::cout << "       [filebase=] [resultfile=]" << std::endl;
@@ -65,6 +65,7 @@ int main(int argc, char** argv)
     int jlen = param.getDefault("jlen", jmax - jmin);
     double zlen = param.getDefault("zlen", zmax - zmin);
     bool upscale = param.getDefault("upscale", true);
+    std::string bc = param.getDefault<std::string>("bc", "fixed");
     bool resettoorigin = param.getDefault("resettoorigin", true);
     boost::mt19937::result_type userseed = param.getDefault("seed", 0);
 
@@ -103,6 +104,25 @@ int main(int argc, char** argv)
         gen.seed(userseed);
     }
 
+    Dune::SinglePhaseUpscaler::BoundaryConditionType bctype;
+    bool isFixed, isPeriodic;
+    isFixed = isPeriodic = false;
+    if (upscale) {
+        if (bc == "fixed") {
+            isFixed = true;
+            bctype = Dune::SinglePhaseUpscaler::Fixed;
+        }
+        else if (bc == "periodic") {
+            isPeriodic = true;
+            bctype = Dune::SinglePhaseUpscaler::Periodic;
+        }
+        else {
+            std::cout << "Boundary condition type (bc=" << bc << ") not allowed." << std::endl;
+            std::cout << "Only bc=fixed or bc=periodic implemented." << std::endl;
+            throw std::exception();
+        }
+    }
+
 
     // Note that end is included in interval for uniform_int.
     boost::uniform_int<> disti(imin, imax - ilen);
@@ -117,6 +137,9 @@ int main(int argc, char** argv)
     std::vector<double> permxs;
     std::vector<double> permys;
     std::vector<double> permzs;
+    std::vector<double> permyzs;
+    std::vector<double> permxzs;
+    std::vector<double> permxys;
     std::vector<double> xdips, ydips;
 
     int finished_subsamples = 0; // keep explicit count of successful subsamples
@@ -143,7 +166,8 @@ int main(int argc, char** argv)
                 Dune::EclipseGridParser subparser = ch.subparser();
                 subparser.convertToSI();
                 Dune::SinglePhaseUpscaler upscaler;
-                upscaler.init(subparser, Dune::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
+                
+                upscaler.init(subparser, bctype, minpermSI, z_tolerance,
                               residual_tolerance, linsolver_verbosity, linsolver_type, false);
 
                 Dune::SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
@@ -154,6 +178,9 @@ int main(int argc, char** argv)
                 permxs.push_back(upscaled_K(0,0));
                 permys.push_back(upscaled_K(1,1));
                 permzs.push_back(upscaled_K(2,2));
+                permyzs.push_back(upscaled_K(1,2));
+                permxzs.push_back(upscaled_K(0,2));
+                permxys.push_back(upscaled_K(0,1));
 
             }
 	    if (dips) {
@@ -211,7 +238,12 @@ int main(int argc, char** argv)
     outputtmp << "################################################################################################" << std::endl;
     outputtmp << "# id";
     if (upscale) {
-	outputtmp << "          porosity                 permx                   permy                   permz";
+        if (isPeriodic) {
+            outputtmp << "          porosity                 permx                   permy                   permz                 permyz                  permxz                  permxy";
+        }
+        else if (isFixed) {
+            outputtmp << "          porosity                 permx                   permy                   permz";
+        }
 
     }
     if (dips) {
@@ -228,6 +260,12 @@ int main(int argc, char** argv)
 		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permxs[sample-1] << '\t' <<
 		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permys[sample-1] << '\t' <<
 		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permzs[sample-1] << '\t';
+            if (isPeriodic) {
+                outputtmp <<
+                    std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permyzs[sample-1] << '\t' <<
+                    std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permxzs[sample-1] << '\t' <<
+                    std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permxys[sample-1] << '\t';                
+            }
 	}
 	if (dips) {
 	    outputtmp <<
