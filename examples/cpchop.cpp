@@ -185,9 +185,8 @@ int main(int argc, char** argv)
             }
 	    if (dips) {
 		Dune::EclipseGridParser subparser = ch.subparser();
-		std::vector<int>  griddims =subparser.getSPECGRID().dimensions;
-		std::vector<double> xdips_subsample, ydips_subsample, cellvolumes;
-		std::vector<int> cellidxs_i, cellidxs_j, cellidxs_k;
+		std::vector<int>  griddims = subparser.getSPECGRID().dimensions;
+		std::vector<double> xdips_subsample, ydips_subsample;
 
 		Dune::EclipseGridInspector gridinspector(subparser);
 		for (int k=0; k < griddims[2]; ++k) {
