@@ -273,6 +273,15 @@ init(const Dune::parameter::ParameterGroup& param)
     state_.well_perf_flux_.clear();
     state_.well_perf_flux_.resize(state_.well_perf_pressure_.size(), 0.0);
     wells_.update(grid_.numCells(), state_.well_perf_pressure_, state_.well_perf_flux_);
+
+    // Check for unused parameters (potential typos).
+    if (param.anyUnused()) {
+        std::cout << "*****     WARNING: Unused parameters:     *****\n";
+        param.displayUsage();
+    }
+
+    // Write parameters used to file.
+    param.writeParam(output_dir_ + "/simulator-parameters.param");
 }
 
 
