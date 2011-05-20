@@ -166,7 +166,8 @@ int main(int argc, char** argv)
 	double porosity_1 = upscaler_1.upscalePorosity();
 
         // Pick another location to form a location-pair to be compared
-        int istart_2, jstart_2, zstart_2;
+        int istart_2, jstart_2;
+        double zstart_2;
         if (variogram_direction == horizontal) {
             istart_2 = ri();
             jstart_2 = rj();
