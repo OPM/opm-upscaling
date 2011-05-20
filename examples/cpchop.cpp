@@ -40,10 +40,10 @@
 int main(int argc, char** argv)
 {
     if (argc == 1) {
-	std::cout << "Usage: cpchop gridfilename=filename.grdecl [subsamples=10] [ilen=5] [jlen=5] " << std::endl;
-	std::cout << "       [zlen=5] [imin=] [imax=] [jmin=] [jmax=] [upscale=true] [bc=fixed]" << std::endl;
+        std::cout << "Usage: cpchop gridfilename=filename.grdecl [subsamples=10] [ilen=5] [jlen=5] " << std::endl;
+        std::cout << "       [zlen=5] [imin=] [imax=] [jmin=] [jmax=] [upscale=true] [bc=fixed]" << std::endl;
         std::cout << "       [resettoorigin=true] [seed=111] [z_tolerance=0.0] [minperm=1e-9] " << std::endl;
-	std::cout << "       [dips=false] [mincellvolume=1e-9]" << std::endl;
+        std::cout << "       [dips=false] [satnumvolumes=false] [mincellvolume=1e-9]" << std::endl;
         std::cout << "       [filebase=] [resultfile=]" << std::endl;
         exit(1);
     }
@@ -79,6 +79,8 @@ int main(int argc, char** argv)
     // Following two options are for dip upscaling (slope of cell top and bottom edges)
     bool dips = param.getDefault("dips", false);  // whether to do dip averaging
     double mincellvolume = param.getDefault("mincellvolume", 1e-9); // ignore smaller cells for dip calculations
+
+    bool satnumvolumes = param.getDefault("satnumvolumes", false); // whether to count volumes pr. satnum
 
     double z_tolerance = param.getDefault("z_tolerance", 0.0);
     double residual_tolerance = param.getDefault("residual_tolerance", 1e-8);
@@ -141,6 +143,11 @@ int main(int argc, char** argv)
     std::vector<double> permxzs;
     std::vector<double> permxys;
     std::vector<double> xdips, ydips;
+
+    // Initialize a matrix for subsample satnum volumes. 
+    // Outer index is subsample index, inner index is SATNUM-value
+    std::vector<std::vector<double> > rockvolumes; 
+    int maxSatnum = 0; // This value is determined from the chopped cells.
 
     int finished_subsamples = 0; // keep explicit count of successful subsamples
     for (int sample = 1; sample <= subsamples; ++sample) {
@@ -208,6 +215,32 @@ int main(int argc, char** argv)
 		ydips.push_back(ydipaverage);
 	    }
 
+	    if (satnumvolumes) {
+		Dune::EclipseGridParser subparser = ch.subparser();
+		Dune::EclipseGridInspector subinspector(subparser);
+		std::vector<int>  griddims = subparser.getSPECGRID().dimensions;
+		int number_of_subsamplecells = griddims[0] * griddims[1] * griddims[2];
+
+		// If SATNUM is non-existent in input grid, this will fail:
+		std::vector<int> satnums = subparser.getIntegerValue("SATNUM");
+
+		std::vector<double> rockvolumessubsample;
+		for (int cell_idx=0; cell_idx < number_of_subsamplecells; ++cell_idx) {
+		    maxSatnum = std::max(maxSatnum, int(satnums[cell_idx]));
+		    rockvolumessubsample.resize(maxSatnum); // Ensure long enough vector
+		    rockvolumessubsample[int(satnums[cell_idx])-1] += subinspector.cellVolumeVerticalPillars(cell_idx);
+		}
+
+		// Normalize volumes to obtain relative volumes:
+		double subsamplevolume = std::accumulate(rockvolumessubsample.begin(),
+							 rockvolumessubsample.end(), 0.0);
+		std::vector<double> rockvolumessubsample_normalized;
+		for (size_t satnum_idx = 0; satnum_idx < rockvolumessubsample.size(); ++satnum_idx) {
+		    rockvolumessubsample_normalized.push_back(rockvolumessubsample[satnum_idx]/subsamplevolume);
+		}
+		rockvolumes.push_back(rockvolumessubsample_normalized);
+	    }
+
 	    finished_subsamples++;
         }
         catch (...) {
@@ -243,15 +276,19 @@ int main(int argc, char** argv)
         else if (isFixed) {
             outputtmp << "          porosity                 permx                   permy                   permz";
         }
-
     }
     if (dips) {
 	outputtmp << "              xdip              ydip";
     }
+    if (satnumvolumes) {
+	for (int satnumidx = 0; satnumidx < maxSatnum; ++satnumidx) {
+	    outputtmp << "         satnum_" << satnumidx+1;
+	}
+    }
     outputtmp << std::endl;
 
     const int fieldwidth = outputprecision + 8;
-    for (size_t sample = 1; sample <= finished_subsamples; ++sample) {
+    for (int sample = 1; sample <= finished_subsamples; ++sample) {
 	outputtmp << sample << '\t';
 	if (upscale) {
 	    outputtmp <<
@@ -270,6 +307,14 @@ int main(int argc, char** argv)
 	    outputtmp <<
 		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << xdips[sample-1] << '\t' <<
 		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << ydips[sample-1];
+	}
+	if (satnumvolumes) {
+	    rockvolumes[sample-1].resize(maxSatnum, 0.0);
+	    for (int satnumidx = 0; satnumidx < maxSatnum; ++satnumidx) {
+		outputtmp <<
+		    std::showpoint << std::setw(fieldwidth) <<
+		    std::setprecision(outputprecision) << rockvolumes[sample-1][satnumidx] << '\t';
+	    }
 	}
 	outputtmp <<  std::endl;
     }
