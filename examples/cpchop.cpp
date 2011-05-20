@@ -125,7 +125,12 @@ int main(int argc, char** argv)
         }
     }
 
-
+    // Check for unused parameters (potential typos).
+    if (param.anyUnused()) {
+	std::cout << "*****     WARNING: Unused parameters:     *****\n";
+	param.displayUsage();
+    }
+    
     // Note that end is included in interval for uniform_int.
     boost::uniform_int<> disti(imin, imax - ilen);
     boost::uniform_int<> distj(jmin, jmax - jlen);

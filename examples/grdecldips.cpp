@@ -54,6 +54,12 @@ int main(int argc, char** argv) {
     double minCellVolume = param.getDefault("mincellvolume", 1e-8);
     bool listallcells = param.getDefault("listallcells", false);
     std::string outputfilename = param.getDefault<std::string>("output", "");
+
+    // Check for unused parameters (potential typos).
+    if (param.anyUnused()) {
+	std::cout << "*****     WARNING: Unused parameters:     *****\n";
+	param.displayUsage();
+    }
     
     //eclParser_p = new Dune::EclipseGridParser(gridfilename);
     //Dune::EclipseGridParser& eclParser = *eclParser_p;
@@ -71,7 +77,7 @@ int main(int argc, char** argv) {
     /***************************
      * Find dips for every cell.
      */
-    
+
     vector<int>  griddims = eclParser.getSPECGRID().dimensions;
     vector<double> xdips, ydips, cellvolumes;
     vector<int> cellidxs_i, cellidxs_j, cellidxs_k;

@@ -85,6 +85,12 @@ int main(int argc, char** argv)
     double linsolver_verbosity = param.getDefault("linsolver_verbosity", 0);
     double linsolver_type = param.getDefault("linsolver_type", 1);
 
+    // Check for unused parameters (potential typos).
+    if (param.anyUnused()) {
+	std::cout << "*****     WARNING: Unused parameters:     *****\n";
+	param.displayUsage();
+    }
+
     // Check that we do not have any user input 
     // that goes outside the coordinates described in
     // the cornerpoint file (runtime-exception will be thrown in case of error)

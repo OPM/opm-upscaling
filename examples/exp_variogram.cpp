@@ -65,7 +65,7 @@ int main(int argc, char** argv)
     int jmax = param.getDefault("jmax", dims[1]);
     double zmin = param.getDefault("zmin", ch.zLimits().first);
     double zmax = param.getDefault("zmax", ch.zLimits().second);
-      int pairs = param.getDefault("pairs", 100);
+    int pairs = param.getDefault("pairs", 100);
     std::string direction = param.get<std::string>("direction");
     int ilen = param.getDefault("ilen", 0);
     int jlen = param.getDefault("jlen", 0);
@@ -81,6 +81,13 @@ int main(int argc, char** argv)
     double residual_tolerance = param.getDefault("residual_tolerance", 1e-8);
     double linsolver_verbosity = param.getDefault("linsolver_verbosity", 0);
     double linsolver_type = param.getDefault("linsolver_type", 1);
+    
+    // Check for unused parameters (potential typos).
+    if (param.anyUnused()) {
+	std::cout << "*****     WARNING: Unused parameters:     *****\n";
+	param.displayUsage();
+    }
+
 
     if (ilen <= 0) {
         std::cerr << "Error: ilen (" << ilen << ") must be greater than zero\n";
