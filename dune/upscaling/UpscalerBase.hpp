@@ -74,6 +74,8 @@ namespace Dune
 	/// Default constructor.
 	UpscalerBase();
 
+        virtual ~UpscalerBase() {;} ;
+
 	/// Initializes the upscaler from parameters.
 	void init(const parameter::ParameterGroup& param);
 
