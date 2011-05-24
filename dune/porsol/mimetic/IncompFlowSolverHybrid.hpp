@@ -654,6 +654,9 @@ namespace Dune {
             case 1: // AMG
                 solveLinearSystemAMG(residual_tolerance, linsolver_verbosity, same_matrix);
                 break;
+            default:
+                std::cerr << "Unknown linsolver_type: " << linsolver_type << '\n';
+                throw std::runtime_error("Unknown linsolver_type");
             }
             computePressureAndFluxes(r, sat);
         }
