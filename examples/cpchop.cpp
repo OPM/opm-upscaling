@@ -249,7 +249,7 @@ int main(int argc, char** argv)
 	    finished_subsamples++;
         }
         catch (...) {
-            std::cerr << "Warning: Upscaling chopped subsample nr. " << sample << "failed, proceeding to next subsample\n";
+            std::cerr << "Warning: Upscaling chopped subsample nr. " << sample << " failed, proceeding to next subsample\n";
         }
 
     }
