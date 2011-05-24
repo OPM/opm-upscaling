@@ -45,6 +45,7 @@
 #include <map>
 #include <numeric>
 #include <ostream>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
