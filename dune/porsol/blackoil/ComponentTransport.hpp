@@ -508,8 +508,8 @@ private: // Methods
         int k,f;
         int c1, c2;
         double *cmob1, *cmob2;
-        double *fden  = malloc(np * sizeof *fden);
-        double *vstar = malloc(np * sizeof *vstar);
+        double *fden  = (double*)malloc(np * sizeof *fden);
+        double *vstar = (double*)malloc(np * sizeof *vstar);
         double gf;
  
         for (f=0; f<number_of_faces; ++f) {
