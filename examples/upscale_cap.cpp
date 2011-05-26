@@ -226,7 +226,7 @@ int main(int varnum, char** vararg)
    vector<double> permxs = eclParser.getFloatingPointValue("PERMX");  
    vector<int>  griddims = eclParser.getSPECGRID().dimensions;
     
-   uint maxSatnum = 0;
+   unsigned int maxSatnum = 0;
    const double maxPermContrast = atof(options["maxPermContrast"].c_str());
    const double minPerm = atof(options["minPerm"].c_str());
    const double minPoro = atof(options["minPoro"].c_str());
@@ -504,7 +504,7 @@ int main(int varnum, char** vararg)
    double Ptestvalue = Pcmax;
 
    vector<MonotCubicInterpolator> watersaturation_rocktype;
-   for (uint satidx=0; satidx <= maxSatnum; ++satidx) {
+   for (unsigned int satidx=0; satidx <= maxSatnum; ++satidx) {
        MonotCubicInterpolator tmp;
        watersaturation_rocktype.push_back(tmp);
    }
@@ -667,7 +667,7 @@ int main(int varnum, char** vararg)
        for (int i = 0; i < interpolationPoints; ++i) {
            Pvalues.push_back(PvaluesVsSaturation.evaluate(SatvaluesInterp[i]));
        }
-       for (uint satidx = 1; satidx <= maxSatnum; ++satidx) {
+       for (unsigned int satidx = 1; satidx <= maxSatnum; ++satidx) {
            MonotCubicInterpolator WaterSaturationRocktypeVsSaturation(Satvalues, watersaturation_rocktype_values[satidx]);
            watersaturation_rocktype_values[satidx].clear();
            for (int i=0; i < interpolationPoints; ++i) {
@@ -685,7 +685,7 @@ int main(int varnum, char** vararg)
        outputtmp << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Pvalues[i]; 
        outputtmp << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Satvalues[i]; 
        
-       for (uint satidx = 1; satidx <= maxSatnum; ++satidx) { 
+       for (unsigned int satidx = 1; satidx <= maxSatnum; ++satidx) { 
            outputtmp << showpoint << setw(fieldwidth) << setprecision(outputprecision) 
                      << watersaturation_rocktype_values[satidx][i]; 
        } 
