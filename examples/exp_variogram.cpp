@@ -79,8 +79,8 @@ int main(int argc, char** argv)
     double minpermSI = Dune::unit::convert::from(minperm, Dune::prefix::milli*Dune::unit::darcy);
     double z_tolerance = param.getDefault("z_tolerance", 0.0);
     double residual_tolerance = param.getDefault("residual_tolerance", 1e-8);
-    double linsolver_verbosity = param.getDefault("linsolver_verbosity", 0);
-    double linsolver_type = param.getDefault("linsolver_type", 1);
+    int linsolver_verbosity = param.getDefault("linsolver_verbosity", 0);
+    int linsolver_type = param.getDefault("linsolver_type", 1);
     
     // Check for unused parameters (potential typos).
     if (param.anyUnused()) {
@@ -173,7 +173,8 @@ int main(int argc, char** argv)
 	double porosity_1 = upscaler_1.upscalePorosity();
 
         // Pick another location to form a location-pair to be compared
-        int istart_2, jstart_2, zstart_2;
+        int istart_2 = 0, jstart_2 = 0;
+        double zstart_2 = 0;
         if (variogram_direction == horizontal) {
             istart_2 = ri();
             jstart_2 = rj();
