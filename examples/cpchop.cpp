@@ -106,7 +106,7 @@ int main(int argc, char** argv)
         gen.seed(userseed);
     }
 
-    Dune::SinglePhaseUpscaler::BoundaryConditionType bctype;
+    Dune::SinglePhaseUpscaler::BoundaryConditionType bctype = Dune::SinglePhaseUpscaler::Fixed;
     bool isFixed, isPeriodic;
     isFixed = isPeriodic = false;
     if (upscale) {
