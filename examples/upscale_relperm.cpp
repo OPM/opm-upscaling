@@ -68,8 +68,6 @@
 #include <map>
 #include <sys/utsname.h>
 
-typedef unsigned int uint;
-
 #ifdef USEMPI
 #include <mpi.h>
 #endif
@@ -400,7 +398,7 @@ int main(int varnum, char** vararg)
         Set to minPerm if zero or less than minPerm.
       - Check maximum number of SATNUM values (can be number of rock types present)
    */
-   for (uint i = 0; i < satnums.size(); ++i) {
+   for (unsigned int i = 0; i < satnums.size(); ++i) {
        if (satnums[i] < 0 || satnums[i] > 1000) { 
            if (isMaster) cerr << "satnums[" << i << "] = " << satnums[i] << ", not sane, quitting." << endl;
            usageandexit();
@@ -656,7 +654,7 @@ int main(int varnum, char** vararg)
        // height of model is calculated as the average of the z-values at the top layer
        // This calculation makes assumption on the indexing of cells in the grid, going from bottom to top.
        double modelHeight = 0;
-       for (uint zIdx = (4 * x_res * y_res * (2*z_res-1)); zIdx < zcorns.size(); ++zIdx) {
+       for (unsigned int zIdx = (4 * x_res * y_res * (2*z_res-1)); zIdx < zcorns.size(); ++zIdx) {
            modelHeight += zcorns[zIdx] / (4*x_res*y_res);
        }
        
@@ -670,7 +668,7 @@ int main(int varnum, char** vararg)
 
        // Calculating difference in capillary pressure for all cells
        dP = vector<double>(satnums.size(), 0);
-       for (uint cellIdx = 0; cellIdx < satnums.size(); ++cellIdx) {
+       for (unsigned int cellIdx = 0; cellIdx < satnums.size(); ++cellIdx) {
            int i,j,k; // Position of cell in cell hierarchy
            vector<int> zIndices(8,0); // 8 corners with 8 heights
            int horIdx = (cellIdx+1) - int(std::floor(((double)(cellIdx+1))/((double)(x_res*y_res))))*x_res*y_res; // index in the corresponding horizon
@@ -695,7 +693,7 @@ int main(int varnum, char** vararg)
            zIndices[7] = zBegin + level2 + 2*x_res*(2*j-1)+2*i-1;
            
            double cellDepth = 0;
-           for (uint corner = 0; corner < 8; ++corner) {
+           for (unsigned int corner = 0; corner < 8; ++corner) {
                cellDepth += zcorns[zIndices[corner]-1] / 8.0;
            }
            // cellDepth is in cm, convert to m by dividing by 100
@@ -751,7 +749,7 @@ int main(int varnum, char** vararg)
    const std::vector<int>& ecl_idx = upscaler.grid().globalCell();
    CpGrid::Codim<0>::LeafIterator c = upscaler.grid().leafbegin<0>();
    for (; c != upscaler.grid().leafend<0>(); ++c) {
-       uint cell_idx = ecl_idx[c->index()];
+       unsigned int cell_idx = ecl_idx[c->index()];
        if (satnums[cell_idx] > 0) { // Satnum zero is "no rock"
 
 	   cellVolumes[cell_idx] = c->geometry().volume();
@@ -884,8 +882,8 @@ int main(int varnum, char** vararg)
        }
        
        double waterVolume = 0.0;
-       for (uint i = 0; i < ecl_idx.size(); ++i) {
-           uint cell_idx = ecl_idx[i];
+       for (unsigned int i = 0; i < ecl_idx.size(); ++i) {
+           unsigned int cell_idx = ecl_idx[i];
                double waterSaturationCell = 0.0;
                if (satnums[cell_idx] > 0) { // handle "no rock" cells with satnum zero
                    double PtestvalueCell;
@@ -954,8 +952,8 @@ int main(int varnum, char** vararg)
    if (isMaster) {
        //cout << "Rank " << mpi_rank << " upscaling single-phase permeability..."; flush(cout);
        Matrix cellperm = zeroMatrix;
-       for (uint i = 0; i < ecl_idx.size(); ++i) {
-           uint cell_idx = ecl_idx[i];
+       for (unsigned int i = 0; i < ecl_idx.size(); ++i) {
+           unsigned int cell_idx = ecl_idx[i];
            zero(cellperm);
            if (! anisotropic_input) {
                double kval = max(permxs[cell_idx], minSinglePhasePerm);
@@ -1060,8 +1058,8 @@ int main(int varnum, char** vararg)
            phasePermValues.resize(satnums.size());
            phasePermValuesDiag.resize(satnums.size());
            waterVolumeLF = 0.0;
-           for (uint i = 0; i < ecl_idx.size(); ++i) {
-               uint cell_idx = ecl_idx[i];
+           for (unsigned int i = 0; i < ecl_idx.size(); ++i) {
+               unsigned int cell_idx = ecl_idx[i];
                    double cellPhasePerm = minPerm;
                    vector<double>  cellPhasePermDiag;
                    cellPhasePermDiag.push_back(minPerm);
@@ -1127,8 +1125,8 @@ int main(int varnum, char** vararg)
 
            // Now remodel the phase permeabilities obeying minPhasePerm.
            Matrix cellperm = zeroMatrix;
-           for (uint i = 0; i < ecl_idx.size(); ++i) {
-               uint cell_idx = ecl_idx[i];
+           for (unsigned int i = 0; i < ecl_idx.size(); ++i) {
+               unsigned int cell_idx = ecl_idx[i];
                zero(cellperm);
                if (! anisotropic_input) {
                    double cellPhasePerm = max(minPhasePerm, phasePermValues[cell_idx]);
@@ -1373,7 +1371,7 @@ int main(int varnum, char** vararg)
            // Find min and max for saturation values
            double xmin = +DBL_MAX;
            double xmax = -DBL_MAX;
-           for (uint i = 0; i < Satvalues.size(); ++i) {
+           for (unsigned int i = 0; i < Satvalues.size(); ++i) {
                if (Satvalues[i] < xmin) {
                    xmin = Satvalues[i];
                }
@@ -1409,7 +1407,7 @@ int main(int varnum, char** vararg)
        
        // The code below does not care whether the data is interpolated or not.
        const int fieldwidth = outputprecision + 8;
-       for (uint i=0; i < Satvalues.size(); ++i) {
+       for (unsigned int i=0; i < Satvalues.size(); ++i) {
            outputtmp << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Pvalues[i]; 
            outputtmp << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Satvalues[i]; 
            
