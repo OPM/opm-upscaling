@@ -133,6 +133,11 @@ public:
             } else {
                 cur_time = dt;
             }
+            // Check if remaining number of steps is excessive.
+            if ((dt - cur_time)/step_time > 10000) {
+                std::cout << "Collapsing transport stepsize detected." << std::endl;
+                return cur_time;
+            }
             std::cout.precision(10);
             std::cout << std::setw(6) << count++
                       << std::setw(24) << step_time
