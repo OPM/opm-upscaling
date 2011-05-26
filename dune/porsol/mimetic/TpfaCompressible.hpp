@@ -86,6 +86,7 @@ namespace Dune
             experimental_jacobian_ = param.getDefault("experimental_jacobian", false);
             nonlinear_residual_tolerance_ = param.getDefault("nonlinear_residual_tolerance", 0.0);
             output_residual_ = param.getDefault("output_residual", false);
+            voldisc_factor_ = param.getDefault("voldisc_factor", 1.0);
         }
 
 
@@ -375,6 +376,7 @@ namespace Dune
         bool experimental_jacobian_;
         bool output_residual_;
         double nonlinear_residual_tolerance_;
+        double voldisc_factor_;
 
         typedef typename FluidInterface::PhaseVec PhaseVec;
         typedef typename FluidInterface::CompVec CompVec;
@@ -484,9 +486,10 @@ namespace Dune
                                      PressureSolver::LinearSystem& linsys,
                                      std::vector<double>& res)
         {
+            std::vector<double> zero(initial_voldiscr.size(), 0.0);
             // Assemble system matrix and rhs.
             psolver_.assemble(src, bctypes_, bcvalues_, dt,
-                              fp_.totcompr, initial_voldiscr, fp_.cellA, fp_.faceA,
+                              fp_.totcompr, zero, fp_.cellA, fp_.faceA,
                               perf_A_, fp_.phasemobf, perf_mob_,
                               cell_pressure_scalar_initial, fp_.gravcapf,
                               perf_gpot_, &(pfluid_->surfaceDensities()[0]));
@@ -637,6 +640,10 @@ namespace Dune
                 double relax = std::min(1.0,dt/relax_time_voldiscr_);
                 std::transform(voldiscr_initial.begin(), voldiscr_initial.end(), voldiscr_initial.begin(),
                                std::binder1st<std::multiplies<double> >(std::multiplies<double>() , relax));
+            }
+            if (voldisc_factor_ != 1.0) {
+                std::transform(voldiscr_initial.begin(), voldiscr_initial.end(), voldiscr_initial.begin(),
+                               std::binder1st<std::multiplies<double> >(std::multiplies<double>(), voldisc_factor_));
             }
             return true;
         }
