@@ -36,6 +36,7 @@
 #ifndef OPENRS_PERIODICHELPERS_HEADER
 #define OPENRS_PERIODICHELPERS_HEADER
 
+#include "BoundaryPeriodicity.hpp"
 #include "BoundaryConditions.hpp"
 #include <dune/common/array.hh>
 #include <dune/common/fvector.hh>
@@ -46,82 +47,6 @@
 namespace Dune
 {
 
-
-    /// @brief
-    /// @todo Doc me!
-    struct BoundaryFaceInfo
-    {
-	/// @brief
-	/// @todo Doc me!
-	int face_index;
-	/// @brief
-	/// @todo Doc me!
-	int bid;
-	/// @brief
-	/// @todo Doc me!
-	int canon_pos;
-	/// @brief
-	/// @todo Doc me!
-	int partner_face_index;
-	/// @brief
-	/// @todo Doc me!
-	int partner_bid;
-	/// @brief
-	/// @todo Doc me!
-	double area;
-	/// @brief
-	/// @todo Doc me!
-	FieldVector<double,3> centroid;
-
-	/// @brief
-	/// @todo Doc me!
-	/// @param
-	/// @return
-	bool operator<(const BoundaryFaceInfo& other) const
-	{
-	    return cmpval() < other.cmpval();
-	}
-
-	/// @brief
-	/// @todo Doc me!
-	/// @return
-	double cmpval() const
-	{
-            const double pi = 3.14159265358979323846264338327950288;
-	    return centroid[(canon_pos/2 + 1)%3] + pi*centroid[(canon_pos/2 + 2)%3];
-	}
-    };
-
-
-    /// @brief
-    /// @todo Doc me!
-    /// @param
-    /// @return
-    bool match(std::vector<BoundaryFaceInfo>& bfaces, int face, int lower, int upper)
-    {
-	const double area_tol = 1e-6;
-	const double centroid_tol = 1e-6;
-	int cp = bfaces[face].canon_pos;
-	int target_cp = (cp%2 == 0) ? cp + 1 : cp - 1;
-	FieldVector<double, 3> cent_this = bfaces[face].centroid;
-	for (int j = lower; j < upper; ++j) {
-	    if (bfaces[j].canon_pos == target_cp) {
-		if (fabs(bfaces[face].area - bfaces[j].area) <= area_tol) {
-		    FieldVector<double, 3> cent_other = bfaces[j].centroid;
-		    cent_other -= cent_this;
-		    double dist = cent_other.two_norm();
-		    if (dist <= centroid_tol) {
-			bfaces[face].partner_face_index = bfaces[j].face_index;
-			bfaces[face].partner_bid = bfaces[j].bid;
-			bfaces[j].partner_face_index = bfaces[face].face_index;
-			bfaces[j].partner_bid = bfaces[face].bid;
-			break;
-		    }
-		}
-	    }
-	}
-	return (bfaces[face].partner_face_index != -1);
-    }
 
 
 
