@@ -60,12 +60,22 @@ blackoil_sim_test_LDADD = $(LDADD) ../lib/libduneporsol.la
 
 TESTS = $(check_PROGRAMS)
 
-
-AM_CPPFLAGS += $(DUNEMPICPPFLAGS) $(BOOST_CPPFLAGS) $(ALUGRID_CPPFLAGS) $(SUPERLU_CPPFLAGS)
-AM_LDFLAGS  += $(DUNEMPILDFLAGS) $(BOOST_LDFLAGS) $(ALUGRID_LDFLAGS) $(SUPERLU_LDFLAGS)
+# Commented out ALUGRID flags and libs, to avoid link trouble
+# related to debug vs. non-debug versions of std::vector used
+# in the ALUgrid interface.
+# If we find out how to properly install two versions of
+# ALUgrid (both debug and release), we may reinstate them.
+# AM_CPPFLAGS += $(DUNEMPICPPFLAGS) $(BOOST_CPPFLAGS) $(ALUGRID_CPPFLAGS) $(SUPERLU_CPPFLAGS)
+# AM_LDFLAGS  += $(DUNEMPILDFLAGS) $(BOOST_LDFLAGS) $(ALUGRID_LDFLAGS) $(SUPERLU_LDFLAGS)
+# LDADD = $(DUNE_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB)   \
+          $(BOOST_SYSTEM_LIB) $(DUNEMPILIBS)              \
+	  $(ALUGRID_LIBS) $(SUPERLU_LIBS)                \
+          $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
+AM_CPPFLAGS += $(DUNEMPICPPFLAGS) $(BOOST_CPPFLAGS) $(SUPERLU_CPPFLAGS)
+AM_LDFLAGS  += $(DUNEMPILDFLAGS) $(BOOST_LDFLAGS) $(SUPERLU_LDFLAGS)
 LDADD = $(DUNE_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB)   \
         $(BOOST_SYSTEM_LIB) $(DUNEMPILIBS)              \
-	 $(ALUGRID_LIBS) $(SUPERLU_LIBS)                \
+	$(SUPERLU_LIBS)                                 \
         $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
 
 # don't follow the full GNU-standard
