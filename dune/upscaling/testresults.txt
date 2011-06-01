@@ -485,3 +485,10 @@ sys	0m0.471s
 real	0m27.264s
 user	0m26.648s
 sys	0m0.529s
+
+
+[again, Jun. 1 2011]
+
+real	0m27.056s
+user	0m26.453s
+sys	0m0.530s
