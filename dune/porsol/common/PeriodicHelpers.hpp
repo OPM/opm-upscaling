@@ -187,7 +187,7 @@ namespace Dune
 			    const array<bool, 2*GridInterface::Dimension>& is_periodic,
 			    double spatial_tolerance = 1e-6)
     {
-        findPeriodicPartners(bfinfo, side_areas, g, is_periodic, spatial_tolerance);
+        findPeriodicPartners(bfinfo, side_areas, g.grid().leafView(), is_periodic, spatial_tolerance);
         int num_bdy = bfinfo.size();
         // This will likely change with boundarySegmentIndex() instead of boundaryId():
         int max_bid = num_bdy;

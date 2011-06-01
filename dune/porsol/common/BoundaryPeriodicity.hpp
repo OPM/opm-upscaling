@@ -105,6 +105,103 @@ namespace Dune
 
 
     /// @brief Common implementation for the various createPeriodic functions.
+    template <class GridView>
+    void findPeriodicPartners(std::vector<BoundaryFaceInfo>& bfinfo,
+                              array<double, 6>& side_areas,
+                              const GridView& g,
+                              const array<bool, 2*GridView::dimension>& is_periodic,
+                              double spatial_tolerance = 1e-6)
+    {
+	// Pick out all boundary faces, simultaneously find the
+	// bounding box of their centroids, and the max id.
+        const int dim = GridView::dimension;
+        typedef typename GridView::template Codim<0>::Iterator CI;
+	typedef typename GridView::IntersectionIterator FI;
+	typedef FieldVector<double, dim> Vector;
+	std::vector<FI> bface_iters;
+	Vector low(1e100);
+	Vector hi(-1e100);
+	int max_bid = 0;
+	for (CI c = g.template begin<0>(); c != g.template end<0>(); ++c) {
+	    for (FI f = g.ibegin(*c); f != g.iend(*c); ++f) {
+		if (f->boundaryId()) {
+		    bface_iters.push_back(f);
+		    Vector fcent = f->geometry().center();
+		    for (int dd = 0; dd < dim; ++dd) {
+			low[dd] = std::min(low[dd], fcent[dd]);
+			hi[dd] = std::max(hi[dd], fcent[dd]);
+		    }
+		    max_bid = std::max(max_bid, f->boundaryId());
+		}
+	    }
+	}
+	int num_bdy = bface_iters.size();
+	if (max_bid != num_bdy) {
+	    THROW("createPeriodic() assumes that every boundary face has a unique boundary id. That seems to be violated.");
+	}
+
+	// Store boundary face info in a suitable structure. Also find side total volumes.
+	std::fill(side_areas.begin(), side_areas.end(), 0.0);
+	bfinfo.clear();
+	bfinfo.reserve(num_bdy);
+	for (int i = 0; i < num_bdy; ++i) {
+	    BoundaryFaceInfo bf;
+	    bf.face_index = i;
+	    bf.bid = bface_iters[i]->boundaryId();
+	    bf.canon_pos = -1;
+	    bf.partner_face_index = -1;
+	    bf.partner_bid = 0;
+	    bf.area = bface_iters[i]->geometry().volume();
+	    bf.centroid = bface_iters[i]->geometry().center();
+	    for (int dd = 0; dd < dim; ++dd) {
+		double coord = bf.centroid[dd];
+		if (fabs(coord - low[dd]) <= spatial_tolerance) {
+		    bf.canon_pos = 2*dd;
+		    break;
+		} else if (fabs(coord - hi[dd]) <= spatial_tolerance) {
+		    bf.canon_pos = 2*dd + 1;
+		    break;
+		}
+	    }
+	    if (bf.canon_pos == -1) {
+		std::cerr << "Centroid: " << bf.centroid << "\n";
+		std::cerr << "Bounding box min: " << low << "\n";
+		std::cerr << "Bounding box max: " << hi << "\n";
+		THROW("Boundary face centroid not on bounding box. Maybe the grid is not an axis-aligned shoe-box?");
+	    }
+	    side_areas[bf.canon_pos] += bf.area;
+	    bf.centroid[bf.canon_pos/2] = 0.0;
+	    bfinfo.push_back(bf);
+	}
+	ASSERT(bfinfo.size() == bface_iters.size());
+
+	// Sort the infos so that partners end up close.
+	std::sort(bfinfo.begin(), bfinfo.end());
+
+	// Identify partners.
+	for (int i = 0; i < num_bdy; ++i) {
+	    if (bfinfo[i].partner_face_index != -1) {
+		continue;
+	    }
+	    if (!is_periodic[bfinfo[i].canon_pos]) {
+		continue;
+	    }
+	    int lower = std::max(0, i - 10);
+	    int upper = std::min(num_bdy, i + 10);
+	    bool ok = match(bfinfo, i, lower, upper);
+	    if (!ok) {
+		// We have not found a partner.
+		ok = match(bfinfo, i, 0, num_bdy);
+		if (!ok) {
+		    MESSAGE("Warning: No partner found for boundary id " << bfinfo[i].bid);
+		    // THROW("No partner found.");
+		}
+	    }
+	}
+    }
+
+    /*
+    /// @brief Common implementation for the various createPeriodic functions.
     template <class GridInterface>
     void findPeriodicPartners(std::vector<BoundaryFaceInfo>& bfinfo,
                               array<double, 6>& side_areas,
@@ -198,7 +295,7 @@ namespace Dune
 	    }
 	}
     }
-
+*/
 
 
 
