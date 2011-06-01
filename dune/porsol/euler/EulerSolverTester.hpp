@@ -135,12 +135,12 @@ namespace Dune
 
 	    // Make transport equation boundary conditions.
 	    if (param.getDefault("periodic_x_bdy", false)) {
-		boost::array<SatBC, 6> scond = {{ SatBC(SatBC::Periodic, 0.0),
-						  SatBC(SatBC::Periodic, 0.0),
-						  SatBC(SatBC::Dirichlet, 0.0),
-						  SatBC(SatBC::Dirichlet, 0.0),
-						  SatBC(SatBC::Dirichlet, 0.0),
-						  SatBC(SatBC::Dirichlet, 0.0) }};
+		Dune::array<SatBC, 6> scond = {{ SatBC(SatBC::Periodic, 0.0),
+                                                 SatBC(SatBC::Periodic, 0.0),
+                                                 SatBC(SatBC::Dirichlet, 0.0),
+                                                 SatBC(SatBC::Dirichlet, 0.0),
+                                                 SatBC(SatBC::Dirichlet, 0.0),
+                                                 SatBC(SatBC::Dirichlet, 0.0) }};
 		grid_.setUniqueBoundaryIds(true);
 		GridInterface gtmp(grid_);
 		createPeriodic(bcond_, gtmp, scond);

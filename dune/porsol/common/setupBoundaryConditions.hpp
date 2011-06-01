@@ -136,11 +136,11 @@ namespace Dune
 	    {
 		// ASSERT(g.uniqueBoundaryIds());
 		FlowBC fb(FlowBC::Periodic, 0.0);
-		boost::array<FlowBC, 6> fcond = {{ fb, fb, fb, fb, fb, fb }};
+		array<FlowBC, 6> fcond = {{ fb, fb, fb, fb, fb, fb }};
 		fcond[2*pddir] = FlowBC(FlowBC::Periodic, pdrop);
 		fcond[2*pddir + 1] = FlowBC(FlowBC::Periodic, -pdrop);
 		SatBC sb(SatBC::Periodic, 0.0);
-		boost::array<SatBC, 6> scond = {{ sb, sb, sb, sb, sb, sb }};
+		array<SatBC, 6> scond = {{ sb, sb, sb, sb, sb, sb }};
 		if (twodim_hack) {
 // 		    fcond[2] = FlowBC(FlowBC::Neumann, 0.0);
 // 		    fcond[3] = FlowBC(FlowBC::Neumann, 0.0);

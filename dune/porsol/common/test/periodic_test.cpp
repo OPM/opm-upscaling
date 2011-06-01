@@ -37,7 +37,7 @@
 #include <dune/porsol/common/BoundaryConditions.hpp>
 #include <dune/porsol/common/GridInterfaceEuler.hpp>
 #include <dune/grid/CpGrid.hpp>
-#include <boost/array.hpp>
+#include <dune/common/array.hh>
 #include <dune/common/param/ParameterGroup.hpp>
 
 using namespace Dune;
@@ -50,19 +50,19 @@ int main(int argc, char** argv)
     grid.setUniqueBoundaryIds(true);
     GridInterfaceEuler<CpGrid> gi(grid);
     typedef FlowBC FBC;
-    boost::array<FBC, 6> fcond = {{ FBC(FBC::Periodic, 1.0e5),
-				    FBC(FBC::Periodic, -1.0e5),
-				    FBC(FBC::Periodic, 0.0),
-				    FBC(FBC::Periodic, 0.0),
-				    FBC(FBC::Neumann, 0.0),
-				    FBC(FBC::Neumann, 0.0) }};
+    Dune::array<FBC, 6> fcond = {{ FBC(FBC::Periodic, 1.0e5),
+                                   FBC(FBC::Periodic, -1.0e5),
+                                   FBC(FBC::Periodic, 0.0),
+                                   FBC(FBC::Periodic, 0.0),
+                                   FBC(FBC::Neumann, 0.0),
+                                   FBC(FBC::Neumann, 0.0) }};
     typedef SatBC SBC;
-    boost::array<SBC, 6> scond = {{ SBC(SBC::Periodic, 0.0),
-				    SBC(SBC::Periodic, 0.0),
-				    SBC(SBC::Periodic, 0.0),
-				    SBC(SBC::Periodic, 0.0),
-				    SBC(SBC::Dirichlet, 0.0),
-				    SBC(SBC::Dirichlet, 0.0) }};
+    Dune::array<SBC, 6> scond = {{ SBC(SBC::Periodic, 0.0),
+                                   SBC(SBC::Periodic, 0.0),
+                                   SBC(SBC::Periodic, 0.0),
+                                   SBC(SBC::Periodic, 0.0),
+                                   SBC(SBC::Dirichlet, 0.0),
+                                   SBC(SBC::Dirichlet, 0.0) }};
     BasicBoundaryConditions<true, true> bcs;
     createPeriodic(bcs, gi, fcond, scond);
     std::cout << bcs;

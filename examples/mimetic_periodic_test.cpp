@@ -68,12 +68,12 @@ int main(int argc, char** argv)
     grid.setUniqueBoundaryIds(true);
     GridInterfaceEuler<CpGrid> g(grid);
     typedef FlowBC FBC;
-    boost::array<FBC, 6> cond = {{ FBC(FBC::Periodic,  1.0*unit::barsa),
-                                   FBC(FBC::Periodic, -1.0*unit::barsa),
-                                   FBC(FBC::Periodic,  0.0),
-                                   FBC(FBC::Periodic,  0.0),
-                                   FBC(FBC::Neumann,   0.0),
-                                   FBC(FBC::Neumann,   0.0) }};
+    array<FBC, 6> cond = {{ FBC(FBC::Periodic,  1.0*unit::barsa),
+                            FBC(FBC::Periodic, -1.0*unit::barsa),
+                            FBC(FBC::Periodic,  0.0),
+                            FBC(FBC::Periodic,  0.0),
+                            FBC(FBC::Neumann,   0.0),
+                            FBC(FBC::Neumann,   0.0) }};
     BCs fbc;
     createPeriodic(fbc, g, cond);
 
