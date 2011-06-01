@@ -94,9 +94,9 @@ public:
         double cur_time = 0.0;
         updateFluidProperties(cell_pressure, face_pressure, cell_z,
                               external_pressure, external_composition);
-        if (!volumeDiscrepancyAcceptable(voldisclimit)) {
-            return 0.0;
-        }
+//         if (!volumeDiscrepancyAcceptable(voldisclimit)) {
+//             return 0.0;
+//         }
         std::vector<CompVec> cell_z_start;
         std::cout << "Transport solver target time: " << dt << std::endl;
         std::cout << "   Step               Stepsize           Remaining time\n";
