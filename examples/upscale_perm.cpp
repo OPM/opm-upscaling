@@ -91,6 +91,11 @@ int main(int varnum, char** vararg) {
     options.insert(make_pair("bc",     "f")); // Fixed boundary conditions are default    
     options.insert(make_pair("minPerm", "1e-9")); // Minimum allowable permeability value (for diagonal tensor entries)
     
+    options.insert(make_pair("linsolver_tolerance", "1e-8"));  // residual tolerance for linear solver
+    options.insert(make_pair("linsolver_verbosity", "0"));     // verbosity level for linear solver
+    options.insert(make_pair("linsolver_type",      "1"));     // type of linear solver: 0 = ILU/BiCGStab, 1 = AMG/CG
+
+
     // Parse options from command line
     int eclipseindex = 1; // Index for the eclipsefile in the command line options
 
@@ -153,7 +158,7 @@ int main(int varnum, char** vararg) {
         usage();
         exit(1);
     }
-   
+
    
     // Variables for timing/profiling
     clock_t start, finish;
@@ -206,6 +211,13 @@ int main(int varnum, char** vararg) {
      * memory and more time for processing.
      */
 
+
+    double ztol = 0.0; 
+    double linsolver_tolerance = atof(options["linsolver_tolerance"].c_str());
+    int linsolver_verbosity = atoi(options["linsolver_verbosity"].c_str());
+    int linsolver_type = atoi(options["linsolver_type"].c_str());
+    bool twodim_hack = false;
+
     SinglePhaseUpscaler upscaler_nonperiodic;
     SinglePhaseUpscaler upscaler_periodic;
 
@@ -217,7 +229,7 @@ int main(int varnum, char** vararg) {
         start = clock();
         upscaler_nonperiodic.init(eclParser, 
                                   isFixed ? SinglePhaseUpscaler::Fixed : SinglePhaseUpscaler::Linear,
-                                  minPerm);
+                                  minPerm, ztol,  linsolver_tolerance, linsolver_verbosity, linsolver_type, twodim_hack);
         finish = clock();
         timeused_nonperiodic_tesselation = (double(finish)-double(start))/CLOCKS_PER_SEC;
         cout << " (" << timeused_nonperiodic_tesselation << " secs)" << endl << endl;
@@ -225,7 +237,8 @@ int main(int varnum, char** vararg) {
     if (isPeriodic) {
         cout << "Tesselating periodic grid ...  ";
         start = clock();
-        upscaler_periodic.init(eclParser, SinglePhaseUpscaler::Periodic, minPerm);
+        upscaler_periodic.init(eclParser, SinglePhaseUpscaler::Periodic, minPerm,
+                               ztol,  linsolver_tolerance, linsolver_verbosity, linsolver_type, twodim_hack);
         finish = clock();
         timeused_periodic_tesselation = (double(finish)-double(start))/CLOCKS_PER_SEC;
         cout << " (" << timeused_periodic_tesselation << " secs)" << endl << endl;
