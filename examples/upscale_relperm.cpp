@@ -115,7 +115,9 @@ void usage()
         "  -minPerm <float>             -- Minimum floating point value allowed for" << endl << 
         "                                  phase permeability in computations. If set to zero," << endl << 
         "                                  some models can end up singular. Default 10^-12" << endl << 
-        "" << endl <<
+        "  -maxPerm <float>             -- Maximum floating point value allowed for" << endl <<
+        "                                  permeability. " << endl <<
+        "                                  Default 20000. Unit Millidarcy." << endl <<
         "If only one stone-file is supplied, it is used for all stone-types defined" << endl <<
         "in the geometry. If more than one, it corresponds to the SATNUM-values." << endl;
     // "minPoro" intentionally left undocumented
@@ -214,7 +216,8 @@ int main(int varnum, char** vararg)
    options.insert(make_pair("maxpoints",          "1000")); // maximal number of saturation points.
    options.insert(make_pair("outputprecision",    "8")); // number of decimals to print
    options.insert(make_pair("maxPermContrast",    "1e7")); // maximum allowed contrast in each single-phase computation
-   options.insert(make_pair("minPerm",            "1e-12")); // absoluted minimum allowed minimal cell permeability
+   options.insert(make_pair("minPerm",            "1e-12")); // absolute minimum for allowed cell permeability
+   options.insert(make_pair("maxPerm",            "20000")); // maximal allowed cell permeability
    options.insert(make_pair("minPoro",            "0.0001")); // this limit is necessary for pcmin/max computation
    options.insert(make_pair("saturationThreshold","0.0001")); // accuracy threshold for saturation, we ignore Pc values that
                                                               // give so small contributions near endpoints.
@@ -387,8 +390,10 @@ int main(int varnum, char** vararg)
    int maxSatnum = 0;
    const double maxPermContrast = atof(options["maxPermContrast"].c_str());
    const double minPerm = atof(options["minPerm"].c_str());
+   const double maxPerm = atof(options["maxPerm"].c_str());
    const double minPoro = atof(options["minPoro"].c_str());
    const double saturationThreshold = atof(options["saturationThreshold"].c_str());
+   double maxPermInInputFile = 0.0;
 
    /* Sanity check/fix on input for each cell:
       - Check that SATNUM are set sensibly, that is => 0 and < 1000, error if not.
@@ -398,6 +403,9 @@ int main(int varnum, char** vararg)
         Set to minPerm if zero or less than minPerm.
       - Check maximum number of SATNUM values (can be number of rock types present)
    */
+   int cells_truncated_from_below_poro = 0;
+   int cells_truncated_from_below_permx = 0;
+   int cells_truncated_from_above_permx = 0;
    for (unsigned int i = 0; i < satnums.size(); ++i) {
        if (satnums[i] < 0 || satnums[i] > 1000) { 
            if (isMaster) cerr << "satnums[" << i << "] = " << satnums[i] << ", not sane, quitting." << endl;
@@ -408,13 +416,22 @@ int main(int varnum, char** vararg)
        }
        if ((poros[i] >= 0) && (poros[i] < minPoro)) { // Truncate porosity from below
            poros[i] = minPoro;
+           ++cells_truncated_from_below_poro;
        }
        if (poros[i] < 0 || poros[i] > 1) {
            if (isMaster) cerr << "poros[" << i <<"] = " << poros[i] << ", not sane, quitting." << endl;
            usageandexit();
        }
+       if (permxs[i] > maxPermInInputFile) {
+           maxPermInInputFile = permxs[i];
+       }
        if ((permxs[i] >= 0) && (permxs[i] < minPerm)) { // Truncate permeability from below
            permxs[i] = minPerm;
+           ++cells_truncated_from_below_permx;
+       }
+       if (permxs[i] > maxPerm) { // Truncate permeability from above
+           permxs[i] = maxPerm;
+           ++cells_truncated_from_above_permx;
        }
        if (permxs[i] < 0) {
            if (isMaster) cerr << "permx[" << i <<"] = " << permxs[i] << ", not sane, quitting." << endl;
@@ -431,6 +448,7 @@ int main(int varnum, char** vararg)
            }
        }
        
+
        // Explicitly handle "no rock" cells, set them to minimum perm and zero porosity.
        if (satnums[i] == 0) {
            permxs[i] = minPerm;
@@ -442,6 +460,15 @@ int main(int varnum, char** vararg)
                          // used in pcmin/max computation.
        }
    }  
+   if (cells_truncated_from_below_poro > 0) {
+       cout << "Cells with truncated porosity: " << cells_truncated_from_below_poro << endl;
+   }
+   if (cells_truncated_from_below_permx > 0) {
+       cout << "Cells with permx truncated from below: " << cells_truncated_from_below_permx << endl;
+   }
+   if (cells_truncated_from_above_permx > 0) {
+       cout << "Cells with permx truncated from above: " << cells_truncated_from_above_permx << endl;
+   }
 
 
    /***************************************************************************
@@ -1046,7 +1073,7 @@ int main(int varnum, char** vararg)
 
        // Should "I" (mpi-wise) compute this pressure point?
        if (node_vs_pressurepoint[pointidx] == mpi_rank) {
-           
+                  
            Ptestvalue = pressurePoints[pointidx];
            
            double accPhasePerm = 0.0;
@@ -1118,6 +1145,8 @@ int main(int varnum, char** vararg)
 
            }
            // Now we can determine the smallest permitted permeability we can calculate for
+
+
            // We have both a fixed bottom limit, as well as a possible higher limit determined
            // by a maximum allowable permeability.
            double minPhasePerm = max(maxPhasePerm/maxPermContrast, minPerm);
@@ -1156,7 +1185,7 @@ int main(int varnum, char** vararg)
            Matrix phasePermTensor = upscaler.upscaleSinglePhase();
            
            //cout << phasePermTensor << endl;
-           
+
 
            // Here we recalculate the upscaled water saturation,
            // although it is already known when we asked for the
