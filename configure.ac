@@ -46,6 +46,9 @@ AC_CONFIG_FILES([
   dune/porsol/blackoil/Makefile
   dune/porsol/blackoil/fluid/Makefile
   dune/porsol/blackoil/test/Makefile
+  dune/porsol/twophase2/Makefile
+  dune/porsol/twophase2/OPMIRISCode/Makefile
+  dune/porsol/twophase2/OPMKvasiSophusCode/Makefile
   lib/Makefile
   examples/Makefile
   dune-porsol.pc
