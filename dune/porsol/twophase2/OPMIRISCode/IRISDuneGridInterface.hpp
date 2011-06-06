@@ -33,7 +33,7 @@
 #include<dune/grid/common/entity.hh>
 #include<dune/grid/common/entitypointer.hh>
 
-#include<RnPoint.h>
+#include<dune/porsol/twophase2/OPMKvasiSophusCode/RnPoint.h>
 //#include<NestedArray.hpp>
 //#include<DoublyNestedArray.hpp>
 
@@ -303,7 +303,7 @@ class IRISDuneGridInterface
 
   // Ny operasjon i IRISDuneGridInterface. (Bør i første omgang kun (innvendig) implementeres for ElementPointer og codimEntity2==1)
   template <int codimEntity2>
-  bool boundaryIndex(const ElementPointer ElmP, const int& Ent2RelIdx) const { return boundaryIndex(ElmP->template entity<codimEntity2>(Ent2RelIdx));}
+  bool boundaryIndex(const ElementPointer ElmP, const int& Ent2RelIdx) const { return boundaryIndex(ElmP->template subEntity<codimEntity2>(Ent2RelIdx));}
 
 
   //A global edge index's actual position at the boundary (NOTE: The outer boundary is here considered as a connsecutive array...)
@@ -469,7 +469,7 @@ void IRISDuneGridInterface<DuneGrid>::setupForMPFAFPS_FVM()
     //ElementNeighboursOfVertex:
     for (int v=0; v < nVertex; v++)
     {
-      VertexPointer vp = ep->template entity<VertexPointer::codim>(v);
+      VertexPointer vp = ep->template subEntity<VertexPointer::codim>(v);
       ElementNeighboursOfVertex_[mapperV_.map(*vp)].push_back(ep);
 
       if (!vtxCoordDone[mapperV_.map(*vp)])
@@ -481,18 +481,18 @@ void IRISDuneGridInterface<DuneGrid>::setupForMPFAFPS_FVM()
    //FaceNeighboursOfVertex:
    for (int f=0; f<nFace; ++f)
    {
-     FacePointer fp = ep->template entity<FacePointer::codim>(f);
+     FacePointer fp = ep->template subEntity<FacePointer::codim>(f);
      if (! faceDone[mapperFa_.map(*fp)])
      {
        Dune::GeometryType gt = fp->type();
        typedef typename DuneGrid::ctype ct;
        const int faceDim = DuneGrid::dimension - FacePointer::codim;
 
-       int nVertexFace = Dune::ReferenceElements<ct,faceDim>::general(gt).size(faceDim);
+       int nVertexFace = Dune::GenericReferenceElements<ct,faceDim>::general(gt).size(faceDim);
        for (int v=0; v < nVertexFace; v++)
         {
-          VertexPointer vp = ep->template entity<VertexPointer::codim>(
-           Dune::ReferenceElements<ct,dim>::general(ep->type()).subEntity(f, FacePointer::codim, v, VertexPointer::codim));
+          VertexPointer vp = ep->template subEntity<VertexPointer::codim>(
+           Dune::GenericReferenceElements<ct,dim>::general(ep->type()).subEntity(f, FacePointer::codim, v, VertexPointer::codim));
 
           FaceNeighboursOfVertex_[mapperV_.map(*vp)].push_back(fp);
         }
@@ -609,8 +609,8 @@ void IRISDuneGridInterface<DuneGrid>::setupForMPFAFPS_FVM()
       {
         if (itFace->boundary())
         {
-          int iFace = itFace->numberInSelf();
-          FacePointer fp = ep->template entity<FacePointer::codim>(iFace);
+          int iFace = itFace->indexInInside();
+          FacePointer fp = ep->template subEntity<FacePointer::codim>(iFace);
           int externalFaceOrdering = iFace;
           if (externalFaceOrdering == 1)
           {
@@ -622,11 +622,11 @@ void IRISDuneGridInterface<DuneGrid>::setupForMPFAFPS_FVM()
           }
           facesAtSubBoundary_[externalFaceOrdering].push_back(fp);
           faceAtBoundary_[mapperFa_.map(*fp)] = true;
-          int numberOfVrtxOnFace = Dune::ReferenceElements<typename DuneGrid::ctype,DuneGrid::dimension>::general(ep->type()).size(iFace,1,VertexPointer::codim);
+          int numberOfVrtxOnFace = Dune::GenericReferenceElements<typename DuneGrid::ctype,DuneGrid::dimension>::general(ep->type()).size(iFace,1,VertexPointer::codim);
           for (int i=0; i<numberOfVrtxOnFace; ++i)
           {
-            int iVrtx = Dune::ReferenceElements<typename DuneGrid::ctype,DuneGrid::dimension>::general(ep->type()).subEntity(iFace, 1, i, VertexPointer::codim);
-            VertexPointer vP= ep->template entity<VertexPointer::codim>(iVrtx);
+            int iVrtx = Dune::GenericReferenceElements<typename DuneGrid::ctype,DuneGrid::dimension>::general(ep->type()).subEntity(iFace, 1, i, VertexPointer::codim);
+            VertexPointer vP= ep->template subEntity<VertexPointer::codim>(iVrtx);
             vertexAtBoundary_[mapperV_.map(*vP)] = true;
           }
         }
@@ -710,7 +710,7 @@ typename IRISDuneGridInterface<DuneGrid>::RnVector
 IRISDuneGridInterface<DuneGrid>::getCentroid_V(const EntityPointer entP) const
 {
   Dune::FieldVector<typename DuneGrid::ctype,DuneGrid::dimension-EntityPointer::codim> cogLocal =
-    Dune::ReferenceElements<typename DuneGrid::ctype,DuneGrid::dimension-EntityPointer::codim>::general(entP->type()).position(0,0);
+    Dune::GenericReferenceElements<typename DuneGrid::ctype,DuneGrid::dimension-EntityPointer::codim>::general(entP->type()).position(0,0);
   RnVector cogGlobal = (*entP).geometry().global(cogLocal);
   //std::cout << "cogLocal= (" << cogLocal << ") - " << "cogGlobal= (" << cogGlobal << ") - " << entP->type() << " - " << EntityPointer::codim << std::endl;
   return cogGlobal;
@@ -721,7 +721,7 @@ template <int codimEntity2>
 typename IRISDuneGridInterface<DuneGrid>::RnVector
 IRISDuneGridInterface<DuneGrid>::getCentroid_V(const IRISDuneGridInterface<DuneGrid>::ElementPointer ElmP, const int& Ent2RelIdx) const
 {
-  return getCentroid_V(ElmP->template entity<codimEntity2>(Ent2RelIdx));
+  return getCentroid_V(ElmP->template subEntity<codimEntity2>(Ent2RelIdx));
 }
 
 template <class DuneGrid>
@@ -814,7 +814,7 @@ IRISDuneGridInterface<DuneGrid>::getNeighbours(const IRISDuneGridInterface<DuneG
 {
   assert(neighbours.empty());
   const int codimFace = IRISDuneGridInterface<DuneGrid>::FacePointer::codim;
-  int nFace = Dune::ReferenceElements<typename DuneGrid::ctype,DuneGrid::dimension>::general(ElmP->type()).size(codimFace);
+  int nFace = Dune::GenericReferenceElements<typename DuneGrid::ctype,DuneGrid::dimension>::general(ElmP->type()).size(codimFace);
   for (int i=0; i<nFace; ++i)
   {
     neighbours.push_back(getGlobalEntityPointerFromRelativeIndex<typename IRISDuneGridInterface<DuneGrid>::FacePointer>(ElmP,i));
@@ -839,7 +839,7 @@ bool
 IRISDuneGridInterface<DuneGrid>::isNeighbour(const IRISDuneGridInterface<DuneGrid>::ElementPointer ElmP, const IRISDuneGridInterface<DuneGrid>::FacePointer FaceP) const
 {
   const int codimFace = IRISDuneGridInterface<DuneGrid>::FacePointer::codim;
-  int nFace = Dune::ReferenceElements<typename DuneGrid::ctype,DuneGrid::dimension>::general(ElmP->type()).size(codimFace);
+  int nFace = Dune::GenericReferenceElements<typename DuneGrid::ctype,DuneGrid::dimension>::general(ElmP->type()).size(codimFace);
   for (int i=0; i<nFace; ++i)
   {
     if (ElmP->template entity<codimFace>(i) == FaceP)
@@ -890,7 +890,7 @@ template <class EntityPointer>
 EntityPointer
 IRISDuneGridInterface<DuneGrid>::getGlobalEntityPointerFromRelativeIndex(const IRISDuneGridInterface<DuneGrid>::ElementPointer & ElmP, const int& EntRelIdx) const
 {
-  return ElmP->template entity<EntityPointer::codim>(EntRelIdx);
+  return ElmP->template subEntity<EntityPointer::codim>(EntRelIdx);
 }
 
 template <class DuneGrid>
@@ -925,7 +925,7 @@ EntityPointer
 IRISDuneGridInterface<DuneGrid>::getGlobalEntityPointerFromRelativeIndex(const IRISDuneGridInterface<DuneGrid>::ElementPointer & ElmP, const int& Ent2RelIdx, const int& codimEntity2, const int& Ent3RelIdx) const
 {
   return ElmP->template entity<EntityPointer::codim>(
-    Dune::ReferenceElements<typename DuneGrid::ctype,DuneGrid::dimension>::general(ElmP->type()).subEntity(Ent2RelIdx, codimEntity2, Ent3RelIdx, EntityPointer::codim));
+    Dune::GenericReferenceElements<typename DuneGrid::ctype,DuneGrid::dimension>::general(ElmP->type()).subEntity(Ent2RelIdx, codimEntity2, Ent3RelIdx, EntityPointer::codim));
 }
 
 template <class DuneGrid>
@@ -943,7 +943,7 @@ template <class EntityPointer>
 int
 IRISDuneGridInterface<DuneGrid>::getDecreasedRelativeIndexFromRelativeIndex(const EntityPointer EntP, const int& Ent2RelIdx, const int& codimEntity2, const int& Ent3RelIdx, const int& codimEntity3) const
 {
-  return Dune::ReferenceElements<typename DuneGrid::ctype,DuneGrid::dimension-EntityPointer::codim>::general(EntP->type()).subEntity(Ent2RelIdx, codimEntity2, Ent3RelIdx, codimEntity3);
+  return Dune::GenericReferenceElements<typename DuneGrid::ctype,DuneGrid::dimension-EntityPointer::codim>::general(EntP->type()).subEntity(Ent2RelIdx, codimEntity2, Ent3RelIdx, codimEntity3);
 }
 
 template <class DuneGrid>

@@ -27,17 +27,17 @@
 //*******************************************************************************
 
 //---------------------- Include Files ----------------------------------------
-#include <IRISDuneGridInterface.hpp>
-#include <GlobType.h>
-#include <IrisOpmTdefs.h>
-#include <Array.h>
-#include <Pair.h>
-#include <RnShape.h>
-#include <RnPoint.h>
-#include <MeshSFSD.h>
-#include <SFPMPhysicalFieldProperties.h>
-#include <SFRelPerm.h>
-#include <SFCapPress.h>
+#include <dune/porsol/twophase2/OPMIRISCode/IRISDuneGridInterface.hpp>
+#include <dune/porsol/twophase2/OPMKvasiSophusCode/GlobType.h>
+#include <dune/porsol/twophase2/OPMIRISCode/IrisOpmTdefs.h>
+#include <dune/porsol/twophase2/OPMKvasiSophusCode/Array.h>
+#include <dune/porsol/twophase2/OPMKvasiSophusCode/Pair.h>
+#include <dune/porsol/twophase2/OPMKvasiSophusCode/RnShape.h>
+#include <dune/porsol/twophase2/OPMKvasiSophusCode/RnPoint.h>
+#include <dune/porsol/twophase2/OPMKvasiSophusCode/MeshSFSD.h>
+#include <dune/porsol/twophase2/OPMIRISCode/SFPMPhysicalFieldProperties.h>
+#include <dune/porsol/twophase2/OPMIRISCode/SFRelPerm.h>
+#include <dune/porsol/twophase2/OPMIRISCode/SFCapPress.h>
 
 //---------------------  Constants --------------------------------------------
 

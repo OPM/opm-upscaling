@@ -40,7 +40,7 @@ typedef Dune::SGrid<2,2> DuneGridType;//This is a 2D structured grid
 
 
 /* Some IRIS-Opm stuff */
-#include <Array.h>
+#include <dune/porsol/twophase2/OPMKvasiSophusCode/Array.h>
 
 typedef Array<double> SFSaturation;
 typedef Array<double> SFVelocity;

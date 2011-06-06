@@ -34,13 +34,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <IRISDuneGridInterface.hpp>
-#include <GlobType.h>
-#include <IrisOpmTdefs.h>
+#include <dune/porsol/twophase2/OPMIRISCode/IRISDuneGridInterface.hpp>
+#include <dune/porsol/twophase2/OPMKvasiSophusCode/GlobType.h>
+#include <dune/porsol/twophase2/OPMIRISCode/IrisOpmTdefs.h>
 
-#include <SFRelPerm.h>
-#include <SFPMPhysicalFieldProperties.h>
-#include <SFCentralUpwind.h>
+#include <dune/porsol/twophase2/OPMIRISCode/SFRelPerm.h>
+#include <dune/porsol/twophase2/OPMIRISCode/SFPMPhysicalFieldProperties.h>
+#include <dune/porsol/twophase2/OPMIRISCode/SFCentralUpwind.h>
 
 
 //---------------------  Constants --------------------------------------------

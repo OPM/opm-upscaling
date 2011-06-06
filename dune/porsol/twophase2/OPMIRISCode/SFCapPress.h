@@ -30,8 +30,8 @@
 */
 //---------------------- Include Files ----------------------------------------
 
-#include <GlobType.h>
-#include <Array.h>
+#include <dune/porsol/twophase2/OPMKvasiSophusCode/GlobType.h>
+#include <dune/porsol/twophase2/OPMKvasiSophusCode/Array.h>
 
 #include <iostream>
 #include <math.h>

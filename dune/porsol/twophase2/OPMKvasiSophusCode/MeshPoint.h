@@ -24,10 +24,10 @@
 
 //---------------------- Include Files ----------------------------------------
 
-#include <GlobConst.h>
-#include <GlobType.h>
+#include <dune/porsol/twophase2/OPMKvasiSophusCode/GlobConst.h>
+#include <dune/porsol/twophase2/OPMKvasiSophusCode/GlobType.h>
 
-#include <MeshShape.h>
+#include <dune/porsol/twophase2/OPMKvasiSophusCode/MeshShape.h>
 
 //---------------------  Constants --------------------------------------------
 

@@ -31,12 +31,12 @@
 */
 //---------------------- Include Files ----------------------------------------
 
-#include <IRISDuneGridInterface.hpp>
-#include <GlobType.h>
-#include <IrisOpmTdefs.h>
-#include <Array.h>
+#include <dune/porsol/twophase2/OPMIRISCode/IRISDuneGridInterface.hpp>
+#include <dune/porsol/twophase2/OPMKvasiSophusCode/GlobType.h>
+#include <dune/porsol/twophase2/OPMIRISCode/IrisOpmTdefs.h>
+#include <dune/porsol/twophase2/OPMKvasiSophusCode/Array.h>
 
-#include <PMTwoPhaseSimulationData.h>
+#include <dune/porsol/twophase2/OPMIRISCode/PMTwoPhaseSimulationData.h>
 
 //---------------------  Constants --------------------------------------------
 

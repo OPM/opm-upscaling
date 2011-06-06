@@ -34,8 +34,8 @@
 #include <string.h>
 #include <assert.h>
 
-#include <GlobType.h>
-#include <Array.h>
+#include <dune/porsol/twophase2/OPMKvasiSophusCode/GlobType.h>
+#include <dune/porsol/twophase2/OPMKvasiSophusCode/Array.h>
 
 //---------------------- Directives -------------------------------------------
 //using namespace std;  // This leads to that all names in the namespace std may be 

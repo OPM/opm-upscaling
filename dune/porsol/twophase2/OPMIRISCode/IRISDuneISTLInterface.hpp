@@ -23,8 +23,8 @@
 
 #include<dune/common/fmatrix.hh>
 #include<dune/istl/bcrsmatrix.hh>
-#include <istl/solvers.hh>
-#include <istl/preconditioners.hh>
+#include <dune/istl/solvers.hh>
+#include <dune/istl/preconditioners.hh>
 
 class IRISDuneISTLInterface
 {
@@ -77,10 +77,10 @@ void IRISDuneISTLInterface::setupMatrix(IRISGrid& grid, const int& codim)
 	 {
 	   typename IRISGrid::ElementPointer ep = it;
 	   int eCurrentIndx = grid.getGlobalIndexFromEntityPointer(ep);
-	   int nVrtx = Dune::ReferenceElements<typename IRISGrid::ctype,IRISGrid::dim>::general(ep->type()).size(IRISGrid::VertexPointer::codim);
+	   int nVrtx = Dune::GenericReferenceElements<typename IRISGrid::ctype,IRISGrid::dim>::general(ep->type()).size(IRISGrid::VertexPointer::codim);
 	   for (int v=0; v<nVrtx; ++v)
 	   {
-	     typename IRISGrid::VertexPointer vp = ep->template entity<IRISGrid::VertexPointer::codim>(v);
+	     typename IRISGrid::VertexPointer vp = ep->template subEntity<IRISGrid::VertexPointer::codim>(v);
 	     std::vector<typename IRISGrid::ElementPointer> elemNgbs;
 	     grid.getNeighbours(vp,elemNgbs);
 	     for (unsigned int e=0; e<elemNgbs.size(); ++e)

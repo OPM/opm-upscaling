@@ -33,18 +33,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <IRISDuneGridInterface.hpp>
-#include <GlobType.h>
-#include <IrisOpmTdefs.h>
+#include <dune/porsol/twophase2/OPMIRISCode/IRISDuneGridInterface.hpp>
+#include <dune/porsol/twophase2/OPMKvasiSophusCode/GlobType.h>
+#include <dune/porsol/twophase2/OPMIRISCode/IrisOpmTdefs.h>
 
-#include <VTKHeaderWriter.h>
-#include <VTKStructuredGridWriter.h>
-#include <SFRelPerm.h>
-#include <SFPMPhysicalFieldProperties.h>
-#include <SFCapPress.h>
-#include <PMTwoPhaseSimulationData.h>
-#include <PMTwoPhaseElliptic.h>
-#include <PMTwoPhaseSaturation.h>
+#include <dune/porsol/twophase2/OPMIRISCode/VTKHeaderWriter.h>
+#include <dune/porsol/twophase2/OPMIRISCode/VTKStructuredGridWriter.h>
+#include <dune/porsol/twophase2/OPMIRISCode/SFRelPerm.h>
+#include <dune/porsol/twophase2/OPMIRISCode/SFPMPhysicalFieldProperties.h>
+#include <dune/porsol/twophase2/OPMIRISCode/SFCapPress.h>
+#include <dune/porsol/twophase2/OPMIRISCode/PMTwoPhaseSimulationData.h>
+#include <dune/porsol/twophase2/OPMIRISCode/PMTwoPhaseElliptic.h>
+#include <dune/porsol/twophase2/OPMIRISCode/PMTwoPhaseSaturation.h>
 
 
 //---------------------  Constants --------------------------------------------

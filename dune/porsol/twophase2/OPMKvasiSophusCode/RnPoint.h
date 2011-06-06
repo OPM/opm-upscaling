@@ -23,9 +23,9 @@
 
 
 //---------------------- Include Files ----------------------------------------
-#include <GlobConst.h>
-#include <RnShape.h>
-#include <Array.h>
+#include <dune/porsol/twophase2/OPMKvasiSophusCode/GlobConst.h>
+#include <dune/porsol/twophase2/OPMKvasiSophusCode/RnShape.h>
+#include <dune/porsol/twophase2/OPMKvasiSophusCode/Array.h>
 
 
 #ifdef DEBUG_RnPoint_h
