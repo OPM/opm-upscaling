@@ -17,7 +17,9 @@ mimetic_solver_test                             \
 simulator_test                                  \
 spe10_test                                      \
 tpfa_compressible_solver_test                   \
-tpfa_solver_test
+tpfa_solver_test                                \
+twophase2_test
+
 
 grdecl_to_legacy_test_SOURCES = grdecl_to_legacy_test.cpp
 
