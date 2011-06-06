@@ -1,22 +1,22 @@
 SUBDIRS =
 
 check_PROGRAMS =
-noinst_PROGRAMS =				\
-aniso_implicitcap_test				\
-aniso_simulator_test				\
-blackoil_sim_test				\
-grdecl_to_legacy_test				\
-ifsh_solver_test				\
-implicitcap_test				\
-istl_test					\
-known_answer_test				\
-make_vtk_test					\
-mimetic_aniso_solver_test			\
-mimetic_periodic_test				\
-mimetic_solver_test				\
-simulator_test					\
-spe10_test					\
-tpfa_compressible_solver_test			\
+noinst_PROGRAMS =                               \
+aniso_implicitcap_test                          \
+aniso_simulator_test                            \
+blackoil_sim_test                               \
+grdecl_to_legacy_test                           \
+ifsh_solver_test                                \
+implicitcap_test                                \
+istl_test                                       \
+known_answer_test                               \
+make_vtk_test                                   \
+mimetic_aniso_solver_test                       \
+mimetic_periodic_test                           \
+mimetic_solver_test                             \
+simulator_test                                  \
+spe10_test                                      \
+tpfa_compressible_solver_test                   \
 tpfa_solver_test
 
 grdecl_to_legacy_test_SOURCES = grdecl_to_legacy_test.cpp
@@ -70,18 +70,18 @@ TESTS = $(check_PROGRAMS)
 # ALUgrid (both debug and release), we may reinstate them.
 # AM_CPPFLAGS += $(DUNEMPICPPFLAGS) $(BOOST_CPPFLAGS) $(ALUGRID_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 # AM_LDFLAGS  += $(DUNEMPILDFLAGS) $(BOOST_LDFLAGS) $(ALUGRID_LDFLAGS) $(SUPERLU_LDFLAGS)
-# LDADD = $(DUNE_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB)	\
-          $(BOOST_SYSTEM_LIB) $(DUNEMPILIBS)		\
-          $(ALUGRID_LIBS) $(SUPERLU_LIBS)		\
+# LDADD = $(DUNE_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) \
+          $(BOOST_SYSTEM_LIB) $(DUNEMPILIBS)            \
+          $(ALUGRID_LIBS) $(SUPERLU_LIBS)               \
           $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
 
 AM_CPPFLAGS += $(DUNEMPICPPFLAGS) $(BOOST_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 AM_LDFLAGS  += $(DUNEMPILDFLAGS) $(BOOST_LDFLAGS) $(SUPERLU_LDFLAGS)
 
-LDADD =						\
-$(DUNE_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB)	\
-$(BOOST_SYSTEM_LIB) $(DUNEMPILIBS)		\
-$(SUPERLU_LIBS)					\
+LDADD =                                         \
+$(DUNE_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB)   \
+$(BOOST_SYSTEM_LIB) $(DUNEMPILIBS)              \
+$(SUPERLU_LIBS)                                 \
 $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
 
 # don't follow the full GNU-standard
@@ -89,11 +89,11 @@ $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
 AUTOMAKE_OPTIONS = foreign 1.5
 
 # pass most important options when "make distcheck" is used
-DISTCHECK_CONFIGURE_FLAGS =				\
---with-dune-common=$(DUNE_COMMON_ROOT)			\
---with-dune-grid=$(DUNE_GRID_ROOT)			\
---with-dune-istl=$(DUNE_ISTL_ROOT)			\
---with-dune-cornerpoint=$(DUNE_CORNERPOINT_ROOT)	\
+DISTCHECK_CONFIGURE_FLAGS =                             \
+--with-dune-common=$(DUNE_COMMON_ROOT)                  \
+--with-dune-grid=$(DUNE_GRID_ROOT)                      \
+--with-dune-istl=$(DUNE_ISTL_ROOT)                      \
+--with-dune-cornerpoint=$(DUNE_CORNERPOINT_ROOT)        \
 CXX="$(CXX)" CC="$(CC)"
 
 include $(top_srcdir)/am/global-rules
