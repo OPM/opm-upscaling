@@ -117,7 +117,7 @@ void usage()
         "                                  some models can end up singular. Default 10^-12" << endl << 
         "  -maxPerm <float>             -- Maximum floating point value allowed for" << endl <<
         "                                  permeability. " << endl <<
-        "                                  Default 20000. Unit Millidarcy." << endl <<
+        "                                  Default 100000. Unit Millidarcy." << endl <<
         "If only one stone-file is supplied, it is used for all stone-types defined" << endl <<
         "in the geometry. If more than one, it corresponds to the SATNUM-values." << endl;
     // "minPoro" intentionally left undocumented
@@ -217,7 +217,7 @@ int main(int varnum, char** vararg)
    options.insert(make_pair("outputprecision",    "8")); // number of decimals to print
    options.insert(make_pair("maxPermContrast",    "1e7")); // maximum allowed contrast in each single-phase computation
    options.insert(make_pair("minPerm",            "1e-12")); // absolute minimum for allowed cell permeability
-   options.insert(make_pair("maxPerm",            "20000")); // maximal allowed cell permeability
+   options.insert(make_pair("maxPerm",            "100000")); // maximal allowed cell permeability
    options.insert(make_pair("minPoro",            "0.0001")); // this limit is necessary for pcmin/max computation
    options.insert(make_pair("saturationThreshold","0.0001")); // accuracy threshold for saturation, we ignore Pc values that
                                                               // give so small contributions near endpoints.
