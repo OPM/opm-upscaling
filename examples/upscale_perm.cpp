@@ -67,12 +67,8 @@ void usage() {
         "                     and periodic (p) boundary conditions." << endl <<
         "                     Default: f (fixed boundary conditions)" << endl <<
         "-minPerm <float>  -- Minimum floating point value allowed for" << endl <<
-        "                     permeability. If zero, the problem can be singular" << endl <<
-        "                     Default 1e-9. Unit Millidarcy." << endl <<
-        "-maxPerm <float>  -- Maximum floating point value allowed for" << endl <<
-        "                     permeability. " << endl <<
-        "                     Default 100000. Unit Millidarcy." << endl;
-    /* Here undocumented options: linsolver_*, see source code below  */
+        "                     permeability. If zero, the problem is singular" << endl <<
+        "                     Default 1e-9. Unit Millidarcy." << endl;
 }
 
 /**
@@ -94,7 +90,6 @@ int main(int varnum, char** vararg) {
     options.insert(make_pair("output", "")); // If this is set, output goes to screen and to this file 
     options.insert(make_pair("bc",     "f")); // Fixed boundary conditions are default    
     options.insert(make_pair("minPerm", "1e-9")); // Minimum allowable permeability value (for diagonal tensor entries)
-    options.insert(make_pair("maxPerm", "100000")); // Maximum allowable permeability value (for diagonal tensor entries)
     
     options.insert(make_pair("linsolver_tolerance", "1e-8"));  // residual tolerance for linear solver
     options.insert(make_pair("linsolver_verbosity", "0"));     // verbosity level for linear solver
@@ -228,8 +223,6 @@ int main(int varnum, char** vararg) {
 
     const double minPerm = Dune::unit::convert::from(atof(options["minPerm"].c_str()),
                                                      Dune::prefix::milli*Dune::unit::darcy);
-    const double maxPerm = Dune::unit::convert::from(atof(options["maxPerm"].c_str()),
-                                                     Dune::prefix::milli*Dune::unit::darcy);
 
     if (isFixed || isLinear)  {
         cout << "Tesselating non-periodic grid ...";
@@ -251,56 +244,6 @@ int main(int varnum, char** vararg) {
         cout << " (" << timeused_periodic_tesselation << " secs)" << endl << endl;
     }
 
-    
-    /* Now truncate permeability from above. Only for scalar permeabilities for now */
-
-    vector<double> permxs = eclParser.getFloatingPointValue("PERMX");  
-    vector<double> permys, permzs;
-    if (eclParser.hasField("PERMY")) {
-        permys = eclParser.getFloatingPointValue("PERMY");
-        permzs = eclParser.getFloatingPointValue("PERMZ");
-    }
-    else {
-        permys = permxs;
-        permzs = permxs;
-    }
-
-    unsigned int cells_truncated_from_above_perm = 0;
-    double maxPermInInputFile = 0.0;
-    for (unsigned int cell_idx = 0; cell_idx < permxs.size(); ++cell_idx) {
-        Matrix cellPerm(3,3,(double*) 0);
-        
-        maxPermInInputFile = max(maxPermInInputFile, permxs[cell_idx]);
-        cellPerm(0,0) = min(maxPerm, permxs[cell_idx]);
-        
-        maxPermInInputFile = max(maxPermInInputFile, permys[cell_idx]);
-        cellPerm(1,1) = min(maxPerm, permys[cell_idx]);
-        
-        maxPermInInputFile = max(maxPermInInputFile, permzs[cell_idx]);
-        cellPerm(2,2) = min(maxPerm, permzs[cell_idx]);
-        
-        if (isPeriodic) {
-            upscaler_periodic.setPermeability(cell_idx, cellPerm);
-        }
-        if (isFixed || isLinear) {
-            upscaler_nonperiodic.setPermeability(cell_idx, cellPerm);
-        }
-        
-        if (permxs[cell_idx] > maxPerm || 
-            permys[cell_idx] > maxPerm || permzs[cell_idx] > maxPerm) {
-            ++cells_truncated_from_above_perm;
-        }
-    }
-    if (cells_truncated_from_above_perm > 0) {
-        cout << "Info: " << cells_truncated_from_above_perm << " cell(s) between " << 
-            Dune::unit::convert::to(maxPerm, Dune::prefix::milli*Dune::unit::darcy)
-             << " mD and " << 
-            Dune::unit::convert::to(maxPermInInputFile, Dune::prefix::milli*Dune::unit::darcy)
-             << " mD truncated from above in permeability." << endl;
-    }
-    
-        
-    
 
     
     
@@ -390,7 +333,6 @@ int main(int varnum, char** vararg) {
     if (isLinear)   outputtmp << "Linear  ";
     outputtmp << endl;
     outputtmp << "#                 minPerm: " << options["minPerm"] << endl;
-    outputtmp << "#                 maxPerm: " << options["maxPerm"] << endl;
     outputtmp << "#" << endl;
     outputtmp << "# If both linear and fixed boundary conditions are calculated, " << endl <<
         "# the nonperiodic tesselation is done only once" << endl <<  "# " << endl  << "#" << endl;
