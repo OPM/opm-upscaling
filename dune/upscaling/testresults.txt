@@ -492,3 +492,9 @@ sys	0m0.529s
 real	0m27.056s
 user	0m26.453s
 sys	0m0.530s
+
+[again, using clang++, Jun. 7 2011 (but using slightly outdated repo)]
+
+real	0m27.669s
+user	0m27.006s
+sys	0m0.555s
