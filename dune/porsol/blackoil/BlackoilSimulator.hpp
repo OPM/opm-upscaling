@@ -88,6 +88,7 @@ namespace Opm
         std::vector<double> report_times_;
         bool do_impes_;
         std::string output_dir_;
+        int output_interval_;
 
         static void output(const Grid& grid,
                            const Fluid& fluid,
@@ -167,6 +168,7 @@ init(const Dune::parameter::ParameterGroup& param)
     minimum_stepsize_ = param.getDefault("minimum_stepsize", 0.0);
     do_impes_ = param.getDefault("do_impes", false);
     output_dir_ = param.getDefault<std::string>("output_dir", "output");
+    output_interval_ = param.getDefault("output_interval", 1);
 
     // Boundary conditions.
     typedef Dune::FlowBC BC;
@@ -393,9 +395,16 @@ simulate()
             }
             stepsize = report_times_[step] - current_time;
         } else {
-            output(grid_, fluid_, state_, face_flux, step, output_name);
+            bool output_now = ((step + 1) % output_interval_ == 0);
+            if (output_now) {
+                output(grid_, fluid_, state_, face_flux, step, output_name);
+            }
             ++step;
         }
+    }
+    if (step % output_interval_ != 0) {
+        // Output was not written at last step, write final output.
+        output(grid_, fluid_, state_, face_flux, step - 1, output_name);
     }
 }
 
