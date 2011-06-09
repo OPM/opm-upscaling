@@ -41,6 +41,7 @@
 
 #include <boost/bind.hpp>
 #include <boost/array.hpp>
+#include <boost/static_assert.hpp>
 
 #include <dune/common/ErrorMacros.hpp>
 #include <dune/common/SparseTable.hpp>
@@ -391,9 +392,9 @@ namespace Dune {
 
             const int nf = Binv.numRows();
 
+            BOOST_STATIC_ASSERT(FV::dimension == int(dim));
             ASSERT(Binv.numRows()  <= max_nf_);
             ASSERT(Binv.numRows()  == Binv.numCols());
-            ASSERT(FV::size        == dim);
             ASSERT(int(t1_.size()) >= nf * dim);
             ASSERT(int(t2_.size()) >= nf * dim);
             ASSERT(int(fa_.size()) >= nf * nf);
