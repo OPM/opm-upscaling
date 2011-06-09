@@ -33,9 +33,7 @@
   along with OpenRS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if HAVE_CONFIG_H
 #include "config.h"
-#endif
 
 
 #if HAVE_MPI // #else clause at bottom of file
@@ -46,7 +44,7 @@
 #include <dune/istl/bcrsmatrix.hh>
 #include <dune/istl/operators.hh>
 #include <dune/istl/io.hh>
-#include <dune/istl/indexset.hh>
+#include <dune/common/parallel/indexset.hh>
 #include <dune/istl/overlappingschwarz.hh>
 #include <dune/istl/schwarz.hh>
 #include <dune/istl/preconditioners.hh>
