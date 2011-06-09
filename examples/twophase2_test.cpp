@@ -94,7 +94,7 @@ int main(int argc, char** argv)
       cout << simulationData.td_.NameOfGridType << endl;
       cout << simulationData.td_.NoGridCells_X << endl;
       cout << simulationData.td_.NoGridCells_Y << endl;
-      DuneGridType* DGridPtr;
+//       DuneGridType* DGridPtr;
       //if (simulationData.td_.NameOfGridType == "SGrid2D")
       //{
 	const int dim=2;                               

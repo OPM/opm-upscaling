@@ -124,14 +124,14 @@ class PMTwoPhaseElliptic
 
 template <class FVMImplicit>
 PMTwoPhaseElliptic<FVMImplicit>::PMTwoPhaseElliptic(const int& numbElements)
-: FVMMeth_(), velocity_(), rPerm_(), cPress_(), PMpp_(), IISTLI_(numbElements), transmissOnePhase_(), transmissOnePhasePC_(), transmissOnePhaseBC_(), transmissOnePhasePCBC_()
+: FVMMeth_(), rPerm_(), cPress_(), PMpp_(), IISTLI_(numbElements), velocity_(), transmissOnePhase_(), transmissOnePhaseBC_(), transmissOnePhasePC_(), transmissOnePhasePCBC_()
 {
 
 }
 
 template <class FVMImplicit>
 PMTwoPhaseElliptic<FVMImplicit>::PMTwoPhaseElliptic(const FVMImplicit& FVMIMeth, const int& numbElements)
-: FVMMeth_(FVMIMeth), velocity_(), rPerm_(), cPress_(), PMpp_(), IISTLI_(numbElements), transmissOnePhase_(), transmissOnePhasePC_(), transmissOnePhaseBC_(), transmissOnePhasePCBC_()
+: FVMMeth_(FVMIMeth), rPerm_(), cPress_(), PMpp_(), IISTLI_(numbElements), velocity_(), transmissOnePhase_(), transmissOnePhaseBC_(), transmissOnePhasePC_(), transmissOnePhasePCBC_()
 {
 
 }
@@ -193,7 +193,7 @@ void PMTwoPhaseElliptic<FVMImplicit>::setupTwoPhasePressureEq(const IRISDuneGrid
       //----------------------------------------------------------------------
 
       //Find the global index from the entity pointer:
-      int qhat = Igrid.getGlobalIndexFromEntityPointer(qhatPt);//@HAF: Kan vi droppe denne???
+      // int qhat = Igrid.getGlobalIndexFromEntityPointer(qhatPt);//@HAF: Kan vi droppe denne???
       int numbElemNeighs = Igrid.getNumberOfNeighbours(qhatPt, 0);
 
       for (int i=0; i < numbElemNeighs; i++)
@@ -295,7 +295,7 @@ void PMTwoPhaseElliptic<FVMImplicit>::computeVelocity(const IRISDuneGridInterfac
     int idT = 0;
     int idTBC = 0;
     double Fluxh, Fluxf;
-    double integrationValue, integrationValue_pc, integrationValuePC;
+    double integrationValue;//, integrationValue_pc, integrationValuePC;
     for (IRISDuneGridInterface<DuneGridType>::VertexIterator qhatIt = Igrid.setEntityPointerToFirst<IRISDuneGridInterface<DuneGridType>::VertexIterator>(0); qhatIt!=Igrid.entityPointerIsAtEnd<IRISDuneGridInterface<DuneGridType>::VertexIterator>(0); ++qhatIt)
     {
       IRISDuneGridInterface<DuneGridType>::VertexPointer qhatPt = qhatIt;
@@ -306,7 +306,7 @@ void PMTwoPhaseElliptic<FVMImplicit>::computeVelocity(const IRISDuneGridInterfac
       //----------------------------------------------------------------------
 
       //Find the global index from the entity pointer:
-      int qhat = Igrid.getGlobalIndexFromEntityPointer(qhatPt);//@HAF: Kan vi droppe denne???
+      // int qhat = Igrid.getGlobalIndexFromEntityPointer(qhatPt);//@HAF: Kan vi droppe denne???
       int numbElemNeighs = Igrid.getNumberOfNeighbours(qhatPt, 0);
       for (int i=0; i < numbElemNeighs; i++)
       {
