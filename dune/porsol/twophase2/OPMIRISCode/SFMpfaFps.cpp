@@ -441,13 +441,13 @@ double SFMpfaFps::ml_matMultMH(const int& kBar, const int& itilde) const
 
 void SFMpfaFps::ml_generateLocalInverseMatrixAndRHS(const IRISDuneGridInterface<DuneGridType>& Igrid, const IRISDuneGridInterface<DuneGridType>::VertexPointer qhatPt, const Array<double>& K11, const Array<double>& K22, const Array<double>& K12, const Array< double >& alpha1, const Array< double >& alpha2)
 {
-  int qhatMax = Igrid.cellCount(0,0);
+//   int qhatMax = Igrid.cellCount(0,0);
   int cellDim = Igrid.cellDimension();
   Pair< int, int > PG(0, 0);
   Pair< int, int > PGnm1((cellDim - 1), 0);
   Pair< int, int > PGn(cellDim, 0);
   int L;
-  int khat;
+//   int khat;
   int kMax;
   int ihat;
   int itildeMax;
@@ -463,7 +463,7 @@ void SFMpfaFps::ml_generateLocalInverseMatrixAndRHS(const IRISDuneGridInterface<
   double deltaM;
   double f1Value;
   double f2Value;
-  double sum;
+//   double sum;
 
   //Array< int > kBarTab;
   //int kBarTab[2];//NOTE: The length of this array is bigger in 3D!!!
@@ -744,7 +744,7 @@ void SFMpfaFps::ml_generateLocalInverseMatrixAndRHS(const IRISDuneGridInterface<
 
 void SFMpfaFps::ml_generateLocalBoundaryInverseMatrixAndRHS(const IRISDuneGridInterface<DuneGridType>& Igrid, const IRISDuneGridInterface<DuneGridType>::VertexPointer qhatPt, const Array<double>& K11, const Array<double>& K22, const Array<double>& K12, const Array<double>& alpha1, const Array<double>& alpha2, const Array<double>& g)
 {
-  int qhatMax = Igrid.cellCount(0,0);
+//   int qhatMax = Igrid.cellCount(0,0);
   int cellDim = Igrid.cellDimension();
   Pair< int, int > PG(0, 0);
   Pair< int, int > PGnm1((cellDim - 1), 0);
@@ -765,7 +765,7 @@ void SFMpfaFps::ml_generateLocalBoundaryInverseMatrixAndRHS(const IRISDuneGridIn
   double deltaM;
   double f1Value;
   double f2Value;
-  double sum;
+//   double sum;
   //Array< Array< double > > H;
   //Array< double > HInner;
 
@@ -1381,7 +1381,7 @@ int SFMpfaFps::ml_getTransformSpaceNormalVectorLabel(const IRISDuneGridInterface
   //0 means that xi i.e. (1.0,0.0) is the normal vector, 
   //whereas 1 means that eta i.e. (0.0,1.0) is the normal vector.
 
-  int cellDim = Igrid.cellDimension();
+//   int cellDim = Igrid.cellDimension();
 
   RnPoint x0 = Igrid.getCentroid<IRISDuneGridInterface<DuneGridType>::VertexPointer>(qhatPt);
   RnPoint x1 = Igrid.getCentroid<IRISDuneGridInterface<DuneGridType>::ElementPointer>(ihatPt);
@@ -1453,7 +1453,7 @@ double SFMpfaFps::ml_computeTransformSpaceIntegralOfTensorComponents(const IRISD
   std::vector<IRISDuneGridInterface<DuneGridType>::FacePointer> actualnm1Neigh;
   actualnm1Neigh.reserve(2); //@HAF: OK???
   RnPoint x0, x1, x2, x3;
-  double x_xi, x_eta, y_xi, y_eta;
+//   double x_xi, x_eta, y_xi, y_eta;
 
   double b, c, d, e, IT11, IT22, IT12, IT21;
 

@@ -160,10 +160,10 @@ void SFCentralUpwind::computeFluxOutOfAllCells(const SFRelPerm& relPerm, const S
     {
       Array<int> rockType = PMPhysProp.getRockType();//@HAF: OK???
 
-      double TOL = 0.000001;
-      int cellDim = IGIPtr_->cellDimension();
+//       double TOL = 0.000001;
+//       int cellDim = IGIPtr_->cellDimension();
 
-      int numbOfEdges = IGIPtr_->cellCount(1,0); 
+//       int numbOfEdges = IGIPtr_->cellCount(1,0); 
       int numbOfElements = IGIPtr_->cellCount(0,0);
 
       //Initialization:
@@ -179,7 +179,7 @@ void SFCentralUpwind::computeFluxOutOfAllCells(const SFRelPerm& relPerm, const S
       
       RnPoint Mk, NVec, contrib;
       double dx_hk, uj1, uj2, veloKurg, totVelN, help, flux, flux_uj1, flux_uj2;
-      int j1, j2, dirInfo_j1, dirInfo_j2;
+      int j1, j2; //, dirInfo_j1, dirInfo_j2;
 
       for (IRISDuneGridInterface<DuneGridType>::ElementIterator ihatIt = IGIPtr_->setEntityPointerToFirst<IRISDuneGridInterface<DuneGridType>::ElementIterator>(0); ihatIt!=IGIPtr_->entityPointerIsAtEnd<IRISDuneGridInterface<DuneGridType>::ElementIterator>(0); ++ihatIt)
       {
@@ -283,10 +283,10 @@ void SFCentralUpwind::computeFluxOutOfAllCells(const SFRelPerm& relPerm, const S
       //*********************************************************
       //*********************************************************
 
-      double TOL = 0.000001;
-      int cellDim = IGIPtr_->cellDimension();
+//       double TOL = 0.000001;
+//       int cellDim = IGIPtr_->cellDimension();
 
-      int numbOfEdges = IGIPtr_->cellCount(1,0); 
+//       int numbOfEdges = IGIPtr_->cellCount(1,0); 
       int numbOfElements = IGIPtr_->cellCount(0,0);
 
       //Initialization:
@@ -300,7 +300,7 @@ void SFCentralUpwind::computeFluxOutOfAllCells(const SFRelPerm& relPerm, const S
       
       RnPoint Mk, NVec, contrib;
       double dx_hk, uj1, uj2, veloKurg, totVelN, help, flux, flux_uj1, flux_uj2;
-      int j1, j2, dirInfo_j1, dirInfo_j2;
+      int j1, j2;//, dirInfo_j1, dirInfo_j2;
 
       for (IRISDuneGridInterface<DuneGridType>::ElementIterator ihatIt = IGIPtr_->setEntityPointerToFirst<IRISDuneGridInterface<DuneGridType>::ElementIterator>(0); ihatIt!=IGIPtr_->entityPointerIsAtEnd<IRISDuneGridInterface<DuneGridType>::ElementIterator>(0); ++ihatIt)
       {
@@ -503,7 +503,7 @@ void SFCentralUpwind::ml_computeSaturationGradientArminjon(const SFSaturation& s
   //We must loop through each element. First we must find the actual number of element neighbours
   //surrounding the given element, and then implement the least square solution (Arminjon et al. (1997)).
 
-  double D, D1, D2, L_YG2, L_XG2, L_XGYG, L_UTXG, L_UTYG;
+  double D, L_YG2, L_XG2, L_XGYG, L_UTXG, L_UTYG;
   double XC, YC, XC2, YC2;
   RnPoint centroid, centroidN;
   RnPoint gradSat(saturationGrad_[0]);//@HAF: Just to initialize
@@ -739,8 +739,8 @@ void SFCentralUpwind::ml_MINMODLimitingOfSaturationGradients()
   std::vector<IRISDuneGridInterface<DuneGridType>::ElementPointer> elementNeigh;
   //elementNeigh.reserve(3);//@HAF: 15.01.2010, OK???
 
-  int numbOfElements = IGIPtr_->cellCount(0,0);
-  int idx, number;
+  // int numbOfElements = IGIPtr_->cellCount(0,0);
+  int number;
   double arg1, arg2, arg3, arg4;
 
   RnShape Rsh(IGIPtr_->domainDimension());

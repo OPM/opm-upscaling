@@ -284,7 +284,7 @@ void MeshSFSD::u_print_0u() const
 
   int r;
   int c;
-  double *dmp;
+  // double *dmp;
 
   if (m_domainDimension == 1)
   {
@@ -582,10 +582,10 @@ void MeshSFSD::u_mdivide_1u(const MeshSFSD &V)
 void MeshSFSD::u_mdivideBanded_1u(MeshSFSD &V) 
 {
   int nors = 1;
-  int r;
-  int c;
-  double *dmp;
-  double *smp;
+//   int r;
+//   int c;
+//   double *dmp;
+//   double *smp;
 
   int nCols = V.m_nCols;
   int numbSubDiag = V.m_numbSubDiag;

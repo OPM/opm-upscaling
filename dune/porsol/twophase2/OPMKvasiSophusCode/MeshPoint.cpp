@@ -93,7 +93,7 @@ MeshPoint::MeshPoint()
 
 //-----------------------------------------------------------------------------
 MeshPoint::MeshPoint(const MeshPoint& mp)   // MeshPoint1
-: shape(mp.shape), nsd(mp.nsd)
+: nsd(mp.nsd), shape(mp.shape)
 //-----------------------------------------------------------------------------
 {
     for (int i = 0; i < nsd; i++) ind[i] = mp.ind[i];
@@ -102,7 +102,7 @@ MeshPoint::MeshPoint(const MeshPoint& mp)   // MeshPoint1
 
 //-----------------------------------------------------------------------------
 MeshPoint::MeshPoint(const MeshShape& ms)   // MeshPoint2
-: shape(ms), nsd(ms.u_domainDimension_0u())
+: nsd(ms.u_domainDimension_0u()), shape(ms)
 //-----------------------------------------------------------------------------
 {
     for (int i = 0; i < nsd; i++) ind[i] = 0;
@@ -111,7 +111,7 @@ MeshPoint::MeshPoint(const MeshShape& ms)   // MeshPoint2
 
 //-----------------------------------------------------------------------------
 MeshPoint::MeshPoint(const MeshShape& ms, const int& def)   // MeshPoint3
-: shape(ms), nsd(ms.u_domainDimension_0u())
+: nsd(ms.u_domainDimension_0u()), shape(ms)
 //-----------------------------------------------------------------------------
 {
     for (int i = 0; i < nsd; i++) ind[i] = def;

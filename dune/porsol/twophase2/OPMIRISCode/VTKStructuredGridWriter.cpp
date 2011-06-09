@@ -282,7 +282,7 @@ void VTKStructuredGridWriter::writeDataSetAttributes(ostream& os) const {
   //os << "SCALARS scalars float" << endl;
   os << "LOOKUP_TABLE default" << endl;
 
-  const int no_elements_in_row = 5;   // format output somewhat
+  //  const int no_elements_in_row = 5;   // format output somewhat
 
   // assumes sorting of vals_ is identical to DuneGridType
   for (int i=0; i<no_values; ++i) {

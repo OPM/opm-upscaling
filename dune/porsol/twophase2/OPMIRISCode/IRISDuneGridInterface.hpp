@@ -932,8 +932,8 @@ template <class DuneGrid>
 typename IRISDuneGridInterface<DuneGrid>::ElementPointer
 IRISDuneGridInterface<DuneGrid>::getGlobalEntityPointerFromRelativeIndex(const IRISDuneGridInterface<DuneGrid>::VertexPointer & VtxP, const int& FaceRelIdx, const int& codimFace, const int& ElemRelIdx) const
 {
-  assert(FaceRelIdx<ElementNeighboursOfVertexThroughFaces_[mapperV_.map(*VtxP)].size() && codimFace==1
-         && ElemRelIdx<ElementNeighboursOfVertexThroughFaces_[mapperV_.map(*VtxP)][FaceRelIdx].size());
+  assert(FaceRelIdx < int(ElementNeighboursOfVertexThroughFaces_[mapperV_.map(*VtxP)].size()) && codimFace==1
+         && ElemRelIdx < int(ElementNeighboursOfVertexThroughFaces_[mapperV_.map(*VtxP)][FaceRelIdx].size()));
   return ElementNeighboursOfVertexThroughFaces_[mapperV_.map(*VtxP)][FaceRelIdx][ElemRelIdx];
 }
 

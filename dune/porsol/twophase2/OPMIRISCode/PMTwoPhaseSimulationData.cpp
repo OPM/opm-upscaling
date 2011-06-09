@@ -85,12 +85,12 @@ bool PMTwoPhaseSimulationData::ml_ReadSimInputData(const char *fn, TempSimInputD
 
         if ( strcmp(parName, "NameOfGridType") == 0)
         {
-          sscanf(inStr, "%s%s%s", parName, dummy, &tempSimData.NameOfGridType);
+          sscanf(inStr, "%s%s%s", parName, dummy, tempSimData.NameOfGridType);
         }
 
         else if ( strcmp(parName, "NameOfDGFFile") == 0)
         {
-          sscanf(inStr, "%s%s%s", parName, dummy, &tempSimData.NameOfDGFFile);
+          sscanf(inStr, "%s%s%s", parName, dummy, tempSimData.NameOfDGFFile);
         }
 
         else if ( strcmp(parName, "DiscretizationType") == 0)

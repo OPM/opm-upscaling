@@ -54,10 +54,10 @@ class SFPMPhysicalFieldProperties
   const PMTwoPhaseSimulationData* getSimulationDataPtr() const ;
 
   const Array<int>& getRockType() const ;
-  const Array<double>& getPermeability(const int& tensorComp) const ;
+  const Array<double>& getPermeability(const int tensorComp) const ;
   const Array<double>& getPorosity() const ;
-  double getViscosity(const int& phase) const ;
-  double getDensityGravity(const int& phase) const ;
+  double getViscosity(const int phase) const ;
+  double getDensityGravity(const int phase) const ;
 
   void operator=(const SFPMPhysicalFieldProperties& PMpp);
 

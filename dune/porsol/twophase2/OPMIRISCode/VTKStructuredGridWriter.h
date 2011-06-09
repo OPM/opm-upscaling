@@ -130,8 +130,8 @@ class VTKStructuredGridWriter {
   VTKCellType getVTKCellType(const int& no_nodes, const int& dim) const ;
 
   // prevent copying
-  VTKStructuredGridWriter(const VTKStructuredGridWriter&) {};
-  VTKStructuredGridWriter& operator=(const VTKStructuredGridWriter&) {};
+  VTKStructuredGridWriter(const VTKStructuredGridWriter&);
+  VTKStructuredGridWriter& operator=(const VTKStructuredGridWriter&);
 };
 
 

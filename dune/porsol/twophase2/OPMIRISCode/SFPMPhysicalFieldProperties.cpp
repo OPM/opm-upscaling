@@ -23,6 +23,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <stdexcept>
 
 //---------------------- Directives -------------------------------------------
 using namespace std;  // This leads to that all names in the namespace std may be 
@@ -72,7 +73,7 @@ const Array<int>& SFPMPhysicalFieldProperties::getRockType() const
 }
 
 
-const Array<double>& SFPMPhysicalFieldProperties::getPermeability(const int& tensorComp) const
+const Array<double>& SFPMPhysicalFieldProperties::getPermeability(const int tensorComp) const
 {
   //@HAF: Is the following implementation OK??? i.e. usable???
   if (IGIPtr_->domainDimension() == 2)
@@ -117,6 +118,7 @@ const Array<double>& SFPMPhysicalFieldProperties::getPermeability(const int& ten
       return Kyz_;
     }
   }
+  throw std::runtime_error("Error in call to getPermeability().");
 }
 
 
@@ -126,7 +128,7 @@ const Array<double>& SFPMPhysicalFieldProperties::getPorosity() const
 }
 
 
-double SFPMPhysicalFieldProperties::getViscosity(const int& phase) const
+double SFPMPhysicalFieldProperties::getViscosity(const int phase) const
 {
   /*
     sw is the water saturation.
@@ -139,7 +141,7 @@ double SFPMPhysicalFieldProperties::getViscosity(const int& phase) const
 }
 
 
-double SFPMPhysicalFieldProperties::getDensityGravity(const int& phase) const
+double SFPMPhysicalFieldProperties::getDensityGravity(const int phase) const
 {
   /*
     sw is the water saturation.

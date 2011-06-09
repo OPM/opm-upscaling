@@ -395,11 +395,11 @@ real RnPoint::u_dot_0u(const RnPoint& tp) const
 //    result is kept in this object.
 //
 //              C
-//             /\
-//            /  \
-//           /    \
-//          /      \
-//         /________\
+//             /\                    .
+//            /  \                   .
+//           /    \                  .
+//          /      \                 .
+//         /________\                .
 //        A          B
 //
 //    vecAB x vecAC = [x1,y1,z1] x [x2,y2,z2] =
