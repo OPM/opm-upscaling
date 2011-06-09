@@ -19,9 +19,7 @@
 
 
 
-#if HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include "config.h"
 
 #include <dune/porsol/blackoil/BlackoilSimulator.hpp>
 #include <dune/common/mpihelper.hh>

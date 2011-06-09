@@ -40,10 +40,6 @@
 // mangling scheme and subsequently defining the macros 'F77_FUNC' and
 // 'F77_FUNC_'.
 
-#if HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #ifdef F77_NAME
 #undef F77_NAME
 #endif

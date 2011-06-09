@@ -33,6 +33,8 @@
   along with OpenRS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "config.h"
+
 #include "../RockJfunc.hpp"
 #include <dune/porsol/common/Matrix.hpp>
 #include <dune/common/Units.hpp>
