@@ -32,4 +32,5 @@ missing
 
 # Ignoring executables
 *_test
-bo_fluid_pressuredeps
+dune/porsol/blackoil/test/bo_fluid_pressuredeps
+dune/porsol/blackoil/test/bo_fluid_p_and_z_deps

@@ -2,11 +2,12 @@
 # $Revision$
 
 check_PROGRAMS =
-noinst_PROGRAMS = bo_fluid_test bo_well_test bo_fluid_pressuredeps
+noinst_PROGRAMS = bo_fluid_test bo_well_test bo_fluid_pressuredeps bo_fluid_p_and_z_deps
 
 bo_fluid_test_SOURCES = bo_fluid_test.cpp
 bo_fluid_pressuredeps_SOURCES = bo_fluid_pressuredeps.cpp
 bo_well_test_SOURCES = bo_well_test.cpp
+bo_fluid_p_and_z_deps_SOURCES = bo_fluid_p_and_z_deps.cpp
 
 
 AM_CPPFLAGS += $(DUNEMPICPPFLAGS) $(BOOST_CPPFLAGS) $(ALUGRID_CPPFLAGS) $(SUPERLU_CPPFLAGS)
