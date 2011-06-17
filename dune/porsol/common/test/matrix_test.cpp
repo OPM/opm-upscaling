@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "config.h"
 
 #define BOOST_TEST_DYN_LINK
 #define NVERBOSE // to suppress our messages when throwing
