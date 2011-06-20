@@ -282,8 +282,13 @@ init(const Dune::parameter::ParameterGroup& param)
         param.displayUsage();
     }
 
-    // Write parameters used to file.
-    param.writeParam(output_dir_ + "/simulator-parameters.param");
+    // Write parameters used to file, ensuring directory exists.
+    std::string paramfilename = output_dir_ + "/simulator-parameters.param";
+    boost::filesystem::path fpath(paramfilename);
+    if (fpath.has_branch_path()) {
+        create_directories(fpath.branch_path());
+    }
+    param.writeParam(paramfilename);
 }
 
 
