@@ -387,7 +387,10 @@ simulate()
         // If using given timesteps, set stepsize to match.
         if (!report_times_.empty()) {
             if (current_time >= report_times_[step]) {
-                output(grid_, fluid_, state_, face_flux, step, output_name);
+                bool output_now = ((step + 1) % output_interval_ == 0);
+                if (output_now) {
+                    output(grid_, fluid_, state_, face_flux, step, output_name);
+                }
                 ++step;
                 if (step == int(report_times_.size())) {
                     break;
