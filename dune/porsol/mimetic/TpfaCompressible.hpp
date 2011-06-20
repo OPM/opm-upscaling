@@ -410,7 +410,7 @@ namespace Dune
                                const std::vector<typename FluidInterface::CompVec>& cell_z,
                                const double dt)
         {
-            fp_.compute(*pgrid_, *prock_, *pfluid_, gravity_, phase_pressure, phase_pressure_face, cell_z, inflow_mixture_, dt);
+            fp_.computeNew(*pgrid_, *prock_, *pfluid_, gravity_, phase_pressure, phase_pressure_face, cell_z, inflow_mixture_, dt);
             // Properties at well perforations.
             // \TODO only need to recompute this once per pressure update.
             // No, that is false, at production perforations the cell z is
