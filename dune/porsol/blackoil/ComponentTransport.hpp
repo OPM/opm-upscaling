@@ -206,7 +206,7 @@ private: // Methods
         }
         data.fractional_flow = state.mobility_;
         data.fractional_flow /= total_mobility;
-        std::copy(state.phase_to_comp_, state.phase_to_comp_ + numComponents*numPhases,
+        std::copy(&state.phase_to_comp_[0][0], &state.phase_to_comp_[0][0] + numComponents*numPhases,
                   &data.phase_to_comp[0][0]);
         data.relperm = state.relperm_;
         data.viscosity = state.viscosity_;
