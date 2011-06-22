@@ -87,6 +87,7 @@ namespace Opm
         double maximum_stepsize_;
         std::vector<double> report_times_;
         bool do_impes_;
+        bool ignore_impes_stability_;
         std::string output_dir_;
         int output_interval_;
 
@@ -167,6 +168,9 @@ init(const Dune::parameter::ParameterGroup& param)
     }
     minimum_stepsize_ = param.getDefault("minimum_stepsize", 0.0);
     do_impes_ = param.getDefault("do_impes", false);
+    if (do_impes_) {
+        ignore_impes_stability_ = param.getDefault("ignore_impes_stability", false);
+    }
     output_dir_ = param.getDefault<std::string>("output_dir", "output");
     output_interval_ = param.getDefault("output_interval", 1);
 
@@ -358,7 +362,7 @@ simulate()
             }
         } else {
             // First check IMPES stepsize.
-            double max_dt = flow_solver_.stableStepIMPES();
+            double max_dt = ignore_impes_stability_ ? 1e100 : flow_solver_.stableStepIMPES();
             std::cout << "Timestep was " << stepsize << " and max stepsize was " << max_dt << std::endl;
             if (stepsize < max_dt || stepsize <= minimum_stepsize_) {
                 flow_solver_.doStepIMPES(state_.cell_z_, stepsize);
