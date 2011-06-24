@@ -1308,7 +1308,6 @@ int main(int varnum, char** vararg)
        outputtmp << "######################################################################" << endl;
        outputtmp << "# Results from upscaling relative permeability."<< endl;
        outputtmp << "#" << endl;
-       outputtmp << "# Version: $Id: upscale_relperm.C 500 2010-05-12 06:52:47Z havb $"  << endl;
 #if USEMPI
        outputtmp << "#          (MPI-version)" << endl;
 #endif
