@@ -212,7 +212,7 @@ int main(int varnum, char** vararg)
    eclipsefile.close(); 
 
    cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... " << endl;
-   EclipseGridParser eclParser(ECLIPSEFILENAME);
+   EclipseGridParser eclParser(ECLIPSEFILENAME, false);
    
    // Check that we have the information we need from the eclipse file:  
    if (! (eclParser.hasField("SPECGRID") && eclParser.hasField("COORD") && eclParser.hasField("ZCORN")  
