@@ -1000,7 +1000,6 @@ int main(int varnum, char** vararg)
        outputtmp << "######################################################################" << endl;
        outputtmp << "# Results from upscaling resistivity."<< endl;
        outputtmp << "#" << endl;
-       outputtmp << "# OPM version" << endl;
 #if USEMPI
        outputtmp << "#          (MPI-version)" << endl;
 #endif

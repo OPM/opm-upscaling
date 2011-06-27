@@ -315,8 +315,6 @@ int main(int varnum, char** vararg) {
     outputtmp << "###############################################################################" << endl;
     outputtmp << "# Results from upscaling permeability."<< endl;
     outputtmp << "#" << endl;
-    outputtmp << "# OPM version" << endl;
-    outputtmp << "# Version: $Id: upscale_perm.C 500 2010-05-12 06:52:47Z havb $" << endl;
     time_t now = time(NULL);
     outputtmp << "# Finished: " << asctime(localtime(&now));
     utsname hostname; uname(&hostname);

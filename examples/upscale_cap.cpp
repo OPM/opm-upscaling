@@ -212,7 +212,7 @@ int main(int varnum, char** vararg)
    eclipsefile.close(); 
 
    cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... " << endl;
-   EclipseGridParser eclParser(ECLIPSEFILENAME);
+   EclipseGridParser eclParser(ECLIPSEFILENAME, false);
    
    // Check that we have the information we need from the eclipse file:  
    if (! (eclParser.hasField("SPECGRID") && eclParser.hasField("COORD") && eclParser.hasField("ZCORN")  
@@ -612,7 +612,6 @@ int main(int varnum, char** vararg)
    outputtmp << "######################################################################" << endl;
    outputtmp << "# Results from upscaling capillary pressure and water saturations."<< endl;
    outputtmp << "#" << endl;
-   outputtmp << "# Version: $Id: upscale_cap.C 388 2008-10-24 08:14:21Z havb $"  << endl;
    time_t now = std::time(NULL);
    outputtmp << "# Finished: " << asctime(localtime(&now));
    
