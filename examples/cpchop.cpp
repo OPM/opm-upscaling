@@ -99,8 +99,9 @@ int main(int argc, char** argv)
 
     // Seed the random number generators with the current time, unless specified on command line
     // Warning: Current code does not allow 0 for the seed!!
+    boost::mt19937::result_type autoseed = time(NULL);
     if (userseed == 0) {
-        gen.seed(time(NULL));
+        gen.seed(autoseed);
     }
     else {
         gen.seed(userseed);
@@ -272,6 +273,12 @@ int main(int argc, char** argv)
     outputtmp << "#   j; min,len,max: " << jmin << " " << jlen << " " << jmax << std::endl;
     outputtmp << "#   z; min,len,max: " << zmin << " " << zlen << " " << zmax << std::endl;
     outputtmp << "#       subsamples: " << subsamples << std::endl;
+    if (userseed == 0) {
+        outputtmp << "#      (auto) seed: " << autoseed << std::endl;
+    }
+    else {
+        outputtmp << "#    (manual) seed: " << userseed << std::endl; 
+    }        
     outputtmp << "################################################################################################" << std::endl;
     outputtmp << "# id";
     if (upscale) {
