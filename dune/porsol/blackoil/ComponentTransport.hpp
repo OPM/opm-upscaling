@@ -173,13 +173,47 @@ private: // Data
     const Wells* pwells_;
     const std::vector<double>* ptrans_;
     typename Grid::Vector gravity_;
-    typename Fluid::FluidData fluid_data_;
+
+    struct AllTransportFluidData : public Opm::AllFluidData
+    {
+        std::vector<double> total_mobility;
+        std::vector<PhaseVec> fractional_flow;
+
+        template <class G, class R>
+        void computeNew(const G& grid,
+                        const R& rock,
+                        const BlackoilFluid& fluid,
+                        const typename Grid::Vector gravity,
+                        const std::vector<PhaseVec>& cell_pressure,
+                        const std::vector<PhaseVec>& face_pressure,
+                        const std::vector<CompVec>& cell_z,
+                        const CompVec& bdy_z,
+                        const double dt)
+        {
+            Opm::AllFluidData::computeNew(grid, rock, fluid, gravity,
+                                          cell_pressure, face_pressure,
+                                          cell_z, bdy_z, dt);
+            int num = grid.numCells();
+            total_mobility.resize(num);
+            fractional_flow.resize(num);
+#pragma omp parallel for
+            for (int i = 0; i < num; ++i) {
+                total_mobility[i] = 0.0;
+                for (int phase = 0; phase < numPhases; ++phase) {
+                    total_mobility[i] += cell_data.mobility[i][phase];
+                }
+                fractional_flow[i] = cell_data.mobility[i];
+                fractional_flow[i] *= (1.0/total_mobility[i]);
+            }
+        }
+    };
+    AllTransportFluidData fluid_data_;
     struct TransportFluidData
     {
         PhaseVec saturation;
         PhaseVec mobility;
         PhaseVec fractional_flow;
-        std::tr1::array<CompVec, numPhases> phase_to_comp;
+        PhaseToCompMatrix phase_to_comp;
         PhaseVec relperm;
         PhaseVec viscosity;
     };
@@ -206,8 +240,7 @@ private: // Methods
         }
         data.fractional_flow = state.mobility_;
         data.fractional_flow /= total_mobility;
-        std::copy(&state.phase_to_comp_[0][0], &state.phase_to_comp_[0][0] + numComponents*numPhases,
-                  &data.phase_to_comp[0][0]);
+        data.phase_to_comp = state.phase_to_comp_;
         data.relperm = state.relperm_;
         data.viscosity = state.viscosity_;
         return data;
@@ -221,8 +254,8 @@ private: // Methods
     {
         // Properties in reservoir.
         const double dummy_dt = 1.0;
-        fluid_data_.compute(*pgrid_, *prock_, *pfluid_, gravity_,
-                            cell_pressure, face_pressure, cell_z, external_composition, dummy_dt);
+        fluid_data_.computeNew(*pgrid_, *prock_, *pfluid_, gravity_,
+                               cell_pressure, face_pressure, cell_z, external_composition, dummy_dt);
 
         // Properties on boundary. \TODO no need to ever recompute this.
         bdy_ = computeProps(external_pressure, external_composition);
@@ -253,16 +286,12 @@ private: // Methods
 
     void cellData(int cell, TransportFluidData& tfd) const
     {
-        tfd.saturation = fluid_data_.saturation[cell];
-        tfd.mobility = fluid_data_.rel_perm[cell];
-        for (int phase = 0; phase < numPhases; ++phase) {
-            tfd.mobility[phase] /= fluid_data_.viscosity[cell][phase];
-        }
-        tfd.fractional_flow = fluid_data_.frac_flow[cell];
-        const double* A = &fluid_data_.cellA[cell*numComponents*numPhases];
-        std::copy(A, A + numComponents*numPhases, &tfd.phase_to_comp[0][0]);
-        tfd.relperm = fluid_data_.rel_perm[cell];
-        tfd.viscosity = fluid_data_.viscosity[cell];
+        tfd.saturation = fluid_data_.cell_data.saturation[cell];
+        tfd.mobility = fluid_data_.cell_data.mobility[cell];
+        tfd.fractional_flow = tfd.fractional_flow[cell];
+        tfd.phase_to_comp = fluid_data_.cell_data.state_matrix[cell];
+        tfd.relperm = fluid_data_.cell_data.relperm[cell];
+        tfd.viscosity = fluid_data_.cell_data.viscosity[cell];
     }
 
 
@@ -302,10 +331,10 @@ private: // Methods
         for (int face = 0; face < num_faces; ++face) {
             // Compute phase densities on face.
             PhaseVec phase_dens(0.0);
-            for (int phase = 0; phase < 3; ++phase) {
-                const double* At = &fluid_data_.faceA[9*face]; // Already transposed since in Fortran order...
-                for (int comp = 0; comp < 3; ++comp) {
-                    phase_dens[phase] += At[3*phase + comp]*surf_dens[comp];
+            for (int phase = 0; phase < numPhases; ++phase) {
+                const double* At = &fluid_data_.faceA[face][0][0]; // Already transposed since in Fortran order...
+                for (int comp = 0; comp < numPhases; ++comp) {
+                    phase_dens[phase] += At[numPhases*phase + comp]*surf_dens[comp];
                 }
             }
             // Collect data from adjacent cells (or boundary).
@@ -368,7 +397,7 @@ private: // Methods
                 double downwind_totmob = 0.0;
                 double upwind_totmob = 0.0;
                 for (int phase = 0; phase < numPhases; ++phase) {
-                    downwind_mob[phase] = fluid_data_.rel_perm[downwind_cell][phase]/upwind_viscosity[phase];
+                    downwind_mob[phase] = fluid_data_.cell_data.relperm[downwind_cell][phase]/upwind_viscosity[phase];
                     downwind_totmob += downwind_mob[phase];
                     upwind_mob[phase] = upwind_relperm[phase]/upwind_viscosity[phase];
                     upwind_totmob += upwind_mob[phase];
@@ -382,7 +411,7 @@ private: // Methods
                 for (int phase = 0; phase < numPhases; ++phase) {
                     if (std::fabs(ff_diff[phase]) > 1e-10) {
                         if (face_flux[face] != 0.0) {
-                            double ff_deriv = ff_diff[phase]/(upwind_sat[phase] - fluid_data_.saturation[downwind_cell][phase]);
+                            double ff_deriv = ff_diff[phase]/(upwind_sat[phase] - fluid_data_.cell_data.saturation[downwind_cell][phase]);
                             // ASSERT(ff_deriv >= 0.0);
                             face_max_ff_deriv = std::max(face_max_ff_deriv, std::fabs(ff_deriv));
                         }
@@ -434,7 +463,7 @@ private: // Methods
             // For injection, phase volumes depend on fractional
             // flow of injection perforation, for production we
             // use the fractional flow of the producing cell.
-            PhaseVec phase_flux = flow > 0.0 ? fl.fractional_flow : fluid_data_.frac_flow[cell];
+            PhaseVec phase_flux = flow > 0.0 ? fl.fractional_flow : fluid_data_.fractional_flow[cell];
             phase_flux *= flow;
             // Conversion to mass flux is given at perforation state
             // if injector, cell state if producer (this is ensured by
