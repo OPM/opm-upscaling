@@ -22,6 +22,7 @@
 
 
 #include "../opmpressure/src/TPFACompressiblePressureSolver.hpp"
+#include <dune/porsol/blackoil/BlackoilFluid.hpp>
 
 #include <dune/common/ErrorMacros.hpp>
 #include <dune/common/SparseTable.hpp>
@@ -336,9 +337,9 @@ namespace Dune
         /// Call this function after solve().
         double stableStepIMPES()
         {
-            return psolver_.explicitTimestepLimit(fp_.faceA,
-                                                  fp_.phasemobf,
-                                                  fp_.phasemobf_deriv,
+            return psolver_.explicitTimestepLimit(&fp_.faceA[0][0][0],
+                                                  &fp_.phasemobf[0][0],
+                                                  &fp_.phasemobf_deriv[0][0][0],
                                                   &(pfluid_->surfaceDensities()[0]));
         }
 
@@ -359,7 +360,8 @@ namespace Dune
         const FluidInterface* pfluid_;
         const WellsInterface* pwells_;
         typename GridInterface::Vector gravity_;
-        typename FluidInterface::FluidData fp_;
+        // typename FluidInterface::FluidData fp_;
+        Opm::AllFluidData fp_;
         std::vector<double> poro_;
         PressureSolver psolver_;
         LinearSolverISTL linsolver_;
@@ -488,11 +490,12 @@ namespace Dune
         {
             std::vector<double> zero(initial_voldiscr.size(), 0.0);
             // Assemble system matrix and rhs.
-            psolver_.assemble(src, bctypes_, bcvalues_, dt,
-                              fp_.totcompr, zero, fp_.cellA, fp_.faceA,
-                              perf_A_, fp_.phasemobf, perf_mob_,
-                              cell_pressure_scalar_initial, fp_.gravcapf,
-                              perf_gpot_, &(pfluid_->surfaceDensities()[0]));
+            psolver_.assemble(&src[0], &bctypes_[0], &bcvalues_[0], dt,
+                              &fp_.cell_data.total_compressibility[0], &zero[0],
+                              &fp_.cell_data.state_matrix[0][0][0], &fp_.faceA[0][0][0],
+                              &perf_A_[0], &fp_.phasemobf[0][0], &perf_mob_[0],
+                              &cell_pressure_scalar_initial[0], &fp_.gravcapf[0][0],
+                              &perf_gpot_[0], &(pfluid_->surfaceDensities()[0]));
             psolver_.linearSystem(linsys);
             // The linear system is for direct evaluation, we want a residual based approach.
             // First we compute the residual for the original code.
@@ -503,8 +506,9 @@ namespace Dune
             // Then we compute the residual we actually want by subtracting terms that do not
             // appear in the new formulation and adding the new terms.
             for (int cell = 0; cell < num_cells; ++cell) {
-                double dres = fp_.totcompr[cell]*(cell_pressure_scalar[cell] - cell_pressure_scalar_initial[cell]);
-                dres -= 1.0 - fp_.totphasevol_density[cell];
+                double tc = fp_.cell_data.total_compressibility[cell];
+                double dres = tc*(cell_pressure_scalar[cell] - cell_pressure_scalar_initial[cell]);
+                dres -= 1.0 - fp_.cell_data.total_phase_volume_density[cell];
                 dres *= pgrid_->cellVolume(cell)*prock_->porosity(cell)/dt;
                 res[cell] -= dres;
             }
@@ -512,8 +516,10 @@ namespace Dune
             for (int cell = 0; cell < num_cells; ++cell) {
                 for (int i = linsys.ia[cell]; i < linsys.ia[cell + 1]; ++i) {
                     if  (linsys.ja[i] == cell) {
-                        linsys.sa[i] -= fp_.totcompr[cell]*pgrid_->cellVolume(cell)*prock_->porosity(cell)/dt;
-                        linsys.sa[i] += fp_.expjacterm[cell]*pgrid_->cellVolume(cell)*prock_->porosity(cell)/dt;
+                        double tc = fp_.cell_data.total_compressibility[cell];
+                        linsys.sa[i] -= tc*pgrid_->cellVolume(cell)*prock_->porosity(cell)/dt;
+                        double ex = fp_.cell_data.experimental_term[cell];
+                        linsys.sa[i] += ex*pgrid_->cellVolume(cell)*prock_->porosity(cell)/dt;
                     }
                 }
             }
@@ -738,11 +744,12 @@ namespace Dune
                     }
                 } else {
                     // Assemble system matrix and rhs.
-                    psolver_.assemble(src, bctypes_, bcvalues_, dt,
-                                      fp_.totcompr, voldiscr_initial, fp_.cellA, fp_.faceA,
-                                      perf_A_, fp_.phasemobf, perf_mob_,
-                                      cell_pressure_initial, fp_.gravcapf,
-                                      perf_gpot_, &(pfluid_->surfaceDensities()[0]));
+                    psolver_.assemble(&src[0], &bctypes_[0], &bcvalues_[0], dt,
+                                      &fp_.cell_data.total_compressibility[0], &voldiscr_initial[0],
+                                      &fp_.cell_data.state_matrix[0][0][0], &fp_.faceA[0][0][0],
+                                      &perf_A_[0], &fp_.phasemobf[0][0], &perf_mob_[0],
+                                      &cell_pressure_initial[0], &fp_.gravcapf[0][0],
+                                      &perf_gpot_[0], &(pfluid_->surfaceDensities()[0]));
                     PressureSolver::LinearSystem s;
                     psolver_.linearSystem(s);
                     // Solve system.
