@@ -99,6 +99,8 @@ void usage()
         "If only one stone-file is supplied, it is used for all stone-types defined" << endl <<
         "in the geometry. If more than one, it corresponds to the SATNUM-values." << endl;
     // "minPoro" intentionally left undocumented
+    // "saturationThreshold"  also
+
 }
 
 
@@ -132,6 +134,7 @@ int main(int varnum, char** vararg)
    options.insert(make_pair("maxPermContrast",    "1e7")); // maximum allowed contrast in each single-phase computation
    options.insert(make_pair("minPerm",            "1e-12")); // absoluted minimum allowed minimal cell permeability
    options.insert(make_pair("minPoro",            "0.0001")); // this limit is necessary for pcmin/max computation
+   options.insert(make_pair("saturationThreshold","0.00001")); // accuracy threshold for saturation, we ignore Pc values that
 
    // Conversion factor, multiply mD numbers with this to get m² numbers
    const double milliDarcyToSqMetre = 9.869233e-16;
@@ -230,6 +233,7 @@ int main(int varnum, char** vararg)
    const double maxPermContrast = atof(options["maxPermContrast"].c_str());
    const double minPerm = atof(options["minPerm"].c_str());
    const double minPoro = atof(options["minPoro"].c_str());
+   const double saturationThreshold = atof(options["saturationThreshold"].c_str());
    bool zerosatnumcells = false; // This is set true if there are some cells with rocktype zero.
 
    /* Sanity check/fix on input for each cell:
