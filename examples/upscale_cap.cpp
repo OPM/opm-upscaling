@@ -576,6 +576,14 @@ int main(int varnum, char** vararg)
    }
    //cout << WaterSaturationVsCapPressure.toString() << endl;
 
+   // Now, it may happen that we have a large number of cells, and
+   // some cells with near zero poro and perm. This may cause that
+   // Pcmax has been estimated so high that it does not affect Sw
+   // within machine precision, and then we need to truncate the
+   // largest Pc values:
+   WaterSaturationVsCapPressure.chopFlatEndpoints(saturationThreshold);
+
+
    // Now we can also invert the upscaled water saturation
    // (it should be monotonic)
    if (!WaterSaturationVsCapPressure.isStrictlyMonotone()) {
