@@ -332,7 +332,7 @@ private: // Methods
             // Compute phase densities on face.
             PhaseVec phase_dens(0.0);
             for (int phase = 0; phase < numPhases; ++phase) {
-                const double* At = &fluid_data_.faceA[face][0][0]; // Already transposed since in Fortran order...
+                const double* At = &fluid_data_.face_data.state_matrix[face][0][0]; // Already transposed since in Fortran order...
                 for (int comp = 0; comp < numPhases; ++comp) {
                     phase_dens[phase] += At[numPhases*phase + comp]*surf_dens[comp];
                 }

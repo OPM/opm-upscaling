@@ -337,9 +337,9 @@ namespace Dune
         /// Call this function after solve().
         double stableStepIMPES()
         {
-            return psolver_.explicitTimestepLimit(&fp_.faceA[0][0][0],
-                                                  &fp_.phasemobf[0][0],
-                                                  &fp_.phasemobf_deriv[0][0][0],
+            return psolver_.explicitTimestepLimit(&fp_.face_data.state_matrix[0][0][0],
+                                                  &fp_.face_data.mobility[0][0],
+                                                  &fp_.face_data.mobility_deriv[0][0][0],
                                                   &(pfluid_->surfaceDensities()[0]));
         }
 
@@ -490,12 +490,21 @@ namespace Dune
         {
             std::vector<double> zero(initial_voldiscr.size(), 0.0);
             // Assemble system matrix and rhs.
-            psolver_.assemble(&src[0], &bctypes_[0], &bcvalues_[0], dt,
-                              &fp_.cell_data.total_compressibility[0], &zero[0],
-                              &fp_.cell_data.state_matrix[0][0][0], &fp_.faceA[0][0][0],
-                              &perf_A_[0], &fp_.phasemobf[0][0], &perf_mob_[0],
-                              &cell_pressure_scalar_initial[0], &fp_.gravcapf[0][0],
-                              &perf_gpot_[0], &(pfluid_->surfaceDensities()[0]));
+            psolver_.assemble(&src[0],
+                              &bctypes_[0],
+                              &bcvalues_[0],
+                              dt,
+                              &fp_.cell_data.total_compressibility[0],
+                              &zero[0],
+                              &fp_.cell_data.state_matrix[0][0][0],
+                              &fp_.face_data.state_matrix[0][0][0],
+                              &perf_A_[0],
+                              &fp_.face_data.mobility[0][0],
+                              &perf_mob_[0],
+                              &cell_pressure_scalar_initial[0],
+                              &fp_.face_data.gravity_potential[0][0],
+                              &perf_gpot_[0],
+                              &(pfluid_->surfaceDensities()[0]));
             psolver_.linearSystem(linsys);
             // The linear system is for direct evaluation, we want a residual based approach.
             // First we compute the residual for the original code.
@@ -744,12 +753,21 @@ namespace Dune
                     }
                 } else {
                     // Assemble system matrix and rhs.
-                    psolver_.assemble(&src[0], &bctypes_[0], &bcvalues_[0], dt,
-                                      &fp_.cell_data.total_compressibility[0], &voldiscr_initial[0],
-                                      &fp_.cell_data.state_matrix[0][0][0], &fp_.faceA[0][0][0],
-                                      &perf_A_[0], &fp_.phasemobf[0][0], &perf_mob_[0],
-                                      &cell_pressure_initial[0], &fp_.gravcapf[0][0],
-                                      &perf_gpot_[0], &(pfluid_->surfaceDensities()[0]));
+                    psolver_.assemble(&src[0],
+                                      &bctypes_[0],
+                                      &bcvalues_[0],
+                                      dt,
+                                      &fp_.cell_data.total_compressibility[0],
+                                      &voldiscr_initial[0],
+                                      &fp_.cell_data.state_matrix[0][0][0],
+                                      &fp_.face_data.state_matrix[0][0][0],
+                                      &perf_A_[0],
+                                      &fp_.face_data.mobility[0][0],
+                                      &perf_mob_[0],
+                                      &cell_pressure_initial[0],
+                                      &fp_.face_data.gravity_potential[0][0],
+                                      &perf_gpot_[0],
+                                      &(pfluid_->surfaceDensities()[0]));
                     PressureSolver::LinearSystem s;
                     psolver_.linearSystem(s);
                     // Solve system.
