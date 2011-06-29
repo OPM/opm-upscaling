@@ -99,7 +99,6 @@ void usage()
         "If only one stone-file is supplied, it is used for all stone-types defined" << endl <<
         "in the geometry. If more than one, it corresponds to the SATNUM-values." << endl;
     // "minPoro" intentionally left undocumented
-    // "saturationThreshold"  also
 
 }
 
@@ -134,7 +133,6 @@ int main(int varnum, char** vararg)
    options.insert(make_pair("maxPermContrast",    "1e7")); // maximum allowed contrast in each single-phase computation
    options.insert(make_pair("minPerm",            "1e-12")); // absoluted minimum allowed minimal cell permeability
    options.insert(make_pair("minPoro",            "0.0001")); // this limit is necessary for pcmin/max computation
-   options.insert(make_pair("saturationThreshold","0.00001")); // accuracy threshold for saturation, we ignore Pc values that
 
    // Conversion factor, multiply mD numbers with this to get m² numbers
    const double milliDarcyToSqMetre = 9.869233e-16;
@@ -233,7 +231,6 @@ int main(int varnum, char** vararg)
    const double maxPermContrast = atof(options["maxPermContrast"].c_str());
    const double minPerm = atof(options["minPerm"].c_str());
    const double minPoro = atof(options["minPoro"].c_str());
-   const double saturationThreshold = atof(options["saturationThreshold"].c_str());
    bool zerosatnumcells = false; // This is set true if there are some cells with rocktype zero.
 
    /* Sanity check/fix on input for each cell:
@@ -578,24 +575,17 @@ int main(int varnum, char** vararg)
        }
 
    }
-   //cout << WaterSaturationVsCapPressure.toString() << endl;
 
-   // Now, it may happen that we have a large number of cells, and
-   // some cells with near zero poro and perm. This may cause that
-   // Pcmax has been estimated so high that it does not affect Sw
-   // within machine precision, and then we need to truncate the
-   // largest Pc values:
-   WaterSaturationVsCapPressure.chopFlatEndpoints(saturationThreshold);
-
-
-   // Now we can also invert the upscaled water saturation
-   // (it should be monotonic)
+   // Check if the saturation vs cap pressure curve is monotone
+   // If not, it would have been a problem for upscale_relperm, but
+   // it is not as critical here, so we only issue a warning
+   // (upscale_relperm solves this by issung chopFlatEndpoints and possibly shrinkFlatAreas, 
+   // but this is trickier to implement in this code due to watersaturation_rocktype[satidx])
    if (!WaterSaturationVsCapPressure.isStrictlyMonotone()) {
        {
-           cerr << "Error: Upscaled water saturation not strictly monotone in capillary pressure." << endl;
-           cerr << "       Unphysical input data, exiting." << endl;
+           cerr << "Warning: Upscaled water saturation not strictly monotone in capillary pressure." << endl;
+           cerr << "         Unphysical input data?." << endl;
        }
-       usageandexit();
    }
    MonotCubicInterpolator CapPressureVsWaterSaturation(WaterSaturationVsCapPressure.get_fVector(), 
                                                        WaterSaturationVsCapPressure.get_xVector());
@@ -610,14 +600,13 @@ int main(int varnum, char** vararg)
     */
    vector<double> Pvalues = WaterSaturationVsCapPressure.get_xVector(); 
    vector<double> Satvalues = WaterSaturationVsCapPressure.get_fVector(); 
-
+   
    vector<vector<double> > watersaturation_rocktype_values;
    vector<double> tmp;
    watersaturation_rocktype_values.push_back(tmp); // dummy zero index element
    for (unsigned int satidx=1; satidx <= maxSatnum; ++satidx) {
        watersaturation_rocktype_values.push_back(watersaturation_rocktype[satidx].get_fVector());
    }
-
    stringstream outputtmp;
    
    // Print a table of all computed values:
@@ -629,7 +618,7 @@ int main(int varnum, char** vararg)
    
    utsname hostname;   uname(&hostname);
    outputtmp << "# Hostname: " << hostname.nodename << endl;
-   
+
    outputtmp << "#" << endl;
    outputtmp << "# Eclipse file: " << ECLIPSEFILENAME << endl;
    outputtmp << "#        cells: " << tesselatedCells << endl;
@@ -648,7 +637,7 @@ int main(int varnum, char** vararg)
    outputtmp << "#          surfaceTension: " << options["surfaceTension"] << endl;   
    outputtmp << "######################################################################" << endl;
    outputtmp << "#         Pc (Pa)         Sw              Sw1           Sw2       Sw3 etc.." << endl; 
-
+   
    
   // If user wants interpolated output, do monotone cubic interpolation
    // by modifying the data vectors that are to be printed
@@ -672,7 +661,7 @@ int main(int varnum, char** vararg)
        // Now capillary pressure and computed relperm-values must be viewed as functions
        // of saturation, and then interpolated on the uniform saturation grid.
 
-       // Now overwrite existing Pvalues and relperm-data with interpolated data:
+       // Now overwrite existing Pvalues and saturation-data with interpolated data:
        MonotCubicInterpolator PvaluesVsSaturation(Satvalues, Pvalues);
        Pvalues.clear();
        for (int i = 0; i < interpolationPoints; ++i) {
@@ -695,7 +684,6 @@ int main(int varnum, char** vararg)
    for (unsigned int i=0; i < Satvalues.size(); ++i) {
        outputtmp << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Pvalues[i]; 
        outputtmp << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Satvalues[i]; 
-       
        for (unsigned int satidx = 1; satidx <= maxSatnum; ++satidx) { 
            outputtmp << showpoint << setw(fieldwidth) << setprecision(outputprecision) 
                      << watersaturation_rocktype_values[satidx][i]; 
