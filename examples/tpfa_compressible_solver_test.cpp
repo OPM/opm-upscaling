@@ -122,10 +122,10 @@ void test_flowsolver(const Grid& grid,
             face_pressure[face] /= double(num);
         }
     }
-    std::vector<double> face_flux, well_pressure, well_flux;
+    std::vector<double> face_flux, well_bhp_pressure, well_perf_pressure, well_flux;
 
     // Solve flow system.
-    solver.solve(cell_pressure, face_pressure, z, face_flux, well_pressure, well_flux, src, dt);
+    solver.solve(cell_pressure, face_pressure, z, face_flux, well_bhp_pressure, well_perf_pressure, well_flux, src, dt);
 
     // Output to VTK.
     std::vector<typename Grid::Vector> cell_velocity;

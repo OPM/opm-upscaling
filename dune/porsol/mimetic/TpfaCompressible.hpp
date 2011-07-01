@@ -280,6 +280,7 @@ namespace Dune
                          std::vector<typename FluidInterface::PhaseVec>& face_pressure,
                          const std::vector<typename FluidInterface::CompVec>& cell_z,
                          std::vector<double>& face_flux,
+                         std::vector<double>& well_bhp_pressures,
                          std::vector<double>& well_perf_pressures,
                          std::vector<double>& well_perf_fluxes,
                          const std::vector<double>& src,
@@ -301,6 +302,7 @@ namespace Dune
             }
             state.face_flux.clear();
             state.face_flux.resize(num_faces);
+            state.well_bhp_pressure = well_bhp_pressures;
             state.well_perf_pressure = well_perf_pressures;
             state.well_perf_flux = well_perf_fluxes;
 
@@ -326,6 +328,7 @@ namespace Dune
                     face_pressure[face] = state.face_pressure[face];
                 }
                 face_flux = state.face_flux;
+                well_bhp_pressures = state.well_bhp_pressure;
                 well_perf_pressures = state.well_perf_pressure;
                 well_perf_fluxes = state.well_perf_flux;
             }
@@ -401,6 +404,7 @@ namespace Dune
             std::vector<double> cell_pressure;
             std::vector<double> face_pressure;
             std::vector<double> face_flux;
+            std::vector<double> well_bhp_pressure;
             std::vector<double> well_perf_pressure;
             std::vector<double> well_perf_flux;
         };
@@ -696,7 +700,6 @@ namespace Dune
             std::vector<double> cell_pressure_initial = state.cell_pressure;
             std::vector<double> voldiscr_initial;
             SolverState start_state;
-            std::vector<double> well_bhp(pwells_->numWells(), 0.0);
 
             // ------------  Main iteration loop -------------
             for (int iter = 0; iter < max_num_iter_; ++iter) {
@@ -722,7 +725,7 @@ namespace Dune
                     PressureSolver::LinearSystem s;
                     std::vector<double> residual;
                     computeResidualJacobian(voldiscr_initial, state.cell_pressure, cell_pressure_initial,
-                                            well_bhp, src, dt, s, residual);
+                                            state.well_bhp_pressure, src, dt, s, residual);
 
                     if (output_residual_) {
                         // Temporary hack to get output of residual.
@@ -749,7 +752,7 @@ namespace Dune
                         s.x[cell] = state.cell_pressure[cell] - s.x[cell];
                     }
                     for (int well = 0; well < pwells_->numWells(); ++well) {
-                        s.x[num_cells + well] = well_bhp[well] - s.x[num_cells + well]; 
+                        s.x[num_cells + well] = state.well_bhp_pressure[well] - s.x[num_cells + well]; 
                     }
                 } else {
                     // Assemble system matrix and rhs.
@@ -780,7 +783,7 @@ namespace Dune
 
                 // Get pressures and face fluxes.
                 psolver_.computePressuresAndFluxes(state.cell_pressure, state.face_pressure, state.face_flux,
-                                                   well_bhp, state.well_perf_flux);
+                                                   state.well_bhp_pressure, state.well_perf_flux);
 
                 // Relaxation
                 if (relax_weight_pressure_iteration_ != 1.0) {
@@ -788,7 +791,8 @@ namespace Dune
                 }
 
                 // Compute state.well_perf_pressure.
-                computeWellPerfPressures(state.well_perf_flux, well_bhp, perf_gpot_, state.well_perf_pressure);
+                computeWellPerfPressures(state.well_perf_flux, state.well_bhp_pressure,
+                                         perf_gpot_, state.well_perf_pressure);
 
                 // Compute relative changes for pressure and flux.
                 std::pair<double, double> rel_changes
@@ -830,7 +834,6 @@ namespace Dune
             std::vector<double> cell_pressure_initial = state.cell_pressure;
             std::vector<double> voldiscr_initial;
             SolverState start_state;
-            std::vector<double> well_bhp(pwells_->numWells(), 0.0);
 
             // ------------  Main iteration loop -------------
             for (int iter = 0; iter < max_num_iter_; ++iter) {
@@ -855,7 +858,7 @@ namespace Dune
                 PressureSolver::LinearSystem s;
                 std::vector<double> residual;
                 computeResidualJacobian(voldiscr_initial, state.cell_pressure, cell_pressure_initial,
-                                        well_bhp, src, dt, s, residual);
+                                        state.well_bhp_pressure, src, dt, s, residual);
                 if (output_residual_) {
                     // Temporary hack to get output of residual.
                     static int psolve_iter = -1;
@@ -886,12 +889,12 @@ namespace Dune
                     s.x[cell] = state.cell_pressure[cell] - s.x[cell];
                 }
                 for (int well = 0; well < pwells_->numWells(); ++well) {
-                    s.x[num_cells + well] = well_bhp[well] - s.x[num_cells + well]; 
+                    s.x[num_cells + well] = state.well_bhp_pressure[well] - s.x[num_cells + well]; 
                 }
 
                 // Get pressures and face fluxes.
                 psolver_.computePressuresAndFluxes(state.cell_pressure, state.face_pressure, state.face_flux,
-                                                   well_bhp, state.well_perf_flux);
+                                                   state.well_bhp_pressure, state.well_perf_flux);
 
                 // Relaxation
                 if (relax_weight_pressure_iteration_ != 1.0) {
@@ -908,7 +911,8 @@ namespace Dune
                 }
 
                 // Compute state.well_perf_pressure.
-                computeWellPerfPressures(state.well_perf_flux, well_bhp, perf_gpot_, state.well_perf_pressure);
+                computeWellPerfPressures(state.well_perf_flux, state.well_bhp_pressure,
+                                         perf_gpot_, state.well_perf_pressure);
 
                 // Compute relative changes for pressure and flux.
                 std::pair<double, double> rel_changes

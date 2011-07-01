@@ -57,6 +57,7 @@ namespace Opm
         {
             std::vector<PhaseVec> cell_pressure_;
             std::vector<PhaseVec> face_pressure_;
+            std::vector<double> well_bhp_pressure_;
             std::vector<double> well_perf_pressure_;
             std::vector<double> well_perf_flux_;
             std::vector<CompVec> cell_z_;
@@ -268,12 +269,20 @@ init(const Dune::parameter::ParameterGroup& param)
 
     // Set initial well perforation pressures equal to cell pressures,
     // and perforation fluxes equal to zero.
+    // Set initial well bhp values to the target if bhp well, or to
+    // first perforation pressure if not.
     state_.well_perf_pressure_.clear();
     for (int well = 0; well < wells_.numWells(); ++well) {
         int num_perf = wells_.numPerforations(well);
         for (int perf = 0; perf < num_perf; ++perf) {
             int cell = wells_.wellCell(well, perf);
             state_.well_perf_pressure_.push_back(state_.cell_pressure_[cell][Fluid::Liquid]);
+        }
+        if (wells_.control(well) == Wells::Pressure) {
+            state_.well_bhp_pressure_.push_back(wells_.target(well));
+        } else {
+            int cell = wells_.wellCell(well, 0);
+            state_.well_bhp_pressure_.push_back(state_.cell_pressure_[cell][Fluid::Liquid]);
         }
     }
     state_.well_perf_flux_.clear();
@@ -330,6 +339,7 @@ simulate()
         // Solve flow system.
         enum FlowSolver::ReturnCode result
             = flow_solver_.solve(state_.cell_pressure_, state_.face_pressure_, state_.cell_z_, face_flux,
+                                 state_.well_bhp_pressure_,
                                  state_.well_perf_pressure_, state_.well_perf_flux_, src_, stepsize);
 
         // Check if the flow solver succeeded.
@@ -339,7 +349,7 @@ simulate()
             std::cout << "********* Nonlinear convergence failure: Shortening (pressure) stepsize, redoing step number " << step <<" **********" << std::endl;
             stepsize *= 0.5;
             state_ = start_state;
-            wells_.update(grid_.numCells(), state_.well_perf_pressure_, state_.well_perf_flux_);
+            wells_.update(grid_.numCells(), start_state.well_perf_pressure_, start_state.well_perf_flux_);
             continue;
         }
         ASSERT(result == FlowSolver::SolveOk);
@@ -363,7 +373,11 @@ simulate()
         } else {
             // First check IMPES stepsize.
             double max_dt = ignore_impes_stability_ ? 1e100 : flow_solver_.stableStepIMPES();
-            std::cout << "Timestep was " << stepsize << " and max stepsize was " << max_dt << std::endl;
+            if (ignore_impes_stability_) {
+                std::cout << "Timestep was " << stepsize << " and max stepsize was not computed." << std::endl;
+            } else {
+                std::cout << "Timestep was " << stepsize << " and max stepsize was " << max_dt << std::endl;
+            }
             if (stepsize < max_dt || stepsize <= minimum_stepsize_) {
                 flow_solver_.doStepIMPES(state_.cell_z_, stepsize);
                 voldisc_ok = flow_solver_.volumeDiscrepancyAcceptable(state_.cell_pressure_, state_.face_pressure_,
@@ -373,7 +387,7 @@ simulate()
                 stepsize = max_dt/1.5;
                 std::cout << "Restarting pressure step with new timestep " << stepsize << std::endl;
                 state_ = start_state;
-                wells_.update(grid_.numCells(), state_.well_perf_pressure_, state_.well_perf_flux_);
+                wells_.update(grid_.numCells(), start_state.well_perf_pressure_, start_state.well_perf_flux_);
                 continue;
             }
         }
@@ -383,7 +397,7 @@ simulate()
             std::cout << "********* Too large volume discrepancy:  Shortening (pressure) stepsize, redoing step number " << step <<" **********" << std::endl;
             stepsize *= 0.5;
             state_ = start_state;
-            wells_.update(grid_.numCells(), state_.well_perf_pressure_, state_.well_perf_flux_);
+            wells_.update(grid_.numCells(), start_state.well_perf_pressure_, start_state.well_perf_flux_);
             continue;
         }
 
