@@ -44,7 +44,7 @@ int main(int argc, char** argv)
         std::cout << "       [zlen=5] [imin=] [imax=] [jmin=] [jmax=] [upscale=true] [bc=fixed]" << std::endl;
         std::cout << "       [resettoorigin=true] [seed=111] [z_tolerance=0.0] [minperm=1e-9] " << std::endl;
         std::cout << "       [dips=false] [satnumvolumes=false] [mincellvolume=1e-9]" << std::endl;
-        std::cout << "       [filebase=] [resultfile=]" << std::endl;
+        std::cout << "       [filebase=] [resultfile=] [endpoints=false] [rock_list=]" << std::endl;
         exit(1);
     }
     Dune::parameter::ParameterGroup param(argc, argv);
@@ -81,6 +81,90 @@ int main(int argc, char** argv)
     double mincellvolume = param.getDefault("mincellvolume", 1e-9); // ignore smaller cells for dip calculations
 
     bool satnumvolumes = param.getDefault("satnumvolumes", false); // whether to count volumes pr. satnum
+
+    bool endpoints = param.getDefault("endpoints", false); // whether to upscale saturation endpoints
+    std::string rock_list =  param.getDefault<std::string>("rock_list", "no_list");
+    //std::vector<Dune::RockAnisotropicRelperm> rock_;
+    std::vector<std::vector<double> > rocksatendpoints_;
+    if (endpoints) {
+        if (!rock_list.compare("no_list")) {
+            std::cout << "Can't do endponts without rock list (" << rock_list << ")" << std::endl;
+            throw std::exception();
+        }
+        // Code copied from ReservoirPropertyCommon.hpp for file reading
+        std::ifstream rl(rock_list.c_str());
+        if (!rl) {
+            THROW("Could not open file " << rock_list);
+        }
+        int num_rocks = -1;
+        rl >> num_rocks;
+        ASSERT(num_rocks >= 1);
+        rocksatendpoints_.resize(num_rocks);
+        
+        for (int i = 0; i < num_rocks; ++i) {
+            std::string spec;
+            while (spec.empty()) {
+                std::getline(rl, spec);
+            }
+            // Read the contents of the i'th rock
+            std::istringstream specstream(spec);
+	    std::string rockname;
+	    specstream >> rockname;
+            std::string rockfilename = rockname;
+            std::ifstream rock_stream(rockfilename.c_str());
+            if (!rock_stream) {
+                THROW("Could not open file " << rockfilename);
+            }
+                        char c = rock_stream.peek();
+            while ((c == '-' || c == '#') && rock_stream) {
+                if (c == '#') {
+                    std::string commentline;
+                    std::getline(rock_stream, commentline);
+                    c = rock_stream.peek();
+                }
+                else { /* Check if the initial '-' was first byte of the sequence '--' */
+                    rock_stream.get(c);
+                    if (c == '-') {
+                        std::string commentline;
+                        std::getline(rock_stream, commentline);
+                        c = rock_stream.peek();
+                    } else {
+                        rock_stream.putback(c);
+                    }
+                }
+            }
+            if (!rock_stream) {
+                THROW("Something went wrong while skipping optional comment header of rock file.");
+            }
+	    typedef Dune::FieldVector<double, 2> Data;
+	    std::istream_iterator<Data> start(rock_stream);
+	    std::istream_iterator<Data> end;
+	    std::vector<Data> data(start, end);
+	    if (!rock_stream.eof()) {
+		THROW("Reading stopped but we're not at eof: something went wrong reading data of rock file.");
+	    }
+            
+            double swmin = std::min(data[0][1],data[data.size()-1][1]);
+            double swmax = std::max(data[0][1],data[data.size()-1][1]);
+            rocksatendpoints_[i][0] = swmin;
+            rocksatendpoints_[i][1] = swmax;
+
+
+            // This part might be useful if one wants to implement relative permeability in cpchop
+// 	    std::vector<double> pc, sw;
+// 	    for (int i = 0; i < int(data.size()); ++i) {
+// 		sw.push_back(data[i][1]);
+// 		pc.push_back(data[i][0]);
+// 	    }
+
+//             typedef Dune::utils::NonuniformTableLinear<double> TabFunc;
+//             TabFunc pc_ = TabFunc(sw, pc);
+            
+            //rocksatendpoints_[i] = 
+            //rock_[i].read(dir, spec);
+        }
+    }
+
 
     double z_tolerance = param.getDefault("z_tolerance", 0.0);
     double residual_tolerance = param.getDefault("residual_tolerance", 1e-8);
@@ -148,6 +232,7 @@ int main(int argc, char** argv)
     std::vector<double> permyzs;
     std::vector<double> permxzs;
     std::vector<double> permxys;
+    std::vector<double> minsws, maxsws;
     std::vector<double> xdips, ydips;
 
     // Initialize a matrix for subsample satnum volumes. 
@@ -196,6 +281,43 @@ int main(int argc, char** argv)
                 permxys.push_back(upscaled_K(0,1));
 
             }
+
+            if (endpoints) {
+                // Calculate minimum and maximum water volume in each cell
+                // Create single-phase upscaling object to get poro and perm values from the grid
+                Dune::EclipseGridParser subparser = ch.subparser();
+                subparser.convertToSI();
+                Dune::SinglePhaseUpscaler upscaler;                
+                upscaler.init(subparser, bctype, minpermSI, z_tolerance,
+                              residual_tolerance, linsolver_verbosity, linsolver_type, false);
+                std::vector<int>   satnums = subparser.getIntegerValue("SATNUM");
+                std::vector<double>  poros = subparser.getFloatingPointValue("PORO");
+                std::vector<double> cellVolumes, cellPoreVolumes;
+                cellVolumes.resize(satnums.size(), 0.0);
+                cellPoreVolumes.resize(satnums.size(), 0.0);
+                int tesselatedCells = 0;
+                double Swirvolume = 0, Sworvolume = 0;
+                const std::vector<int>& ecl_idx = upscaler.grid().globalCell();
+                Dune::CpGrid::Codim<0>::LeafIterator c = upscaler.grid().leafbegin<0>();
+                for (; c != upscaler.grid().leafend<0>(); ++c) {
+                    unsigned int cell_idx = ecl_idx[c->index()];
+                    if (satnums[cell_idx] > 0) { // Satnum zero is "no rock"
+                        cellVolumes[cell_idx] = c->geometry().volume();
+                        cellPoreVolumes[cell_idx] = cellVolumes[cell_idx] * poros[cell_idx];
+                        Swirvolume += rocksatendpoints_[satnums[cell_idx]-1][0] * cellPoreVolumes[cell_idx]; 
+                        Sworvolume += rocksatendpoints_[satnums[cell_idx]-1][1] * cellPoreVolumes[cell_idx];
+                        
+                    }
+                    ++ tesselatedCells;
+                }
+                
+                double poreVolume = std::accumulate(cellPoreVolumes.begin(), 
+                                                    cellPoreVolumes.end(),
+                                                    0.0);
+                minsws.push_back(Swirvolume/poreVolume);
+                maxsws.push_back(Sworvolume/poreVolume);
+            }
+
 	    if (dips) {
 		Dune::EclipseGridParser subparser = ch.subparser();
 		std::vector<int>  griddims = subparser.getSPECGRID().dimensions;
@@ -289,6 +411,9 @@ int main(int argc, char** argv)
             outputtmp << "          porosity                 permx                   permy                   permz";
         }
     }
+    if (endpoints) {
+        outputtmp << "                  Swir                    Swor";
+    }
     if (dips) {
 	outputtmp << "              xdip              ydip";
     }
@@ -314,6 +439,11 @@ int main(int argc, char** argv)
                     std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permxzs[sample-1] << '\t' <<
                     std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permxys[sample-1] << '\t';                
             }
+	}
+	if (endpoints) {
+	    outputtmp <<
+		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << minsws[sample-1] << '\t' <<
+		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << maxsws[sample-1];
 	}
 	if (dips) {
 	    outputtmp <<
