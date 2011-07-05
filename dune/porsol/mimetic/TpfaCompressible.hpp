@@ -429,7 +429,7 @@ namespace Dune
                 for (int perf = 0; perf < num_perf; ++perf) {
                     int cell = pwells_->wellCell(well, perf);
                     // \TODO handle capillary in perforation pressure below?
-                    PhaseVec well_pressure = inj ? PhaseVec(well_perf_pressure[perf]) : phase_pressure[cell];
+                    PhaseVec well_pressure = inj ? PhaseVec(well_perf_pressure[perfcount]) : phase_pressure[cell];
                     CompVec well_mixture = inj ? pwells_->injectionMixture(cell) : cell_z[cell];
                     typename FluidInterface::FluidState state = pfluid_->computeState(well_pressure, well_mixture);
                     std::copy(&state.phase_to_comp_[0][0], &state.phase_to_comp_[0][0] + numComponents*numPhases,
