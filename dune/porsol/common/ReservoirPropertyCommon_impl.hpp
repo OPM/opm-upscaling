@@ -536,8 +536,15 @@ namespace Dune
         porosity_.assign(global_cell.size(), 1.0);
 
         if (parser.hasField("PORO")) {
+            EclipseGridInspector insp(parser);
+            boost::array<int, 3> dims = insp.gridSize();
+            int num_global_cells = dims[0]*dims[1]*dims[2];
             const std::vector<double>& poro = parser.getFloatingPointValue("PORO");
-
+            if (int(poro.size()) != num_global_cells) {
+                THROW("PORO field must have the same size as the "
+                      "logical cartesian size of the grid: "
+                      << poro.size() << " != " << num_global_cells);
+            }
             for (int c = 0; c < int(porosity_.size()); ++c) {
                 porosity_[c] = poro[global_cell[c]];
             }
@@ -568,6 +575,13 @@ namespace Dune
         BOOST_STATIC_ASSERT(dim == 3);
         boost::array<int,9> kmap;
         permeability_kind_ = fillTensor(parser, tensor, kmap);
+        for (int i = 1; i < int(tensor.size()); ++i) {
+            if (int(tensor[i]->size()) != num_global_cells) {
+                THROW("All permeability fields must have the same size as the "
+                      "logical cartesian size of the grid: "
+                      << (tensor[i]->size()) << " != " << num_global_cells);
+            }
+        }
 
         // Assign permeability values only if such values are
         // given in the input deck represented by 'parser'.  In
@@ -609,8 +623,15 @@ namespace Dune
         cell_to_rock_.assign(nc, 0);
 
         if (parser.hasField("SATNUM")) {
+            EclipseGridInspector insp(parser);
+            boost::array<int, 3> dims = insp.gridSize();
+            int num_global_cells = dims[0]*dims[1]*dims[2];
             const std::vector<int>& satnum = parser.getIntegerValue("SATNUM");
-
+            if (int(satnum.size()) != num_global_cells) {
+                THROW("SATNUM field must have the same size as the "
+                      "logical cartesian size of the grid: "
+                      << satnum.size() << " != " << num_global_cells);
+            }
             for (int c = 0; c < nc; ++c) {
                 // Note: SATNUM is FORTRANish, ranging from 1 to n, therefore we subtract one.
                 cell_to_rock_[c] = satnum[global_cell[c]] - 1;
