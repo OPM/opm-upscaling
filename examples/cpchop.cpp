@@ -45,7 +45,7 @@ int main(int argc, char** argv)
         std::cout << "Usage: cpchop gridfilename=filename.grdecl [subsamples=10] [ilen=5] [jlen=5] " << std::endl;
         std::cout << "       [zlen=5] [imin=] [imax=] [jmin=] [jmax=] [upscale=true] [bc=fixed]" << std::endl;
         std::cout << "       [resettoorigin=true] [seed=111] [z_tolerance=0.0] [minperm=1e-9] " << std::endl;
-        std::cout << "       [dips=false] [satnumvolumes=false] [mincellvolume=1e-9]" << std::endl;
+        std::cout << "       [dips=false] [azimuthdisplacement=] [satnumvolumes=false] [mincellvolume=1e-9]" << std::endl;
         std::cout << "       [filebase=] [resultfile=] [endpoints=false] [cappres=false]" << std::endl;
         std::cout << "       [rock_list=] [anisotropicrocks=false]" << std::endl;
         exit(1);
@@ -81,6 +81,7 @@ int main(int argc, char** argv)
 
     // Following two options are for dip upscaling (slope of cell top and bottom edges)
     bool dips = param.getDefault("dips", false);  // whether to do dip averaging
+    double azimuthdisplacement = param.getDefault("azimuthdisplacement", 0.0);  // posibility to add/subtract a value to/from azimuth for dip plane.
     double mincellvolume = param.getDefault("mincellvolume", 1e-9); // ignore smaller cells for dip calculations
 
     bool satnumvolumes = param.getDefault("satnumvolumes", false); // whether to count volumes pr. satnum
@@ -262,7 +263,7 @@ int main(int argc, char** argv)
     std::vector<double> permxys;
     std::vector<double> minsws, maxsws;
     std::vector<std::vector<double> > pcvalues;
-    std::vector<double> xdips, ydips;
+    std::vector<double> dipangs, azimuths;
 
     // Initialize a matrix for subsample satnum volumes. 
     // Outer index is subsample index, inner index is SATNUM-value
@@ -458,7 +459,7 @@ int main(int argc, char** argv)
 		    for (int j=0; j < griddims[1]; ++j) {
 			for (int i=0; i < griddims[0]; ++i) {
 			    if (gridinspector.cellVolumeVerticalPillars(i, j, k) > mincellvolume) {
-				std::pair<double,double> xydip = gridinspector.cellDips(i, j, k);
+				std::pair<double,double> xydip = gridinspector.cellDips(i, j, k);                       
 				xdips_subsample.push_back(xydip.first);
 				ydips_subsample.push_back(xydip.second);
 			    }
@@ -466,11 +467,21 @@ int main(int argc, char** argv)
 		    }
 		}
 
+
+                //  double azimuth = atan(xydip.first/xydip.second);
+                //              double dip = acos(1.0/sqrt(pow(xydip.first,2.0)+pow(xydip.second,2.0)+1.0));
+                //	dips_subsample.push_back( xydip.first );
+                //	azims_subsample.push_back(atan(xydip.first/xydip.second));         
+
 		// Average xdips and ydips
 		double xdipaverage = accumulate(xdips_subsample.begin(), xdips_subsample.end(), 0.0)/xdips_subsample.size();
 		double ydipaverage = accumulate(ydips_subsample.begin(), ydips_subsample.end(), 0.0)/ydips_subsample.size();
-		xdips.push_back(xdipaverage);
-		ydips.push_back(ydipaverage);
+
+                // Convert to dip and azimuth
+                double azimuth = atan(xdipaverage/ydipaverage)+azimuthdisplacement;
+                double dip = acos(1.0/sqrt(pow(xdipaverage,2.0)+pow(ydipaverage,2.0)+1.0));
+                dipangs.push_back(dip);
+                azimuths.push_back(azimuth);                    
 	    }
 
 	    if (satnumvolumes) {
@@ -536,7 +547,7 @@ int main(int argc, char** argv)
     outputtmp << "# id";
     if (upscale) {
         if (isPeriodic) {
-            outputtmp << "          porosity                 permx                   permy                   permz                 permyz                  permxz                  permxy";
+            outputtmp << "          porosity                 permx                   permy                   permz                   permyz                  permxz                  permxy";
         }
         else if (isFixed) {
             outputtmp << "          porosity                 permx                   permy                   permz";
@@ -549,11 +560,11 @@ int main(int argc, char** argv)
         }
     }
     if (dips) {
-	outputtmp << "              xdip              ydip";
+        outputtmp << "                  dip                     azim(displacement:" << azimuthdisplacement << ")";
     }
     if (satnumvolumes) {
 	for (int satnumidx = 0; satnumidx < maxSatnum; ++satnumidx) {
-	    outputtmp << "         satnum_" << satnumidx+1;
+	    outputtmp << "               satnum_" << satnumidx+1;
 	}
     }
     outputtmp << std::endl;
@@ -589,8 +600,8 @@ int main(int argc, char** argv)
 	}
 	if (dips) {
 	    outputtmp <<
-		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << xdips[sample-1] << '\t' <<
-		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << ydips[sample-1];
+		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << dipangs[sample-1] << '\t' <<
+		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << azimuths[sample-1];
 	}
 	if (satnumvolumes) {
 	    rockvolumes[sample-1].resize(maxSatnum, 0.0);
