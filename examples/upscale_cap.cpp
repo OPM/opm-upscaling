@@ -571,7 +571,12 @@ int main(int varnum, char** vararg)
        for (unsigned int satidx = 1; satidx <= maxSatnum; ++satidx) {
            // cout << "satidx "<< satidx << " " << watervolume_rocktype[satidx]/cellporevolume_rocktype[satidx] << endl;
            //cout << "watvol: " << watervolume_rocktype[satidx] << " porevol " << cellporevolume_rocktype[satidx] << endl;
-           watersaturation_rocktype[satidx].addPair(Ptestvalue, watervolume_rocktype[satidx]/cellporevolume_rocktype[satidx]);
+           if (cellporevolume_rocktype[satidx] > 0) {
+               watersaturation_rocktype[satidx].addPair(Ptestvalue, watervolume_rocktype[satidx]/cellporevolume_rocktype[satidx]);
+           }
+           else {
+               watersaturation_rocktype[satidx].addPair(Ptestvalue, 0.0);
+           }
        }
 
    }
