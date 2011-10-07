@@ -5,7 +5,7 @@
 // Created: Mon Aug 10 08:21:44 2009
 //
 // Author(s): Atgeirr F Rasmussen <atgeirr@sintef.no>
-//            Bård Skaflestad     <bard.skaflestad@sintef.no>
+//            Bï¿½rd Skaflestad     <bard.skaflestad@sintef.no>
 //
 // $Date$
 //
