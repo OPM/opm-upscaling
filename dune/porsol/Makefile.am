@@ -1,5 +1,6 @@
 porsolincludedir = $(includedir)/dune/porsol
 
-SUBDIRS = opmpressure opmtransport common euler mimetic blackoil twophase2
+SUBDIRS = opmpressure common euler mimetic blackoil twophase2
+# opmtransport 
 
 include $(top_srcdir)/am/global-rules

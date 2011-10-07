@@ -40,6 +40,13 @@
 // mangling scheme and subsequently defining the macros 'F77_FUNC' and
 // 'F77_FUNC_'.
 
+
+// However, if we're not using Autoconf, then make a guess at
+// Linux conventions...
+#ifndef F77_FUNC
+#define F77_FUNC(lcase,UCASE) lcase ## _
+#endif
+
 #ifdef F77_NAME
 #undef F77_NAME
 #endif

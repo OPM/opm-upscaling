@@ -19,10 +19,10 @@
 
 #ifndef APPLEYARD_CONTROL_HEADER
 #define APPLEYARD_CONTROL_HEADER
-
+#include<vector>
 #include<cmath>
 
-namespace Dune
+namespace Dune 
 {	
 	class AppleyardControl
 	{

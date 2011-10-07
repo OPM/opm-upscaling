@@ -99,7 +99,20 @@ namespace Dune
         };
     };
 
-
+    /// Traits for implicit transport.
+    template <class IsotropyPolicy>
+    struct Implicit
+    {
+        template <class GridInterface, class BoundaryConditions>
+        struct TransportSolver
+        {
+            enum { Dimension = GridInterface::Dimension };
+            typedef typename IsotropyPolicy::template ResProp<Dimension>::Type RP;
+            typedef EulerUpstream<GridInterface,
+                                  RP,
+                                  BoundaryConditions> Type;
+        };
+    };
     /// Traits for implicit transport (solving for capillary pressure of steady state implicitly).
     template <class IsotropyPolicy>
     struct ImplicitCap
