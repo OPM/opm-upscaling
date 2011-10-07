@@ -59,5 +59,6 @@ AC_CONFIG_FILES([
 #  dune/porsol/opmtransport/examples/Makefile
 
 AC_OUTPUT
+
 # finally print the summary information
 DUNE_SUMMARY_ALL
