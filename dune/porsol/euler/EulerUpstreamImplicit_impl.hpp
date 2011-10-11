@@ -102,15 +102,21 @@ namespace Dune
     {
 	//        residual_computer_.initObj(g, r, b);
 	mygrid_= mygrid_.init(g);
-        porevol_.resize(g.numberOfCells());
+    porevol_.resize(g.numberOfCells());
+    for (int i = 0; i < mygrid_.numCells(); ++i){
+    	porevol_[i]= g.cell_volume_[i]*r.porosity(i);
+    }
+    }
+    /*
         for (CIt c = g.cellbegin(); c != g.cellend(); ++c) {
             porevol_[c->index()] = c->volume()*r.porosity(c->index());
         }
+     */
     std::array< double, 3 >    gravity;
     std::vector< double >		trans;
     trans.resize(mygrid_.numCells());
 	model_ = TransportModel(myfluid_,mygrid_.c_grid(),porevol_,gravity);
-	tsolver_ = TransportModel(model_);
+	tsolver_ = TransportSolver(model_);
     }
 
 
@@ -133,14 +139,22 @@ namespace Dune
 						   const PressureSolution& pressure_sol,
 						   const SparseVector<double>& injection_rates) const
     {
-    	ReservoirState<2> state(mygrid_);
+    	typedef typename GI::CellIterator CIt;
+        typedef typename CIt::FaceIterator FIt;
+    	typedef typename FIt::Vector Vector;
+
+    	ReservoirState<2> state(mygrid_.c_grid());
     	std::vector<double>& sat = state.saturation();
     	for (int i=0; i < mygrid_.numCells(); ++i){
     			sat[2*i] = saturation[i];
     			sat[2*i+1] = 1-saturation[i];
     	}
-    	state.faceflux() = pressure_sol.flux;
-       
+    	//state.faceflux() = pressure_sol.flux;
+    	std::vector<double>& flux = state.flux();
+    	int count=0;
+    	for (FIt f = c->facebegin(); f != c->faceend(); ++f) {
+    		flux[count] = pressure_sol.outflux(f);
+    	}
 		double dt_transport = time;
 		int nr_transport_steps = 1;
 		time::StopWatch clock;
