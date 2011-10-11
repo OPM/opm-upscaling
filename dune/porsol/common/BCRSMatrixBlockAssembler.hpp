@@ -13,25 +13,25 @@
 //==========================================================================*/
 
 
- /*
-   Copyright 2011 SINTEF ICT, Applied Mathematics.
-   Copyright 2011 Statoil ASA.
+/*
+  Copyright 2011 SINTEF ICT, Applied Mathematics.
+  Copyright 2011 Statoil ASA.
 
-   This file is part of the Open Porous Media Project (OPM).
+  This file is part of the Open Porous Media Project (OPM).
 
-   OPM is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+  OPM is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-   OPM is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+  OPM is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+  You should have received a copy of the GNU General Public License
+  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #ifndef OPM_BCRSMATRIXBLOCKASSEMBLER_HPP_HEADER
 #define OPM_BCRSMATRIXBLOCKASSEMBLER_HPP_HEADER
@@ -48,11 +48,70 @@
 
 namespace Opm {
     namespace ImplicitTransportDefault {
-        typedef Dune::FieldMatrix<double, 1, 1> ScalarBlock;
-        typedef Dune::BCRSMatrix<ScalarBlock>   ScalarBCRSMatrix;
+        namespace ISTLTypeDetails {
+            typedef Dune::FieldVector<double, 1>    ScalarVectorBlockType;
+            typedef Dune::FieldMatrix<double, 1, 1> ScalarMatrixBlockType;
+
+            typedef Dune::BlockVector<ScalarVectorBlockType> ScalarBlockVector;
+            typedef Dune::BCRSMatrix <ScalarMatrixBlockType> ScalarBCRSMatrix;
+        }
 
         template <>
-        class MatrixBlockAssembler<ScalarBCRSMatrix>
+        class VectorAdder<ISTLTypeDetails::ScalarBlockVector> {
+        public:
+            static void
+            add(const ISTLTypeDetails::ScalarBlockVector& x,
+                ISTLTypeDetails::ScalarBlockVector&       y) {
+                y += x;
+            }
+        };
+
+        template <>
+        class VectorNegater<ISTLTypeDetails::ScalarBlockVector> {
+        public:
+            static void
+            negate(ISTLTypeDetails::ScalarBlockVector& x) {
+                x *= -1.0;
+            }
+        };
+
+        template <>
+        class VectorZero<ISTLTypeDetails::ScalarBlockVector> {
+        public:
+            static void
+            zero(ISTLTypeDetails::ScalarBlockVector& x) {
+                x = 0.0;
+            }
+        };
+
+        template <>
+        class VectorBlockAssembler<ISTLTypeDetails::ScalarBlockVector> {
+        public:
+            template <class Block>
+            static void
+            assemble(::std::size_t                       ndof,
+                     ::std::size_t                       i   ,
+                     const Block&                        b   ,
+                     ISTLTypeDetails::ScalarBlockVector& vec ) {
+                assert (ndof == 1);  (void) ndof;
+
+                ISTLTypeDetails::ScalarBlockVector::block_type blk(b[0]);
+
+                vec[i] += blk;
+            }
+        };
+
+        template <>
+        class MatrixZero<ISTLTypeDetails::ScalarBCRSMatrix> {
+        public:
+            static void
+            zero(ISTLTypeDetails::ScalarBCRSMatrix& A) {
+                A = 0.0;
+            }
+        };
+
+        template <>
+        class MatrixBlockAssembler<ISTLTypeDetails::ScalarBCRSMatrix>
         {
         public:
             template <class Block>
@@ -60,7 +119,7 @@ namespace Opm {
             assembleBlock(size_t ndof, size_t i, size_t j, const Block& b) {
                 assert (ndof == 1);  (void) ndof;
 
-                ScalarBCRSMatrix::block_type blk(b[0]);
+                ISTLTypeDetails::ScalarBCRSMatrix::block_type blk(b[0]);
 
                 mat_[i][j] += blk;
             }
@@ -68,32 +127,49 @@ namespace Opm {
             template <class Connections>
             void
             createBlockRow(size_t i, const Connections& conn, size_t ndof) {
-                assert (ndof == 1);  (void) ndof;
+                assert (ndof == 1);            (void) ndof;
+                assert (i    == i_prev_ + 1);  (void) i   ;
 
-                ScalarBCRSMatrix::CreateIterator ci(mat_, i);
+                ISTLTypeDetails::ScalarBCRSMatrix::CreateIterator ci(mat_, i);
 
                 for (typename Connections::const_iterator
                          c = conn.begin(), e = conn.end(); c != e; ++c) {
                     ci.insert(*c);
                 }
+
+                ++i_prev_;
+                ++ci;
             }
 
             void
             finalizeStructure() {}
 
             void
-            setSize(size_t nrow, size_t ncol, size_t nnz = 0) {
-                mat_.setSize     (nrow, ncol, nnz);
-                mat_.setBuildMode(ScalarBCRSMatrix::row_wise);
+            setSize(::std::size_t ndof,
+                    ::std::size_t nrow,
+                    ::std::size_t ncol,
+                    ::std::size_t nnz = 0) {
+
+                assert (ndof == 1);  (void) ndof;
+                (void) nnz;
+
+                mat_.setSize     (nrow, ncol);
+                mat_.setBuildMode(ISTLTypeDetails::ScalarBCRSMatrix::row_wise);
+
+                i_prev_ = -1;
             }
 
-            const ScalarBCRSMatrix&
-            Matrix() const { return mat_; }
+            const ISTLTypeDetails::ScalarBCRSMatrix&
+            matrix() const { return mat_; }
+
+            ISTLTypeDetails::ScalarBCRSMatrix&
+            matrix() { return mat_; }
 
         private:
-            ScalarBCRSMatrix mat_;
+            ::std::size_t                     i_prev_;
+            ISTLTypeDetails::ScalarBCRSMatrix mat_   ;
         };
     }
- }
+}
 
 #endif  /* OPM_BCRSMATRIXBLOCKASSEMBLER_HPP_HEADER */
