@@ -117,10 +117,10 @@ namespace Dune {
 			    const SparseVector<double>& injection_rates) const;
 
     protected:
-	typedef typename GridInterface::CellIterator CIt;
-	typedef typename CIt::FaceIterator FIt;
-	typedef typename FIt::Vector Vector;
-        typedef ReservoirProperties RP;
+	// typedef typename GridInterface::CellIterator CIt;
+	// typedef typename CIt::FaceIterator FIt;
+	// typedef typename FIt::Vector Vector;
+     typedef ReservoirProperties RP;
 
 	/*
 	template <class PressureSolution>
