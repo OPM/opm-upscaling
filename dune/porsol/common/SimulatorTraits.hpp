@@ -42,7 +42,7 @@
 #include <dune/porsol/mimetic/MimeticIPEvaluator.hpp>
 #include <dune/porsol/mimetic/IncompFlowSolverHybrid.hpp>
 #include <dune/porsol/euler/EulerUpstream.hpp>
-//#include <dune/porsol/euler/EulerUpstreamImplicit.hpp>
+#include <dune/porsol/euler/EulerUpstreamImplicit.hpp>
 #include <dune/porsol/euler/ImplicitCapillarity.hpp>
 
 namespace Dune
@@ -110,7 +110,7 @@ namespace Dune
             enum { Dimension = GridInterface::Dimension };
             typedef typename IsotropyPolicy::template ResProp<Dimension>::Type RP;
 
-            typedef EulerUpstream<GridInterface,
+            typedef EulerUpstreamImplicit<GridInterface,
                                   RP,
                                   BoundaryConditions> Type;
 
