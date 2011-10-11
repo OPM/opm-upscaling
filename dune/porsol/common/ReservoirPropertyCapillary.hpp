@@ -122,6 +122,9 @@ namespace Dune
         template<class Vector>
         void phaseMobilities(int cell_index, double saturation, Vector& mobility) const;
 
+        template<class Vector>
+        void phaseMobilitiesDeriv(int c, double s, Vector& dmob) const;
+
 	/// @brief Computes cfl factors. Called from ReservoirPropertyCommon::init().
         void computeCflFactors();
     private:
