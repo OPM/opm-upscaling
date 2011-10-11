@@ -5,7 +5,7 @@
 // Created: Fri Aug 28 14:11:03 2009
 //
 // Author(s): Atgeirr F Rasmussen <atgeirr@sintef.no>
-//            Bård Skaflestad     <bard.skaflestad@sintef.no>
+//            Bï¿½rd Skaflestad     <bard.skaflestad@sintef.no>
 //
 // $Date$
 //
@@ -37,16 +37,16 @@
 //#define VERBOSE
 
 #include <dune/upscaling/SteadyStateUpscalerManager.hpp>
-#include <dune/upscaling/UpscalingTraits.hpp>
+//#include <dune/upscaling/UpscalingTraits.hpp>
 
-using namespace Dune;
+//using namespace Dune;
 
 int main(int argc, char** argv)
 {
     // Initialize.
-    parameter::ParameterGroup param(argc, argv);
+//parameter::ParameterGroup param(argc, argv);
     // MPIHelper::instance(argc,argv);
 
-    SteadyStateUpscalerManager<UpscalingTraitsBasic> mgr;
-    mgr.upscale(param);
+ //   SteadyStateUpscalerManager<UpscalingTraitsBasic> mgr;
+ //   mgr.upscale(param);
 }

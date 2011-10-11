@@ -37,3 +37,4 @@ examples/cpregularize
 examples/exp_variogram
 examples/upscale_*
 examples/grdecldips
+data
