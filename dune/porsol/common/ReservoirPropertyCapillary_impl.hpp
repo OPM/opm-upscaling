@@ -92,9 +92,21 @@ namespace Dune
     template<class Vector>
     void ReservoirPropertyCapillary<dim>::phaseMobilities(int cell_index, double saturation, Vector& mobility) const
     {
-        ASSERT (mobility.size() >= Super::NumberOfPhases);
+        //ASSERT (mobility.size() >= Super::NumberOfPhases);
         mobility[0] = mobilityFirstPhase(cell_index, saturation);
         mobility[1] = mobilitySecondPhase(cell_index, saturation);
+    }
+
+
+    template <int dim>
+    template <class Vector>
+    void
+    ReservoirPropertyCapillary<dim>::phaseMobilitiesDeriv(int c, double s,
+                                                          Vector& dmob) const {
+
+        dmob[0] =   relPermFirstPhaseDeriv (c, s) / Super::viscosity1_;
+        dmob[3] = - relPermSecondPhaseDeriv(c, s) / Super::viscosity2_;
+        dmob[1] = dmob[2] = 0;
     }
 
 
@@ -118,6 +130,24 @@ namespace Dune
         }
     }
 
+    template <int dim>
+    double
+    ReservoirPropertyCapillary<dim>::
+    relPermFirstPhaseDeriv(int cell_index, double saturation) const
+    {
+        if (Super::rock_.size() > 0) {
+            const int region = Super::cell_to_rock_[cell_index];
+            ASSERT (region < int(Super::rock_.size()));
+            double res;
+            Super::rock_[region].dkrw(saturation, res);
+            return res;
+        } else {
+            // HACK ALERT!
+            // Use quadratic rel-perm if no known rock table exists.
+            return 2 * saturation;
+        }
+    }
+
 
 
 
@@ -137,6 +167,23 @@ namespace Dune
         }
     }
 
+    template <int dim>
+    double
+    ReservoirPropertyCapillary<dim>::
+    relPermSecondPhaseDeriv(int cell_index, double saturation) const
+    {
+        if (Super::rock_.size() > 0) {
+            const int region = Super::cell_to_rock_[cell_index];
+            ASSERT (region < int(Super::rock_.size()));
+            double res;
+            Super::rock_[region].dkro(saturation, res);
+            return res;
+        } else {
+            // HACK ALERT!
+            // Use quadratic rel-perm if no known rock table exists.
+            return - 2 * (1 - saturation);
+        }
+    }
 
 
 

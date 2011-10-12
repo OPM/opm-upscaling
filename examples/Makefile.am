@@ -1,23 +1,24 @@
 SUBDIRS =
 
 check_PROGRAMS =
-noinst_PROGRAMS =                               \
-aniso_implicitcap_test                          \
-aniso_simulator_test                            \
-blackoil_sim_test                               \
-grdecl_to_legacy_test                           \
-ifsh_solver_test                                \
-implicitcap_test                                \
-istl_test                                       \
-known_answer_test                               \
-make_vtk_test                                   \
-mimetic_aniso_solver_test                       \
-mimetic_periodic_test                           \
-mimetic_solver_test                             \
-simulator_test                                  \
-spe10_test                                      \
-tpfa_compressible_solver_test                   \
-tpfa_solver_test                                \
+noinst_PROGRAMS =				\
+aniso_implicitcap_test				\
+aniso_simulator_test				\
+blackoil_sim_test				\
+grdecl_to_legacy_test				\
+ifsh_solver_test				\
+implicitcap_test				\
+istl_test					\
+known_answer_test				\
+make_vtk_test					\
+mimetic_aniso_solver_test			\
+mimetic_periodic_test				\
+mimetic_solver_test				\
+simulator_test					\
+spe10_test					\
+spu_2p						\
+tpfa_compressible_solver_test			\
+tpfa_solver_test				\
 twophase2_test
 
 
@@ -35,6 +36,9 @@ mimetic_aniso_solver_test_SOURCES = mimetic_aniso_solver_test.cpp
 mimetic_periodic_test_SOURCES = mimetic_periodic_test.cpp
 
 istl_test_SOURCES = istl_test.cpp
+
+spu_2p_SOURCES = spu_2p.cpp
+spu_2p_LDADD = $(LDADD) ../lib/libduneporsol.la
 
 spe10_test_SOURCES = spe10_test.cpp
 

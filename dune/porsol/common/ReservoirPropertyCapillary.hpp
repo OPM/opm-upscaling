@@ -122,6 +122,9 @@ namespace Dune
         template<class Vector>
         void phaseMobilities(int cell_index, double saturation, Vector& mobility) const;
 
+        template<class Vector>
+        void phaseMobilitiesDeriv(int c, double s, Vector& dmob) const;
+
 	/// @brief Computes cfl factors. Called from ReservoirPropertyCommon::init().
         void computeCflFactors();
     private:
@@ -129,6 +132,8 @@ namespace Dune
 	// Methods
         double relPermFirstPhase(int cell_index, double saturation) const;
         double relPermSecondPhase(int cell_index, double saturation) const;
+        double relPermFirstPhaseDeriv(int cell_index, double saturation) const;
+        double relPermSecondPhaseDeriv(int cell_index, double saturation) const;
         void cflFracFlows(int rock, double s, double& ff_first, double& ff_gravity) const;
         array<double, 3> computeSingleRockCflFactors(int rock, double min_perm, double max_poro) const;
     };
