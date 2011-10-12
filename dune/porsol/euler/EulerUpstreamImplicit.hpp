@@ -51,8 +51,8 @@ along with OpenRS.  If not, see <http://www.gnu.org/licenses/>.
 
 
 
-#include <dune/porsol/opmtransport/src/CSRMatrixBlockAssembler.hpp>
-
+//#include <dune/porsol/opmtransport/src/CSRMatrixBlockAssembler.hpp>
+#include <dune/porsol/common/BCRSMatrixBlockAssembler.hpp>
 #include <dune/porsol/opmtransport/src/SimpleFluid2pWrapper.hpp>
 #include <dune/porsol/opmtransport/src/SinglePointUpwindTwoPhase.hpp>
 
@@ -141,28 +141,39 @@ namespace Dune {
 
 	
 	// try to make bard ingerfaces
-	typedef Opm::SimpleFluid2pWrapper<ReservoirProperties>                          TwophaseFluid;
+	//typedef Opm::SimpleFluid2pWrapper<ReservoirProperties>                          TwophaseFluid;
+	typedef TwophaseFluidWrapper                          TwophaseFluid;
 	typedef Opm::SinglePointUpwindTwoPhase<TwophaseFluid> TransportModel;
 	// using namespace Opm::ImplicitTransportDefault
-	typedef Opm::ImplicitTransportDefault::NewtonVectorCollection< ::std::vector<double> >      NVecColl;
-	typedef Opm::ImplicitTransportDefault::JacobianSystem        < struct CSRMatrix, NVecColl > JacSys;
-	
+	//typedef Opm::ImplicitTransportDefault::NewtonVectorCollection< ::std::vector<double> >      NVecColl;
+	//typedef Opm::ImplicitTransportDefault::JacobianSystem        < struct CSRMatrix, NVecColl > JacSys;
+	//using namespace Opm::ImplicitTransportDefault;
+	typedef Dune::FieldVector<double, 1>    ScalarVectorBlockType;
+	typedef Dune::FieldMatrix<double, 1, 1> ScalarMatrixBlockType;
+
+	typedef Dune::BlockVector<ScalarVectorBlockType> ScalarBlockVector;
+	typedef Dune::BCRSMatrix <ScalarMatrixBlockType> ScalarBCRSMatrix;
+
+	typedef Opm::ImplicitTransportDefault::NewtonVectorCollection< ScalarBlockVector >          NVecColl;
+	typedef Opm::ImplicitTransportDefault::JacobianSystem        < ScalarBCRSMatrix, NVecColl > JacSys;
+
 	typedef Opm::ImplicitTransport<TransportModel,
                                JacSys        ,
                                MaxNorm       ,
                                Opm::ImplicitTransportDefault::VectorNegater ,
                                Opm::ImplicitTransportDefault::VectorZero    ,
                                Opm::ImplicitTransportDefault::MatrixZero    > TransportSolver;
-	// should be initialized by param
-	Opm::ImplicitTransportDetails::NRReport  rpt_;
-	Opm::ImplicitTransportDetails::NRControl ctrl_;
-	Opm::ImplicitTransportLinAlgSupport::CSRMatrixUmfpackSolver linsolve_;
-	
-	TransportModel  model_;
-	TransportSolver tsolver_;
-	GridAdapter mygrid_;
 
-	Opm::SimpleFluid2pWrapper< ReservoirProperties > myfluid_;
+	// should be initialized by param
+	
+
+	//TransportModel  model_;
+	//TransportSolver tsolver_;
+	GridAdapter mygrid_;
+	ReservoirProperties myrp_;
+
+	//Opm::SimpleFluid2pWrapper< ReservoirProperties > myfluid_;
+	//TwophaseFluid myfluid_;
 
 	bool check_sat_;
 	bool clamp_sat_;

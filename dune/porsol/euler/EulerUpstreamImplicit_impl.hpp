@@ -51,6 +51,7 @@
 //#include <dune/porsol/euler/CflCalculator.hpp>
 #include <dune/common/StopWatch.hpp>
 #include <dune/porsol/opmtransport/examples/ImplicitTransportDefs.hpp>
+#include <dune/porsol/opmtransport/examples/transport_source.h>
 #include <vector>
 #include <array>
 
@@ -73,7 +74,7 @@ namespace Dune
         //residual_computer_.initObj(g, r, b);
 	//std::array<double, 2> mu  = {{ 1.0, 1.0 }};
 	//std::array<double, 2> rho = {{ 0.0, 0.0 }};
-	myfluid_  = Opm::SimpleFluid2pWrapper<RP>(r);
+	//myfluid_  = Opm::SimpleFluid2pWrapper<RP>(r);
 	check_sat_ = true;
 	clamp_sat_ = false;
 	//residual_computer_.initObj(g, r, b);
@@ -109,12 +110,13 @@ namespace Dune
     		porevol_[i]= mygrid_.cellVolume(i)*r.porosity(i);
     	}
 
-    	std::array< double, 3 >    gravity;
-    	std::vector< double >		trans;
-    	trans.resize(mygrid_.numFaces());
-		model_ = TransportModel(myfluid_,mygrid_.c_grid(),porevol_,&gravity[0],&trans[0]);
+
+    	myrp_= r;
+		//model_ = TransportModel(myfluid_,mygrid_.c_grid(),porevol_,&gravity[0],&trans[0]);
+		//myfluid_.init(r);
+		//model_.init(myfluid_,mygrid_.c_grid(),porevol_,&gravity[0],&trans[0]);
 		//model.init(myfluid_,mygrid_.c_grid(), &porevol_, gravity, &trans);
-		tsolver_ = TransportSolver(model_);
+		//tsolver_ = TransportSolver(model_);
     }
 
 
@@ -145,22 +147,21 @@ namespace Dune
     			sat[2*i+1] = 1-saturation[i];
     	}
 
-    	typedef typename GI::CellIterator CIt;
-    	typedef typename CIt::FaceIterator FIt;
-    	typedef typename FIt::Vector Vector;
-    	int count=0;
-    	grid_t* cgrid = mygrid_.c_grid();
+
+    	//int count=0;
+    	const grid_t* cgrid = mygrid_.c_grid();
     	int numhf = cgrid->cell_facepos[cgrid->number_of_cells];
     	//for (int i=0; i < numhf); ++i){
-
+    	std::vector<double>	faceflux(numhf);
     	for (int c = 0, i = 0; c < cgrid->number_of_cells; ++c){
     		for (; i < cgrid->cell_facepos[c + 1]; ++i) {
     		   	int f= cgrid->cell_faces[i];
     		   	double outflux = pressure_sol.outflux(i);
     		   	double sgn = 2.0*(cgrid->face_cells[2*f + 0] == c) - 1;
-    		   	faceflux_[f] = sgn * outflux;
+    		   	faceflux[f] = sgn * outflux;
     		}
     	}
+    	state.faceflux()=faceflux;
 
 		double dt_transport = time;
 		int nr_transport_steps = 1;
@@ -170,12 +171,26 @@ namespace Dune
 		bool finished = false;
 		clock.start();
 		std::vector< double > saturation_initial(saturation);
+		//std::array< double, 3 >    mygravity;
+		std::vector< double >		trans;
+		trans.resize(mygrid_.numFaces());
 
+		TwophaseFluid myfluid(myrp_);
+		TransportModel model(myfluid,*mygrid_.c_grid(),porevol_,&gravity[0],&trans[0]);
+		TransportSolver		tsolver(model);
+		Opm::ImplicitTransportDetails::NRReport  rpt_;
+		Opm::ImplicitTransportDetails::NRControl ctrl_;
+		//Opm::ImplicitTransportLinAlgSupport::CSRMatrixUmfpackSolver linsolve_;
+		TransportLinearSolver linsolve_;
+		//std::vector<double> totmob(mygrid_.numCells(), 1.0);
+	    //std::vector<double> src   (mygrid_.numCells(), 0.0);
+		//src[0]                         =  1.0;
+		//    src[grid->number_of_cells - 1] = -1.0;
+	    TransportSource* tsrc = 0;//create_transport_source(0, 2);
 		while (!finished) {
 			try {
 	 	   		for (int q = 0; q < nr_transport_steps; ++q) {
-	    			//grid_t* pp=mygrid_.c_grid();
-	    			//tsolver_.solve(*pp, NULL, dt_transport, ctrl_, state, linsolve_, rpt_);
+	 	   			tsolver.solve(*mygrid_.c_grid(), tsrc, dt_transport, ctrl_, state, linsolve_, rpt_);
 	    		}
 #ifdef VERBOSE
 		    	std::cout << "Doing " << 1

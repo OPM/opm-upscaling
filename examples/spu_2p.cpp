@@ -212,6 +212,10 @@ public:
     TwophaseFluid(const Dune::ReservoirPropertyCapillary<3>& r)
         : r_(r)
     {}
+    void init(const Dune::ReservoirPropertyCapillary<3>& r)
+    {
+        r_ = r;
+    }
 
     template <class Sat ,
               class Mob ,
@@ -234,7 +238,7 @@ public:
     
 
 private:
-    const Dune::ReservoirPropertyCapillary<3>& r_;
+    Dune::ReservoirPropertyCapillary<3> r_;
 };
 
 typedef Opm::SinglePointUpwindTwoPhase<TwophaseFluid> TransportModel;
