@@ -104,8 +104,8 @@ namespace Dune
     ReservoirPropertyCapillary<dim>::phaseMobilitiesDeriv(int c, double s,
                                                           Vector& dmob) const {
 
-        dmob[0] = relPermFirstPhaseDeriv (c, s) / Super::viscosity1_;
-        dmob[3] = relPermSecondPhaseDeriv(c, s) / Super::viscosity2_;
+        dmob[0] =   relPermFirstPhaseDeriv (c, s) / Super::viscosity1_;
+        dmob[3] = - relPermSecondPhaseDeriv(c, s) / Super::viscosity2_;
         dmob[1] = dmob[2] = 0;
     }
 
@@ -181,7 +181,7 @@ namespace Dune
         } else {
             // HACK ALERT!
             // Use quadratic rel-perm if no known rock table exists.
-            return 2 * (1 - saturation);
+            return - 2 * (1 - saturation);
         }
     }
 
