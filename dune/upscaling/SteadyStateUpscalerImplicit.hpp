@@ -59,8 +59,8 @@ namespace Dune
 
         typedef UpscalerBase<Traits> Super;
         typedef typename Super::permtensor_t permtensor_t;
-        //typedef typename UpscalerBase<Traits>::GridInterface GridInterface;
-        typedef typename UpscalerBase<Traits>::GridType GridInterface;
+        typedef typename UpscalerBase<Traits>::GridInterface GridInterface;
+        typedef typename UpscalerBase<Traits>::GridType GridType;
         enum { Dimension = UpscalerBase<Traits>::Dimension };
 
 	// ------- Methods -------
@@ -97,7 +97,7 @@ namespace Dune
         double lastSaturationUpscaled() const;
     protected:
 	// ------- Typedefs -------
-        typedef typename Traits::template TransportSolver<GridInterface, typename Super::BCs>::Type TransportSolver;
+   typedef typename Traits::template TransportSolver<GridType, typename Super::BCs>::Type TransportSolver;
 
 	// ------- Methods -------
 	template <class FlowSol>

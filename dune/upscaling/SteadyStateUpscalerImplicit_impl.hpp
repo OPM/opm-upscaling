@@ -157,7 +157,7 @@ namespace Dune
         if (flow_direction == 0) {
             this->flow_solver_.init(this->ginterf_, this->res_prop_, gravity, this->bcond_);
         }
-        transport_solver_.initObj(this->ginterf_, this->res_prop_, this->bcond_);
+        transport_solver_.initObj(this->grid_, this->res_prop_, this->bcond_);
 
         // Run pressure solver.
         this->flow_solver_.solve(this->res_prop_, saturation, this->bcond_, src,
