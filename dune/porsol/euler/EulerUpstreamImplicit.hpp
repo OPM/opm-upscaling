@@ -167,6 +167,9 @@ namespace Dune {
 	bool check_sat_;
 	bool clamp_sat_;
     std::vector<double> porevol_;
+    std::vector<double> faceflux_;
+    std::vector<double> dunefaceind_;
+    std::vector<double> dunehfacesign_;
 
 	// Storing residual so that we won't have to reallocate it for every step.
 	//mutable std::vector<double> residual_;

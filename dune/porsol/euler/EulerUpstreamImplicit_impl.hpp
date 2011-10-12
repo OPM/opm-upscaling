@@ -52,6 +52,7 @@
 #include <dune/common/StopWatch.hpp>
 #include <dune/porsol/opmtransport/examples/ImplicitTransportDefs.hpp>
 #include <vector>
+#include <array>
 
 namespace Dune
 {
@@ -100,23 +101,37 @@ namespace Dune
     template <class GI, class RP, class BC>
     inline void EulerUpstreamImplicit<GI, RP, BC>::initObj(const GI& g, const RP& r, const BC& b)
     {
-	//        residual_computer_.initObj(g, r, b);
-	mygrid_= mygrid_.init(g);
-    porevol_.resize(g.numberOfCells());
-    for (int i = 0; i < mygrid_.numCells(); ++i){
-    	porevol_[i]= g.cell_volume_[i]*r.porosity(i);
-    }
-    }
-    /*
+    	//        residual_computer_.initObj(g, r, b);
+
+    	mygrid_.init(g);
+    	porevol_.resize(g.numberOfCells());
+    	for (int i = 0; i < mygrid_.numCells(); ++i){
+    		porevol_[i]= g.cell_volume_[i]*r.porosity(i);
+    	}
+    	typedef typename GI::CellIterator CIt;
+    	typedef typename CIt::FaceIterator FIt;
+    	typedef typename FIt::Vector Vector;
+
+    	dunefaceind_.resize(2*g.numberOfFaces());
+    	//state.faceflux() = pressure_sol.flux;
+    	//std::vector<double>& flux = state.faceflux();
+    	int count=0;
+    	for (CIt c = c->cellbegin(); c != c->cellend(); ++c) {
+    		for (FIt f = c->facebegin(); f != c->faceend(); ++f) {
+    			dunefaceind_[f->index()] = f->index();
+    			count=count+1;
+    		}
+    	}
+    	/*
         for (CIt c = g.cellbegin(); c != g.cellend(); ++c) {
             porevol_[c->index()] = c->volume()*r.porosity(c->index());
-        }
-     */
-    std::array< double, 3 >    gravity;
-    std::vector< double >		trans;
-    trans.resize(mygrid_.numCells());
-	model_ = TransportModel(myfluid_,mygrid_.c_grid(),porevol_,gravity);
-	tsolver_ = TransportSolver(model_);
+       	 }
+     	*/
+    	std::array< double, 3 >    gravity;
+    	std::vector< double >		trans;
+    	trans.resize(mygrid_.numCells());
+		model_ = TransportModel(myfluid_,mygrid_.c_grid(),porevol_,gravity);
+		tsolver_ = TransportSolver(model_);
     }
 
 
@@ -139,9 +154,6 @@ namespace Dune
 						   const PressureSolution& pressure_sol,
 						   const SparseVector<double>& injection_rates) const
     {
-    	typedef typename GI::CellIterator CIt;
-        typedef typename CIt::FaceIterator FIt;
-    	typedef typename FIt::Vector Vector;
 
     	ReservoirState<2> state(mygrid_.c_grid());
     	std::vector<double>& sat = state.saturation();
@@ -149,12 +161,17 @@ namespace Dune
     			sat[2*i] = saturation[i];
     			sat[2*i+1] = 1-saturation[i];
     	}
-    	//state.faceflux() = pressure_sol.flux;
-    	std::vector<double>& flux = state.flux();
+    	typedef typename GI::CellIterator CIt;
+    	typedef typename CIt::FaceIterator FIt;
+    	typedef typename FIt::Vector Vector;
     	int count=0;
-    	for (FIt f = c->facebegin(); f != c->faceend(); ++f) {
-    		flux[count] = pressure_sol.outflux(f);
+    	for (CIt c = c->cellbegin(); c != c->cellend(); ++c) {
+    		for (FIt f = c->facebegin(); f != c->faceend(); ++f) {
+    			faceflux_[dunefaceind_[count]] = pressure_sol.outflux(f);
+    			count=count+1;
+    		}
     	}
+
 		double dt_transport = time;
 		int nr_transport_steps = 1;
 		time::StopWatch clock;
