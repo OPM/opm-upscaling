@@ -107,7 +107,8 @@ namespace Dune
         template <class GridInterface, class BoundaryConditions>
         struct TransportSolver
         {
-            enum { Dimension = GridInterface::Dimension };
+            //enum { Dimension = GridInterface::Dimension };
+        	enum { Dimension = GridInterface::dimension };
             typedef typename IsotropyPolicy::template ResProp<Dimension>::Type RP;
 
             typedef EulerUpstreamImplicit<GridInterface,

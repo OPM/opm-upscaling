@@ -4,7 +4,7 @@
 //
 // Created: Tue Jun 30 10:25:40 2009
 //
-// Author(s): Bård Skaflestad     <bard.skaflestad@sintef.no>
+// Author(s): Bï¿½rd Skaflestad     <bard.skaflestad@sintef.no>
 //            Atgeirr F Rasmussen <atgeirr@sintef.no>
 //
 // $Date$
@@ -418,6 +418,10 @@ namespace Dune {
             Scalar outflux (const FI& f) const
             {
                 return outflux_[cellno_[f->cellIndex()]][f->localIndex()];
+            }
+            Scalar outflux (int hf) const
+            {
+                            return outflux_.data(hf);
             }
         private:
             std::vector< int  > cellno_;

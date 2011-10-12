@@ -61,9 +61,9 @@ namespace Dune
     template <class GI, class RP, class BC>
     inline EulerUpstreamImplicit<GI, RP, BC>::EulerUpstreamImplicit()
     {
-	std::array<double, 2> mu  = {{ 1.0, 1.0 }};
-	std::array<double, 2> rho = {{ 0.0, 0.0 }};
-	myfluid_ = TwophaseFluid(mu,rho);
+	//std::array<double, 2> mu  = {{ 1.0, 1.0 }};
+	//std::array<double, 2> rho = {{ 0.0, 0.0 }};
+	// myfluid_ = TwophaseFluid(mu,rho);
 	check_sat_ = true;
 	clamp_sat_ = false;
     }	
@@ -71,9 +71,9 @@ namespace Dune
     inline EulerUpstreamImplicit<GI, RP, BC>::EulerUpstreamImplicit(const GI& g, const RP& r, const BC& b)
     {
         //residual_computer_.initObj(g, r, b);
-	std::array<double, 2> mu  = {{ 1.0, 1.0 }};
-	std::array<double, 2> rho = {{ 0.0, 0.0 }};
-	myfluid_ = TwophaseFluid(mu,rho);
+	//std::array<double, 2> mu  = {{ 1.0, 1.0 }};
+	//std::array<double, 2> rho = {{ 0.0, 0.0 }};
+	myfluid_  = Opm::SimpleFluid2pWrapper<RP>(r);
 	check_sat_ = true;
 	clamp_sat_ = false;
 	//residual_computer_.initObj(g, r, b);
@@ -104,33 +104,16 @@ namespace Dune
     	//        residual_computer_.initObj(g, r, b);
 
     	mygrid_.init(g);
-    	porevol_.resize(g.numberOfCells());
+    	porevol_.resize(mygrid_.numCells());
     	for (int i = 0; i < mygrid_.numCells(); ++i){
-    		porevol_[i]= g.cell_volume_[i]*r.porosity(i);
+    		porevol_[i]= mygrid_.cellVolume(i)*r.porosity(i);
     	}
-    	typedef typename GI::CellIterator CIt;
-    	typedef typename CIt::FaceIterator FIt;
-    	typedef typename FIt::Vector Vector;
 
-    	dunefaceind_.resize(2*g.numberOfFaces());
-    	//state.faceflux() = pressure_sol.flux;
-    	//std::vector<double>& flux = state.faceflux();
-    	int count=0;
-    	for (CIt c = c->cellbegin(); c != c->cellend(); ++c) {
-    		for (FIt f = c->facebegin(); f != c->faceend(); ++f) {
-    			dunefaceind_[f->index()] = f->index();
-    			count=count+1;
-    		}
-    	}
-    	/*
-        for (CIt c = g.cellbegin(); c != g.cellend(); ++c) {
-            porevol_[c->index()] = c->volume()*r.porosity(c->index());
-       	 }
-     	*/
     	std::array< double, 3 >    gravity;
     	std::vector< double >		trans;
-    	trans.resize(mygrid_.numCells());
-		model_ = TransportModel(myfluid_,mygrid_.c_grid(),porevol_,gravity);
+    	trans.resize(mygrid_.numFaces());
+		model_ = TransportModel(myfluid_,mygrid_.c_grid(),porevol_,&gravity[0],&trans[0]);
+		//model.init(myfluid_,mygrid_.c_grid(), &porevol_, gravity, &trans);
 		tsolver_ = TransportSolver(model_);
     }
 
@@ -161,14 +144,21 @@ namespace Dune
     			sat[2*i] = saturation[i];
     			sat[2*i+1] = 1-saturation[i];
     	}
+
     	typedef typename GI::CellIterator CIt;
     	typedef typename CIt::FaceIterator FIt;
     	typedef typename FIt::Vector Vector;
     	int count=0;
-    	for (CIt c = c->cellbegin(); c != c->cellend(); ++c) {
-    		for (FIt f = c->facebegin(); f != c->faceend(); ++f) {
-    			faceflux_[dunefaceind_[count]] = pressure_sol.outflux(f);
-    			count=count+1;
+    	grid_t* cgrid = mygrid_.c_grid();
+    	int numhf = cgrid->cell_facepos[cgrid->number_of_cells];
+    	//for (int i=0; i < numhf); ++i){
+
+    	for (int c = 0, i = 0; c < cgrid->number_of_cells; ++c){
+    		for (; i < cgrid->cell_facepos[c + 1]; ++i) {
+    		   	int f= cgrid->cell_faces[i];
+    		   	double outflux = pressure_sol.outflux(i);
+    		   	double sgn = 2.0*(cgrid->face_cells[2*f + 0] == c) - 1;
+    		   	faceflux_[f] = sgn * outflux;
     		}
     	}
 
