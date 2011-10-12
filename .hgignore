@@ -38,3 +38,4 @@ examples/exp_variogram
 examples/upscale_*
 examples/grdecldips
 data
+steadystate_test_implicit
