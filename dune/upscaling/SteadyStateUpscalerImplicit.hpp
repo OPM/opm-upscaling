@@ -59,7 +59,8 @@ namespace Dune
 
         typedef UpscalerBase<Traits> Super;
         typedef typename Super::permtensor_t permtensor_t;
-        typedef typename UpscalerBase<Traits>::GridInterface GridInterface;
+        //typedef typename UpscalerBase<Traits>::GridInterface GridInterface;
+        typedef typename UpscalerBase<Traits>::GridType GridInterface;
         enum { Dimension = UpscalerBase<Traits>::Dimension };
 
 	// ------- Methods -------
@@ -100,10 +101,10 @@ namespace Dune
 
 	// ------- Methods -------
 	template <class FlowSol>
-        void computeInOutFlows(std::pair<double, double>& water_inout,
-                               std::pair<double, double>& oil_inout,
-                               const FlowSol& flow_solution,
-                               const std::vector<double>& saturations) const;
+    void computeInOutFlows(std::pair<double, double>& water_inout,
+                           std::pair<double, double>& oil_inout,
+                           const FlowSol& flow_solution,
+                           const std::vector<double>& saturations) const;
 	/// Override from superclass.
 	virtual void initImpl(const parameter::ParameterGroup& param);
 
@@ -111,12 +112,12 @@ namespace Dune
 	// ------- Data members -------
 	std::vector<double> last_saturation_state_;
 	bool output_vtk_;
-        bool print_inoutflows_;
+    bool print_inoutflows_;
 	int simulation_steps_;
 	double stepsize_;
-        double relperm_threshold_;
-        double maximum_mobility_contrast_;
-        double sat_change_threshold_;
+    double relperm_threshold_;
+    double maximum_mobility_contrast_;
+    double sat_change_threshold_;
 	TransportSolver transport_solver_;
     };
 

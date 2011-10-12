@@ -11,8 +11,8 @@
 check_PROGRAMS = 
 noinst_PROGRAMS = \
 		 test_array \
-         steadystate_test \ 
-         steadystate_test_implicit
+         steadystate_test 
+        
         
 
 AM_CPPFLAGS += $(DUNEMPICPPFLAGS) $(BOOST_CPPFLAGS) $(SUPERLU_CPPFLAGS)
@@ -29,7 +29,7 @@ test_array_SOURCES = test_array.cpp
 
 steadystate_test_SOURCES = steadystate_test.cpp
 
-steadystate_test_implicit_SOURCES = steadystate_test_implicit.cpp
+#steadystate_test_implicit_SOURCES = steadystate_test_implicit.cpp
 
 #aniso_steadystate_test_SOURCES = aniso_steadystate_test.cpp
 

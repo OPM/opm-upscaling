@@ -53,12 +53,12 @@ namespace Dune
     inline SteadyStateUpscalerImplicit<Traits>::SteadyStateUpscalerImplicit()
 	: Super(),
 	  output_vtk_(false),
-          print_inoutflows_(false),
+      print_inoutflows_(false),
 	  simulation_steps_(10),
 	  stepsize_(0.1),
 	  relperm_threshold_(1.0e-8),
-          maximum_mobility_contrast_(1.0e9),
-          sat_change_threshold_(0.0)
+      maximum_mobility_contrast_(1.0e9),
+      sat_change_threshold_(0.0)
     {
     }
 

@@ -37,16 +37,15 @@
 //#define VERBOSE
 
 #include <dune/upscaling/SteadyStateUpscalerManager.hpp>
-//#include <dune/upscaling/UpscalingTraits.hpp>
+#include <dune/upscaling/UpscalingTraits.hpp>
 
-//using namespace Dune;
+using namespace Dune;
 
 int main(int argc, char** argv)
 {
-    // Initialize.
-//parameter::ParameterGroup param(argc, argv);
-    // MPIHelper::instance(argc,argv);
-
- //   SteadyStateUpscalerManager<UpscalingTraitsBasic> mgr;
- //   mgr.upscale(param);
+     //Initialize.
+     parameter::ParameterGroup param(argc, argv);
+     //MPIHelper::instance(argc,argv);
+     SteadyStateUpscalerManager<UpscalingTraitsBasic> mgr;
+     mgr.upscale(param);
 }
