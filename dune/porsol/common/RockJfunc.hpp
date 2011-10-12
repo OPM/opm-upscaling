@@ -75,6 +75,16 @@ namespace Dune
 	    kro_value = kro_(saturation);
 	}
 
+	void dkrw(const double saturation, double& dkrw_value) const
+	{
+	    dkrw_value = krw_.derivative(saturation);
+	}
+
+	void dkro(const double saturation, double& dkro_value) const
+	{
+	    dkro_value = kro_.derivative(saturation);
+	}
+
 	template <template <class> class SP, class OP>
 	double capPress(const FullMatrix<double, SP, OP>& perm, const double poro, const double saturation) const
 	{
