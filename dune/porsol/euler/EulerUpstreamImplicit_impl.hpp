@@ -112,6 +112,34 @@ namespace Dune
 
 
     	myrp_= r;
+    	/*
+    	typedef typename GI::CellIterator Cit;
+    	typedef typename GI::CellIterator Cit;
+    	for (FIt f = c->facebegin(); f != c->faceend(); ++f) {
+    	  // Neighbour face, will be changed if on a periodic boundary.
+    	   FIt nbface = f;
+    	  // Compute cell[1], cell_sat[1]
+    	   if (f->boundary()) {
+    		   if (s.pboundary_->satCond(*f).isPeriodic()) {
+    			   nbface = s.bid_to_face_[s.pboundary_->getPeriodicPartner(f->boundaryId())];
+    			   ASSERT(nbface != f);
+    			   cell[1] = nbface->cellIndex();
+    			   ASSERT(cell[0] != cell[1]);
+    			   // Periodic faces will be visited twice, but only once
+    			   // should they contribute. We make sure that we skip the
+    			   // periodic faces half the time.
+    			   if (cell[0] > cell[1]) {
+    				   // We skip this face.
+    				   continue;
+    			   }
+    		   } else {
+    			   ASSERT(s.pboundary_->satCond(*f).isDirichlet());
+    			   cell[1] = cell[0];
+    			   cell_sat[1] = s.pboundary_->satCond(*f).saturation();
+    		   }
+    	   }
+    	}
+    	 */
 		//model_ = TransportModel(myfluid_,mygrid_.c_grid(),porevol_,&gravity[0],&trans[0]);
 		//myfluid_.init(r);
 		//model_.init(myfluid_,mygrid_.c_grid(),porevol_,&gravity[0],&trans[0]);
@@ -188,28 +216,30 @@ namespace Dune
 		//    src[grid->number_of_cells - 1] = -1.0;
 	    TransportSource* tsrc = 0;//create_transport_source(0, 2);
 		while (!finished) {
-			try {
 	 	   		for (int q = 0; q < nr_transport_steps; ++q) {
 	 	   			tsolver.solve(*mygrid_.c_grid(), tsrc, dt_transport, ctrl_, state, linsolve_, rpt_);
+	 	   			if(rpt_.flag<0){
+	 	   			  break;
+	 	   			}
 	    		}
-#ifdef VERBOSE
-		    	std::cout << "Doing " << 1
-				  << " steps for saturation equation with stepsize "
-					  << dt_transport << " in seconds." << std::endl;
-#endif // VERBOSE
-	   	 	}
-	    	catch (...) {
-				if (repeats > max_repeats) {
-		    		throw;
-				}
-				MESSAGE("Warning: Transport failed, retrying with more steps.");
-				nr_transport_steps *= 2;
-				dt_transport = time/nr_transport_steps;
-				saturation = saturation_initial;
-	    	}
+	 	   		if(~(rpt_.flag<0) ){
+	 	   			finished =true;
+	 	   		}else{
+	 	   			if(repeats >max_repeats){
+	 	   				finished=true;
+	 	   			}else{
+	 	   				MESSAGE("Warning: Transport failed, retrying with more steps.");
+	 	   				nr_transport_steps *= 2;
+	 	   				dt_transport = time/nr_transport_steps;
+	 	   				saturation = saturation_initial;
+	 	   			}
+	 	   		}
+	 	   		repeats +=1;
 		}
-
         clock.stop();
+        if((rpt_.flag<0)){
+        	std::cerr << "EulerUpstreamImplicit did not converge" << std::endl;
+        }
 #ifdef VERBOSE
         std::cout << "Seconds taken by transport solver: " << clock.secsSinceStart() << std::endl;
 #endif // VERBOSE

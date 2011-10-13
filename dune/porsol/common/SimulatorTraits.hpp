@@ -42,7 +42,7 @@
 #include <dune/porsol/mimetic/MimeticIPEvaluator.hpp>
 #include <dune/porsol/mimetic/IncompFlowSolverHybrid.hpp>
 #include <dune/porsol/euler/EulerUpstream.hpp>
-#include <dune/porsol/euler/EulerUpstreamImplicit.hpp>
+//#include <dune/porsol/euler/EulerUpstreamImplicit.hpp>
 #include <dune/porsol/euler/ImplicitCapillarity.hpp>
 
 namespace Dune
@@ -101,6 +101,7 @@ namespace Dune
     };
 
     /// Traits for implicit transport.
+    /*
     template <class IsotropyPolicy>
     struct Implicit
     {
@@ -117,6 +118,7 @@ namespace Dune
 
         };
     };
+    */
     /// Traits for implicit transport (solving for capillary pressure of steady state implicitly).
     template <class IsotropyPolicy>
     struct ImplicitCap
