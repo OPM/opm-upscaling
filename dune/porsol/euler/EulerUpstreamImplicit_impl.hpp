@@ -87,6 +87,11 @@ namespace Dune
     {
 	check_sat_ = param.getDefault("check_sat", check_sat_);
 	clamp_sat_ = param.getDefault("clamp_sat", clamp_sat_);
+	//Opm::ImplicitTransportDetails::NRControl ctrl_;
+	ctrl_.max_it = param.getDefault("transport_nr_max_it", 10);
+	ctrl_.atol  = param.getDefault("transport_a_tol", 1.0e-6);
+	ctrl_.atol  = param.getDefault("transport_a_tol", 5.0e-7);
+	ctrl_.dxtol = param.getDefault("transport_a_tol", 1.0e-6);
     }
 
     template <class GI, class RP, class BC>
@@ -232,7 +237,7 @@ namespace Dune
 		TransportModel model(myfluid,*mygrid_.c_grid(),porevol_,&gravity[0],&trans_[0]);
 		TransportSolver		tsolver(model);
 		Opm::ImplicitTransportDetails::NRReport  rpt_;
-		Opm::ImplicitTransportDetails::NRControl ctrl_;
+
 		//Opm::ImplicitTransportLinAlgSupport::CSRMatrixUmfpackSolver linsolve_;
 		Opm::TransportLinearSolver linsolve_;
 		//std::vector<double> totmob(mygrid_.numCells(), 1.0);
@@ -240,6 +245,16 @@ namespace Dune
 		//src[0]                         =  1.0;
 		//    src[grid->number_of_cells - 1] = -1.0;
 	    Opm::TransportSource tsrc;//create_transport_source(0, 2);
+	    // the input flux is assumed to be the satuation times the flux in the transport solver
+	    for(int i=0; i <direclet_cells_.size(); ++i){
+	    	std::array<double,2> sat = {{saturation[2*i] ,saturation[2*i+1] }};
+	    	std::array<double,2> mob;
+	    	std::array<double,2> dmob;
+	    	myfluid.mobility(direclet_cells_[i], sat, mob, dmob);
+	    	double fl = mob[0]/(mob[0]+mob[1]);
+	    	saturation[2*i] = fl;
+	    	saturation[2*i+1] = 1-fl;
+	    }
 	    tsrc.nsrc =direclet_sat_.size();
 	    tsrc.saturation = direclet_sat_;
 	    tsrc.cell = direclet_cells_;
