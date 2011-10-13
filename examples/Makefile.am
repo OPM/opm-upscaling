@@ -19,8 +19,8 @@ spe10_test					\
 spu_2p						\
 tpfa_compressible_solver_test			\
 tpfa_solver_test				\
-twophase2_test \
-spu_2p
+twophase2_test 
+
 
 
 grdecl_to_legacy_test_SOURCES = grdecl_to_legacy_test.cpp
@@ -38,8 +38,8 @@ mimetic_periodic_test_SOURCES = mimetic_periodic_test.cpp
 
 istl_test_SOURCES = istl_test.cpp
 
-spu_2p_SOURCES = spu_2p.cpp
-spu_2p_LDADD = $(LDADD) ../lib/libduneporsol.la
+#spu_2p_SOURCES = spu_2p.cpp
+#spu_2p_LDADD = $(LDADD) ../lib/libduneporsol.la
 
 spe10_test_SOURCES = spe10_test.cpp
 

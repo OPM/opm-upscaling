@@ -51,7 +51,6 @@
 //#include <dune/porsol/euler/CflCalculator.hpp>
 #include <dune/common/StopWatch.hpp>
 #include <dune/porsol/opmtransport/examples/ImplicitTransportDefs.hpp>
-#include <dune/porsol/opmtransport/examples/transport_source.h>
 #include <vector>
 #include <array>
 
@@ -104,49 +103,75 @@ namespace Dune
     {
     	//        residual_computer_.initObj(g, r, b);
 
-    	mygrid_.init(g);
+    	mygrid_.init(g.grid());
     	porevol_.resize(mygrid_.numCells());
     	for (int i = 0; i < mygrid_.numCells(); ++i){
     		porevol_[i]= mygrid_.cellVolume(i)*r.porosity(i);
     	}
-
+    	trans_.resize(mygrid_.numFaces());
 
     	myrp_= r;
-    	/*
-    	typedef typename GI::CellIterator Cit;
-    	typedef typename GI::CellIterator Cit;
-    	for (FIt f = c->facebegin(); f != c->faceend(); ++f) {
-    	  // Neighbour face, will be changed if on a periodic boundary.
-    	   FIt nbface = f;
-    	  // Compute cell[1], cell_sat[1]
-    	   if (f->boundary()) {
-    		   if (s.pboundary_->satCond(*f).isPeriodic()) {
-    			   nbface = s.bid_to_face_[s.pboundary_->getPeriodicPartner(f->boundaryId())];
-    			   ASSERT(nbface != f);
-    			   cell[1] = nbface->cellIndex();
-    			   ASSERT(cell[0] != cell[1]);
-    			   // Periodic faces will be visited twice, but only once
-    			   // should they contribute. We make sure that we skip the
-    			   // periodic faces half the time.
-    			   if (cell[0] > cell[1]) {
-    				   // We skip this face.
-    				   continue;
-    			   }
-    		   } else {
-    			   ASSERT(s.pboundary_->satCond(*f).isDirichlet());
-    			   cell[1] = cell[0];
-    			   cell_sat[1] = s.pboundary_->satCond(*f).saturation();
-    		   }
-    	   }
+
+    	//const BoundaryConditions* pboundary_;
+    	std::array<int,2> cell;
+    	typedef typename GI::CellIterator CIt;
+    	typedef typename CIt::FaceIterator FIt;
+    	std::vector<FIt> bid_to_face;
+    	int maxbid = 0;
+    	for (CIt c = g.cellbegin(); c != g.cellend(); ++c) {
+    	    for (FIt f = c->facebegin(); f != c->faceend(); ++f) {
+    		int bid = f->boundaryId();
+    		maxbid = std::max(maxbid, bid);
+    	    }
     	}
-    	 */
+    	bid_to_face.resize(maxbid + 1);
+    	for (CIt c = g.cellbegin(); c != g.cellend(); ++c) {
+    	    for (FIt f = c->facebegin(); f != c->faceend(); ++f) {
+    		if (f->boundary() && b.satCond(*f).isPeriodic()) {
+    		    	bid_to_face[f->boundaryId()] = f;
+    			}
+    	    }
+    	}
+
+    	for (CIt c = g.cellbegin(); c != g.cellend(); ++c) {
+    		cell[0] = c->index();
+    		for (FIt f = c->facebegin(); f != c->faceend(); ++f) {
+    			// Neighbour face, will be changed if on a periodic boundary.
+    			// Compute cell[1], cell_sat[1]
+    			FIt nbface = f;
+    			if (f->boundary()) {
+    				if (b.satCond(*f).isPeriodic()) {
+    					nbface = bid_to_face[b.getPeriodicPartner(f->boundaryId())];
+    					ASSERT(nbface != f);
+    					cell[1] = nbface->cellIndex();
+    					ASSERT(cell[0] != cell[1]);
+    					// Periodic faces will be visited twice, but only once
+    					// should they contribute. We make sure that we skip the
+    					// periodic faces half the time.
+    					if (cell[0] > cell[1]) {
+    						// We skip this face.
+    					continue;
+    					}
+    					periodic_cells_.push_back(cell[0]);
+    					periodic_cells_.push_back(cell[1]);
+    					periodic_faces_.push_back(f->index());
+    				} else {
+    					ASSERT(b.satCond(*f).isDirichlet());
+    					cell[1] = cell[0];
+    					direclet_cells_.push_back(cell[0]);
+    					direclet_sat_.push_back(b.satCond(*f).saturation());
+    					direclet_sat_.push_back(1-b.satCond(*f).saturation());//only work for 2 phases
+    				}
+    			}
+    		}
+
 		//model_ = TransportModel(myfluid_,mygrid_.c_grid(),porevol_,&gravity[0],&trans[0]);
 		//myfluid_.init(r);
 		//model_.init(myfluid_,mygrid_.c_grid(),porevol_,&gravity[0],&trans[0]);
 		//model.init(myfluid_,mygrid_.c_grid(), &porevol_, gravity, &trans);
 		//tsolver_ = TransportSolver(model_);
+    	}
     }
-
 
 
     template <class GI, class RP, class BC>
@@ -168,7 +193,7 @@ namespace Dune
 						   const SparseVector<double>& injection_rates) const
     {
 
-    	ReservoirState<2> state(mygrid_.c_grid());
+    	Opm::ReservoirState<2> state(mygrid_.c_grid());
     	std::vector<double>& sat = state.saturation();
     	for (int i=0; i < mygrid_.numCells(); ++i){
     			sat[2*i] = saturation[i];
@@ -200,24 +225,28 @@ namespace Dune
 		clock.start();
 		std::vector< double > saturation_initial(saturation);
 		//std::array< double, 3 >    mygravity;
-		std::vector< double >		trans;
-		trans.resize(mygrid_.numFaces());
+
+
 
 		TwophaseFluid myfluid(myrp_);
-		TransportModel model(myfluid,*mygrid_.c_grid(),porevol_,&gravity[0],&trans[0]);
+		TransportModel model(myfluid,*mygrid_.c_grid(),porevol_,&gravity[0],&trans_[0]);
 		TransportSolver		tsolver(model);
 		Opm::ImplicitTransportDetails::NRReport  rpt_;
 		Opm::ImplicitTransportDetails::NRControl ctrl_;
 		//Opm::ImplicitTransportLinAlgSupport::CSRMatrixUmfpackSolver linsolve_;
-		TransportLinearSolver linsolve_;
+		Opm::TransportLinearSolver linsolve_;
 		//std::vector<double> totmob(mygrid_.numCells(), 1.0);
 	    //std::vector<double> src   (mygrid_.numCells(), 0.0);
 		//src[0]                         =  1.0;
 		//    src[grid->number_of_cells - 1] = -1.0;
-	    TransportSource* tsrc = 0;//create_transport_source(0, 2);
+	    Opm::TransportSource tsrc;//create_transport_source(0, 2);
+	    tsrc.nsrc =direclet_sat_.size();
+	    tsrc.saturation = direclet_sat_;
+	    tsrc.cell = direclet_cells_;
+
 		while (!finished) {
 	 	   		for (int q = 0; q < nr_transport_steps; ++q) {
-	 	   			tsolver.solve(*mygrid_.c_grid(), tsrc, dt_transport, ctrl_, state, linsolve_, rpt_);
+	 	   			tsolver.solve(*mygrid_.c_grid(), &tsrc, dt_transport, ctrl_, state, linsolve_, rpt_);
 	 	   			if(rpt_.flag<0){
 	 	   			  break;
 	 	   			}
