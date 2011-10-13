@@ -50,7 +50,7 @@
 #include <dune/grid/common/Volumes.hpp>
 //#include <dune/porsol/euler/CflCalculator.hpp>
 #include <dune/common/StopWatch.hpp>
-#include <dune/porsol/opmtransport/examples/ImplicitTransportDefs.hpp>
+#include <dune/porsol/common/ImplicitTransportDefs.hpp>
 #include <vector>
 #include <array>
 #include <dune/porsol/opmpressure/src/trans_tpfa.h>
@@ -114,7 +114,8 @@ namespace Dune
     	for (int i = 0; i < mygrid_.numCells(); ++i){
     		porevol_[i]= mygrid_.cellVolume(i)*r.porosity(i);
     	}
-    	trans_.resize(mygrid_.numFaces());
+    	int numf=mygrid_.numFaces();
+    	trans_.resize(numf);
     	//grid_t* cgrid=mygrid_.c_grid();
     	std::array<int,2> cell;
     	int num_cells = mygrid_.numCells();
@@ -133,7 +134,7 @@ namespace Dune
     	    	count +=1;
     	    }
     	}
-        for(int i=0; i < trans_.size();++i){
+        for(int i=0; i < numf;++i){
         	trans_[i]= 1/trans_[i];
         }
     	myrp_= r;
@@ -267,7 +268,8 @@ namespace Dune
 		//    src[grid->number_of_cells - 1] = -1.0;
 	    Opm::TransportSource tsrc;//create_transport_source(0, 2);
 	    // the input flux is assumed to be the satuation times the flux in the transport solver
-	    for(int i=0; i <direclet_cells_.size(); ++i){
+	    int num_b=direclet_cells_.size();
+	    for(int i=0; i <num_b; ++i){
 	    	std::array<double,2> sat = {{saturation[2*i] ,saturation[2*i+1] }};
 	    	std::array<double,2> mob;
 	    	std::array<double,2> dmob;

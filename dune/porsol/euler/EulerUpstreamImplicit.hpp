@@ -47,7 +47,7 @@ along with OpenRS.  If not, see <http://www.gnu.org/licenses/>.
 #include <dune/porsol/opmtransport/src/JacobianSystem.hpp>
 
 #include <dune/common/SparseVector.hpp>
-#include <dune/porsol/opmtransport/examples/ImplicitTransportDefs.hpp>
+#include <dune/porsol/common/ImplicitTransportDefs.hpp>
 
 
 
