@@ -36,23 +36,20 @@ along with OpenRS.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef OPENRS_EULERUPSTREAMIMPLICIT_HEADER
 #define OPENRS_EULERUPSTREAMIMPLICIT_HEADER
 
-//#include <dune/porsol/euler/EulerUpstreamImplicit	Residual.hpp>
-#include <dune/porsol/opmpressure/src/GridAdapter.hpp>
 #include <tr1/unordered_map>
+
+#include <dune/common/SparseVector.hpp>
 #include <dune/common/param/ParameterGroup.hpp>
-#include <dune/porsol/opmtransport/src/CSRMatrixUmfpackSolver.hpp>
-#include <dune/porsol/opmtransport/src/NormSupport.hpp>
+
+#include <dune/porsol/opmpressure/src/GridAdapter.hpp>
+
 #include <dune/porsol/opmtransport/src/ImplicitAssembly.hpp>
 #include <dune/porsol/opmtransport/src/ImplicitTransport.hpp>
 #include <dune/porsol/opmtransport/src/JacobianSystem.hpp>
 
-#include <dune/common/SparseVector.hpp>
 #include <dune/porsol/common/ImplicitTransportDefs.hpp>
-
-
-
-//#include <dune/porsol/opmtransport/src/CSRMatrixBlockAssembler.hpp>
 #include <dune/porsol/common/BCRSMatrixBlockAssembler.hpp>
+
 #include <dune/porsol/opmtransport/src/SimpleFluid2pWrapper.hpp>
 #include <dune/porsol/opmtransport/src/SinglePointUpwindTwoPhase.hpp>
 
