@@ -97,7 +97,7 @@ namespace Dune
         double lastSaturationUpscaled() const;
     protected:
 	// ------- Typedefs -------
-   typedef typename Traits::template TransportSolver<GridType, typename Super::BCs>::Type TransportSolver;
+   typedef typename Traits::template TransportSolver<GridInterface, typename Super::BCs>::Type TransportSolver;
 
 	// ------- Methods -------
 	template <class FlowSol>

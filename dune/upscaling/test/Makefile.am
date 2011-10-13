@@ -11,7 +11,7 @@
 check_PROGRAMS = 
 noinst_PROGRAMS = \
 		 test_array \
-         steadystate_test \
+		 steadystate_test \
          steadystate_test_implicit
         
 

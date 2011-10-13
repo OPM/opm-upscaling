@@ -62,7 +62,7 @@ namespace Dune
 	typedef CpGrid GridType;
  	enum { Dimension = GridType::dimension };
 	typedef GridInterfaceEuler<GridType> GridInterface;
-        typedef typename Traits::template ResProp<Dimension>::Type ResProp;
+    typedef typename Traits::template ResProp<Dimension>::Type ResProp;
 
 	/// A type for the upscaled permeability.
 	typedef typename ResProp::MutablePermTensor permtensor_t;

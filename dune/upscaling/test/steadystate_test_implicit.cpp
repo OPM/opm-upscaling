@@ -37,8 +37,28 @@
 //#define VERBOSE
 #include <dune/upscaling/SteadyStateUpscalerImplicit.hpp>
 #include <dune/upscaling/SteadyStateUpscalerManagerImplicit.hpp>
-#include <dune/upscaling/UpscalingTraits.hpp>
+//#include <dune/upscaling/UpscalingTraits.hpp>
+#include <dune/porsol/euler/EulerUpstreamImplicit.hpp>
+#include <dune/porsol/common/SimulatorTraits.hpp>
+namespace Dune{
+	template <class IsotropyPolicy>
+    struct Implicit
+    {
+        template <class GridInterface, class BoundaryConditions>
+        struct TransportSolver
+        {
+            //enum { Dimension = GridInterface::Dimension };
+        	enum { Dimension = GridInterface::Dimension };
+            typedef typename IsotropyPolicy::template ResProp<Dimension>::Type RP;
 
+            typedef EulerUpstreamImplicit<GridInterface,
+                                  RP,
+                                  BoundaryConditions> Type;
+
+        };
+    };
+	typedef SimulatorTraits<Isotropic, Implicit> UpscalingTraitsBasicImplicit;
+}
 using namespace Dune;
 
 int main(int argc, char** argv)
