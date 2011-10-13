@@ -53,6 +53,7 @@
 #include <dune/porsol/opmtransport/examples/ImplicitTransportDefs.hpp>
 #include <vector>
 #include <array>
+#include <dune/porsol/opmpressure/src/trans_tpfa.h>
 
 namespace Dune
 {
@@ -114,11 +115,31 @@ namespace Dune
     		porevol_[i]= mygrid_.cellVolume(i)*r.porosity(i);
     	}
     	trans_.resize(mygrid_.numFaces());
-
+    	//grid_t* cgrid=mygrid_.c_grid();
+    	std::array<int,2> cell;
+    	int num_cells = mygrid_.numCells();
+    	int ngconn  = mygrid_.c_grid()->cell_facepos[num_cells];
+    	std::vector<double> htrans(ngconn);
+    	const double* perm = &(r.permeability(0)(0,0));
+    	tpfa_htrans_compute(mygrid_.c_grid(), perm, &htrans[0]);
+    	int count = 0;
+    	for (int cell = 0; cell < num_cells; ++cell) {
+    		int num_local_faces = mygrid_.numCellFaces(cell);
+    		GridAdapter::Vector cc = mygrid_.cellCentroid(cell);
+    		//typename GridType::Vector cc = mygrid_.cellCentroid(cell);
+    	    for (int local_ix = 0; local_ix < num_local_faces; ++local_ix) {
+    	    	int face = mygrid_.cellFace(cell, local_ix);
+    	    	trans_[face] +=(1/htrans[count]);
+    	    	count +=1;
+    	    }
+    	}
+        for(int i=0; i < trans_.size();++i){
+        	trans_[i]= 1/trans_[i];
+        }
     	myrp_= r;
 
     	//const BoundaryConditions* pboundary_;
-    	std::array<int,2> cell;
+
     	typedef typename GI::CellIterator CIt;
     	typedef typename CIt::FaceIterator FIt;
     	std::vector<FIt> bid_to_face;
