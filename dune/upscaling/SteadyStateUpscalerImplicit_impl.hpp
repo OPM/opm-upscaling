@@ -41,7 +41,7 @@
 #include <dune/porsol/common/MatrixInverse.hpp>
 #include <dune/porsol/common/SimulatorUtilities.hpp>
 #include <dune/porsol/common/ReservoirPropertyFixedMobility.hpp>
-
+#include <dune/common/Units.hpp>
 #include <algorithm>
 
 namespace Dune
@@ -58,7 +58,10 @@ namespace Dune
 	  stepsize_(0.1),
 	  relperm_threshold_(1.0e-8),
       maximum_mobility_contrast_(1.0e9),
-      sat_change_threshold_(0.0)
+      sat_change_year_(0.0),
+      max_it_(20),
+      max_stepsize_(10),
+      dt_sat_tol_(1e-2)
     {
     }
 
@@ -75,9 +78,11 @@ namespace Dune
 	stepsize_ = Dune::unit::convert::from(param.getDefault("stepsize", stepsize_),
 					      Dune::unit::day);
 	relperm_threshold_ = param.getDefault("relperm_threshold", relperm_threshold_);
-        maximum_mobility_contrast_ = param.getDefault("maximum_mobility_contrast", maximum_mobility_contrast_);
-        sat_change_threshold_ = param.getDefault("sat_change_threshold", sat_change_threshold_);
-
+    maximum_mobility_contrast_ = param.getDefault("maximum_mobility_contrast", maximum_mobility_contrast_);
+    sat_change_year_ = param.getDefault("sat_change_year", sat_change_year_);
+    dt_sat_tol_ = param.getDefault("dt_sat_tol", dt_sat_tol_);
+    max_it_               = param.getDefault("max_it", max_it_);
+    max_stepsize_        = Dune::unit::convert::from(param.getDefault("max_stepsize", max_stepsize_),Dune::unit::year);
 	transport_solver_.init(param);
         // Set viscosities and densities if given.
         double v1_default = this->res_prop_.viscosityFirstPhase();
@@ -131,7 +136,7 @@ namespace Dune
                        const std::vector<double>& initial_saturation,
 		       const double boundary_saturation,
 		       const double pressure_drop,
-		       const permtensor_t& upscaled_perm)
+		       const permtensor_t& upscaled_perm,bool& success)
     {
 	static int count = 0;
 	++count;
@@ -167,60 +172,71 @@ namespace Dune
 
         // Do a run till steady state. For now, we just do some pressure and transport steps...
         std::vector<double> saturation_old = saturation;
-
-        for (int iter = 0; iter < simulation_steps_; ++iter) {
+        bool stationary = false;
+        int it_count=0;
+        std::vector<double> init_saturation(saturation);
+        while((~stationary) & (it_count < max_it_)){// & transport_cost < max_transport_cost_)
+        //for (int iter = 0; iter < simulation_steps_; ++iter) {
         // Run transport solver.
-            transport_solver_.transportSolve(saturation, stepsize_, gravity, this->flow_solver_.getSolution(), injection);
-
+        	std::cout << "Running transport step " << it_count <<" with stepsize " << stepsize_/Dune::unit::year << " year \n";
+            bool converged=transport_solver_.transportSolve(saturation, stepsize_, gravity, this->flow_solver_.getSolution(), injection);
             // Run pressure solver.
-            this->flow_solver_.solve(this->res_prop_, saturation, this->bcond_, src,
-                                     this->residual_tolerance_, this->linsolver_verbosity_, this->linsolver_type_);
-            max_mod = this->flow_solver_.postProcessFluxes();
-            std::cout << "Max mod = " << max_mod << std::endl;
-
-            // Print in-out flows if requested.
-            if (print_inoutflows_) {
-                std::pair<double, double> w_io, o_io;
-                computeInOutFlows(w_io, o_io, this->flow_solver_.getSolution(), saturation);
-                std::cout << "Pressure step " << iter
-                          << "\nWater flow [in] " << w_io.first
-                          << "  [out] " << w_io.second
-                          << "\nOil flow   [in] " << o_io.first
-                          << "  [out] " << o_io.second
-                          << std::endl;
+            if(converged){
+            	init_saturation=saturation;
+            	/*
+            	this->flow_solver_.solve(this->res_prop_, saturation, this->bcond_, src,
+            			this->residual_tolerance_, this->linsolver_verbosity_, this->linsolver_type_);
+            			*/
+            	max_mod = this->flow_solver_.postProcessFluxes();
+            	std::cout << "Max mod = " << max_mod << std::endl;
+            	// Print in-out flows if requested.
+            	if (print_inoutflows_) {
+            		std::pair<double, double> w_io, o_io;
+            		computeInOutFlows(w_io, o_io, this->flow_solver_.getSolution(), saturation);
+            		std::cout << "Pressure step " << it_count
+            				<< "\nWater flow [in] " << w_io.first
+            				<< "  [out] " << w_io.second
+            				<< "\nOil flow   [in] " << o_io.first
+            				<< "  [out] " << o_io.second
+            				<< std::endl;
+            	}
+            	// Output.
+            	if (output_vtk_) {
+            		writeVtkOutput(this->ginterf_,
+            				this->res_prop_,
+            				this->flow_solver_.getSolution(),
+            				saturation,
+            				std::string("output-steadystate")
+            		+ '-' + boost::lexical_cast<std::string>(count)
+            		+ '-' + boost::lexical_cast<std::string>(flow_direction)
+            		+ '-' + boost::lexical_cast<std::string>(it_count));
+            	}
+            	// Comparing old to new.
+            	int num_cells = saturation.size();
+            	double maxdiff = 0.0;
+            	for (int i = 0; i < num_cells; ++i) {
+            		maxdiff = std::max(maxdiff, std::fabs(saturation[i] - saturation_old[i]));
+            	}
+            	std::cout << "Maximum saturation change: " << maxdiff << std::endl;
+            	double ds_year=maxdiff*Dune::unit::year/stepsize_;
+            	if( ds_year < sat_change_year_){
+            		stationary=true;
+            	}
+            	if(maxdiff< dt_sat_tol_){
+            		stepsize_=std::min(max_stepsize_,2*stepsize_);
+            	}
+            }else{
+            	std::cerr << "Cutting time step\n";
+            	init_saturation = saturation_old;
+            	stepsize_=stepsize_/2.0;
             }
-
-            // Output.
-            if (output_vtk_) {
-                writeVtkOutput(this->ginterf_,
-                               this->res_prop_,
-                               this->flow_solver_.getSolution(),
-                               saturation,
-                               std::string("output-steadystate")
-                               + '-' + boost::lexical_cast<std::string>(count)
-                               + '-' + boost::lexical_cast<std::string>(flow_direction)
-                               + '-' + boost::lexical_cast<std::string>(iter));
-            }
-
-            // Comparing old to new.
-            int num_cells = saturation.size();
-            double maxdiff = 0.0;
-            for (int i = 0; i < num_cells; ++i) {
-                maxdiff = std::max(maxdiff, std::fabs(saturation[i] - saturation_old[i]));
-            }
-#ifdef VERBOSE
-            std::cout << "Maximum saturation change: " << maxdiff << std::endl;
-#endif
-            if (maxdiff < sat_change_threshold_) {
-#ifdef VERBOSE
-                std::cout << "Maximum saturation change is under steady state threshold." << std::endl;
-#endif
-                break;
-            }
-
+            it_count+=1;
             // Copy to old.
             saturation_old = saturation;
+
+
         }
+        success=stationary;
 
         // Compute phase mobilities.
         // First: compute maximal mobilities.

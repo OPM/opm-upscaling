@@ -92,22 +92,22 @@ namespace Dune
 	/// Access the grid.
 	const GridType& grid() const;
 
-        /// Set boundary condition type. This may not be used to swicth
-        /// between Periodic and the other types, since the grid is
-        /// modified for Periodic conditions.
-        void setBoundaryConditionType(BoundaryConditionType type);
+    /// Set boundary condition type. This may not be used to swicth
+    /// between Periodic and the other types, since the grid is
+    /// modified for Periodic conditions.
+    void setBoundaryConditionType(BoundaryConditionType type);
 
-        /// Set the permeability of a cell directly. This will override
-        /// the permeability that was read from the eclipse file.
-        void setPermeability(const int cell_index, const permtensor_t& k);
+    /// Set the permeability of a cell directly. This will override
+    /// the permeability that was read from the eclipse file.
+    void setPermeability(const int cell_index, const permtensor_t& k);
 
 	/// Does a single-phase upscaling.
 	/// @return an upscaled permeability tensor.
 	permtensor_t upscaleSinglePhase();
 
-        /// Compute upscaled porosity.
-        /// @return total pore volume of all cells divided by total volume.
-        double upscalePorosity() const;
+    /// Compute upscaled porosity.
+    /// @return total pore volume of all cells divided by total volume.
+    double upscalePorosity() const;
 
     protected:
 	// ------- Typedefs and enums -------

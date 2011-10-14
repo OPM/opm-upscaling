@@ -83,7 +83,7 @@ namespace Dune
                                                                  const std::vector<double>& initial_saturation,
                                                                  const double boundary_saturation,
                                                                  const double pressure_drop,
-                                                                 const permtensor_t& upscaled_perm);
+                                                                 const permtensor_t& upscaled_perm,bool& success);
 
 	/// Accessor for the steady state saturation field. This is empty until
 	/// upscaleSteadyState() is called, at which point it will
@@ -117,7 +117,10 @@ namespace Dune
 	double stepsize_;
     double relperm_threshold_;
     double maximum_mobility_contrast_;
-    double sat_change_threshold_;
+    double sat_change_year_;
+    int    max_it_;
+    double  max_stepsize_;
+    double dt_sat_tol_;
 	TransportSolver transport_solver_;
     };
 

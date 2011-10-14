@@ -97,7 +97,7 @@ namespace Dune
 
 
     template<class Ostream, class Tensor>
-    void writeRelPerm(Ostream& os, const Tensor& K, double sat, double pdrop)
+    void writeRelPerm(Ostream& os, const Tensor& K, double sat, double pdrop,bool success)
     {
         /* const int num_rows = K.numRows(); */
         /* const int num_cols = K.numCols(); */
@@ -124,8 +124,8 @@ namespace Dune
         os << K(0,1) << '\t'; /* xy */
         os << K(2,1) << '\t'; /* zy */
         os << K(2,0) << '\t'; /* zx */
-        os << K(1,2);         /* yz */
-        
+        os << K(1,2) << '\t';         /* yz */
+        os << success;
 
 	os << std::endl;
 
@@ -206,13 +206,14 @@ namespace Dune
             kro_out << "# Pressuredrop  Sw  Krxx  Kryy  Krzz" << std::endl;
 
 
-            krw_out.precision(15);  krw_out.setf(std::ios::scientific | std::ios::showpoint);
-            kro_out.precision(15);  kro_out.setf(std::ios::scientific | std::ios::showpoint);
+            krw_out.precision(4);  krw_out.setf(std::ios::scientific | std::ios::showpoint);
+            kro_out.precision(4);  kro_out.setf(std::ios::scientific | std::ios::showpoint);
 	    //#endif
 
             // Then, compute some upscaled relative permeabilities.
             int num_cells = upscaler.grid().size(0);
             int num_sats = saturations.size();
+            //std::vector<bool> success_state;
             for (int i = 0; i < num_sats; ++i) {
                 // Starting every computation with a trio of uniform profiles.
                 std::vector<double> init_sat(num_cells, saturations[i]);
@@ -220,20 +221,23 @@ namespace Dune
                 int num_pdrops = pdrops.size();
                 for (int j = 0; j < num_pdrops; ++j) {
                     double pdrop = pdrops[j];
+                    bool success = false;
                     std::pair<permtensor_t, permtensor_t> lambda
-                        = upscaler.upscaleSteadyState(flow_direction, init_sat, saturations[i], pdrop, upscaled_K);
+                        = upscaler.upscaleSteadyState(flow_direction, init_sat, saturations[i], pdrop, upscaled_K, success);
                     double usat = upscaler.lastSaturationUpscaled();
+                    if(~success){
+                    	std::cout << "Upscaling failed for " << usat << std::endl;
+                    }else{
+                    	init_sat = upscaler.lastSaturationState();
+                    }
                     std::cout << "\n\nTensor of upscaled relperms for initial saturation " << saturations[i]
                               << ", real steady-state saturation " << usat
                               << " and pressure drop " << pdrop
                               << ":\n\n[water]\n" << lambda.first
                               << "\n[oil]\n" << lambda.second << std::endl;
                     // Changing initial saturations for next pressure drop to equal the steady state of the last
-                    init_sat = upscaler.lastSaturationState();
-
-		    
-                    writeRelPerm(krw_out, lambda.first , usat, pdrop);
-                    writeRelPerm(kro_out, lambda.second, usat, pdrop);
+                    writeRelPerm(krw_out, lambda.first , usat, pdrop, success);
+                    writeRelPerm(kro_out, lambda.second, usat, pdrop, success);
 		    
                 }
             }
