@@ -90,9 +90,10 @@ namespace Dune
 	clamp_sat_ = param.getDefault("clamp_sat", clamp_sat_);
 	//Opm::ImplicitTransportDetails::NRControl ctrl_;
 	ctrl_.max_it = param.getDefault("transport_nr_max_it", 10);
-	ctrl_.atol  = param.getDefault("transport_a_tol", 1.0e-6);
-	ctrl_.atol  = param.getDefault("transport_a_tol", 5.0e-7);
-	ctrl_.dxtol = param.getDefault("transport_a_tol", 1.0e-6);
+	max_repeats_ = param.getDefault("transport_max_rep", 10);
+	ctrl_.atol  = param.getDefault("transport_atol", 1.0e-6);
+	ctrl_.rtol  = param.getDefault("transport_rtol", 5.0e-7);
+
     }
 
     template <class GI, class RP, class BC>
@@ -152,6 +153,7 @@ namespace Dune
     	    }
     	}
     	bid_to_face.resize(maxbid + 1);
+    	periodic_cells_.resize(maxbid +1); // unnesseary?
     	for (CIt c = g.cellbegin(); c != g.cellend(); ++c) {
     	    for (FIt f = c->facebegin(); f != c->faceend(); ++f) {
     		if (f->boundary() && b.satCond(*f).isPeriodic()) {
@@ -198,6 +200,17 @@ namespace Dune
 		//model.init(myfluid_,mygrid_.c_grid(), &porevol_, gravity, &trans);
 		//tsolver_ = TransportSolver(model_);
     	}
+    	TwophaseFluid myfluid(myrp_);
+    	int num_b=direclet_cells_.size();
+    	for(int i=0; i <num_b; ++i){
+    		std::array<double,2> sat = {{direclet_sat_[2*i] ,direclet_sat_[2*i+1] }};
+    		std::array<double,2> mob;
+    		std::array<double,2> dmob;
+    		myfluid.mobility(direclet_cells_[i], sat, mob, dmob);
+    		double fl = mob[0]/(mob[0]+mob[1]);
+    		direclet_sat_[2*i] = fl;
+    		direclet_sat_[2*i+1] = 1-fl;
+    	}
     }
 
 
@@ -213,7 +226,7 @@ namespace Dune
 
     template <class GI, class RP, class BC>
     template <class PressureSolution>
-    void EulerUpstreamImplicit<GI, RP, BC>::transportSolve(std::vector<double>& saturation,
+    bool EulerUpstreamImplicit<GI, RP, BC>::transportSolve(std::vector<double>& saturation,
 						   const double time,
 						   const typename GI::Vector& gravity,
 						   const PressureSolution& pressure_sol,
@@ -221,12 +234,13 @@ namespace Dune
     {
 
     	Opm::ReservoirState<2> state(mygrid_.c_grid());
-    	std::vector<double>& sat = state.saturation();
-    	for (int i=0; i < mygrid_.numCells(); ++i){
+    	{
+    		std::vector<double>& sat = state.saturation();
+    		for (int i=0; i < mygrid_.numCells(); ++i){
     			sat[2*i] = saturation[i];
-    			sat[2*i+1] = 1-saturation[i];
+    		    sat[2*i+1] = 1-saturation[i];
+    		}
     	}
-
 
     	//int count=0;
     	const grid_t* cgrid = mygrid_.c_grid();
@@ -247,37 +261,28 @@ namespace Dune
 		int nr_transport_steps = 1;
 		time::StopWatch clock;
 		int repeats = 0;
-		const int max_repeats = 10;
 		bool finished = false;
 		clock.start();
-		std::vector< double > saturation_initial(saturation);
+		//std::vector< double > saturation_initial(saturation);
 		//std::array< double, 3 >    mygravity;
 
 
 
 		TwophaseFluid myfluid(myrp_);
 		TransportModel model(myfluid,*mygrid_.c_grid(),porevol_,&gravity[0],&trans_[0]);
-		TransportSolver		tsolver(model);
+		TransportSolver tsolver(model);
+		LinearSolver linsolve_;
 		Opm::ImplicitTransportDetails::NRReport  rpt_;
 
-		//Opm::ImplicitTransportLinAlgSupport::CSRMatrixUmfpackSolver linsolve_;
-		Opm::TransportLinearSolver linsolve_;
+
 		//std::vector<double> totmob(mygrid_.numCells(), 1.0);
 	    //std::vector<double> src   (mygrid_.numCells(), 0.0);
 		//src[0]                         =  1.0;
 		//    src[grid->number_of_cells - 1] = -1.0;
 	    Opm::TransportSource tsrc;//create_transport_source(0, 2);
 	    // the input flux is assumed to be the satuation times the flux in the transport solver
-	    int num_b=direclet_cells_.size();
-	    for(int i=0; i <num_b; ++i){
-	    	std::array<double,2> sat = {{saturation[2*i] ,saturation[2*i+1] }};
-	    	std::array<double,2> mob;
-	    	std::array<double,2> dmob;
-	    	myfluid.mobility(direclet_cells_[i], sat, mob, dmob);
-	    	double fl = mob[0]/(mob[0]+mob[1]);
-	    	saturation[2*i] = fl;
-	    	saturation[2*i+1] = 1-fl;
-	    }
+
+
 	    tsrc.nsrc =direclet_sat_.size();
 	    tsrc.saturation = direclet_sat_;
 	    tsrc.cell = direclet_cells_;
@@ -292,27 +297,44 @@ namespace Dune
 	 	   		if(~(rpt_.flag<0) ){
 	 	   			finished =true;
 	 	   		}else{
-	 	   			if(repeats >max_repeats){
+	 	   			if(repeats >max_repeats_){
 	 	   				finished=true;
 	 	   			}else{
 	 	   				MESSAGE("Warning: Transport failed, retrying with more steps.");
+	 	   				std::cout << "Warning: Transport failed, retrying with more steps.\n";
 	 	   				nr_transport_steps *= 2;
 	 	   				dt_transport = time/nr_transport_steps;
-	 	   				saturation = saturation_initial;
+	 	   			    {
+	 	   					std::vector<double>& sat = state.saturation();
+	 	   					for (int i=0; i < mygrid_.numCells(); ++i){
+	 	   							sat[2*i] = saturation[i];
+	 	   							sat[2*i+1] = 1-saturation[i];
+	 	   					}
+	 	   			    }
 	 	   			}
 	 	   		}
 	 	   		repeats +=1;
 		}
         clock.stop();
-        if((rpt_.flag<0)){
-        	std::cerr << "EulerUpstreamImplicit did not converge" << std::endl;
-        }
+        std::cout << "EulerUpstreamImplicite used  " << repeats << "repeats and " << nr_transport_steps <<" steps"<< std::endl;
 #ifdef VERBOSE
         std::cout << "Seconds taken by transport solver: " << clock.secsSinceStart() << std::endl;
 #endif // VERBOSE
-        for (int i=0; i < mygrid_.numCells(); ++i){
-	 		   saturation[i] = sat[2*i];
-		}
+        {
+        	std::vector<double>& sat = state.saturation();
+        	for (int i=0; i < mygrid_.numCells(); ++i){
+        		saturation[i] = sat[2*i];
+        	}
+        }
+
+        if((rpt_.flag<0)){
+        	std::cerr << "EulerUpstreamImplicit did not converge" << std::endl;
+        	return false;
+        }else{
+           return true;
+        }
+
+
     }
 
 

@@ -5,7 +5,7 @@
 // Created: Mon Oct 26 08:29:09 2009
 //
 // Author(s): Atgeirr F Rasmussen <atgeirr@sintef.no>
-//            Bård Skaflestad     <bard.skaflestad@sintef.no>
+//            Bï¿½rd Skaflestad     <bard.skaflestad@sintef.no>
 //
 // $Date$
 //
@@ -440,20 +440,32 @@ namespace Dune
         return cfl_factor_capillary_;
     }
 
-
     template <int dim, class RPImpl, class RockType>
     double ReservoirPropertyCommon<dim, RPImpl, RockType>::capillaryPressure(int cell_index, double saturation) const
+        {
+            if (rock_.size() > 0) {
+                int r = cell_to_rock_[cell_index];
+                return rock_[r].capPress(permeability(cell_index), porosity(cell_index), saturation);
+            } else {
+                // HACK ALERT!
+                // Use zero capillary pressure if no known rock table exists.
+                return 0.0;
+            }
+    }
+
+    template <int dim, class RPImpl, class RockType>
+    double ReservoirPropertyCommon<dim, RPImpl, RockType>::capillaryPressureDeriv(int cell_index, double saturation) const
     {
         if (rock_.size() > 0) {
             int r = cell_to_rock_[cell_index];
-            return rock_[r].capPress(permeability(cell_index), porosity(cell_index), saturation);
+            double dpc = rock_[r].capPressDeriv(permeability(cell_index), porosity(cell_index), saturation);
+            return dpc;
         } else {
             // HACK ALERT!
             // Use zero capillary pressure if no known rock table exists.
             return 0.0;
         }
     }
-
 
     template <int dim, class RPImpl, class RockType>
     double ReservoirPropertyCommon<dim, RPImpl, RockType>::saturationFromCapillaryPressure(int cell_index, double cap_press) const

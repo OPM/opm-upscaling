@@ -110,7 +110,7 @@ namespace Dune {
 	/// @tparam
 	/// @param
 	template <class PressureSolution>
-	void transportSolve(std::vector<double>& saturation,
+	bool transportSolve(std::vector<double>& saturation,
 			    const double time,
 			    const typename GridInterface::Vector& gravity,
 			    const PressureSolution& pressure_sol,
@@ -144,10 +144,11 @@ namespace Dune {
 	//typedef Opm::SimpleFluid2pWrapper<ReservoirProperties>                          TwophaseFluid;
 	typedef Opm::TwophaseFluidWrapper                          TwophaseFluid;
 	typedef Opm::SinglePointUpwindTwoPhase<TwophaseFluid> TransportModel;
-	// using namespace Opm::ImplicitTransportDefault
-	//typedef Opm::ImplicitTransportDefault::NewtonVectorCollection< ::std::vector<double> >      NVecColl;
-	//typedef Opm::ImplicitTransportDefault::JacobianSystem        < struct CSRMatrix, NVecColl > JacSys;
-	//using namespace Opm::ImplicitTransportDefault;
+#	if 0
+	typedef Opm::ImplicitTransportDefault::NewtonVectorCollection< ::std::vector<double> >      NVecColl;
+	typedef Opm::ImplicitTransportDefault::JacobianSystem        < struct CSRMatrix, NVecColl > JacSys;
+	typedef Opm::ImplicitTransportLinAlgSupport::CSRMatrixUmfpackSolver LinearSolver;
+# else
 	typedef Dune::FieldVector<double, 1>    ScalarVectorBlockType;
 	typedef Dune::FieldMatrix<double, 1, 1> ScalarMatrixBlockType;
 
@@ -157,12 +158,15 @@ namespace Dune {
 	typedef Opm::ImplicitTransportDefault::NewtonVectorCollection< ScalarBlockVector >          NVecColl;
 	typedef Opm::ImplicitTransportDefault::JacobianSystem        < ScalarBCRSMatrix, NVecColl > JacSys;
 
+    typedef Opm::LinearSolverBICGSTAB LinearSolver;
+# endif
 	typedef Opm::ImplicitTransport<TransportModel,
                                JacSys        ,
                                Opm::MaxNormDune       ,
                                Opm::ImplicitTransportDefault::VectorNegater ,
                                Opm::ImplicitTransportDefault::VectorZero    ,
                                Opm::ImplicitTransportDefault::MatrixZero    > TransportSolver;
+
 
 	// should be initialized by param
 	
@@ -177,6 +181,7 @@ namespace Dune {
 
 	bool check_sat_;
 	bool clamp_sat_;
+	int max_repeats_;
     std::vector<double> porevol_;
 
     std::vector<int> periodic_cells_;

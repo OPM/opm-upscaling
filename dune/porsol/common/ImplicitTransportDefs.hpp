@@ -8,6 +8,14 @@
 #include <dune/istl/solvers.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
+#include <dune/common/param/ParameterGroup.hpp>
+#include <dune/porsol/common/LinearSolverISTL.hpp>
+#include <dune/porsol/opmpressure/src/GridAdapter.hpp>
+#include <dune/porsol/common/ReservoirPropertyCapillary.hpp>
+#include <dune/porsol/opmpressure/src/sparse_sys.h>
+#include <dune/porsol/opmpressure/src/ifs_tpfa.h>
+#include <dune/porsol/opmpressure/src/trans_tpfa.h>
+
 #if 0
 template <class Ostream, class Collection>
 Ostream&
@@ -130,7 +138,15 @@ public:
         r_.phaseMobilities     (c, s1, mob );
         r_.phaseMobilitiesDeriv(c, s1, dmob);
     }
-
+    template <class Sat ,
+              class PC ,
+              class DPC>
+    void
+    pc(int c, const Sat& s, PC& pc, DPC& dpc) const {
+    	const double s1 = s[0];
+    	pc = r_.capillaryPressure(c, s1);
+    	dpc= r_.capillaryPressureDeriv(c, s1);
+    }
     double density(int p) const {
         if (p == 0) {
             return r_.densityFirstPhase();
@@ -143,7 +159,8 @@ public:
 private:
     Dune::ReservoirPropertyCapillary<3> r_;
 };
-class TransportLinearSolver {
+    
+class LinearSolverBICGSTAB {
 public:
 	typedef Dune::FieldVector<double, 1>    ScalarVectorBlockType;
 	typedef Dune::FieldMatrix<double, 1, 1> ScalarMatrixBlockType;
@@ -165,7 +182,7 @@ public:
 
         int maxit  = A.N();
         double tol = 5.0e-7;
-        int verb   = 1;
+        int verb   = 0;
 
         Dune::BiCGSTABSolver<ScalarBlockVector>
             solver(opA, precond, tol, maxit, verb);
@@ -175,6 +192,38 @@ public:
         solver.apply(x, bcpy, res);
     }
 };
+
+class LinearSolverISTLAMG {
+public:
+    LinearSolverISTLAMG()
+    {
+        Dune::parameter::ParameterGroup params;
+
+        params.insertParameter("linsolver_tolerance",
+                               boost::lexical_cast<std::string>(5.0e-9));
+
+        params.insertParameter("linsoler_verbosity",
+                               boost::lexical_cast<std::string>(1));
+
+        params.insertParameter("linsolver_type",
+                               boost::lexical_cast<std::string>(1));
+
+        ls_.init(params);
+    }
+
+    void
+    solve(struct CSRMatrix* A,
+          const double*     b,
+          double*           x)
+    {
+        Dune::LinearSolverISTL::LinearSolverResults res =
+            ls_.solve(A->m, A->nnz, A->ia, A->ja, A->sa, b, x);
+    }
+
+private:
+    Dune::LinearSolverISTL ls_;
+};
+
 class TransportSource {
 public:
     TransportSource() : nsrc(0) {}

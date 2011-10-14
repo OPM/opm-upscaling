@@ -5,7 +5,7 @@
 // Created: Mon Oct 26 08:23:31 2009
 //
 // Author(s): Atgeirr F Rasmussen <atgeirr@sintef.no>
-//            Bård Skaflestad     <bard.skaflestad@sintef.no>
+//            Bï¿½rd Skaflestad     <bard.skaflestad@sintef.no>
 //
 // $Date$
 //
@@ -164,10 +164,14 @@ namespace Dune
 
         /// @brief Capillary pressure.
         /// @param cell_index index of a grid cell.
-	/// @param saturation a saturation value.
+	    /// @param saturation a saturation value.
         /// @return capillary pressure at the given cell and saturation.
         double capillaryPressure(int cell_index, double saturation) const;
-
+        /// @brief Derivative of Capillary pressure.
+        /// @param cell_index index of a grid cell.
+        /// @param saturation a saturation value.
+        /// @return capillary pressure at the given cell and saturation.
+        double capillaryPressureDeriv(int c, double s) const;
         /// @brief Inverse of the capillary pressure function.
         /// @param cell_index index of a grid cell.
 	/// @param cap_press a capillary pressure value.
