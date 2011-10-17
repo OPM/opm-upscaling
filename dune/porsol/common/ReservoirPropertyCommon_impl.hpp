@@ -449,7 +449,7 @@ namespace Dune
             } else {
                 // HACK ALERT!
                 // Use zero capillary pressure if no known rock table exists.
-                return 0.0;
+                return 1e5*(1-saturation);
             }
     }
 
@@ -463,7 +463,7 @@ namespace Dune
         } else {
             // HACK ALERT!
             // Use zero capillary pressure if no known rock table exists.
-            return 0.0;
+            return -1.0e5;
         }
     }
 
