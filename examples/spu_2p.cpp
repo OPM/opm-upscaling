@@ -65,7 +65,7 @@
 #include <dune/porsol/opmtransport/src/JacobianSystem.hpp>
 
 #include <dune/porsol/opmtransport/src/SinglePointUpwindTwoPhase.hpp>
-
+#include <array>
 
 class PressureSolver {
 public:
@@ -169,6 +169,9 @@ main(int argc, char** argv)
     src[grid.c_grid()->number_of_cells - 1] = -1.0;
 
     Opm::ReservoirState<> state(grid.c_grid());
+    std::vector<double>& sat=state.saturation();
+    std::vector<double> tmp_sat(sat.size(),0.3);
+    sat =  tmp_sat;
 
     psolver.solve(grid.c_grid(), totmob, src, state);
 
@@ -183,14 +186,19 @@ main(int argc, char** argv)
     Opm::ImplicitTransportDetails::NRControl ctrl;
 
     std::vector<double> porevol;
+    std::vector<double> trans(grid.c_grid()->number_of_cells,1);
+    std::array<double,3> gravity;
+    gravity[2]=10.0;
     compute_porevolume(grid.c_grid(), rock, porevol);
 
     Opm::TwophaseFluidWrapper   fluid  (res_prop);
-    TransportModel  model  (fluid, *grid.c_grid(), porevol);
+    TransportModel  model  (fluid, *grid.c_grid(), porevol, &gravity[0], &trans[0]);
     TransportSolver tsolver(model);
 
     double dt   = 1e2;
     ctrl.max_it = 20 ;
+    ctrl.rtol = 1e-40;
+    ctrl.atol = 1e-12;
 
     Opm::LinearSolverBICGSTAB linsolve;
     tsolver.solve(*grid.c_grid(), &tsrc, dt, ctrl, state, linsolve, rpt);
