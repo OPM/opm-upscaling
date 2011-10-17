@@ -19,7 +19,7 @@ spe10_test					\
 spu_2p						\
 tpfa_compressible_solver_test			\
 tpfa_solver_test				\
-twophase2_test 
+twophase2_test
 
 
 
