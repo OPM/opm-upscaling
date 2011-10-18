@@ -225,7 +225,7 @@ namespace Dune
                     std::pair<permtensor_t, permtensor_t> lambda
                         = upscaler.upscaleSteadyState(flow_direction, init_sat, saturations[i], pdrop, upscaled_K, success);
                     double usat = upscaler.lastSaturationUpscaled();
-                    if(~success){
+                    if(! success){
                     	std::cout << "Upscaling failed for " << usat << std::endl;
                     }else{
                     	init_sat = upscaler.lastSaturationState();

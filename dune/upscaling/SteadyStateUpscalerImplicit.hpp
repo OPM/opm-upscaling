@@ -114,7 +114,7 @@ namespace Dune
 	bool output_vtk_;
     bool print_inoutflows_;
 	int simulation_steps_;
-	double stepsize_;
+	double init_stepsize_;
     double relperm_threshold_;
     double maximum_mobility_contrast_;
     double sat_change_year_;

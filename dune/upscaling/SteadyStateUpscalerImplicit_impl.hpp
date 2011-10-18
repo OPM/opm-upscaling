@@ -55,7 +55,7 @@ namespace Dune
 	  output_vtk_(false),
       print_inoutflows_(false),
 	  simulation_steps_(10),
-	  stepsize_(0.1),
+	  init_stepsize_(0.1),
 	  relperm_threshold_(1.0e-8),
       maximum_mobility_contrast_(1.0e9),
       sat_change_year_(0.0),
@@ -75,7 +75,7 @@ namespace Dune
 	output_vtk_ = param.getDefault("output_vtk", output_vtk_);
 	print_inoutflows_ = param.getDefault("print_inoutflows", print_inoutflows_);
 	simulation_steps_ = param.getDefault("simulation_steps", simulation_steps_);
-	stepsize_ = Dune::unit::convert::from(param.getDefault("stepsize", stepsize_),
+	init_stepsize_ = Dune::unit::convert::from(param.getDefault("stepsize", init_stepsize_),
 					      Dune::unit::day);
 	relperm_threshold_ = param.getDefault("relperm_threshold", relperm_threshold_);
     maximum_mobility_contrast_ = param.getDefault("maximum_mobility_contrast", maximum_mobility_contrast_);
@@ -174,12 +174,13 @@ namespace Dune
         std::vector<double> saturation_old = saturation;
         bool stationary = false;
         int it_count=0;
+        double stepsize=init_stepsize_;
         std::vector<double> init_saturation(saturation);
-        while((~stationary) & (it_count < max_it_)){// & transport_cost < max_transport_cost_)
+        while((!stationary) & (it_count < max_it_)){// & transport_cost < max_transport_cost_)
         //for (int iter = 0; iter < simulation_steps_; ++iter) {
         // Run transport solver.
-        	std::cout << "Running transport step " << it_count <<" with stepsize " << stepsize_/Dune::unit::year << " year \n";
-            bool converged=transport_solver_.transportSolve(saturation, stepsize_, gravity, this->flow_solver_.getSolution(), injection);
+        	std::cout << "Running transport step " << it_count <<" with stepsize " << stepsize/Dune::unit::year << " year \n";
+            bool converged=transport_solver_.transportSolve(saturation, stepsize, gravity, this->flow_solver_.getSolution(), injection);
             // Run pressure solver.
             if(converged){
             	init_saturation=saturation;
@@ -218,17 +219,17 @@ namespace Dune
             		maxdiff = std::max(maxdiff, std::fabs(saturation[i] - saturation_old[i]));
             	}
             	std::cout << "Maximum saturation change: " << maxdiff << std::endl;
-            	double ds_year=maxdiff*Dune::unit::year/stepsize_;
+            	double ds_year=maxdiff*Dune::unit::year/stepsize;
             	if( ds_year < sat_change_year_){
             		stationary=true;
             	}
             	if(maxdiff< dt_sat_tol_){
-            		stepsize_=std::min(max_stepsize_,2*stepsize_);
+            		stepsize=std::min(max_stepsize_,2*stepsize);
             	}
             }else{
             	std::cerr << "Cutting time step\n";
             	init_saturation = saturation_old;
-            	stepsize_=stepsize_/2.0;
+            	stepsize=stepsize/2.0;
             }
             it_count+=1;
             // Copy to old.
