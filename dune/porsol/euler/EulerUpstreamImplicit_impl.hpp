@@ -294,7 +294,7 @@ namespace Dune
 	 	   			  break;
 	 	   			}
 	    		}
-	 	   		if(~(rpt_.flag<0) ){
+	 	   		if(!(rpt_.flag<0) ){
 	 	   			finished =true;
 	 	   		}else{
 	 	   			if(repeats >max_repeats_){
