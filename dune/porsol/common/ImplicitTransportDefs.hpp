@@ -226,13 +226,16 @@ private:
 
 class TransportSource {
 public:
-    TransportSource() : nsrc(0) {}
+    TransportSource() : nsrc(0),pf(0) {}
 
     int                   nsrc      ;
+    int                   pf      ;
     ::std::vector< int  > cell      ;
     ::std::vector<double> pressure  ;
     ::std::vector<double> flux      ;
     ::std::vector<double> saturation;
+    ::std::vector<double> periodic_cells;
+    ::std::vector<double> periodic_faces;
 };
 template <class Arr>
 void
