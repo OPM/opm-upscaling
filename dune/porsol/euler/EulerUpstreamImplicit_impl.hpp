@@ -116,14 +116,16 @@ namespace Dune
     		porevol_[i]= mygrid_.cellVolume(i)*r.porosity(i);
     	}
     	int numf=mygrid_.numFaces();
-    	trans_.resize(numf);
+    	//std::vector<double> htrans(ngconn);trans_(numf);
     	//grid_t* cgrid=mygrid_.c_grid();
     	int num_cells = mygrid_.numCells();
     	int ngconn  = mygrid_.c_grid()->cell_facepos[num_cells];
-    	std::vector<double> htrans(ngconn);
+    	//std::vector<double> htrans_(ngconn);
+    	htrans_.resize(ngconn);
     	const double* perm = &(r.permeability(0)(0,0));
-    	tpfa_htrans_compute(mygrid_.c_grid(), perm, &htrans[0]);
+    	tpfa_htrans_compute(mygrid_.c_grid(), perm, &htrans_[0]);
     	int count = 0;
+    	/*
     	for (int cell = 0; cell < num_cells; ++cell) {
     		int num_local_faces = mygrid_.numCellFaces(cell);
     		GridAdapter::Vector cc = mygrid_.cellCentroid(cell);
@@ -137,6 +139,7 @@ namespace Dune
         for(int i=0; i < numf;++i){
         	trans_[i]= 1/trans_[i];
         }
+        */
     	myrp_= r;
 
     	//const BoundaryConditions* pboundary_;
@@ -233,15 +236,17 @@ namespace Dune
 
     	mygrid_.makeQPeriodic(periodic_hfaces_,periodic_cells_);
     	//calculating new values for trans for periodic faces
+    	/*
     	for(int i=0;i<int(periodic_faces_.size());++i){
     		trans_[periodic_faces_[i]]=0;
     	}
     	for(int i=0;i<int(periodic_hfaces_.size());++i){
-    	    		trans_[periodic_faces_[i]]+=1/htrans[periodic_hfaces_[i]];
+    	    		trans_[periodic_faces_[i]]+=1/htrans_[periodic_hfaces_[i]];
     	}
     	for(int i=0;i<int(periodic_faces_.size());++i){
     	    		trans_[periodic_faces_[i]]=1/trans_[periodic_faces_[i]];
     	}
+    	*/
 
     	TwophaseFluid myfluid(myrp_);
     	int num_b=direclet_cells_.size();
@@ -321,8 +326,9 @@ namespace Dune
 		double* tmp_grav=0;
 		const grid_t& c_grid=*mygrid_.c_grid();
 		//TransportModel model(myfluid,*mygrid_.c_grid(),porevol_,&gravity[0],&trans_[0]);
-		TransportModel model(myfluid,c_grid,porevol_,tmp_grav,&trans_[0]);
+		TransportModel model(myfluid,c_grid,porevol_,tmp_grav);
 		model.makefhfQPeriodic(periodic_faces_,periodic_hfaces_);
+		model.initGravityTrans(*mygrid_.c_grid(),htrans_);
 		TransportSolver tsolver(model);
 		LinearSolver linsolve_;
 		Opm::ImplicitTransportDetails::NRReport  rpt_;

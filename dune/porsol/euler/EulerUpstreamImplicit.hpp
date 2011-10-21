@@ -187,7 +187,8 @@ namespace Dune {
     std::vector<int> direclet_cells_;
     std::vector<double> direclet_sat_;
     std::vector<double> direclet_hfaces_;
-    std::vector< double >		trans_;
+    //std::vector< double >		trans_;
+    std::vector<double> htrans_;
     Opm::ImplicitTransportDetails::NRControl ctrl_;
 	// Storing residual so that we won't have to reallocate it for every step.
 	//mutable std::vector<double> residual_;
