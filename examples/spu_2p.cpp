@@ -186,13 +186,15 @@ main(int argc, char** argv)
     Opm::ImplicitTransportDetails::NRControl ctrl;
 
     std::vector<double> porevol;
-    std::vector<double> trans(grid.c_grid()->number_of_cells,1);
+    grid_t& cgrid=*grid.c_grid();
+    std::vector<double> htrans(cgrid.cell_facepos[ cgrid.number_of_cells ],1);
     std::array<double,3> gravity;
     gravity[2]=10.0;
     compute_porevolume(grid.c_grid(), rock, porevol);
 
     Opm::TwophaseFluidWrapper   fluid  (res_prop);
-    TransportModel  model  (fluid, *grid.c_grid(), porevol, &gravity[0], &trans[0]);
+    TransportModel  model  (fluid, *grid.c_grid(), porevol, &gravity[0]);//, &trans[0]);
+    model.initGravityTrans(*grid.c_grid(),htrans);
     TransportSolver tsolver(model);
 
     double dt   = 1e2;
