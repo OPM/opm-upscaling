@@ -75,7 +75,7 @@ namespace Dune
 	output_vtk_ = param.getDefault("output_vtk", output_vtk_);
 	print_inoutflows_ = param.getDefault("print_inoutflows", print_inoutflows_);
 	simulation_steps_ = param.getDefault("simulation_steps", simulation_steps_);
-	init_stepsize_ = Dune::unit::convert::from(param.getDefault("stepsize", init_stepsize_),
+	init_stepsize_ = Dune::unit::convert::from(param.getDefault("init_stepsize", init_stepsize_),
 					      Dune::unit::day);
 	relperm_threshold_ = param.getDefault("relperm_threshold", relperm_threshold_);
     maximum_mobility_contrast_ = param.getDefault("maximum_mobility_contrast", maximum_mobility_contrast_);
@@ -189,7 +189,7 @@ namespace Dune
             			this->residual_tolerance_, this->linsolver_verbosity_, this->linsolver_type_);
             			*/
             	max_mod = this->flow_solver_.postProcessFluxes();
-            	std::cout << "Max mod = " << max_mod << std::endl;
+            	std::cout << "Max mod of fluxes= " << max_mod << std::endl;
             	// Print in-out flows if requested.
             	if (print_inoutflows_) {
             		std::pair<double, double> w_io, o_io;
@@ -218,8 +218,9 @@ namespace Dune
             	for (int i = 0; i < num_cells; ++i) {
             		maxdiff = std::max(maxdiff, std::fabs(saturation[i] - saturation_old[i]));
             	}
-            	std::cout << "Maximum saturation change: " << maxdiff << std::endl;
             	double ds_year=maxdiff*Dune::unit::year/stepsize;
+            	std::cout << "Maximum saturation change/year: " << ds_year << std::endl;
+
             	if( ds_year < sat_change_year_){
             		stationary=true;
             	}
