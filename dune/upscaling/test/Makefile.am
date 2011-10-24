@@ -10,7 +10,6 @@
 
 check_PROGRAMS = 
 noinst_PROGRAMS = \
-		 test_array \
 		 steadystate_test \
          steadystate_test_implicit
         
@@ -21,7 +20,7 @@ LDADD = $(DUNEMPILIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) \
         $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)   \
         $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) $(SUPERLU_LIBS)
 
-test_array_SOURCES = test_array.cpp
+# test_array_SOURCES = test_array.cpp
 
 #upscaling_test_SOURCES = upscaling_test.cpp
 
