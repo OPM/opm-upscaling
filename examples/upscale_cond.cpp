@@ -1066,7 +1066,7 @@ int main(int varnum, char** vararg)
                outputtmp << "# CementationExp, rocktype " << i << ": " << cemoptionvalue << endl;
            }
            if (satoptionvalue > 0) {
-               outputtmp << "# SaturationExp, rocktype  " << i << ": " << cemoptionvalue << endl;
+               outputtmp << "# SaturationExp, rocktype  " << i << ": " << satoptionvalue << endl;
            }
        }
        outputtmp << "# " << endl;
