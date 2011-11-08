@@ -44,6 +44,8 @@
 #include <algorithm>
 #include <limits>
 
+#include <dune/common/array.hh>
+
 #include <dune/common/ErrorMacros.hpp>
 #include <dune/common/Average.hpp>
 #include <dune/common/Units.hpp>
@@ -52,7 +54,6 @@
 #include <dune/common/StopWatch.hpp>
 #include <dune/porsol/common/ImplicitTransportDefs.hpp>
 #include <vector>
-#include <array>
 #include <dune/porsol/opmpressure/src/trans_tpfa.h>
 
 namespace Dune
@@ -117,7 +118,6 @@ namespace Dune
     	int numf=mygrid_.numFaces();
     	trans_.resize(numf);
     	//grid_t* cgrid=mygrid_.c_grid();
-    	std::array<int,2> cell;
     	int num_cells = mygrid_.numCells();
     	int ngconn  = mygrid_.c_grid()->cell_facepos[num_cells];
     	std::vector<double> htrans(ngconn);
@@ -160,6 +160,7 @@ namespace Dune
     	    }
     	}
 
+    	array<int,2> cell;
     	for (CIt c = g.cellbegin(); c != g.cellend(); ++c) {
     		cell[0] = c->index();
     		for (FIt f = c->facebegin(); f != c->faceend(); ++f) {
@@ -270,9 +271,9 @@ namespace Dune
 	    // the input flux is assumed to be the satuation times the flux in the transport solver
 	    int num_b=direclet_cells_.size();
 	    for(int i=0; i <num_b; ++i){
-	    	std::array<double,2> sat = {{saturation[2*i] ,saturation[2*i+1] }};
-	    	std::array<double,2> mob;
-	    	std::array<double,2> dmob;
+	    	array<double,2> sat = {{saturation[2*i] ,saturation[2*i+1] }};
+	    	array<double,2> mob;
+	    	array<double,4> dmob;
 	    	myfluid.mobility(direclet_cells_[i], sat, mob, dmob);
 	    	double fl = mob[0]/(mob[0]+mob[1]);
 	    	saturation[2*i] = fl;
