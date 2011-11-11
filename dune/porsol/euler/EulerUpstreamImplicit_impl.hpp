@@ -175,7 +175,7 @@ namespace Dune
 
     	const grid_t& c_grid=*mygrid_.c_grid();
         int hf_ind=0;
-
+        int bf_ind=0;
 		periodic_cells_.resize(0);
 		periodic_faces_.resize(0);
 		periodic_hfaces_.resize(0);
@@ -194,6 +194,7 @@ namespace Dune
     			// Compute cell[1], cell_sat[1]
     			FIt nbface = f;
     			if (f->boundary()) {
+    				bf_ind+=1;
     				if (b.satCond(*f).isPeriodic()) {
     					nbface = bid_to_face[b.getPeriodicPartner(f->boundaryId())];
     					ASSERT(nbface != f);
@@ -221,8 +222,8 @@ namespace Dune
     					periodic_cells_.push_back(cell1);
     					periodic_faces_.push_back(f_ind);
     					periodic_hfaces_.push_back(hf_ind);
-    				} else {
-    					ASSERT(b.satCond(*f).isDirichlet());
+    				} else if (!( b.flowCond(*f).isNeumann() && b.flowCond(*f).outflux() == 0.0)) {
+
     					//cell1 = cell0;
     					direclet_cells_.push_back(cell0);
     					direclet_sat_.push_back(b.satCond(*f).saturation());
