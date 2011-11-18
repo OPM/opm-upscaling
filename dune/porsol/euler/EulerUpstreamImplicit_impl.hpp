@@ -93,6 +93,7 @@ namespace Dune
 	max_repeats_ = param.getDefault("transport_max_rep", 10);
 	ctrl_.atol  = param.getDefault("transport_atol", 1.0e-6);
 	ctrl_.rtol  = param.getDefault("transport_rtol", 5.0e-7);
+	ctrl_.max_it_ls = param.getDefault("transport_max_it_ls", 20);
 
     }
 
@@ -380,7 +381,7 @@ namespace Dune
 	 	   		repeats +=1;
 		}
         clock.stop();
-        std::cout << "EulerUpstreamImplicite used  " << repeats << "repeats and " << nr_transport_steps <<" steps"<< std::endl;
+        std::cout << "EulerUpstreamImplicite used  " << repeats << " repeats and " << nr_transport_steps <<" steps"<< std::endl;
 #ifdef VERBOSE
         std::cout << "Seconds taken by transport solver: " << clock.secsSinceStart() << std::endl;
 #endif // VERBOSE

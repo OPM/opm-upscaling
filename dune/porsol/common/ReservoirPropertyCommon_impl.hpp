@@ -466,6 +466,31 @@ namespace Dune
             return -1.0e5;
         }
     }
+    template <int dim, class RPImpl, class RockType>
+    double ReservoirPropertyCommon<dim, RPImpl, RockType>::s_min(int cell_index) const
+    {
+    	if (rock_.size() > 0) {
+     		int r = cell_to_rock_[cell_index];
+     		return rock_[r].s_min();
+    	} else {
+        // HACK ALERT!
+        // Use zero as minimum saturation if no known rock table exists.
+    		return 0;
+        }
+     }
+
+    template <int dim, class RPImpl, class RockType>
+    double ReservoirPropertyCommon<dim, RPImpl, RockType>::s_max(int cell_index) const
+    {
+     	if (rock_.size() > 0) {
+     		int r = cell_to_rock_[cell_index];
+       		return rock_[r].s_max();
+      	} else {
+       // HACK ALERT!
+       // Use 1 as maximum saturation if no known rock table exists.
+      		return 1;
+      	}
+    }
 
     template <int dim, class RPImpl, class RockType>
     double ReservoirPropertyCommon<dim, RPImpl, RockType>::saturationFromCapillaryPressure(int cell_index, double cap_press) const

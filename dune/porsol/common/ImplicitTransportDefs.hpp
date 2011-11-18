@@ -154,7 +154,14 @@ public:
             return r_.densitySecondPhase();
         }
     }
-    
+
+    double s_min(int c) const {
+        return r_.s_min(c);
+    }
+    double s_max(int c) const {
+    	return r_.s_max(c);
+    }
+
 
 private:
     Dune::ReservoirPropertyCapillary<3> r_;

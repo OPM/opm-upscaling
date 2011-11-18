@@ -172,9 +172,20 @@ namespace Dune
         /// @param saturation a saturation value.
         /// @return capillary pressure at the given cell and saturation.
         double capillaryPressureDeriv(int c, double s) const;
+
+        // @brief Minimum of saturation in rock table.
+        /// @param cell_index index of a grid cell.
+        /// @return minimum saturation in given cell.
+        double s_min(int c) const;
+
+        // @brief Maximum of saturation in rock table.
+        /// @param cell_index index of a grid cell.
+        /// @return maximum saturation in given cell.
+        double s_max(int c) const;
+
         /// @brief Inverse of the capillary pressure function.
         /// @param cell_index index of a grid cell.
-	/// @param cap_press a capillary pressure value.
+        /// @param cap_press a capillary pressure value.
         /// @return the saturation at the given cell has the given capillary pressure.
         double saturationFromCapillaryPressure(int cell_index, double cap_press) const;
 
