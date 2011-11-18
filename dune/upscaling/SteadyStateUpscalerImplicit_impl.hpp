@@ -154,6 +154,13 @@ namespace Dune
         // Set up initial saturation profile.
         std::vector<double> saturation = initial_saturation;
 
+        for (int c = 0; c < saturation.size(); c++ ) {
+            	double s_min = this->res_prop_.s_min(c);
+            	double s_max = this->res_prop_.s_max(c);
+            	saturation[c] = std::max(s_min, saturation[c]);
+            	saturation[c] = std::min(s_max, saturation[c]);
+        }
+
         // Set up boundary conditions.
         setupUpscalingConditions(this->ginterf_, this->bctype_, flow_direction,
                                  pressure_drop, boundary_saturation, this->twodim_hack_, this->bcond_);
@@ -175,6 +182,8 @@ namespace Dune
         bool stationary = false;
         int it_count=0;
         double stepsize=init_stepsize_;
+
+
         std::vector<double> init_saturation(saturation);
         while((!stationary) & (it_count < max_it_)){// & transport_cost < max_transport_cost_)
         //for (int iter = 0; iter < simulation_steps_; ++iter) {
