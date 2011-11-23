@@ -134,9 +134,9 @@ namespace Dune
     SteadyStateUpscalerImplicit<Traits>::
     upscaleSteadyState(const int flow_direction,
                        const std::vector<double>& initial_saturation,
-		       const double boundary_saturation,
-		       const double pressure_drop,
-		       const permtensor_t& upscaled_perm,bool& success)
+                       const double boundary_saturation,
+                       const double pressure_drop,
+                       const permtensor_t& upscaled_perm,bool& success)
     {
 	static int count = 0;
 	++count;
@@ -157,8 +157,8 @@ namespace Dune
         for (int c = 0; c < saturation.size(); c++ ) {
             	double s_min = this->res_prop_.s_min(c);
             	double s_max = this->res_prop_.s_max(c);
-            	saturation[c] = std::max(s_min, saturation[c]);
-            	saturation[c] = std::min(s_max, saturation[c]);
+            	saturation[c] = std::max(s_min+1e-4, saturation[c]);
+            	saturation[c] = std::min(s_max-1e-4, saturation[c]);
         }
 
         // Set up boundary conditions.
@@ -329,9 +329,6 @@ namespace Dune
         // Dividing by pore volume gives average saturations.
         return sat_vol/pore_vol;
     }
-
-
-
 
     template <class Traits>
     template <class FlowSol>
