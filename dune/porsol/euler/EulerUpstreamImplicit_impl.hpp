@@ -44,6 +44,8 @@
 #include <algorithm>
 #include <limits>
 
+#include <dune/common/array.hh>
+
 #include <dune/common/ErrorMacros.hpp>
 #include <dune/common/Average.hpp>
 #include <dune/common/Units.hpp>

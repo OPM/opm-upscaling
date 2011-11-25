@@ -288,7 +288,7 @@ private: // Methods
     {
         tfd.saturation = fluid_data_.cell_data.saturation[cell];
         tfd.mobility = fluid_data_.cell_data.mobility[cell];
-        tfd.fractional_flow = tfd.fractional_flow[cell];
+        tfd.fractional_flow = fluid_data_.fractional_flow[cell];
         tfd.phase_to_comp = fluid_data_.cell_data.state_matrix[cell];
         tfd.relperm = fluid_data_.cell_data.relperm[cell];
         tfd.viscosity = fluid_data_.cell_data.viscosity[cell];

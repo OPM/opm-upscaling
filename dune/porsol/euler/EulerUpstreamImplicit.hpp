@@ -1,6 +1,6 @@
 //===========================================================================
 //
-// File: EulerUpstreamImplicit	.hpp
+// File: EulerUpstreamImplicit.hpp
 //
 // Created: Tue Jun 16 14:07:53 2009
 //
@@ -53,8 +53,6 @@ along with OpenRS.  If not, see <http://www.gnu.org/licenses/>.
 #include <dune/porsol/opmtransport/src/SimpleFluid2pWrapper.hpp>
 #include <dune/porsol/opmtransport/src/SinglePointUpwindTwoPhase.hpp>
 
-// temporatly
-#include <array>
 
 namespace Dune {
 
