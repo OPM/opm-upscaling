@@ -5,7 +5,7 @@
 // Created: Fri Oct 23 08:59:52 2009
 //
 // Author(s): Atgeirr F Rasmussen <atgeirr@sintef.no>
-//            Bård Skaflestad     <bard.skaflestad@sintef.no>
+//            Bï¿½rd Skaflestad     <bard.skaflestad@sintef.no>
 //
 // $Date$
 //
@@ -48,7 +48,7 @@ namespace Dune
 {
 
     class RockJfunc
-    {
+        {
     public:
         RockJfunc()
             : use_jfunction_scaling_(true), sigma_cos_theta_(1.0)
@@ -85,6 +85,15 @@ namespace Dune
 	    dkro_value = kro_.derivative(saturation);
 	}
 
+	double s_min() const
+	{
+		return s_min_;
+	}
+	double s_max() const
+	{
+		return s_max_;
+	}
+
 	template <template <class> class SP, class OP>
 	double capPress(const FullMatrix<double, SP, OP>& perm, const double poro, const double saturation) const
 	{
@@ -118,16 +127,19 @@ namespace Dune
 	template <template <class> class SP, class OP>
 	double satFromCapPress(const FullMatrix<double, SP, OP>& perm, const double poro, const double cap_press) const
 	{
+			double s = 0;
             if (use_jfunction_scaling_) {
                 // p_{cow} = J\frac{\sigma \cos \theta}{\sqrt{k/\phi}}
                 // \sigma \cos \theta is by default approximated by 1.0;
                 // k is approximated by the average of the diagonal terms.
                 double sqrt_k_phi = std::sqrt(trace(perm)/(perm.numRows()*poro));
-                return Jfunc_.inverse(cap_press*sqrt_k_phi/sigma_cos_theta_);
+                s = Jfunc_.inverse(cap_press*sqrt_k_phi/sigma_cos_theta_);
             } else {
                 // The Jfunc_ table actually contains the pressure directly.
-                return Jfunc_.inverse(cap_press);
+                s = Jfunc_.inverse(cap_press);
             }
+            s = std::min(s_max_, std::max(s_min_, s));
+            return s;
 	}
 
 	void read(const std::string& directory, const std::string& specification)
@@ -191,6 +203,8 @@ namespace Dune
                 kro.back() = 0.0;
                 std::cout << "Warning: kro table were modified to go to zero at the end." << std::endl;
             }
+            s_min_ = svals.front();
+	    s_max_ = svals.back();
 	    krw_ = TabFunc(svals, krw);
 	    kro_ = TabFunc(svals, kro);
 	    Jfunc_ = TabFunc(svals, Jfunc);
@@ -206,8 +220,12 @@ namespace Dune
 	TabFunc kro_;
 	TabFunc Jfunc_;
 	TabFunc invJfunc_;
-        bool use_jfunction_scaling_;
-        double sigma_cos_theta_;
+	bool use_jfunction_scaling_;
+	double sigma_cos_theta_;
+	double s_min_;
+	double s_max_;
+
+
     };
 
 } // namespace Dune
