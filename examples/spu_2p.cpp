@@ -43,6 +43,8 @@
 #include <iterator>
 #include <vector>
 
+#include <dune/common/array.hh>
+
 #include <dune/istl/operators.hh>
 #include <dune/istl/solvers.hh>
 
@@ -65,7 +67,6 @@
 #include <dune/porsol/opmtransport/src/JacobianSystem.hpp>
 
 #include <dune/porsol/opmtransport/src/SinglePointUpwindTwoPhase.hpp>
-#include <array>
 
 class PressureSolver {
 public:
@@ -188,7 +189,7 @@ main(int argc, char** argv)
     std::vector<double> porevol;
     grid_t& cgrid=*grid.c_grid();
     std::vector<double> htrans(cgrid.cell_facepos[ cgrid.number_of_cells ],1);
-    std::array<double,3> gravity;
+    Dune::array<double,3> gravity;
     gravity[2]=10.0;
     compute_porevolume(grid.c_grid(), rock, porevol);
 
