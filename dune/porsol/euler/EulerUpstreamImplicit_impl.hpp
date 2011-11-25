@@ -37,12 +37,10 @@
 #ifndef OPENRS_EULERUPSTREAMIMPLICIT_IMPL_HEADER
 #define OPENRS_EULERUPSTREAMIMPLICIT_IMPL_HEADER
 
-
-
-#include <cassert>
 #include <cmath>
 #include <algorithm>
 #include <limits>
+#include <vector>
 
 #include <dune/common/array.hh>
 
@@ -52,8 +50,6 @@
 #include <dune/grid/common/Volumes.hpp>
 #include <dune/common/StopWatch.hpp>
 #include <dune/porsol/common/ImplicitTransportDefs.hpp>
-#include <vector>
-#include <array>
 #include <dune/porsol/opmpressure/src/trans_tpfa.h>
 
 namespace Dune
@@ -160,7 +156,7 @@ namespace Dune
         direclet_sat_.resize(0);
         direclet_hfaces_.resize(0);
 
-        assert(periodic_cells_.size()==0);
+        ASSERT(periodic_cells_.size()==0);
         for (CIt c = g.cellbegin(); c != g.cellend(); ++c) {
             int cell0 = c->index();
             for (FIt f = c->facebegin(); f != c->faceend(); ++f) {
@@ -181,10 +177,10 @@ namespace Dune
                         // mapping face indices
                         f_ind=egf_cf[f_ind];
                         fn_ind=egf_cf[fn_ind];
-                        assert((c_grid.face_cells[2*f_ind]==-1) || (c_grid.face_cells[2*f_ind+1]==-1));
-                        assert((c_grid.face_cells[2*fn_ind]==-1) || (c_grid.face_cells[2*fn_ind+1]==-1));
-                        assert((c_grid.face_cells[2*f_ind]==cell0) || (c_grid.face_cells[2*f_ind+1]==cell0));
-                        assert((c_grid.face_cells[2*fn_ind]==cell1) || (c_grid.face_cells[2*fn_ind+1]==cell1));
+                        ASSERT((c_grid.face_cells[2*f_ind]==-1) || (c_grid.face_cells[2*f_ind+1]==-1));
+                        ASSERT((c_grid.face_cells[2*fn_ind]==-1) || (c_grid.face_cells[2*fn_ind+1]==-1));
+                        ASSERT((c_grid.face_cells[2*f_ind]==cell0) || (c_grid.face_cells[2*f_ind+1]==cell0));
+                        ASSERT((c_grid.face_cells[2*fn_ind]==cell1) || (c_grid.face_cells[2*fn_ind+1]==cell1));
                         periodic_cells_.push_back(cell0);
                         periodic_cells_.push_back(cell1);
                         periodic_faces_.push_back(f_ind);
@@ -207,9 +203,9 @@ namespace Dune
         TwophaseFluid myfluid(myrp_);
         int num_b=direclet_cells_.size();
         for(int i=0; i <num_b; ++i){
-            std::array<double,2> sat = {{direclet_sat_[2*i] ,direclet_sat_[2*i+1] }};
-            std::array<double,2> mob;
-            std::array<double,2*2> dmob;
+            array<double,2> sat = {{direclet_sat_[2*i] ,direclet_sat_[2*i+1] }};
+            array<double,2> mob;
+            array<double,2*2> dmob;
             myfluid.mobility(direclet_cells_[i], sat, mob, dmob);
             double fl = mob[0]/(mob[0]+mob[1]);
             direclet_sat_[2*i] = fl;
