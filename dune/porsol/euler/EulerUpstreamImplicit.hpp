@@ -58,7 +58,7 @@ along with OpenRS.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace Dune {
 
-    /// Class for doing simple transport by explicit Euler upstream method for general grid.
+    /// Class for doing simple transport by implicit Euler upstream method for general grid.
     /// @tparam
     template <class GridInterface, class ReservoirProperties, class BoundaryConditions>
     class EulerUpstreamImplicit	
@@ -95,15 +95,8 @@ namespace Dune {
 	/// @param
 	void display();
 
-	/// \brief Set the Courant number.
-	/// That is dt = dt_cfl*courant_number.
-	/// For this explicit method it should be < 1.
-	void setCourantNumber(double cn);
-
 	/// \brief Solve transport equation, evolving \param saturation
 	/// for \param time seconds.
-	/// Cfl type conditions may force many explicit timesteps to
-	/// be taken, before the function returns.
 	/// @tparam
 	/// @param
 	template <class PressureSolution>
@@ -119,13 +112,6 @@ namespace Dune {
 	// typedef typename FIt::Vector Vector;
      typedef ReservoirProperties RP;
 
-	/*
-	template <class PressureSolution>
-	double computeCflTime(const std::vector<double>& saturation,
-			      const double time,
-			      const typename GridInterface::Vector& gravity,
-			      const PressureSolution& pressure_sol) const;
-	*/
 	template <class PressureSolution>
 	void smallTimeStep(std::vector<double>& saturation,
 			   const double time,
@@ -137,8 +123,7 @@ namespace Dune {
 
 
 	
-	// try to make bard ingerfaces
-	//typedef Opm::SimpleFluid2pWrapper<ReservoirProperties>                          TwophaseFluid;
+	// Interface to implicit solver
 	typedef Opm::TwophaseFluidWrapper                          TwophaseFluid;
 	typedef Opm::SinglePointUpwindTwoPhase<TwophaseFluid> TransportModel;
 #	if 0
@@ -164,9 +149,7 @@ namespace Dune {
                                Opm::ImplicitTransportDefault::VectorZero    ,
                                Opm::ImplicitTransportDefault::MatrixZero    > TransportSolver;
 
-
 	// should be initialized by param
-	
 
 	//TransportModel  model_;
 	//TransportSolver tsolver_;
@@ -183,6 +166,7 @@ namespace Dune {
 
     std::vector<int> periodic_cells_;
     std::vector<int> periodic_faces_;
+    std::vector<int> periodic_nbfaces_;
     std::vector<int> periodic_hfaces_;
     std::vector<int> direclet_cells_;
     std::vector<double> direclet_sat_;

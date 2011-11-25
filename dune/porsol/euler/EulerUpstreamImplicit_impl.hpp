@@ -94,7 +94,8 @@ namespace Dune
 	ctrl_.atol  = param.getDefault("transport_atol", 1.0e-6);
 	ctrl_.rtol  = param.getDefault("transport_rtol", 5.0e-7);
 	ctrl_.max_it_ls = param.getDefault("transport_max_it_ls", 20);
-
+	ctrl_.dxtol = param.getDefault("transport_dxtol", 1e-6);
+	ctrl_.verbose = param.getDefault("transport_verbose", 0);
     }
 
     template <class GI, class RP, class BC>
@@ -109,7 +110,7 @@ namespace Dune
     template <class GI, class RP, class BC>
     inline void EulerUpstreamImplicit<GI, RP, BC>::initObj(const GI& g, const RP& r, const BC& b)
     {
-    	//        residual_computer_.initObj(g, r, b);
+    	//residual_computer_.initObj(g, r, b);
 
     	mygrid_.init(g.grid());
     	porevol_.resize(mygrid_.numCells());
@@ -126,22 +127,8 @@ namespace Dune
     	const double* perm = &(r.permeability(0)(0,0));
     	tpfa_htrans_compute(mygrid_.c_grid(), perm, &htrans_[0]);
     	int count = 0;
-    	/*
-    	for (int cell = 0; cell < num_cells; ++cell) {
-    		int num_local_faces = mygrid_.numCellFaces(cell);
-    		GridAdapter::Vector cc = mygrid_.cellCentroid(cell);
-    		//typename GridType::Vector cc = mygrid_.cellCentroid(cell);
-    	    for (int local_ix = 0; local_ix < num_local_faces; ++local_ix) {
-    	    	int face = mygrid_.cellFace(cell, local_ix);
-    	    	trans_[face] +=(1/htrans[count]);
-    	    	count +=1;
-    	    }
-    	}
-        for(int i=0; i < numf;++i){
-        	trans_[i]= 1/trans_[i];
-        }
-        */
-    	myrp_= r;
+
+        myrp_= r;
 
     	//const BoundaryConditions* pboundary_;
 
@@ -155,7 +142,6 @@ namespace Dune
     		maxbid = std::max(maxbid, bid);
     	    }
     	}
-
 
     	bid_to_face.resize(maxbid + 1);
     	std::vector<int> egf_cf(mygrid_.numFaces());
@@ -180,7 +166,7 @@ namespace Dune
 		periodic_cells_.resize(0);
 		periodic_faces_.resize(0);
 		periodic_hfaces_.resize(0);
-
+		periodic_nbfaces_.resize(0);
 		//cell1 = cell0;
 		direclet_cells_.resize(0);
 		direclet_sat_.resize(0);
@@ -201,14 +187,7 @@ namespace Dune
     					ASSERT(nbface != f);
     					int cell1 = nbface->cellIndex();
     					ASSERT(cell0 != cell1);
-    					// Periodic faces will be visited twice, but only once
-    					// should they contribute. We make sure that we skip the
-    					// periodic faces half the time.
-    					/*
-    					if (cell0 > cell1) {
-    						// We skip this face.
-    					continue;
-    					}*/
+
     					int f_ind=f->index();
 
     					int fn_ind=nbface->index();
@@ -223,8 +202,8 @@ namespace Dune
     					periodic_cells_.push_back(cell1);
     					periodic_faces_.push_back(f_ind);
     					periodic_hfaces_.push_back(hf_ind);
+    					periodic_nbfaces_.push_back(fn_ind);
     				} else if (!( b.flowCond(*f).isNeumann() && b.flowCond(*f).outflux() == 0.0)) {
-
     					//cell1 = cell0;
     					direclet_cells_.push_back(cell0);
     					direclet_sat_.push_back(b.satCond(*f).saturation());
@@ -237,19 +216,7 @@ namespace Dune
     	}
 
     	mygrid_.makeQPeriodic(periodic_hfaces_,periodic_cells_);
-    	//calculating new values for trans for periodic faces
-    	/*
-    	for(int i=0;i<int(periodic_faces_.size());++i){
-    		trans_[periodic_faces_[i]]=0;
-    	}
-    	for(int i=0;i<int(periodic_hfaces_.size());++i){
-    	    		trans_[periodic_faces_[i]]+=1/htrans_[periodic_hfaces_[i]];
-    	}
-    	for(int i=0;i<int(periodic_faces_.size());++i){
-    	    		trans_[periodic_faces_[i]]=1/trans_[periodic_faces_[i]];
-    	}
-    	*/
-
+    	// use fractional flow instead of saturation as src
     	TwophaseFluid myfluid(myrp_);
     	int num_b=direclet_cells_.size();
     	for(int i=0; i <num_b; ++i){
@@ -295,16 +262,17 @@ namespace Dune
     	//int count=0;
     	const grid_t* cgrid = mygrid_.c_grid();
     	int numhf = cgrid->cell_facepos[cgrid->number_of_cells];
-    	//for (int i=0; i < numhf); ++i){
+
     	std::vector<double>	faceflux(numhf);
     	int hg_ind=0;
+
     	for (int c = 0, i = 0; c < cgrid->number_of_cells; ++c){
     		for (; i < cgrid->cell_facepos[c + 1]; ++i) {
     		   	int f= cgrid->cell_faces[i];
     		   	double outflux = pressure_sol.outflux(i);
     		   	double sgn = 2.0*(cgrid->face_cells[2*f + 0] == c) - 1;
     		   	faceflux[f] = sgn * outflux;
-    		}
+      		}
     	}
     	int num_db=direclet_hfaces_.size();
     	std::vector<double> sflux(num_db);
@@ -319,39 +287,25 @@ namespace Dune
 		int repeats = 0;
 		bool finished = false;
 		clock.start();
-		//std::vector< double > saturation_initial(saturation);
-		//std::array< double, 3 >    mygravity;
-
-
 
 		TwophaseFluid myfluid(myrp_);
 		double* tmp_grav=0;
 		const grid_t& c_grid=*mygrid_.c_grid();
-		//TransportModel model(myfluid,*mygrid_.c_grid(),porevol_,&gravity[0],&trans_[0]);
 		TransportModel model(myfluid,c_grid,porevol_,tmp_grav);
-		model.makefhfQPeriodic(periodic_faces_,periodic_hfaces_);
+		model.makefhfQPeriodic(periodic_faces_,periodic_hfaces_, periodic_nbfaces_);
 		model.initGravityTrans(*mygrid_.c_grid(),htrans_);
 		TransportSolver tsolver(model);
 		LinearSolver linsolve_;
 		Opm::ImplicitTransportDetails::NRReport  rpt_;
 
-
-		//std::vector<double> totmob(mygrid_.numCells(), 1.0);
-	    //std::vector<double> src   (mygrid_.numCells(), 0.0);
-		//src[0]                         =  1.0;
-		//    src[grid->number_of_cells - 1] = -1.0;
-	    Opm::TransportSource tsrc;//create_transport_source(0, 2);
-	    // the input flux is assumed to be the satuation times the flux in the transport solver
+		Opm::TransportSource tsrc;//create_transport_source(0, 2);
+	    // the input flux is assumed to be the saturation times the flux in the transport solver
 
 	    tsrc.nsrc =direclet_cells_.size();
 	    tsrc.saturation = direclet_sat_;
 	    tsrc.cell = direclet_cells_;
 	    tsrc.flux = sflux;
-	    /*
-	    tsrc.pf = periodic_faces_.size();
-	    tsrc.periodic_cells = periodic_cells_;
-	    tsrc.periodic_faces = periodic_faces_;
-	     */
+
 		while (!finished) {
 	 	   		for (int q = 0; q < nr_transport_steps; ++q) {
 	 	   			tsolver.solve(*mygrid_.c_grid(), &tsrc, dt_transport, ctrl_, state, linsolve_, rpt_);
@@ -366,9 +320,10 @@ namespace Dune
 	 	   				finished=true;
 	 	   			}else{
 	 	   				MESSAGE("Warning: Transport failed, retrying with more steps.");
-	 	   				std::cout << "Warning: Transport failed, retrying with more steps.\n";
 	 	   				nr_transport_steps *= 2;
 	 	   				dt_transport = time/nr_transport_steps;
+	 	   				std::cout << "Warning: Transport failed, retrying with more steps."
+	 	   				          << dt_transport/Dune::unit::year << "\n";
 	 	   			    {
 	 	   					std::vector<double>& sat = state.saturation();
 	 	   					for (int i=0; i < mygrid_.numCells(); ++i){
@@ -381,7 +336,8 @@ namespace Dune
 	 	   		repeats +=1;
 		}
         clock.stop();
-        std::cout << "EulerUpstreamImplicite used  " << repeats << " repeats and " << nr_transport_steps <<" steps"<< std::endl;
+        std::cout << "EulerUpstreamImplicite used  " << repeats
+                  << " repeats and " << nr_transport_steps <<" steps"<< std::endl;
 #ifdef VERBOSE
         std::cout << "Seconds taken by transport solver: " << clock.secsSinceStart() << std::endl;
 #endif // VERBOSE
@@ -391,59 +347,13 @@ namespace Dune
         		saturation[i] = sat[2*i];
         	}
         }
-
         if((rpt_.flag<0)){
         	std::cerr << "EulerUpstreamImplicit did not converge" << std::endl;
         	return false;
         }else{
            return true;
         }
-
-
     }
-
-
-
-
-    /*
-
-
-    template <class GI, class RP, class BC>
-    inline void EulerUpstreamImplicit<GI, RP, BC>::initFinal()
-    {
-	// Build bid_to_face_ mapping for handling periodic conditions.
-	int maxbid = 0;
-	for (typename GI::CellIterator c = pgrid_->cellbegin(); c != pgrid_->cellend(); ++c) {
-	    for (typename GI::CellIterator::FaceIterator f = c->facebegin(); f != c->faceend(); ++f) {
-		int bid = f->boundaryId();
-		maxbid = std::max(maxbid, bid);
-	    }
-	}
-	bid_to_face_.clear();
-	bid_to_face_.resize(maxbid + 1);
-	for (typename GI::CellIterator c = pgrid_->cellbegin(); c != pgrid_->cellend(); ++c) {
-	    for (typename GI::CellIterator::FaceIterator f = c->facebegin(); f != c->faceend(); ++f) {
-		if (f->boundary() && pboundary_->satCond(*f).isPeriodic()) {
-		    bid_to_face_[f->boundaryId()] = f;
-		}
-	    }
-	}
-
-        // Build cell_iters_.
-        const int num_cells_per_iter = std::min(50, pgrid_->numberOfCells());
-        int counter = 0;
-	for (typename GI::CellIterator c = pgrid_->cellbegin(); c != pgrid_->cellend(); ++c, ++counter) {
-            if (counter % num_cells_per_iter == 0) {
-                cell_iters_.push_back(c);
-            }
-        }
-        cell_iters_.push_back(pgrid_->cellend());
-    }
-
-    */
-
-
-
 
     template <class GI, class RP, class BC>
     inline void EulerUpstreamImplicit<GI, RP, BC>::checkAndPossiblyClampSat(std::vector<double>& s) const
