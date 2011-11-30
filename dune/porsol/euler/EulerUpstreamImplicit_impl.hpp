@@ -303,14 +303,15 @@ namespace Dune
                     MESSAGE("Warning: Transport failed, retrying with more steps.");
                     nr_transport_steps *= 2;
                     dt_transport = time/nr_transport_steps;
-                    std::cout << "Warning: Transport failed, retrying with more steps."
-                              << dt_transport/Dune::unit::year << "\n";
-                    {
-                        std::vector<double>& sat = state.saturation();
-                        for (int i=0; i < mygrid_.numCells(); ++i){
-                            sat[2*i] = saturation[i];
-                            sat[2*i+1] = 1-saturation[i];
-                        }
+                    if (ctrl_.verbosity){
+                        std::cout << "Warning: Transport failed, retrying with more steps. dt = "
+                                  << dt_transport/Dune::unit::year << " year.\n";
+                    }
+
+                    std::vector<double>& sat = state.saturation();
+                    for (int i=0; i < mygrid_.numCells(); ++i){
+                        sat[2*i] = saturation[i];
+                        sat[2*i+1] = 1-saturation[i];
                     }
                 }
             }
