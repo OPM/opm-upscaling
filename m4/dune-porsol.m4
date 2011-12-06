@@ -15,6 +15,9 @@ AC_DEFUN([DUNE_PORSOL_CHECKS],
         # the $FLIBS macro.
         AC_REQUIRE([AC_F77_WRAPPERS])
         AC_REQUIRE([ACX_LAPACK])
+	AS_IF([test "$acx_lapack_ok" != "yes"], dnl
+	      [AC_MSG_ERROR([No suitable LAPACK library found!])],dnl
+	      [])
 
         DUNE_ADD_MODULE_DEPS([DUNE_PORSOL],dnl
                              [DUNE_PORSOL],dnl
