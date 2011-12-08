@@ -129,12 +129,13 @@ typedef Dune::BCRSMatrix <ScalarMatrixBlockType> ScalarBCRSMatrix;
 typedef NewtonVectorCollection< ScalarBlockVector >          NVecColl;
 typedef JacobianSystem        < ScalarBCRSMatrix, NVecColl > JacSys;
 
-typedef Opm::ImplicitTransport<TransportModel,
-                               JacSys        ,
-                               Opm::MaxNormDune       ,
-                               VectorNegater ,
-                               VectorZero    ,
-                               MatrixZero    > TransportSolver;
+typedef Opm::ImplicitTransport<TransportModel  ,
+                               JacSys          ,
+                               Opm::MaxNormDune,
+                               VectorNegater   ,
+                               VectorZero      ,
+                               MatrixZero      ,
+                               VectorAssign    > TransportSolver;
 
 
 

@@ -102,6 +102,27 @@ namespace Opm {
         };
 
         template <>
+        class VectorAssign<ISTLTypeDetails::ScalarBlockVector> {
+        public:
+            // y <- x
+            static void
+            assign(const ISTLTypeDetails::ScalarBlockVector& x,
+                   ISTLTypeDetails::ScalarBlockVector&       y) {
+                y = x;
+            }
+
+            // y <- a*x
+            template <class Scalar>
+            static void
+            assign(const Scalar& a,
+                   const ISTLTypeDetails::ScalarBlockVector& x,
+                   ISTLTypeDetails::ScalarBlockVector&       y) {
+                y  = x;
+                y *= a;
+            }
+        };
+
+        template <>
         class MatrixZero<ISTLTypeDetails::ScalarBCRSMatrix> {
         public:
             static void

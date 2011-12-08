@@ -140,12 +140,13 @@ namespace Dune {
 
     typedef Opm::LinearSolverBICGSTAB LinearSolver;
 # endif
-	typedef Opm::ImplicitTransport<TransportModel,
-                               JacSys        ,
-                               Opm::MaxNormDune       ,
-                               Opm::ImplicitTransportDefault::VectorNegater ,
-                               Opm::ImplicitTransportDefault::VectorZero    ,
-                               Opm::ImplicitTransportDefault::MatrixZero    > TransportSolver;
+	typedef Opm::ImplicitTransport<TransportModel                              ,
+                                       JacSys                                      ,
+                                       Opm::MaxNormDune                            ,
+                                       Opm::ImplicitTransportDefault::VectorNegater,
+                                       Opm::ImplicitTransportDefault::VectorZero   ,
+                                       Opm::ImplicitTransportDefault::MatrixZero   ,
+                                       Opm::ImplicitTransportDefault::VectorAssign > TransportSolver;
 
 	// should be initialized by param
 
