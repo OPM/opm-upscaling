@@ -56,12 +56,12 @@ namespace Dune
           output_vtk_(false),
           print_inoutflows_(false),
           simulation_steps_(10),
-          init_stepsize_(0.1),
+          init_stepsize_(10),
           relperm_threshold_(1.0e-8),
           maximum_mobility_contrast_(1.0e9),
           sat_change_year_(0.0),
           max_it_(20),
-          max_stepsize_(10),
+          max_stepsize_(1e4),
           dt_sat_tol_(1e-2)
     {
     }
