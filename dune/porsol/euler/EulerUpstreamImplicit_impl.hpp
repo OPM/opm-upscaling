@@ -245,7 +245,6 @@ namespace Dune
         int numhf = cgrid->cell_facepos[cgrid->number_of_cells];
 
         std::vector<double>     faceflux(numhf);
-        int hg_ind=0;
 
         for (int c = 0, i = 0; c < cgrid->number_of_cells; ++c){
             for (; i < cgrid->cell_facepos[c + 1]; ++i) {
