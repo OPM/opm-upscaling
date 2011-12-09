@@ -176,6 +176,7 @@ namespace Dune
                 }
             }
             int flow_direction = param.getDefault("flow_direction", 0);
+            bool start_from_cl = param.getDefault("start_from_cl", false);
 
             // Print the saturations and pressure drops.
             // writeControl(std::cout, saturations, all_pdrops);
@@ -216,7 +217,12 @@ namespace Dune
             //std::vector<bool> success_state;
             for (int i = 0; i < num_sats; ++i) {
                 // Starting every computation with a trio of uniform profiles.
-                std::vector<double> init_sat(num_cells, saturations[i]);
+                std::vector<double> init_sat;
+                if (start_from_cl) {
+                    upscaler.setToCapillaryLimit(saturations[i], init_sat);
+                } {
+                    init_sat.resize(num_cells, saturations[i]);
+                }
                 const SparseTable<double>::row_type pdrops = all_pdrops[i];
                 int num_pdrops = pdrops.size();
                 for (int j = 0; j < num_pdrops; ++j) {

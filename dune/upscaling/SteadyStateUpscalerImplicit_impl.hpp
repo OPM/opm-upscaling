@@ -41,6 +41,7 @@
 #include <dune/porsol/common/MatrixInverse.hpp>
 #include <dune/porsol/common/SimulatorUtilities.hpp>
 #include <dune/porsol/common/ReservoirPropertyFixedMobility.hpp>
+#include <dune/porsol/euler/MatchSaturatedVolumeFunctor.hpp>
 #include <dune/common/Units.hpp>
 #include <algorithm>
 
@@ -154,7 +155,7 @@ namespace Dune
         // Set up initial saturation profile.
         std::vector<double> saturation = initial_saturation;
 
-        for (int c = 0; c < saturation.size(); c++ ) {
+        for (int c = 0; c < int(saturation.size()); c++ ) {
             double s_min = this->res_prop_.s_min(c);
             double s_max = this->res_prop_.s_max(c);
             saturation[c] = std::max(s_min+1e-4, saturation[c]);
@@ -329,6 +330,29 @@ namespace Dune
         // Dividing by pore volume gives average saturations.
         return sat_vol/pore_vol;
     }
+
+
+    template <class Traits>
+    void SteadyStateUpscalerImplicit<Traits>::setToCapillaryLimit(double average_s, std::vector<double>& s) const
+    {
+        int num_cells = this->ginterf_.numberOfCells();
+        std::vector<double> s_orig(num_cells, average_s);
+        std::vector<double> cap_press(num_cells, 0.0);
+        typedef typename UpscalerBase<Traits>::ResProp ResProp;
+        MatchSaturatedVolumeFunctor<GridInterface, ResProp> func(this->ginterf_, this->res_prop_, s_orig, cap_press);
+        double cap_press_range = 1e2;
+        double mod_low = 1e100;
+        double mod_high = -1e100;
+        bracketZero(func, 0.0, cap_press_range, mod_low, mod_high);
+        const int max_iter = 40;
+        const double nonlinear_tolerance = 1e-12;
+        int iterations_used = -1;
+        double mod_correct = modifiedRegulaFalsi(func, mod_low, mod_high, max_iter, nonlinear_tolerance, iterations_used);
+        std::cout << "Moved capillary pressure solution by " << mod_correct << " after "
+                  << iterations_used << " iterations." << std::endl;
+        s = func.lastSaturations();
+    }
+
 
     template <class Traits>
     template <class FlowSol>

@@ -93,8 +93,11 @@ namespace Dune
         /// Computes the upscaled saturation corresponding to the saturation field
         /// returned by lastSaturationState(). Does this by computing total saturated
         /// volume divided by total pore volume.
-	
         double lastSaturationUpscaled() const;
+
+        void setToCapillaryLimit(double average_s, std::vector<double>& s) const;
+
+
     protected:
 	// ------- Typedefs -------
    typedef typename Traits::template TransportSolver<GridInterface, typename Super::BCs>::Type TransportSolver;
