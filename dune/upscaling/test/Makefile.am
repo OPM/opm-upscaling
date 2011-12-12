@@ -1,13 +1,13 @@
 # $Date$
 # $Revision$
 
-check_PROGRAMS = 
+check_PROGRAMS =
 noinst_PROGRAMS =				\
 aniso_implicit_steadystate_test			\
 aniso_steadystate_test				\
 implicit_steadystate_test			\
 opmpressure_test				\
-steadystate_test				\
+steadystate_test_explicit			\
 steadystate_test_implicit			\
 upscaling_test
 
@@ -32,8 +32,8 @@ implicit_steadystate_test.cpp
 opmpressure_test_SOURCES =			\
 opmpressure_test.cpp
 
-steadystate_test_SOURCES =			\
-steadystate_test.cpp
+steadystate_test_explicit_SOURCES =			\
+steadystate_test_explicit.cpp
 
 steadystate_test_implicit_SOURCES =		\
 steadystate_test_implicit.cpp

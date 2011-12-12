@@ -83,7 +83,7 @@ namespace Dune
                                                                  const std::vector<double>& initial_saturation,
                                                                  const double boundary_saturation,
                                                                  const double pressure_drop,
-                                                                 const permtensor_t& upscaled_perm);
+                                                                 const permtensor_t& upscaled_perm,bool& success);
 
 	/// Accessor for the steady state saturation field. This is empty until
 	/// upscaleSteadyState() is called, at which point it will
@@ -93,8 +93,11 @@ namespace Dune
         /// Computes the upscaled saturation corresponding to the saturation field
         /// returned by lastSaturationState(). Does this by computing total saturated
         /// volume divided by total pore volume.
-	
         double lastSaturationUpscaled() const;
+
+        void setToCapillaryLimit(double average_s, std::vector<double>& s) const;
+
+
     protected:
 	// ------- Typedefs -------
    typedef typename Traits::template TransportSolver<GridInterface, typename Super::BCs>::Type TransportSolver;
@@ -114,10 +117,13 @@ namespace Dune
 	bool output_vtk_;
     bool print_inoutflows_;
 	int simulation_steps_;
-	double stepsize_;
+	double init_stepsize_;
     double relperm_threshold_;
     double maximum_mobility_contrast_;
-    double sat_change_threshold_;
+    double sat_change_year_;
+    int    max_it_;
+    double  max_stepsize_;
+    double dt_sat_tol_;
 	TransportSolver transport_solver_;
     };
 

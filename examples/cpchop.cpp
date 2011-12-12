@@ -37,7 +37,7 @@
 #include <fstream>
 #include <iostream>
 #include <cfloat>
-
+#include <cmath>
 
 int main(int argc, char** argv)
 {
@@ -406,7 +406,7 @@ int main(int argc, char** argv)
                             largestSaturationInterval = SatDiff.second;
                         }
                         // Check for saneness of Ptestvalue:
-                        if (isnan(Ptestvalue) | isinf(Ptestvalue)) {
+                        if (std::isnan(Ptestvalue) || std::isinf(Ptestvalue)) {
                             std::cerr << "ERROR: Ptestvalue was inf or nan" << std::endl;
                             break; // Jump out of while-loop, just print out the results
                             // up to now and exit the program
@@ -440,7 +440,7 @@ int main(int argc, char** argv)
                     MonotCubicInterpolator CapPressureVsWaterSaturation(WaterSaturationVsCapPressure.get_fVector(), 
                                                                         WaterSaturationVsCapPressure.get_xVector());
                     std::vector<double> pcs;
-                    for (uint satp=0; satp<nsatpoints; ++satp) {
+                    for (int satp=0; satp<nsatpoints; ++satp) {
                         pcs.push_back(CapPressureVsWaterSaturation.evaluate(Swir+(Swor-Swir)/(nsatpoints-1)*satp));
                     }
                     pcvalues.push_back(pcs);
