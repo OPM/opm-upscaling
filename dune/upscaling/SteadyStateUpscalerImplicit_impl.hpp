@@ -155,13 +155,6 @@ namespace Dune
         // Set up initial saturation profile.
         std::vector<double> saturation = initial_saturation;
 
-        for (int c = 0; c < int(saturation.size()); c++ ) {
-            double s_min = this->res_prop_.s_min(c);
-            double s_max = this->res_prop_.s_max(c);
-            saturation[c] = std::max(s_min+1e-4, saturation[c]);
-            saturation[c] = std::min(s_max-1e-4, saturation[c]);
-        }
-
         // Set up boundary conditions.
         setupUpscalingConditions(this->ginterf_, this->bctype_, flow_direction,
                                  pressure_drop, boundary_saturation, this->twodim_hack_, this->bcond_);
@@ -333,10 +326,23 @@ namespace Dune
 
 
     template <class Traits>
+    void SteadyStateUpscalerImplicit<Traits>::initSatLimits(std::vector<double>& s) const
+    {
+        for (int c = 0; c < int (s.size()); c++ ) {
+            double s_min = this->res_prop_.s_min(c);
+            double s_max = this->res_prop_.s_max(c);
+            s[c] = std::max(s_min+1e-4, s[c]);
+            s[c] = std::min(s_max-1e-4, s[c]);
+        }
+    }
+
+    template <class Traits>
     void SteadyStateUpscalerImplicit<Traits>::setToCapillaryLimit(double average_s, std::vector<double>& s) const
     {
         int num_cells = this->ginterf_.numberOfCells();
         std::vector<double> s_orig(num_cells, average_s);
+
+        initSatLimits(s_orig);
         std::vector<double> cap_press(num_cells, 0.0);
         typedef typename UpscalerBase<Traits>::ResProp ResProp;
         MatchSaturatedVolumeFunctor<GridInterface, ResProp> func(this->ginterf_, this->res_prop_, s_orig, cap_press);

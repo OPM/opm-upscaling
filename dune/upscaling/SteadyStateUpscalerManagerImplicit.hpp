@@ -101,8 +101,8 @@ namespace Dune
     {
         /* const int num_rows = K.numRows(); */
         /* const int num_cols = K.numCols(); */
-	
-        /* We write tensor output in Voigt notation, 
+
+        /* We write tensor output in Voigt notation,
            (but we also output the remainding three terms)
            http://en.wikipedia.org/wiki/Voigt_notation
         */
@@ -113,7 +113,7 @@ namespace Dune
 	  If linear or periodic bc's, output all 9 elements (even though 6 is strictly necessary for periodic bc's)
 	  Use the Tensor class to order output into Voigt notation, so that it works for more than 3x3 matrices
 	*/
-        
+
         os << pdrop << '\t';
         os << sat << '\t';
         os << K(0,0) << '\t'; /* xx */
@@ -219,10 +219,17 @@ namespace Dune
                 // Starting every computation with a trio of uniform profiles.
                 std::vector<double> init_sat;
                 if (start_from_cl) {
-                    upscaler.setToCapillaryLimit(saturations[i], init_sat);
+                    try {
+                        upscaler.setToCapillaryLimit(saturations[i], init_sat);
+                    }catch (...){
+                        init_sat.resize(num_cells, saturations[i]);
+                        std::cout << "Failed to initialize with capillary limit for s = " << saturations[i]
+                                  << ". Init with uniform distribution." << std::endl;
+                   }
                 } {
-                    init_sat.resize(num_cells, saturations[i]);
+                     init_sat.resize(num_cells, saturations[i]);
                 }
+                upscaler.initSatLimits(init_sat);
                 const SparseTable<double>::row_type pdrops = all_pdrops[i];
                 int num_pdrops = pdrops.size();
                 for (int j = 0; j < num_pdrops; ++j) {
@@ -244,7 +251,7 @@ namespace Dune
                     // Changing initial saturations for next pressure drop to equal the steady state of the last
                     writeRelPerm(krw_out, lambda.first , usat, pdrop, success);
                     writeRelPerm(kro_out, lambda.second, usat, pdrop, success);
-		    
+
                 }
             }
         }

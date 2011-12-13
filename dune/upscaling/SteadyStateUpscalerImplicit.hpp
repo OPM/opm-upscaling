@@ -95,6 +95,9 @@ namespace Dune
         /// volume divided by total pore volume.
         double lastSaturationUpscaled() const;
 
+        /// Ensure saturations are not outside table
+        void initSatLimits(std::vector<double>& s) const;
+
         void setToCapillaryLimit(double average_s, std::vector<double>& s) const;
 
 
