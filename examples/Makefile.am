@@ -2,36 +2,41 @@
 # $Revision$
 
 check_PROGRAMS = 
-noinst_PROGRAMS = upscale_perm \
-                  upscale_relperm \
-                  upscale_avg  \
-                  upscale_cond \
-                  upscale_cap \
-                  cpchop \
-                  exp_variogram \
-                  cpregularize \
-                  cpchop_depthtrend \
-                  grdecldips                   
+noinst_PROGRAMS =				\
+cpchop						\
+cpchop_depthtrend				\
+cpregularize					\
+exp_variogram					\
+grdecldips                   			\
+upscale_avg					\
+upscale_cap					\
+upscale_cond					\
+upscale_perm					\
+upscale_relperm					\
+upscale_relpermvisc
 
-upscale_perm_SOURCES = upscale_perm.cpp
 
-upscale_relperm_SOURCES = upscale_relperm.cpp
+cpchop_SOURCES = cpchop.cpp
 
-upscale_cond_SOURCES = upscale_cond.cpp
+cpchop_depthtrend_SOURCES = cpchop_depthtrend.cpp
+
+cpregularize_SOURCES = cpregularize.cpp
+
+exp_variogram_SOURCES = exp_variogram.cpp
+
+grdecldips_SOURCES = grdecldips.cpp
 
 upscale_avg_SOURCES = upscale_avg.cpp
 
 upscale_cap_SOURCES = upscale_cap.cpp
 
-cpchop_SOURCES = cpchop.cpp
+upscale_cond_SOURCES = upscale_cond.cpp
 
-exp_variogram_SOURCES = exp_variogram.cpp
+upscale_perm_SOURCES = upscale_perm.cpp
 
-cpregularize_SOURCES = cpregularize.cpp
+upscale_relperm_SOURCES = upscale_relperm.cpp
 
-cpchop_depthtrend_SOURCES = cpchop_depthtrend.cpp
-
-grdecldips_SOURCES = grdecldips.cpp
+upscale_relpermvisc_SOURCES = upscale_relpermvisc.cpp
 
 AM_CPPFLAGS += $(DUNEMPICPPFLAGS) $(BOOST_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 AM_LDFLAGS  += $(DUNEMPILDFLAGS) $(BOOST_LDFLAGS) $(SUPERLU_LDFLAGS)
