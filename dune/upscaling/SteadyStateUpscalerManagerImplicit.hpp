@@ -176,7 +176,7 @@ namespace Dune
                 }
             }
             int flow_direction = param.getDefault("flow_direction", 0);
-            bool start_from_cl = param.getDefault("start_from_cl", false);
+            bool start_from_cl = param.getDefault("start_from_cl", true);
 
             // Print the saturations and pressure drops.
             // writeControl(std::cout, saturations, all_pdrops);
@@ -229,10 +229,11 @@ namespace Dune
                 } {
                      init_sat.resize(num_cells, saturations[i]);
                 }
-                upscaler.initSatLimits(init_sat);
+
                 const SparseTable<double>::row_type pdrops = all_pdrops[i];
                 int num_pdrops = pdrops.size();
                 for (int j = 0; j < num_pdrops; ++j) {
+                    upscaler.initSatLimits(init_sat);
                     double pdrop = pdrops[j];
                     bool success = false;
                     std::pair<permtensor_t, permtensor_t> lambda
