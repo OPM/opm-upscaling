@@ -50,7 +50,7 @@
 #include <dune/grid/common/Volumes.hpp>
 #include <dune/common/StopWatch.hpp>
 #include <dune/porsol/common/ImplicitTransportDefs.hpp>
-#include <dune/porsol/opmpressure/src/trans_tpfa.h>
+#include <opm/core/pressure/tpfa/trans_tpfa.h>
 
 namespace Dune
 {

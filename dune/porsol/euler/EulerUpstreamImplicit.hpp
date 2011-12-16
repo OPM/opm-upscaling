@@ -41,17 +41,16 @@ along with OpenRS.  If not, see <http://www.gnu.org/licenses/>.
 #include <dune/common/SparseVector.hpp>
 #include <dune/common/param/ParameterGroup.hpp>
 
-#include <dune/porsol/opmpressure/src/GridAdapter.hpp>
-
-#include <dune/porsol/opmtransport/src/ImplicitAssembly.hpp>
-#include <dune/porsol/opmtransport/src/ImplicitTransport.hpp>
-#include <dune/porsol/opmtransport/src/JacobianSystem.hpp>
-
 #include <dune/porsol/common/ImplicitTransportDefs.hpp>
 #include <dune/porsol/common/BCRSMatrixBlockAssembler.hpp>
 
-#include <dune/porsol/opmtransport/src/SimpleFluid2pWrapper.hpp>
-#include <dune/porsol/opmtransport/src/SinglePointUpwindTwoPhase.hpp>
+#include <opm/core/GridAdapter.hpp>
+
+#include <opm/core/transport/ImplicitAssembly.hpp>
+#include <opm/core/transport/ImplicitTransport.hpp>
+#include <opm/core/transport/JacobianSystem.hpp>
+#include <opm/core/transport/SimpleFluid2pWrapper.hpp>
+#include <opm/core/transport/SinglePointUpwindTwoPhase.hpp>
 
 
 namespace Dune {
