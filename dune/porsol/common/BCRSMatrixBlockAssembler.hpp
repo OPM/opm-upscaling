@@ -44,7 +44,7 @@
 #include <dune/istl/bvector.hh>
 #include <dune/istl/bcrsmatrix.hh>
 
-#include <dune/porsol/opmtransport/src/JacobianSystem.hpp>
+#include <opm/core/transport/JacobianSystem.hpp>
 
 namespace Opm {
     namespace ImplicitTransportDefault {

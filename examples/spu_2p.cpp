@@ -57,17 +57,16 @@
 #include <dune/porsol/common/SimulatorUtilities.hpp>
 #include <dune/porsol/common/LinearSolverISTL.hpp>
 
-#include <dune/porsol/opmpressure/src/GridAdapter.hpp>
+#include <opm/core/GridAdapter.hpp>
 
-#include <dune/porsol/opmpressure/src/sparse_sys.h>
-#include <dune/porsol/opmpressure/src/ifs_tpfa.h>
-#include <dune/porsol/opmpressure/src/trans_tpfa.h>
+#include <opm/core/linalg/sparse_sys.h>
+#include <opm/core/pressure/tpfa/ifs_tpfa.h>
+#include <opm/core/pressure/tpfa/trans_tpfa.h>
 
-#include <dune/porsol/opmtransport/src/ImplicitAssembly.hpp>
-#include <dune/porsol/opmtransport/src/ImplicitTransport.hpp>
-#include <dune/porsol/opmtransport/src/JacobianSystem.hpp>
-
-#include <dune/porsol/opmtransport/src/SinglePointUpwindTwoPhase.hpp>
+#include <opm/core/transport/ImplicitAssembly.hpp>
+#include <opm/core/transport/ImplicitTransport.hpp>
+#include <opm/core/transport/JacobianSystem.hpp>
+#include <opm/core/transport/SinglePointUpwindTwoPhase.hpp>
 
 class PressureSolver {
 public:

@@ -21,7 +21,7 @@
 #define OPM_TPFACOMPRESSIBLE_HEADER_INCLUDED
 
 
-#include "../opmpressure/src/TPFACompressiblePressureSolver.hpp"
+#include <opm/core/pressure/TPFACompressiblePressureSolver.hpp>
 #include <dune/porsol/blackoil/BlackoilFluid.hpp>
 
 #include <dune/common/ErrorMacros.hpp>

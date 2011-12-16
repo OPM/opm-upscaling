@@ -2,19 +2,19 @@
 #ifndef OPENRS_IMPLICITTRANSPORTDEFS_HEADER
 #define OPENRS_IMPLICITTRANSPORTDEFS_HEADER
 
-#include <dune/porsol/opmtransport/src/NormSupport.hpp>
-#include <dune/porsol/opmtransport/src/ImplicitTransport.hpp>
+#include <dune/porsol/common/ReservoirPropertyCapillary.hpp>
+#include <dune/porsol/common/LinearSolverISTL.hpp>
 #include <dune/istl/operators.hh>
 #include <dune/istl/solvers.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/common/param/ParameterGroup.hpp>
-#include <dune/porsol/common/LinearSolverISTL.hpp>
-#include <dune/porsol/opmpressure/src/GridAdapter.hpp>
-#include <dune/porsol/common/ReservoirPropertyCapillary.hpp>
-#include <dune/porsol/opmpressure/src/sparse_sys.h>
-#include <dune/porsol/opmpressure/src/ifs_tpfa.h>
-#include <dune/porsol/opmpressure/src/trans_tpfa.h>
+#include <opm/core/GridAdapter.hpp>
+#include <opm/core/linalg/sparse_sys.h>
+#include <opm/core/pressure/tpfa/ifs_tpfa.h>
+#include <opm/core/pressure/tpfa/trans_tpfa.h>
+#include <opm/core/transport/NormSupport.hpp>
+#include <opm/core/transport/ImplicitTransport.hpp>
 
 #if 0
 template <class Ostream, class Collection>

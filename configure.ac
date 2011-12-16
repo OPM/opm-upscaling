@@ -39,8 +39,6 @@ AC_CONFIG_FILES([
   dune/porsol/common/test/Makefile
   dune/porsol/euler/Makefile
   dune/porsol/euler/test/Makefile
-  dune/porsol/opmpressure/Makefile
-  dune/porsol/opmpressure/src/Makefile
   dune/porsol/mimetic/Makefile
   dune/porsol/mimetic/test/Makefile
   dune/porsol/blackoil/Makefile
