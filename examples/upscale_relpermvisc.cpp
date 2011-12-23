@@ -96,7 +96,8 @@ using namespace std;
  */
 void usage()
 {
-    cout << "Usage: upscale_relpermvisc <options> <eclipsefile> stoneA.txt stoneB.txt stoneA.txt ..." << endl <<
+    cout << "Usage: upscale_relpermvisc <options> <eclipsefile> rock1.txt rock2.txt... (isotropic case)" << endl <<
+        "       upscale_relpermvisc <options> <eclipsefile> rock1_water.txt rock1_oil.txt rock2_water.txt rock2_oil.txt ... (anisotropic case)" << endl <<
         " where the options are:" << endl <<
         "-bc <string>                 -- which boundary conditions to use." << endl << 
         "                                Possible values are f (fixed), " << endl << 
@@ -639,8 +640,13 @@ int main(int varnum, char** vararg)
         } 
     }
     else {   // Anisotropic case here! (double set of input curves needed
+        cout << "rock types: " << stone_types << endl;
+        cout << "varnum: " << varnum << endl;
+        cout << "rockfileindex: " << rockfileindex << endl;
         if (varnum == rockfileindex + 2*stone_types) { // two .txt for each stone type in anisotropic case
-            for (int i=0 ; i < stone_types; i+=2) {  
+            int rockidx=0;
+            for (int i=0 ; i < 2*stone_types; i+=2) {  
+                rockidx++;
                 const char* WATERFILENAME = vararg[rockfileindex+i];
                 const char* OILFILENAME = vararg[rockfileindex+i+1];
                 // Check if rock files exists and is readable:
@@ -711,7 +717,7 @@ int main(int varnum, char** vararg)
                 Krwx.push_back(Krwxtmp); Krwy.push_back(Krwytmp); Krwz.push_back(Krwztmp); 
                 Krox.push_back(Kroxtmp); Kroy.push_back(Kroytmp); Kroz.push_back(Kroztmp); 
                 if (isMaster) cout << "Loaded rock files: " << WATERFILENAME << " and " 
-                                   << OILFILENAME  << ", for stone type " << i+1 << endl; 
+                                   << OILFILENAME  << ", for stone type " << rockidx << endl; 
                 rockTypeNames.push_back(WATERFILENAME);       
                 rockTypeNames.push_back(OILFILENAME);       
             }
@@ -784,7 +790,7 @@ int main(int varnum, char** vararg)
                     "       was not strictly monotone. Exiting." << endl;
                 usageandexit();
             }
-            for (int i=0 ; i < stone_types; i+=2) {  
+            for (int i=0 ; i < 2*stone_types; i+=2) {  
                 Krwx.push_back(Krwxtmp); Krwy.push_back(Krwytmp); Krwz.push_back(Krwztmp); 
                 Krox.push_back(Kroxtmp); Kroy.push_back(Kroytmp); Kroz.push_back(Kroztmp); 
                 rockTypeNames.push_back(WATERFILENAME);       
@@ -797,10 +803,11 @@ int main(int varnum, char** vararg)
         else { 
             cerr << "Error:  Wrong number of stone-functions provided. " << endl 
                  << "Note that all input arguments after eclipse file are " << endl  
-                 << "interpreted as stone functions." << endl; 
+                 << "interpreted as input functions." << endl; 
             return 1; 
         } 
     }
+
 
     /*****************************************************************************
      * Step 4:
@@ -853,7 +860,6 @@ int main(int varnum, char** vararg)
  
     // Loop through all cells. Add the cells porevolume to the corresponding rock type volume 
     // Also determine bounds for fractional flow ratio 
- 
     const std::vector<int>& ecl_idx = upscaler.grid().globalCell();
     CpGrid::Codim<0>::LeafIterator c = upscaler.grid().leafbegin<0>();
     for (; c != upscaler.grid().leafend<0>(); ++c) {
@@ -866,12 +872,17 @@ int main(int varnum, char** vararg)
             
             // Also find max single-phase perm in input file:
             maxSinglePhasePerm = max( maxSinglePhasePerm, permxs[cell_idx]);
-            
-            double minSw = Krw[int(satnums[cell_idx])-1].getMinimumX().first;
-            double maxSw = Krw[int(satnums[cell_idx])-1].getMaximumX().first;
-            //cout << "minSwc: " << minSw << endl;
-            //cout << "maxSwc: " << maxSw << endl;
-            
+            double minSw, maxSw;
+            if (! anisotropic_input) {
+                minSw = Krw[int(satnums[cell_idx])-1].getMinimumX().first;
+                maxSw = Krw[int(satnums[cell_idx])-1].getMaximumX().first;
+                //cout << "minSwc: " << minSw << endl;
+                //cout << "maxSwc: " << maxSw << endl;
+            }
+            else {
+                minSw = Krwx[int(satnums[cell_idx])-1].getMinimumX().first;
+                maxSw = Krwx[int(satnums[cell_idx])-1].getMaximumX().first;               
+            }
             // Add irreducible water saturation volume
             Swirvolume += minSw * cellPoreVolumes[cell_idx];
             Sworvolume += maxSw * cellPoreVolumes[cell_idx];
@@ -889,7 +900,6 @@ int main(int varnum, char** vararg)
                                cellVolumes.end(), 
                                0.0); 
  
-   
     double Swir = Swirvolume/poreVolume;
     double Swor = Sworvolume/poreVolume;
  
@@ -923,9 +933,27 @@ int main(int varnum, char** vararg)
     const int interpPoints = 1000; 
     const double lowerRelPermLimit = 1e-12; 
     vector<MonotCubicInterpolator> FracFlowRatioInv; // We only need the inverse of this 
+    vector<MonotCubicInterpolator> FracFlowRatioInvY, FracFlowRatioInvZ;
     for (int stone_idx = 0; stone_idx < stone_types; ++stone_idx) { 
-        MonotCubicInterpolator waterCurve(Krw[stone_idx]); 
-        MonotCubicInterpolator oilCurve(Kro[stone_idx]); 
+        MonotCubicInterpolator waterCurve, oilCurve, 
+            waterCurveY, oilCurveY, waterCurveYInv, oilCurveYInv,
+            waterCurveZ, oilCurveZ, waterCurveZInv, oilCurveZInv; 
+       // NOTE: This is a huge hack for anisotropic_input, we only look at
+       // x-directions, and hope this is good enough for establishing
+       // which fracflows to choose. The only side effect is probably slightly 
+       // variations in distance between each saturation point.
+        if (! anisotropic_input) {
+            waterCurve = MonotCubicInterpolator(Krw[stone_idx]);
+            oilCurve = MonotCubicInterpolator(Kro[stone_idx]); 
+        }
+        else {
+            waterCurve = MonotCubicInterpolator(Krwx[stone_idx]);
+            oilCurve = MonotCubicInterpolator(Krox[stone_idx]); 
+            waterCurveY   = MonotCubicInterpolator(Krwy[stone_idx]);
+            oilCurveY     = MonotCubicInterpolator(Kroy[stone_idx]);
+            waterCurveZ   = MonotCubicInterpolator(Krwz[stone_idx]);
+            oilCurveZ     = MonotCubicInterpolator(Kroz[stone_idx]);            
+        }
         MonotCubicInterpolator waterCurveInv(waterCurve.get_fVector(), waterCurve.get_xVector()); 
         MonotCubicInterpolator oilCurveInv(oilCurve.get_fVector(), oilCurve.get_xVector()); 
         // Finding min and max bounds for watersaturation 
@@ -933,6 +961,16 @@ int main(int varnum, char** vararg)
         double waterSwMax = waterCurve.getMaximumX().first; 
         double oilSwMin = oilCurve.getMinimumX().first; 
         double oilSwMax = oilCurve.getMaximumX().first; 
+        if (anisotropic_input) {
+            waterSwMin = min(waterSwMin, waterCurveY.getMinimumX().first);
+            waterSwMax = max(waterSwMax, waterCurveY.getMaximumX().first);
+            waterSwMin = min(waterSwMin, waterCurveZ.getMinimumX().first);
+            waterSwMax = max(waterSwMax, waterCurveZ.getMaximumX().first);
+            oilSwMin = min(oilSwMin, oilCurveY.getMinimumX().first);
+            oilSwMax = max(oilSwMax, oilCurveY.getMaximumX().first);
+            oilSwMin = min(oilSwMin, oilCurveZ.getMinimumX().first);
+            oilSwMax = max(oilSwMax, oilCurveZ.getMaximumX().first);
+        }        
         // Next two lines limit the Sw-span. CHECK!!
         double leftBound = min(oilSwMin, waterSwMin); // Maximum of the two curves left bounds 
         double rightBound = max(oilSwMax, waterSwMax); // Minimum of the two curves right bounds 
@@ -942,21 +980,37 @@ int main(int varnum, char** vararg)
         } 
         if (oilCurve.evaluate(rightBound) < lowerRelPermLimit) { 
             rightBound = oilCurveInv.evaluate(lowerRelPermLimit); 
+            // Assume that also holds for aniso input
         } 
         
         // Uniformly distributed watersaturation points for each rocktype
         vector<double> Sw(interpPoints, leftBound); 
         vector<double> f(interpPoints, 0); 
+        vector<double> fY(interpPoints, 0); 
+        vector<double> fZ(interpPoints, 0); 
         double stepSize = (rightBound-leftBound)/(interpPoints-1); 
         for (int i = 0; i < interpPoints; ++i) { 
             Sw[i] += i*stepSize; 
             f[i] = max(waterCurve.evaluate(Sw[i]), lowerRelPermLimit) / 
                 max(oilCurve.evaluate(Sw[i]), lowerRelPermLimit)
                 * viscosities[oilPhaseIndex]/viscosities[waterPhaseIndex]; 
+            if (anisotropic_input) {
+                fY[i] = max(waterCurveY.evaluate(Sw[i]), lowerRelPermLimit) / 
+                    max(oilCurveY.evaluate(Sw[i]), lowerRelPermLimit)
+                    * viscosities[oilPhaseIndex]/viscosities[waterPhaseIndex]; 
+                fZ[i] = max(waterCurveZ.evaluate(Sw[i]), lowerRelPermLimit) / 
+                    max(oilCurveZ.evaluate(Sw[i]), lowerRelPermLimit)
+                    * viscosities[oilPhaseIndex]/viscosities[waterPhaseIndex]; 
+            }
         }     
         FracFlowRatioInv.push_back(MonotCubicInterpolator(f,Sw));   
+        if (anisotropic_input) {
+            FracFlowRatioInvY.push_back(MonotCubicInterpolator(fY,Sw));
+            FracFlowRatioInvZ.push_back(MonotCubicInterpolator(fY,Sw));
+        }
     } 
     
+    cout << "Kom hit 2?" << endl;
    
     // Find max/min fracflowratio over all rock types.
     double fracflowratioMin = numeric_limits<double>().max(); 
@@ -966,7 +1020,16 @@ int main(int varnum, char** vararg)
         double fracflowratioMaxRock = FracFlowRatioInv[rockIdx].getMaximumX().first; 
         fracflowratioMin = min(fracflowratioMin, fracflowratioMinRock); 
         fracflowratioMax = max(fracflowratioMax, fracflowratioMaxRock); 
-        //cout << "Rock type " << rockIdx << ": min f=" << fracflowratioMinRock << "  max f=" << fracflowratioMaxRock << endl;
+        if (anisotropic_input) {
+            double fracflowratioMinRockY = FracFlowRatioInvY[rockIdx].getMinimumX().first; 
+            double fracflowratioMaxRockY = FracFlowRatioInvY[rockIdx].getMaximumX().first; 
+            fracflowratioMin = min(fracflowratioMin, fracflowratioMinRockY); 
+            fracflowratioMax = max(fracflowratioMax, fracflowratioMaxRockY); 
+            double fracflowratioMinRockZ = FracFlowRatioInvZ[rockIdx].getMinimumX().first; 
+            double fracflowratioMaxRockZ = FracFlowRatioInvZ[rockIdx].getMaximumX().first; 
+            fracflowratioMin = min(fracflowratioMin, fracflowratioMinRockZ); 
+            fracflowratioMax = max(fracflowratioMax, fracflowratioMaxRockZ); 
+        }  
     } 
     
     if (isMaster) cout << endl << "Lower fracflowratio: " << fracflowratioMin << ", Upper fracflowratio: " << fracflowratioMax << endl; 
@@ -1014,6 +1077,11 @@ int main(int varnum, char** vararg)
         
         for (int rockIdx = 0; rockIdx < stone_types; ++rockIdx) {
             waterSaturationRockType[rockIdx] = FracFlowRatioInv[rockIdx].evaluate(fracFlowRatioTestvalue);
+            if (anisotropic_input) {
+                waterSaturationRockType[rockIdx] += FracFlowRatioInvY[rockIdx].evaluate(fracFlowRatioTestvalue);
+                waterSaturationRockType[rockIdx] += FracFlowRatioInvZ[rockIdx].evaluate(fracFlowRatioTestvalue);
+                waterSaturationRockType[rockIdx] /= 3.0; // arithmetic average of three directions.
+            }
             waterVolume += waterSaturationRockType[rockIdx] * rocktypeVolume[rockIdx];
         }
         WaterSaturationVsFractionalFlow.addPair(fracFlowRatioTestvalue, waterVolume/poreVolume);
@@ -1081,6 +1149,20 @@ int main(int varnum, char** vararg)
         permTensorInv = permTensor;
         invert(permTensorInv);
     }
+
+   /*****************************************************************
+    * Step 8 and 9  
+    * (step 8 is for water, 9 is for oil, the code is identical, we just 
+    * swap some variables) 
+    * 
+    * For uniformly distributed water saturation values between upscaled Swir and Swor, 
+    *    a: Find fractional flow ratio corresponding to wanted upscaled water saturation
+    *    b: Model water saturation in each cell given fractional flow ratio
+    *    c: Model phase permeability in each cell given cell water saturation and inputted
+    *       relative permeability curves.
+    *    d: Upscale phase permeability
+    */
+
     vector<double> WaterSaturation;
     
     vector<vector<vector<double> > > PhasePerm; // 'phases' * 'tensorElementCount' phaseperm values per fracflowpoint
@@ -1169,28 +1251,60 @@ int main(int varnum, char** vararg)
                 
                 for (int rockIdx = 0; rockIdx < stone_types; ++rockIdx) {
                     waterSaturationRockType[rockIdx] = FracFlowRatioInv[rockIdx].evaluate(fracFlowRatioTestvalue);
+                    if (anisotropic_input) {
+                        waterSaturationRockType[rockIdx] += FracFlowRatioInvY[rockIdx].evaluate(fracFlowRatioTestvalue);
+                        waterSaturationRockType[rockIdx] += FracFlowRatioInvZ[rockIdx].evaluate(fracFlowRatioTestvalue);
+                        waterSaturationRockType[rockIdx] /= 3.0; // arithmetic average of three directions.
+                    }
                     waterVolumeLF += waterSaturationRockType[rockIdx] * rocktypeVolume[rockIdx];
                 }   
                 for (unsigned int i = 0; i < ecl_idx.size(); ++i) {
                     unsigned int cell_idx = ecl_idx[i];
                     double cellPhasePerm = minPerm;
+                    vector<double>  cellPhasePermDiag;
+                    cellPhasePermDiag.push_back(minPerm);
+                    cellPhasePermDiag.push_back(minPerm);
+                    cellPhasePermDiag.push_back(minPerm);
+
                     if (satnums[cell_idx] > 0) { // Satnum zero is "no rock", model those with minPerm.
                         
                         // Water saturation is only a function of the rock type
                         double saturationCell 
                             = waterSaturationRockType[int(satnums[cell_idx])-1];
-                        double cellRelPerm; 
-                        
-                        if (phase == waterPhaseIndex) {
-                            cellRelPerm = Krw[int(satnums[cell_idx])-1].evaluate(saturationCell);
+                        if (! anisotropic_input) {
+                            double cellRelPerm; 
+                            if (phase == waterPhaseIndex) {
+                                cellRelPerm = Krw[int(satnums[cell_idx])-1].evaluate(saturationCell);
+                            }
+                            else { // if (phase == oilPhaseIndex) {
+                                cellRelPerm = Kro[int(satnums[cell_idx])-1].evaluate(saturationCell);
+                            }
+                            cellPhasePerm = cellRelPerm * permxs[cell_idx];
                         }
-                        else { // if (phase == oilPhaseIndex) {
-                            cellRelPerm = Kro[int(satnums[cell_idx])-1].evaluate(saturationCell);
+                        else { //anisotropic
+                            if (phase == waterPhaseIndex) {
+                                cellPhasePermDiag[0] = Krwx[int(satnums[cell_idx])-1].evaluate(saturationCell) * 
+                                    permxs[cell_idx];
+                                cellPhasePermDiag[1] = Krwy[int(satnums[cell_idx])-1].evaluate(saturationCell) * 
+                                    permys[cell_idx];
+                                cellPhasePermDiag[2] = Krwz[int(satnums[cell_idx])-1].evaluate(saturationCell) * 
+                                    permzs[cell_idx];
+                            }
+                            else { // oil
+                                cellPhasePermDiag[0] = Krox[int(satnums[cell_idx])-1].evaluate(saturationCell) * 
+                                    permxs[cell_idx];
+                                cellPhasePermDiag[1] = Kroy[int(satnums[cell_idx])-1].evaluate(saturationCell) * 
+                                    permys[cell_idx];
+                                cellPhasePermDiag[2] = Kroz[int(satnums[cell_idx])-1].evaluate(saturationCell) * 
+                                    permzs[cell_idx];
+                            }
                         }
-                        cellPhasePerm = cellRelPerm * permxs[cell_idx];
                     }
                     phasePermValues[cell_idx] = cellPhasePerm;
+                    phasePermValuesDiag[cell_idx] = cellPhasePermDiag;
                     maxPhasePerm = max(maxPhasePerm, cellPhasePerm);
+                    maxPhasePerm = max(maxPhasePerm, *max_element(cellPhasePermDiag.begin(),
+                                                                  cellPhasePermDiag.end()));
                 }
                 
                 // Now we can determine the smallest permitted permeability we can calculate for
@@ -1377,7 +1491,12 @@ int main(int varnum, char** vararg)
        outheadtmp << "#     Porosity: " << poreVolume/volume << endl;
        outheadtmp << "#" << endl;
        for (int i=0; i < stone_types ; ++i) {
-           outheadtmp << "# Stone " << i+1 << ": " << rockTypeNames[i] << " (" << Krw[i].getSize() << " points)" <<  endl;
+           if (! anisotropic_input) {
+               outheadtmp << "# Stone " << i+1 << ": " << rockTypeNames[i] << " (" << Krw[i].getSize() << " points)" <<  endl;
+           }
+           else {
+               outheadtmp << "# Stone " << i+1 << ": " << rockTypeNames[i] << " (" << Krwx[i].getSize() << " points)" <<  endl;
+           }
        }
        outheadtmp << "#" << endl;
        outheadtmp << "# Timings:   Tesselation: " << timeused_tesselation << " secs" << endl;
