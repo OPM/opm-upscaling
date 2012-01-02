@@ -8,8 +8,8 @@ DEPENDENCIES=@REQUIRES@
 
 Name: @PACKAGE_NAME@
 Version: @VERSION@
-Description: dune-upscaling module
-URL: http://dune-project.org/
-Requires: dune-common dune-grid dune-istl dune-cornerpoint dune-porsol
-Libs: -L
-Cflags: -I
+Description: A Dune module containing single-phase and steady-state upscaling methods.
+URL: http://public.ict.sintef.no/openrs
+Requires: ${DEPENDENCIES}
+Libs: -L${libdir} -lduneupscaling
+Cflags: -I${includedir}
