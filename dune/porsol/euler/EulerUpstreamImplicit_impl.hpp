@@ -104,14 +104,14 @@ namespace Dune
         for (int i = 0; i < mygrid_.numCells(); ++i){
             porevol_[i]= mygrid_.cellVolume(i)*r.porosity(i);
         }
-        int numf=mygrid_.numFaces();
+        // int numf=mygrid_.numFaces();
         int num_cells = mygrid_.numCells();
         int ngconn  = mygrid_.c_grid()->cell_facepos[num_cells];
         //std::vector<double> htrans_(ngconn);
         htrans_.resize(ngconn);
         const double* perm = &(r.permeability(0)(0,0));
         tpfa_htrans_compute(mygrid_.c_grid(), perm, &htrans_[0]);
-        int count = 0;
+        // int count = 0;
 
         myrp_= r;
 
