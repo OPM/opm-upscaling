@@ -15,6 +15,7 @@ mimetic_aniso_solver_test			\
 mimetic_periodic_test				\
 mimetic_solver_test				\
 simulator_test					\
+simulator_implicit_test				\
 spe10_test					\
 spu_2p						\
 tpfa_compressible_solver_test			\
@@ -53,6 +54,8 @@ known_answer_test_SOURCES = known_answer_test.cpp
 
 simulator_test_SOURCES = simulator_test.cpp
 #simulator_test_LDADD   = $(LDADD) -ltbb
+
+simulator_implicit_test_SOURCES = simulator_implicit_test.cpp
 
 aniso_simulator_test_SOURCES = aniso_simulator_test.cpp
 
