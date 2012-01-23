@@ -210,7 +210,7 @@ int main(int varnum, char** vararg)
    options.insert(make_pair("minPoro",            "0.0001")); // this limit is necessary for pcmin/max computation
 
    // dune-cornerpoint specific options
-   options.insert(make_pair("linsolver_tolerance", "1e-8"));  // residual tolerance for linear solver
+   options.insert(make_pair("linsolver_tolerance", "1e-12"));  // residual tolerance for linear solver
    options.insert(make_pair("linsolver_verbosity", "0"));     // verbosity level for linear solver
    options.insert(make_pair("linsolver_type",      "1"));     // type of linear solver: 0 = ILU/BiCGStab, 1 = AMG/CG
 
@@ -575,11 +575,24 @@ int main(int varnum, char** vararg)
        cout << "LF Volume:         " << volume << endl;
        cout << "Upscaled porosity: " << poreVolume/volume << endl;
        cout << "Upscaled Swir:     " << Swir << endl;
-       cout << "Upscaled Swor:     " << Swor << endl;
+       cout << "Upscaled Swmax:     " << Swor << endl;
        cout << "Saturation points to be computed: " << points << endl;
    }
 
-   if (Swir < 0 || Swir > 1 || Swor < 0 || Swor > 1) {
+   // Sometimes, if Swmax=1 or Swir=0 in the input tables, the upscaled 
+   // values can be a little bit larger (within machine precision) and
+   // the check below fails. Hence, check if these values are within the 
+   // the [0 1] interval within some precision (use linsolver_precision)
+   if (Swor > 1.0 && Swor - linsolver_tolerance < 1.0) {
+       Swor = 1.0;
+   }
+   if (Swir < 0.0 && Swir + linsolver_tolerance > 0.0) {
+       Swir = 0.0;
+   }
+   
+
+   if (Swir < 0.0 || Swir > 1.0 || Swor < 0.0 || Swor > 1.0) {
+       cout << Swor-1.0 << endl;
        if (isMaster) cerr << "ERROR: Swir/Swor unsensible. Check your input. Exiting";
        usageandexit();
    }      
