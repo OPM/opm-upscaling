@@ -575,7 +575,7 @@ int main(int varnum, char** vararg)
        cout << "LF Volume:         " << volume << endl;
        cout << "Upscaled porosity: " << poreVolume/volume << endl;
        cout << "Upscaled Swir:     " << Swir << endl;
-       cout << "Upscaled Swmax:     " << Swor << endl;
+       cout << "Upscaled Swmax:    " << Swor << endl; //Swor=1-Swmax
        cout << "Saturation points to be computed: " << points << endl;
    }
 
@@ -589,10 +589,7 @@ int main(int varnum, char** vararg)
    if (Swir < 0.0 && Swir + linsolver_tolerance > 0.0) {
        Swir = 0.0;
    }
-   
-
    if (Swir < 0.0 || Swir > 1.0 || Swor < 0.0 || Swor > 1.0) {
-       cout << Swor-1.0 << endl;
        if (isMaster) cerr << "ERROR: Swir/Swor unsensible. Check your input. Exiting";
        usageandexit();
    }      

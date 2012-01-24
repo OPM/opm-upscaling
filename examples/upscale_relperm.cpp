@@ -845,10 +845,20 @@ int main(int varnum, char** vararg)
        cout << "LF Volume:         " << volume << endl;
        cout << "Upscaled porosity: " << poreVolume/volume << endl;
        cout << "Upscaled Swir:     " << Swir << endl;
-       cout << "Upscaled Swor:     " << Swor << endl;
+       cout << "Upscaled Swmax:    " << Swor << endl; //Swor=1-Swmax
        cout << "Saturation points to be computed: " << points << endl;
    }
 
+   // Sometimes, if Swmax=1 or Swir=0 in the input tables, the upscaled 
+   // values can be a little bit larger (within machine precision) and
+   // the check below fails. Hence, check if these values are within the 
+   // the [0 1] interval within some precision (use linsolver_precision)
+   if (Swor > 1.0 && Swor - linsolver_tolerance < 1.0) {
+       Swor = 1.0;
+   }
+   if (Swir < 0.0 && Swir + linsolver_tolerance > 0.0) {
+       Swir = 0.0;
+   }
    if (Swir < 0 || Swir > 1 || Swor < 0 || Swor > 1) {
        if (isMaster) cerr << "ERROR: Swir/Swor unsensible. Check your input. Exiting";
        usageandexit();
