@@ -221,7 +221,7 @@ int main(int varnum, char** vararg)
    options.insert(make_pair("minPoro",            "0.0001")); // this limit is necessary for pcmin/max computation
    options.insert(make_pair("saturationThreshold","0.00001")); // accuracy threshold for saturation, we ignore Pc values that
                                                               // give so small contributions near endpoints.
-   options.insert(make_pair("linsolver_tolerance", "1e-8"));  // residual tolerance for linear solver
+   options.insert(make_pair("linsolver_tolerance", "1e-12"));  // residual tolerance for linear solver
    options.insert(make_pair("linsolver_verbosity", "0"));     // verbosity level for linear solver
    options.insert(make_pair("linsolver_type",      "1"));     // type of linear solver: 0 = ILU/BiCGStab, 1 = AMG/CG
 
@@ -1041,7 +1041,9 @@ int main(int varnum, char** vararg)
        double saturation = Swir + (Swor-Swir)/(points-1)*(pointidx-1);
        pressurePoints.push_back(CapPressureVsWaterSaturation.evaluate(saturation));
    }
-
+   // Preserve max and min pressures
+   pressurePoints[0]=Pcmax; 
+   pressurePoints[pressurePoints.size()-1]=Pcmin;
 
    // Construct a vector that tells for each pressure point which mpi-node (rank) should compute for that
    // particular pressure point
