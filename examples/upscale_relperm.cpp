@@ -214,7 +214,7 @@ int main(int varnum, char** vararg)
    options.insert(make_pair("oilDensity",         "0.6")); // ditto
    options.insert(make_pair("interpolate",        "0"));    // default is not to interpolate
    options.insert(make_pair("maxpoints",          "1000")); // maximal number of saturation points.
-   options.insert(make_pair("outputprecision",    "8")); // number of decimals to print
+   options.insert(make_pair("outputprecision",    "4")); // number of significant numbers to print
    options.insert(make_pair("maxPermContrast",    "1e7")); // maximum allowed contrast in each single-phase computation
    options.insert(make_pair("minPerm",            "1e-12")); // absolute minimum for allowed cell permeability
    options.insert(make_pair("maxPerm",            "100000")); // maximal allowed cell permeability
