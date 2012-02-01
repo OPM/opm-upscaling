@@ -70,7 +70,7 @@
 
 class PressureSolver {
 public:
-    PressureSolver(grid_t* g, const Opm::Rock& rock)
+    PressureSolver(UnstructuredGrid* g, const Opm::Rock& rock)
         : htrans_(g->cell_facepos[ g->number_of_cells ]),
           trans_ (g->number_of_faces),
           gpress_(g->cell_facepos[ g->number_of_cells ])
@@ -86,7 +86,7 @@ public:
 
     template <class State>
     void
-    solve(grid_t*                      g     ,
+    solve(UnstructuredGrid*                      g     ,
           const ::std::vector<double>& totmob,
           const ::std::vector<double>& src   ,
           State&                       state ) {
@@ -188,7 +188,7 @@ main(int argc, char** argv)
     Opm::ImplicitTransportDetails::NRControl ctrl;
 
     std::vector<double> porevol;
-    grid_t& cgrid=*grid.c_grid();
+    UnstructuredGrid& cgrid=*grid.c_grid();
     std::vector<double> htrans(cgrid.cell_facepos[ cgrid.number_of_cells ],1);
     Dune::array<double,3> gravity;
     gravity[2]=10.0;

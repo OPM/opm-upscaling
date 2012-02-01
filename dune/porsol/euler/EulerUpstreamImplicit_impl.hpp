@@ -143,7 +143,7 @@ namespace Dune
             cix+=1;
         }
 
-        const grid_t& c_grid=*mygrid_.c_grid();
+        const UnstructuredGrid& c_grid=*mygrid_.c_grid();
         int hf_ind=0;
         int bf_ind=0;
         periodic_cells_.resize(0);
@@ -241,7 +241,7 @@ namespace Dune
         }
 
         //int count=0;
-        const grid_t* cgrid = mygrid_.c_grid();
+        const UnstructuredGrid* cgrid = mygrid_.c_grid();
         int numhf = cgrid->cell_facepos[cgrid->number_of_cells];
 
         std::vector<double>     faceflux(numhf);
@@ -270,7 +270,7 @@ namespace Dune
 
         TwophaseFluid myfluid(myrp_);
         double* tmp_grav=0;
-        const grid_t& c_grid=*mygrid_.c_grid();
+        const UnstructuredGrid& c_grid=*mygrid_.c_grid();
         TransportModel model(myfluid,c_grid,porevol_,tmp_grav);
         model.makefhfQPeriodic(periodic_faces_,periodic_hfaces_, periodic_nbfaces_);
         model.initGravityTrans(*mygrid_.c_grid(),htrans_);

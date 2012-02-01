@@ -52,7 +52,7 @@ public:
 template <int np = 2>
 class ReservoirState { 
 public:
-    ReservoirState(const grid_t* g)
+    ReservoirState(const UnstructuredGrid* g)
         : press_ (g->number_of_cells),
           fpress_(g->number_of_faces),
           flux_  (g->number_of_faces),
@@ -257,7 +257,7 @@ append_transport_source(int c, double p, double v, const Arr& s,
     ++src.nsrc;
 }
 void
-compute_porevolume(const grid_t*        g,
+compute_porevolume(const UnstructuredGrid*        g,
                    const Rock&          rock,
                    std::vector<double>& porevol)
 {
