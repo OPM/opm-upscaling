@@ -44,11 +44,11 @@
 
 #include <dune/common/array.hh>
 
-#include <dune/common/ErrorMacros.hpp>
-#include <dune/common/Average.hpp>
-#include <dune/common/Units.hpp>
+#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/core/utility/Average.hpp>
+#include <opm/core/utility/Units.hpp>
 #include <dune/grid/common/Volumes.hpp>
-#include <dune/common/StopWatch.hpp>
+#include <opm/core/utility/StopWatch.hpp>
 #include <dune/porsol/common/ImplicitTransportDefs.hpp>
 #include <opm/core/pressure/tpfa/trans_tpfa.h>
 

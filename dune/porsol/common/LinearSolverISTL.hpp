@@ -47,7 +47,7 @@ namespace Dune
     public:
         LinearSolverISTL();
         virtual ~LinearSolverISTL();
-        virtual void init(const parameter::ParameterGroup& param);
+        virtual void init(const Opm::parameter::ParameterGroup& param);
         virtual LinearSolverResults solve(int size, int nonzeros,
                                           const int* ia, const int* ja, const double* sa,
                                           const double* rhs, double* solution);

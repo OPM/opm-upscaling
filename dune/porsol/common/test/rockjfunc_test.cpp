@@ -37,7 +37,7 @@
 
 #include "../RockJfunc.hpp"
 #include <dune/porsol/common/Matrix.hpp>
-#include <dune/common/Units.hpp>
+#include <opm/core/utility/Units.hpp>
 
 using namespace Dune;
 
@@ -52,7 +52,7 @@ int main(int argc, char** argv)
 
     OwnCMatrix perm(3,3,(double*)0);
     eye(perm);
-    perm *= 100*prefix::milli*unit::darcy;
+    perm *= 100*Opm::prefix::milli*Opm::unit::darcy;
     double poro = 0.2;
 
     double sat;

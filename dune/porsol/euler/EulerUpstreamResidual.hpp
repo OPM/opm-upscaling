@@ -40,8 +40,8 @@
 
 #include <tr1/unordered_map>
 
-#include <dune/common/param/ParameterGroup.hpp>
-#include <dune/common/SparseVector.hpp>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
+#include <opm/core/utility/SparseVector.hpp>
 
 
 namespace Dune {
@@ -85,7 +85,7 @@ namespace Dune {
 	void computeResidual(const std::vector<double>& saturation,
 			     const typename GridInterface::Vector& gravity,
 			     const FlowSolution& flow_sol,
-                             const SparseVector<double>& injection_rates,
+                             const Opm::SparseVector<double>& injection_rates,
                              const bool method_viscous,
                              const bool method_gravity,
                              const bool method_capillary,
@@ -116,7 +116,7 @@ namespace Dune {
 
 	// Precomputing the capillary pressures of cells saves a little time.
 	mutable std::vector<double> cap_pressures_;
-        mutable const SparseVector<double>* pinjection_rates_;
+        mutable const Opm::SparseVector<double>* pinjection_rates_;
         mutable bool method_viscous_;
         mutable bool method_gravity_;
         mutable bool method_capillary_;

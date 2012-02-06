@@ -38,8 +38,8 @@
 
 
 #include <dune/porsol/euler/EulerUpstreamResidual.hpp>
-#include <dune/common/param/ParameterGroup.hpp>
-#include <dune/common/SparseVector.hpp>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
+#include <opm/core/utility/SparseVector.hpp>
 #include <dune/porsol/mimetic/IncompFlowSolverHybrid.hpp>
 #include <dune/porsol/mimetic/MimeticIPEvaluator.hpp>
 

@@ -42,8 +42,8 @@
 #include <boost/scoped_ptr.hpp>
 
 #include <dune/common/fvector.hh>
-#include <dune/common/SparseTable.hpp>
-#include <dune/common/StopWatch.hpp>
+#include <opm/core/utility/SparseTable.hpp>
+#include <opm/core/utility/StopWatch.hpp>
 #include <dune/grid/common/mcmgmapper.hh>
 #include <dune/grid/CpGrid.hpp> // How to avoid this? Needed for the explicit mapper specialization below.
 
@@ -481,8 +481,8 @@ namespace Dune
             ASSERT(num_faces_ != 0);
             return face_indices_[cell_index][local_face_index];
         }
-        typedef SparseTable<int>::row_type Indices;
-        Indices faceIndices(int cell_index) const
+        typedef Opm::SparseTable<int>::row_type Indices;
+	Indices faceIndices(int cell_index) const
         {
             ASSERT(num_faces_ != 0);
             return face_indices_[cell_index];
@@ -492,13 +492,13 @@ namespace Dune
         boost::scoped_ptr<Mapper> pmapper_;
         int num_faces_;
         int max_faces_per_cell_;
-        SparseTable<int> face_indices_;
+	Opm::SparseTable<int> face_indices_;
 
         void buildFaceIndices()
         {
 #ifdef VERBOSE
             std::cout << "Building unique face indices... " << std::flush;
-            time::StopWatch clock;
+	    Opm::time::StopWatch clock;
             clock.start();
 #endif
             typedef CellIterator CI;

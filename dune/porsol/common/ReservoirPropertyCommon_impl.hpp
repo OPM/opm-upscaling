@@ -40,7 +40,7 @@
 #include <fstream>
 #include <boost/static_assert.hpp>
 #include <boost/array.hpp>
-#include <dune/common/EclipseGridInspector.hpp>
+#include <opm/core/eclipse/EclipseGridInspector.hpp>
 
 namespace Dune
 {
@@ -66,7 +66,7 @@ namespace Dune
         ///        TensorPerm     at least one cross-component given.
         ///        None           no components given.
         ///        Invalid        invalid set of components given.
-        PermeabilityKind classifyPermeability(const EclipseGridParser& parser)
+        PermeabilityKind classifyPermeability(const Opm::EclipseGridParser& parser)
         {
             const bool xx = parser.hasField("PERMX" );
             const bool xy = parser.hasField("PERMXY");
@@ -174,7 +174,7 @@ namespace Dune
         ///
         /// @param [out] tensor
         /// @param [out] kmap
-        PermeabilityKind fillTensor(const EclipseGridParser&                 parser,
+        PermeabilityKind fillTensor(const Opm::EclipseGridParser&                 parser,
                                     std::vector<const std::vector<double>*>& tensor,
                                     boost::array<int,9>&                     kmap)
         {
@@ -255,15 +255,15 @@ namespace Dune
     template <int dim, class RPImpl, class RockType>
     ReservoirPropertyCommon<dim, RPImpl, RockType>::ReservoirPropertyCommon()
 #if 1
-        : density1_  (1013.9*unit::kilogram/unit::cubic(unit::meter)),
-          density2_  ( 834.7*unit::kilogram/unit::cubic(unit::meter)),
-          viscosity1_(   1.0*prefix::centi*unit::Poise),
-          viscosity2_(   3.0*prefix::centi*unit::Poise),
+        : density1_  (1013.9*Opm::unit::kilogram/Opm::unit::cubic(Opm::unit::meter)),
+          density2_  ( 834.7*Opm::unit::kilogram/Opm::unit::cubic(Opm::unit::meter)),
+          viscosity1_(   1.0*Opm::prefix::centi*Opm::unit::Poise),
+          viscosity2_(   3.0*Opm::prefix::centi*Opm::unit::Poise),
 #else
-        : density1_  (1000.0*unit::kilogram/unit::cubic(unit::meter)),
-          density2_  (1000.0*unit::kilogram/unit::cubic(unit::meter)),
-          viscosity1_(   1000.0*prefix::centi*unit::Poise),
-          viscosity2_(   1000.0*prefix::centi*unit::Poise),
+        : density1_  (1000.0*Opm::unit::kilogram/Opm::unit::cubic(Opm::unit::meter)),
+          density2_  (1000.0*Opm::unit::kilogram/Opm::unit::cubic(Opm::unit::meter)),
+          viscosity1_(   1000.0*Opm::prefix::centi*Opm::unit::Poise),
+          viscosity2_(   1000.0*Opm::prefix::centi*Opm::unit::Poise),
 #endif
           permeability_kind_(Invalid)
     {
@@ -271,7 +271,7 @@ namespace Dune
 
 
     template <int dim, class RPImpl, class RockType>
-    void ReservoirPropertyCommon<dim, RPImpl, RockType>::init(const EclipseGridParser& parser,
+    void ReservoirPropertyCommon<dim, RPImpl, RockType>::init(const Opm::EclipseGridParser& parser,
                                                               const std::vector<int>& global_cell,
                                                               const double perm_threshold,
                                                               const std::string* rock_list_filename,
@@ -567,14 +567,14 @@ namespace Dune
 
 
     template <int dim, class RPImpl, class RockType>
-    void ReservoirPropertyCommon<dim, RPImpl, RockType>::assignPorosity(const EclipseGridParser& parser,
+    void ReservoirPropertyCommon<dim, RPImpl, RockType>::assignPorosity(const Opm::EclipseGridParser& parser,
                                                          const std::vector<int>& global_cell)
     {
         porosity_.assign(global_cell.size(), 1.0);
 
         if (parser.hasField("PORO")) {
-            EclipseGridInspector insp(parser);
-            boost::array<int, 3> dims = insp.gridSize();
+	    Opm::EclipseGridInspector insp(parser);
+            std::tr1::array<int, 3> dims = insp.gridSize();
             int num_global_cells = dims[0]*dims[1]*dims[2];
             const std::vector<double>& poro = parser.getFloatingPointValue("PORO");
             if (int(poro.size()) != num_global_cells) {
@@ -592,12 +592,12 @@ namespace Dune
 
 
     template <int dim, class RPImpl, class RockType>
-    void ReservoirPropertyCommon<dim, RPImpl, RockType>::assignPermeability(const EclipseGridParser& parser,
+    void ReservoirPropertyCommon<dim, RPImpl, RockType>::assignPermeability(const Opm::EclipseGridParser& parser,
                                                                             const std::vector<int>& global_cell,
                                                                             double perm_threshold)
     {
-        EclipseGridInspector insp(parser);
-        boost::array<int, 3> dims = insp.gridSize();
+	Opm::EclipseGridInspector insp(parser);
+        std::tr1::array<int, 3> dims = insp.gridSize();
         int num_global_cells = dims[0]*dims[1]*dims[2];
         ASSERT (num_global_cells > 0);
 
@@ -652,7 +652,7 @@ namespace Dune
 
 
     template <int dim, class RPImpl, class RockType>
-    void ReservoirPropertyCommon<dim, RPImpl, RockType>::assignRockTable(const EclipseGridParser& parser,
+    void ReservoirPropertyCommon<dim, RPImpl, RockType>::assignRockTable(const Opm::EclipseGridParser& parser,
                                                           const std::vector<int>& global_cell)
     {
         const int nc = global_cell.size();
@@ -660,8 +660,8 @@ namespace Dune
         cell_to_rock_.assign(nc, 0);
 
         if (parser.hasField("SATNUM")) {
-            EclipseGridInspector insp(parser);
-            boost::array<int, 3> dims = insp.gridSize();
+	    Opm::EclipseGridInspector insp(parser);
+            std::tr1::array<int, 3> dims = insp.gridSize();
             int num_global_cells = dims[0]*dims[1]*dims[2];
             const std::vector<int>& satnum = parser.getIntegerValue("SATNUM");
             if (int(satnum.size()) != num_global_cells) {

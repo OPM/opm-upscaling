@@ -19,19 +19,19 @@
 
 #include "config.h"
 
-#include <dune/common/param/ParameterGroup.hpp>
-#include <dune/common/EclipseGridParser.hpp>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
+#include <opm/core/eclipse/EclipseGridParser.hpp>
 #include <dune/porsol/blackoil/BlackoilFluid.hpp>
 
 
 int main(int argc, char** argv)
 {
     // Parameters.
-    Dune::parameter::ParameterGroup param(argc, argv);
+    Opm::parameter::ParameterGroup param(argc, argv);
 
     // Parser.
     std::string ecl_file = param.get<std::string>("filename");
-    Dune::EclipseGridParser parser(ecl_file);
+    Opm::EclipseGridParser parser(ecl_file);
 
     // Look at the BlackoilFluid behaviour
     Opm::BlackoilFluid fluid;

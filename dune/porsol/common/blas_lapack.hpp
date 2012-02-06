@@ -36,7 +36,7 @@
 #ifndef OPENRS_BLAS_LAPACK_HEADER
 #define OPENRS_BLAS_LAPACK_HEADER
 
-#include <dune/common/ErrorMacros.hpp>
+#include <opm/core/utility/ErrorMacros.hpp>
 #include <dune/porsol/common/fortran.hpp>
 
 #ifdef __cplusplus

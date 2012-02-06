@@ -116,7 +116,7 @@ int main(int argc, char** argv)
 #ifdef AluGridToBeUsed
       if (simulationData.td_.NameOfGridType == "ALUGridSimplex2D")
       {
-	Dune::GridFactory<DuneGridType> factory();
+	Opm::GridFactory<DuneGridType> factory();
 	//Must fill in the vertices and elements from Triangle:
 	//insertVertices( factory, "A.1.node");	
 	//insertSimplices( factory, "A.1.ele");

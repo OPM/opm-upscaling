@@ -37,8 +37,8 @@
 #define OPENRS_IFSHINTERFACE_HEADER
 
 #include <opm/core/pressure/HybridPressureSolver.hpp>
-#include <dune/common/ErrorMacros.hpp>
-#include <dune/common/SparseTable.hpp>
+#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/core/utility/SparseTable.hpp>
 #include <dune/porsol/common/LinearSolverISTL.hpp>
 #include <boost/array.hpp>
 #include <boost/static_assert.hpp>

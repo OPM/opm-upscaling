@@ -20,18 +20,18 @@
 #include "config.h"
 
 #include <dune/porsol/blackoil/fluid/FluidMatrixInteractionBlackoil.hpp>
-#include <dune/common/param/ParameterGroup.hpp>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <dune/common/fvector.hh>
 
 
 int main(int argc, char** argv)
 {
     // Parameters.
-    Dune::parameter::ParameterGroup param(argc, argv);
+    Opm::parameter::ParameterGroup param(argc, argv);
 
     // Parser.
     std::string ecl_file = param.get<std::string>("filename");
-    Dune::EclipseGridParser parser(ecl_file);
+    Opm::EclipseGridParser parser(ecl_file);
 
     // Test the FluidMatrixInteractionBlackoil class.
     Opm::FluidMatrixInteractionBlackoilParams<double> fluid_params;

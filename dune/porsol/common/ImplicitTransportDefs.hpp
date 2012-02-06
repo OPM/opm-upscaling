@@ -8,7 +8,7 @@
 #include <dune/istl/solvers.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
-#include <dune/common/param/ParameterGroup.hpp>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/core/GridAdapter.hpp>
 #include <opm/core/linalg/sparse_sys.h>
 #include <opm/core/pressure/tpfa/ifs_tpfa.h>

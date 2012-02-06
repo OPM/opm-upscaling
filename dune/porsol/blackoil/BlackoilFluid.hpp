@@ -24,7 +24,7 @@
 #include <dune/porsol/blackoil/fluid/FluidMatrixInteractionBlackoil.hpp>
 #include <dune/porsol/blackoil/fluid/FluidStateBlackoil.hpp>
 #include <dune/porsol/blackoil/fluid/BlackoilPVT.hpp>
-#include <dune/common/EclipseGridParser.hpp>
+#include <opm/core/eclipse/EclipseGridParser.hpp>
 #include <dune/common/fvector.hh>
 #include <vector>
 
@@ -45,7 +45,7 @@ namespace Opm
         typedef FluidStateBlackoil FluidState;
         typedef BlackoilFluidData FluidData;
 
-        void init(const Dune::EclipseGridParser& parser)
+        void init(const Opm::EclipseGridParser& parser)
         {
             fmi_params_.init(parser);
             // FluidSystemBlackoil<>::init(parser);

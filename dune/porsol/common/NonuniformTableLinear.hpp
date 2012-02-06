@@ -40,8 +40,8 @@
 #include <vector>
 #include <utility>
 
-#include <dune/common/ErrorMacros.hpp>
-#include <dune/porsol/common/linearInterpolation.hpp>
+#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/core/utility/linearInterpolation.hpp>
 
 namespace Dune {
     namespace utils {
@@ -190,7 +190,7 @@ namespace Dune {
 	NonuniformTableLinear<T>
 	::operator()(const double x) const
 	{
-	    return linearInterpolation(x_values_, y_values_, x);
+	    return Opm::linearInterpolation(x_values_, y_values_, x);
 	}
 
 	template<typename T>
@@ -198,7 +198,7 @@ namespace Dune {
 	NonuniformTableLinear<T>
 	::derivative(const double x) const
 	{
-	    return linearInterpolationDerivative(x_values_, y_values_, x);
+	    return Opm::linearInterpolationDerivative(x_values_, y_values_, x);
 	}
 
 	template<typename T>
@@ -207,7 +207,7 @@ namespace Dune {
 	::inverse(const double y) const
 	{
             if (y_values_.front() < y_values_.back()) {
-                return linearInterpolation(y_values_, x_values_, y);
+                return Opm::linearInterpolation(y_values_, x_values_, y);
             } else {
                 if (y_values_reversed_.empty()) {
                     y_values_reversed_ = y_values_;
@@ -216,7 +216,7 @@ namespace Dune {
                     x_values_reversed_ = x_values_;
                     std::reverse(x_values_reversed_.begin(), x_values_reversed_.end());
                 }
-                return linearInterpolation(y_values_reversed_, x_values_reversed_, y);
+                return Opm::linearInterpolation(y_values_reversed_, x_values_reversed_, y);
             }
 	}
 

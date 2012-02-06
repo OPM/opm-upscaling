@@ -40,9 +40,9 @@
 #include <iterator>
 #include <boost/lexical_cast.hpp>
 
-#include <dune/common/param/ParameterGroup.hpp>
-#include <dune/common/SparseVector.hpp>
-#include <dune/common/SparseTable.hpp>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
+#include <opm/core/utility/SparseVector.hpp>
+#include <opm/core/utility/SparseTable.hpp>
 
 #include <dune/grid/common/Volumes.hpp>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
@@ -103,7 +103,7 @@ namespace Dune
 	}
 
     private:
-	SparseTable<double> halfface_fluxes_;
+	Opm::SparseTable<double> halfface_fluxes_;
     };
 
 
@@ -124,11 +124,11 @@ namespace Dune
 	/// @brief
 	/// @todo Doc me!
 	/// @param
-	void init(const parameter::ParameterGroup& param)
+	void init(const Opm::parameter::ParameterGroup& param)
 	{
 	    simulation_steps_ = param.getDefault("simulation_steps", simulation_steps_);
-	    stepsize_ = Dune::unit::convert::from(param.getDefault("stepsize", stepsize_),
-                                                  Dune::unit::day);
+	    stepsize_ = Opm::unit::convert::from(param.getDefault("stepsize", stepsize_),
+                                                  Opm::unit::day);
 	    init_saturation_ = param.getDefault("init_saturation", init_saturation_);
 
 	    setupGridAndProps(param, grid_, res_prop_);
@@ -157,7 +157,7 @@ namespace Dune
 	    // Make the grid interface
 	    GridInterface g(grid_);
 	    // No injection or production.
-	    SparseVector<double> injection_rates(g.numberOfCells());
+	    Opm::SparseVector<double> injection_rates(g.numberOfCells());
 	    // Make a solver.
 	    TransportSolver transport_solver(g, res_prop_, bcond_);
 	    // Define a flow field with constant velocity.

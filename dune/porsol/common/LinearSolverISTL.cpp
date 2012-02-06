@@ -78,7 +78,7 @@ namespace Dune
 
 
 
-    void LinearSolverISTL::init(const parameter::ParameterGroup& param)
+    void LinearSolverISTL::init(const Opm::parameter::ParameterGroup& param)
     {
         linsolver_residual_tolerance_ = param.getDefault("linsolver_residual_tolerance", linsolver_residual_tolerance_);
         linsolver_verbosity_ = param.getDefault("linsolver_verbosity", linsolver_verbosity_);

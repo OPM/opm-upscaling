@@ -43,8 +43,8 @@
 #include <boost/array.hpp>
 #include <boost/static_assert.hpp>
 
-#include <dune/common/ErrorMacros.hpp>
-#include <dune/common/SparseTable.hpp>
+#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/core/utility/SparseTable.hpp>
 
 #include <dune/porsol/common/fortran.hpp>
 #include <dune/porsol/common/blas_lapack.hpp>
@@ -551,8 +551,8 @@ namespace Dune {
         Scalar              totmob_      ;
         Scalar              mob_dens_    ;
         std::vector<Scalar> fa_, t1_, t2_;
-        SparseTable<Scalar> Binv_        ;
-        SparseTable<Scalar> gflux_       ;
+	Opm::SparseTable<Scalar> Binv_        ;
+	Opm::SparseTable<Scalar> gflux_       ;
     };
 } // namespace Dune
 

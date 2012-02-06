@@ -21,7 +21,7 @@
 #define OPM_SIMPLEROCK_HEADER_INCLUDED
 
 
-#include <dune/common/param/ParameterGroup.hpp>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
 
 
 namespace Opm

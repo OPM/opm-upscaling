@@ -20,13 +20,13 @@
 #include "config.h"
 
 #include <iostream>
-#include <dune/common/Units.hpp>
+#include <opm/core/utility/Units.hpp>
 #include <dune/porsol/blackoil/BlackoilWells.hpp>
 #include <dune/porsol/common/Rock.hpp>
 #include <iterator>
 
 // Forward declaration
-void write_fields(std::ostream& os, const Dune::EclipseGridParser& parser);
+void write_fields(std::ostream& os, const Opm::EclipseGridParser& parser);
 
 // Program for test of reading newly implemented keywords.
 // Writes field data with and without unit conversion.
@@ -37,7 +37,7 @@ int main(int argc, char** argv)
     const std::string ecl_file = (argc == 1) ? "SPE9.DATA" : argv[1];
     std::cout << "Parsing file " << ecl_file << std::endl;
 
-    Dune::EclipseGridParser parser1(ecl_file, false);
+    Opm::EclipseGridParser parser1(ecl_file, false);
     
     // Stored fieldnames
     std::cout << "\nStored fieldnames.\n";
@@ -50,14 +50,14 @@ int main(int argc, char** argv)
     std::cout << "\nUnits are not converted to SI-units.\n";
     write_fields(std::cout, parser1);
     
-    Dune::EclipseGridParser parser2(ecl_file);
+    Opm::EclipseGridParser parser2(ecl_file);
     std::cout << "\nUnits are converted to SI-units.\n";
     write_fields(std::cout, parser2);
     
     return 0;
 }
 
-void write_fields(std::ostream& os, const Dune::EclipseGridParser& parser)
+void write_fields(std::ostream& os, const Opm::EclipseGridParser& parser)
 {
     if (parser.hasField("WELSPECS")) {
 	parser.getWELSPECS().write(os);    

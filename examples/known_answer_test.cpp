@@ -47,7 +47,7 @@
 
 #include <dune/common/array.hh>
 #include <dune/common/mpihelper.hh>
-#include <dune/common/Units.hpp>
+#include <opm/core/utility/Units.hpp>
 
 // #if HAVE_ALUGRID
 // #include <dune/common/shared_ptr.hh>
@@ -60,8 +60,8 @@
 
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/CpGrid.hpp>
-#include <dune/common/EclipseGridParser.hpp>
-#include <dune/common/EclipseGridInspector.hpp>
+#include opm/core/eclipse/EclipseGridParser.hpp>
+#include opm/core/eclipse/EclipseGridInspector.hpp>
 
 #include <dune/porsol/common/fortran.hpp>
 #include <dune/porsol/common/blas_lapack.hpp>
@@ -72,8 +72,8 @@
 
 #include <dune/porsol/mimetic/MimeticIPEvaluator.hpp>
 #include <dune/porsol/mimetic/IncompFlowSolverHybrid.hpp>
-#include <dune/common/param/ParameterGroup.hpp>
-#include <dune/common/StopWatch.hpp>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>>
+#include <opm/core/utility/StopWatch.hpp>
 
 
 // ------------ Specifying the solution ------------

@@ -42,8 +42,8 @@
 
 #include <boost/bind.hpp>
 
-#include <dune/common/ErrorMacros.hpp>
-#include <dune/common/SparseTable.hpp>
+#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/core/utility/SparseTable.hpp>
 
 #include <dune/porsol/common/fortran.hpp>
 #include <dune/porsol/common/blas_lapack.hpp>

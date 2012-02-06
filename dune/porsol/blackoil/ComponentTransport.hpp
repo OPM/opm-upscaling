@@ -24,7 +24,7 @@
 #include <vector>
 #include <dune/porsol/blackoil/fluid/BlackoilDefs.hpp>
 #include <dune/porsol/blackoil/BlackoilFluid.hpp>
-#include <dune/common/param/ParameterGroup.hpp>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
 
 #include <stdlib.h>
 #include <float.h>

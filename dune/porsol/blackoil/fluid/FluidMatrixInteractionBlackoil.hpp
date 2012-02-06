@@ -20,9 +20,9 @@
 #ifndef OPM_FLUIDMATRIXINTERACTIONBLACKOIL_HEADER_INCLUDED
 #define OPM_FLUIDMATRIXINTERACTIONBLACKOIL_HEADER_INCLUDED
 
-#include <dune/common/EclipseGridParser.hpp>
-#include <dune/porsol/common/UniformTableLinear.hpp>
-#include <dune/porsol/common/buildUniformMonotoneTable.hpp>
+#include <opm/core/eclipse/EclipseGridParser.hpp>
+#include <opm/core/utility/UniformTableLinear.hpp>
+#include <opm/core/utility/buildUniformMonotoneTable.hpp>
 #include "BlackoilDefs.hpp"
 #include <iostream>
 #include <stdexcept>
@@ -39,11 +39,11 @@ class FluidMatrixInteractionBlackoilParams
 {
 public:
     typedef ScalarT Scalar;
-    void init(const Dune::EclipseGridParser& ep)
+    void init(const Opm::EclipseGridParser& ep)
     {
         // Extract input data.
-        const Dune::SGOF::table_t& sgof_table = ep.getSGOF().sgof_;
-        const Dune::SWOF::table_t& swof_table = ep.getSWOF().swof_;
+        const Opm::SGOF::table_t& sgof_table = ep.getSGOF().sgof_;
+        const Opm::SWOF::table_t& swof_table = ep.getSWOF().swof_;
         if (sgof_table.size() != 1 || swof_table.size() != 1) {
             std::cerr << "We must have exactly one SWOF and one SGOF table (at the moment).\n";
             throw std::logic_error("Not implemented");
@@ -74,12 +74,12 @@ private:
     template <class S, class P>
     friend class FluidMatrixInteractionBlackoil;
 
-    Dune::utils::UniformTableLinear<Scalar> krw_;
-    Dune::utils::UniformTableLinear<Scalar> krow_;
-    Dune::utils::UniformTableLinear<Scalar> pcow_;
-    Dune::utils::UniformTableLinear<Scalar> krg_;
-    Dune::utils::UniformTableLinear<Scalar> krog_;
-    Dune::utils::UniformTableLinear<Scalar> pcog_;
+    Opm::utils::UniformTableLinear<Scalar> krw_;
+    Opm::utils::UniformTableLinear<Scalar> krow_;
+    Opm::utils::UniformTableLinear<Scalar> pcow_;
+    Opm::utils::UniformTableLinear<Scalar> krg_;
+    Opm::utils::UniformTableLinear<Scalar> krog_;
+    Opm::utils::UniformTableLinear<Scalar> pcog_;
     Scalar krocw_; // = krow_(s_wc)
 };
 

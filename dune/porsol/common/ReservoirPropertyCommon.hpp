@@ -36,8 +36,8 @@
 #ifndef OPENRS_RESERVOIRPROPERTYCOMMON_HEADER
 #define OPENRS_RESERVOIRPROPERTYCOMMON_HEADER
 
-#include <dune/common/Units.hpp>
-#include <dune/common/EclipseGridParser.hpp>
+#include <opm/core/utility/Units.hpp>
+#include <opm/core/eclipse/EclipseGridParser.hpp>
 #include <dune/porsol/common/Matrix.hpp>
 
 namespace Dune
@@ -81,7 +81,7 @@ namespace Dune
         ///                              pressure, if applicable.
         /// @param sigma interface tension for j-scaling, if applicable.
         /// @param theta angle for j-scaling, if applicable.
-        void init(const EclipseGridParser& parser,
+        void init(const Opm::EclipseGridParser& parser,
                   const std::vector<int>& global_cell,
                   const double perm_threshold = 0.0,
                   const std::string* rock_list_filename = 0,
@@ -95,7 +95,7 @@ namespace Dune
         /// @param uniform_perm the uniform (scalar) permeability.
         void init(const int num_cells,
                   const double uniform_poro = 0.2,
-                  const double uniform_perm = 100.0*prefix::milli*unit::darcy);
+                  const double uniform_perm = 100.0*Opm::prefix::milli*Opm::unit::darcy);
 
         /// @brief Set viscosities of both faces.
         /// @param v1 the viscosity of the first (water) phase.
@@ -195,12 +195,12 @@ namespace Dune
 
     protected:
 	// Methods
-        void assignPorosity(const EclipseGridParser& parser,
+        void assignPorosity(const Opm::EclipseGridParser& parser,
                             const std::vector<int>& global_cell);
-        void assignPermeability(const EclipseGridParser& parser,
+        void assignPermeability(const Opm::EclipseGridParser& parser,
                                 const std::vector<int>& global_cell,
                                 const double perm_threshold);
-        void assignRockTable(const EclipseGridParser& parser,
+        void assignRockTable(const Opm::EclipseGridParser& parser,
                              const std::vector<int>& global_cell);
         void readRocks(const std::string& rock_list_file);
 

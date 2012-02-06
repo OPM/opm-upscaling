@@ -21,10 +21,10 @@
 #define OPM_BLACKOILWELLS_HEADER_INCLUDED
 
 #include <dune/porsol/blackoil/fluid/BlackoilDefs.hpp>
-#include <dune/common/EclipseGridParser.hpp>
+#include <opm/core/eclipse/EclipseGridParser.hpp>
 #include <dune/grid/CpGrid.hpp>
-#include <dune/common/ErrorMacros.hpp>
-#include <dune/common/SparseTable.hpp>
+#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/core/utility/SparseTable.hpp>
 #include <dune/porsol/common/Rock.hpp>
 #include <dune/common/fvector.hh>
 #include <vector>
@@ -37,7 +37,7 @@ namespace Opm
     class BlackoilWells : public BlackoilDefs
     {
     public:
-        void init(const Dune::EclipseGridParser& parser,
+        void init(const Opm::EclipseGridParser& parser,
 		  const Dune::CpGrid& grid,
 		  const Dune::Rock<3>& rock);
 
@@ -71,7 +71,7 @@ namespace Opm
 	struct WellData { WellType type; WellControl control; double target; double reference_bhp_depth; };
         std::vector<WellData> well_data_;
         struct PerfData { int cell; double well_index; };
-        Dune::SparseTable<PerfData> perf_data_;
+        Opm::SparseTable<PerfData> perf_data_;
         std::vector<double> well_cell_flux_;
         std::vector<double> well_cell_pressure_;
         Dune::FieldVector<double, 3> injection_mixture_;
@@ -92,7 +92,7 @@ namespace Opm
 
     } // anon namespace
 
-    inline void BlackoilWells::init(const Dune::EclipseGridParser& parser,
+    inline void BlackoilWells::init(const Opm::EclipseGridParser& parser,
 				    const Dune::CpGrid& grid,
 				    const Dune::Rock<3>& rock) 
     {

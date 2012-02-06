@@ -38,8 +38,8 @@ along with OpenRS.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <tr1/unordered_map>
 
-#include <dune/common/SparseVector.hpp>
-#include <dune/common/param/ParameterGroup.hpp>
+#include <opm/core/utility/SparseVector.hpp>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
 
 #include <dune/porsol/common/ImplicitTransportDefs.hpp>
 #include <dune/porsol/common/BCRSMatrixBlockAssembler.hpp>

@@ -27,7 +27,7 @@
 #include <dune/grid/CpGrid.hpp>
 #include <dune/porsol/common/Rock.hpp>
 #include <dune/porsol/mimetic/TpfaCompressible.hpp>
-#include <dune/common/StopWatch.hpp>
+#include <opm/core/utility/StopWatch.hpp>
 #include <dune/porsol/blackoil/BlackoilFluid.hpp>
 #include <dune/porsol/blackoil/BlackoilWells.hpp>
 #include <dune/porsol/blackoil/ComponentTransport.hpp>

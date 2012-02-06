@@ -19,14 +19,14 @@
 
 
 #include "BlackoilPVT.hpp"
-#include <dune/common/EclipseGridParser.hpp>
-#include <dune/common/Units.hpp>
+#include <opm/core/eclipse/EclipseGridParser.hpp>
+#include <opm/core/utility/Units.hpp>
 #include "MiscibilityDead.hpp"
 #include "MiscibilityLiveOil.hpp"
 #include "MiscibilityLiveGas.hpp"
 #include "MiscibilityWater.hpp"
-#include <dune/common/ErrorMacros.hpp>
-#include <dune/common/linInt.hpp>
+#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/core/utility/linInt.hpp>
 
 using namespace Dune;
 
@@ -34,7 +34,7 @@ namespace Opm
 {
 
 
-    void BlackoilPVT::init(const Dune::EclipseGridParser& parser)
+    void BlackoilPVT::init(const Opm::EclipseGridParser& parser)
     {
         typedef std::vector<std::vector<std::vector<double> > > table_t;
 	region_number_ = 0;
@@ -55,7 +55,7 @@ namespace Opm
         if (parser.hasField("PVTW")) {
             water_props_.reset(new MiscibilityWater(parser.getPVTW().pvtw_));
         } else {
-            water_props_.reset(new MiscibilityWater(0.5*Dune::prefix::centi*Dune::unit::Poise)); // Eclipse 100 default 
+            water_props_.reset(new MiscibilityWater(0.5*Opm::prefix::centi*Opm::unit::Poise)); // Eclipse 100 default 
         }
 
         // Oil PVT

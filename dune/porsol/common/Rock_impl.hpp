@@ -24,7 +24,7 @@
 #include <fstream>
 #include <boost/static_assert.hpp>
 #include <boost/array.hpp>
-#include <dune/common/EclipseGridInspector.hpp>
+#include <opm/core/eclipse/EclipseGridInspector.hpp>
 
 namespace Dune
 {
@@ -42,7 +42,7 @@ namespace Dune
 
 
     template <int dim>
-    void Rock<dim>::init(const EclipseGridParser& parser,
+    void Rock<dim>::init(const Opm::EclipseGridParser& parser,
                          const std::vector<int>& global_cell,
                          const double perm_threshold)
     {
@@ -113,7 +113,7 @@ namespace Dune
 
 
     template <int dim>
-    void Rock<dim>::assignPorosity(const EclipseGridParser& parser,
+    void Rock<dim>::assignPorosity(const Opm::EclipseGridParser& parser,
                                    const std::vector<int>& global_cell)
     {
         porosity_.assign(global_cell.size(), 1.0);
@@ -130,11 +130,11 @@ namespace Dune
 
 
     template <int dim>
-    void Rock<dim>::assignPermeability(const EclipseGridParser& parser,
+    void Rock<dim>::assignPermeability(const Opm::EclipseGridParser& parser,
                                        const std::vector<int>& global_cell,
                                        double perm_threshold)
     {
-        EclipseGridInspector insp(parser);
+	Opm::EclipseGridInspector insp(parser);
         boost::array<int, 3> dims = insp.gridSize();
         int num_global_cells = dims[0]*dims[1]*dims[2];
         ASSERT (num_global_cells > 0);

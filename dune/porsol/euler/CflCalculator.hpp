@@ -36,8 +36,8 @@
 #ifndef OPENRS_CFLCALCULATOR_HEADER
 #define OPENRS_CFLCALCULATOR_HEADER
 
-#include <dune/common/ErrorMacros.hpp>
-#include <dune/common/Average.hpp>
+#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/core/utility/Average.hpp>
 
 #include <dune/porsol/common/Matrix.hpp>
 #include <dune/porsol/common/MatrixInverse.hpp>
@@ -107,7 +107,7 @@ namespace Dune {
 		    if (!f->boundary()) {
 			PermTensor K0 = resprop.permeability(f->cellIndex());
 			PermTensor K1 = resprop.permeability(f->neighbourCellIndex());
-			loc_perm_aver = utils::arithmeticAverage<PermTensor, MutablePermTensor>(K0, K1);
+			loc_perm_aver = Opm::utils::arithmeticAverage<PermTensor, MutablePermTensor>(K0, K1);
 			permdata = loc_perm_aver.data();
 		    } else {
 			permdata = resprop.permeability(f->cellIndex()).data();
@@ -157,7 +157,7 @@ namespace Dune {
 		    if (!f->boundary()) {
 			PermTensor K0 = resprop.permeability(f->cellIndex());
 			PermTensor K1 = resprop.permeability(f->neighbourCellIndex());
-			loc_perm_aver = utils::arithmeticAverage<PermTensor, MutablePermTensor>(K0, K1);
+			loc_perm_aver = Opm::utils::arithmeticAverage<PermTensor, MutablePermTensor>(K0, K1);
 			permdata = loc_perm_aver.data();
 		    } else {
 			permdata = resprop.permeability(f->cellIndex()).data();

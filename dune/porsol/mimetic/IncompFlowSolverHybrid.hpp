@@ -53,8 +53,8 @@
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
-#include <dune/common/ErrorMacros.hpp>
-#include <dune/common/SparseTable.hpp>
+#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/core/utility/SparseTable.hpp>
 
 #include <dune/istl/bvector.hh>
 #include <dune/istl/bcrsmatrix.hh>
@@ -425,9 +425,9 @@ namespace Dune {
             }
         private:
             std::vector< int  > cellno_;
-            SparseTable< int  > cellFaces_;
+	    Opm::SparseTable< int  > cellFaces_;
             std::vector<Scalar> pressure_;
-            SparseTable<Scalar> outflux_;
+	    Opm::SparseTable<Scalar> outflux_;
 
             void clear() {
                 std::vector<int>().swap(cellno_);
@@ -561,7 +561,7 @@ namespace Dune {
                      "to computeInnerProducts()");
 
             typedef typename GridInterface::CellIterator CI;
-            const SparseTable<int>& cf = flowSolution_.cellFaces_;
+            const Opm::SparseTable<int>& cf = flowSolution_.cellFaces_;
 
             int i = 0;
             for (CI c = pgrid_->cellbegin(); c != pgrid_->cellend(); ++c, ++i) {
@@ -716,8 +716,8 @@ namespace Dune {
             typedef typename GridInterface::CellIterator CI;
             typedef typename CI           ::FaceIterator FI;
             const std::vector<int>& cell     = flowSolution_.cellno_;
-            const SparseTable<int>& cf       = flowSolution_.cellFaces_;
-            SparseTable<double>& cflux = flowSolution_.outflux_;
+            const Opm::SparseTable<int>& cf       = flowSolution_.cellFaces_;
+	    Opm::SparseTable<double>& cflux = flowSolution_.outflux_;
 
             FaceFluxes face_fluxes(pgrid_->numberOfFaces());
             // First pass: compute projected fluxes.
@@ -819,7 +819,7 @@ namespace Dune {
                       std::ostream_iterator<int>(os, " "));
             os << "\b]\n";
 
-            const SparseTable<int>& cf = flowSolution_.cellFaces_;
+            const Opm::SparseTable<int>& cf = flowSolution_.cellFaces_;
             os << "cell faces     =\n";
             for (int i = 0; i < cf.size(); ++i)
             {
@@ -883,7 +883,7 @@ namespace Dune {
 
         // ----------------------------------------------------------------
         std::vector<Scalar> L_, g_;
-        SparseTable<Scalar> F_    ;
+	Opm::SparseTable<Scalar> F_    ;
 
         // ----------------------------------------------------------------
         // Actual, assembled system of linear equations
@@ -968,7 +968,7 @@ namespace Dune {
             flowSolution_.cellFaces_.reserve(nc, tot_ncf);
             flowSolution_.outflux_  .reserve(nc, tot_ncf);
 
-            SparseTable<int>& cf = flowSolution_.cellFaces_;
+	    Opm::SparseTable<int>& cf = flowSolution_.cellFaces_;
 
             // Avoid (most) allocation(s) inside 'c' loop.
             std::vector<int>    l2g;        l2g       .reserve(max_ncf_);
@@ -1035,7 +1035,7 @@ namespace Dune {
             typedef typename CI           ::FaceIterator FI;
 
             const std::vector<int>& cell = flowSolution_.cellno_;
-            const SparseTable<int>& cf   = flowSolution_.cellFaces_;
+            const Opm::SparseTable<int>& cf   = flowSolution_.cellFaces_;
 
             bdry_id_map_.clear();
             for (CI c = g.cellbegin(); c != g.cellend(); ++c) {
@@ -1103,8 +1103,8 @@ namespace Dune {
         void allocateGridConnections()
         // ----------------------------------------------------------------
         {
-            const   SparseTable<int>& cf = flowSolution_.cellFaces_;
-            typedef SparseTable<int>::row_type::const_iterator fi;
+            const   Opm::SparseTable<int>& cf = flowSolution_.cellFaces_;
+            typedef Opm::SparseTable<int>::row_type::const_iterator fi;
 
             for (int c = 0; c < cf.size(); ++c) {
                 const int nf = cf[c].size();
@@ -1138,7 +1138,7 @@ namespace Dune {
             typedef typename CI           ::FaceIterator FI;
 
             const std::vector<int>& cell = flowSolution_.cellno_;
-            const SparseTable<int>& cf   = flowSolution_.cellFaces_;
+            const Opm::SparseTable<int>& cf   = flowSolution_.cellFaces_;
 
             if (!bdry_id_map_.empty()) {
                 // At least one periodic BC.  Allocate corresponding
@@ -1201,8 +1201,8 @@ namespace Dune {
         void setGridConnections()
         // ----------------------------------------------------------------
         {
-            const   SparseTable<int>& cf = flowSolution_.cellFaces_;
-            typedef SparseTable<int>::row_type::const_iterator fi;
+            const   Opm::SparseTable<int>& cf = flowSolution_.cellFaces_;
+            typedef Opm::SparseTable<int>::row_type::const_iterator fi;
 
             // Compute actual connections (the non-zero structure).
             for (int c = 0; c < cf.size(); ++c) {
@@ -1238,7 +1238,7 @@ namespace Dune {
             typedef typename CI           ::FaceIterator FI;
 
             const std::vector<int>& cell = flowSolution_.cellno_;
-            const SparseTable<int>& cf   = flowSolution_.cellFaces_;
+            const Opm::SparseTable<int>& cf   = flowSolution_.cellFaces_;
 
             if (!bdry_id_map_.empty()) {
                 // At least one periodic BC.  Assign periodic
@@ -1291,7 +1291,7 @@ namespace Dune {
             typedef typename GridInterface::CellIterator CI;
 
             const std::vector<int>& cell = flowSolution_.cellno_;
-            const SparseTable<int>& cf   = flowSolution_.cellFaces_;
+            const Opm::SparseTable<int>& cf   = flowSolution_.cellFaces_;
 
             std::vector<Scalar>   data_store(max_ncf_ * max_ncf_);
             std::vector<Scalar>   e         (max_ncf_);
@@ -1473,10 +1473,10 @@ namespace Dune {
             typedef typename GridInterface::CellIterator CI;
 
             const std::vector<int>& cell = flowSolution_.cellno_;
-            const SparseTable<int>& cf   = flowSolution_.cellFaces_;
+            const Opm::SparseTable<int>& cf   = flowSolution_.cellFaces_;
 
             std::vector<Scalar>& p = flowSolution_.pressure_;
-            SparseTable<Scalar>& v = flowSolution_.outflux_;
+	    Opm::SparseTable<Scalar>& v = flowSolution_.outflux_;
 
             //std::vector<double> mob(FluidInterface::NumberOfPhases);
             std::vector<double> pi   (max_ncf_);
@@ -1537,7 +1537,7 @@ namespace Dune {
         {
             typedef typename GridInterface::CellIterator::FaceIterator FI;
 
-            const SparseTable<int>& cf = flowSolution_.cellFaces_;
+            const Opm::SparseTable<int>& cf = flowSolution_.cellFaces_;
 
             std::fill(rhs     .begin(), rhs     .end(), Scalar(0.0));
             std::fill(facetype.begin(), facetype.end(), Internal   );

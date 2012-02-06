@@ -21,7 +21,7 @@
 #ifndef OPM_ROCK_HEADER_INCLUDED
 #define OPM_ROCK_HEADER_INCLUDED
 
-#include <dune/common/EclipseGridParser.hpp>
+#include <opm/core/eclipse/EclipseGridParser.hpp>
 #include <dune/porsol/common/Matrix.hpp>
 
 #include <dune/porsol/common/ReservoirPropertyCommon.hpp>
@@ -57,7 +57,7 @@ namespace Dune
         ///                              pressure, if applicable.
         /// @param sigma interface tension for j-scaling, if applicable.
         /// @param theta angle for j-scaling, if applicable.
-        void init(const EclipseGridParser& parser,
+        void init(const Opm::EclipseGridParser& parser,
                   const std::vector<int>& global_cell,
                   const double perm_threshold = 0.0);
 
@@ -87,9 +87,9 @@ namespace Dune
 
     protected:
 	// Methods
-        void assignPorosity(const EclipseGridParser& parser,
+        void assignPorosity(const Opm::EclipseGridParser& parser,
                             const std::vector<int>& global_cell);
-        void assignPermeability(const EclipseGridParser& parser,
+        void assignPermeability(const Opm::EclipseGridParser& parser,
                                 const std::vector<int>& global_cell,
                                 const double perm_threshold);
 

@@ -20,7 +20,7 @@
 #ifndef OPM_BLACKOILINITIALIZATION_HEADER_INCLUDED
 #define OPM_BLACKOILINITIALIZATION_HEADER_INCLUDED
 
-#include <dune/common/param/ParameterGroup.hpp>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
 
 namespace Opm
 {

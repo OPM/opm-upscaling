@@ -24,9 +24,9 @@
 
 
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
-#include <dune/common/Units.hpp>
-#include <dune/common/EclipseGridParser.hpp>
-#include <dune/common/param/ParameterGroup.hpp>
+#include <opm/core/utility/Units.hpp>
+#include <opm/core/eclipse/EclipseGridParser.hpp>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <dune/porsol/common/BoundaryConditions.hpp>
 #include <dune/porsol/blackoil/BlackoilInitialization.hpp>
 #include <boost/filesystem/convenience.hpp>
@@ -114,7 +114,7 @@ init(const Dune::parameter::ParameterGroup& param)
     using namespace Dune;
     std::string fileformat = param.getDefault<std::string>("fileformat", "cartesian");
     if (fileformat == "eclipse") {
-        Dune::EclipseGridParser parser(param.get<std::string>("filename"));
+        Opm::EclipseGridParser parser(param.get<std::string>("filename"));
         double z_tolerance = param.getDefault<double>("z_tolerance", 0.0);
         bool periodic_extension = param.getDefault<bool>("periodic_extension", false);
         bool turn_normals = param.getDefault<bool>("turn_normals", false);
@@ -137,7 +137,7 @@ init(const Dune::parameter::ParameterGroup& param)
         double default_perm = unit::convert::from(default_perm_md, prefix::milli*unit::darcy);
         MESSAGE("Warning: For generated cartesian grids, we use uniform rock properties.");
         rock_.init(grid_.size(0), default_poro, default_perm);
-        EclipseGridParser parser(param.get<std::string>("filename")); // Need a parser for the fluids anyway.
+	Opm::EclipseGridParser parser(param.get<std::string>("filename")); // Need a parser for the fluids anyway.
         fluid_.init(parser);
         wells_.init(parser, grid_, rock_);
     } else {

@@ -42,10 +42,10 @@
 #include <cmath>
 #include <algorithm>
 
-#include <dune/common/ErrorMacros.hpp>
-#include <dune/common/Average.hpp>
-#include <dune/common/Units.hpp>
-#include <dune/common/RootFinders.hpp>
+#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/core/utility/Average.hpp>
+#include <opm/core/utility/Units.hpp>
+#include <opm-core/opm/core/utility/RootFinders.hpp>
 #include <dune/grid/common/Volumes.hpp>
 #include <dune/porsol/common/ReservoirPropertyFixedMobility.hpp>
 #include <dune/porsol/euler/MatchSaturatedVolumeFunctor.hpp>

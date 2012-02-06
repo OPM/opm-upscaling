@@ -20,8 +20,8 @@
 #ifndef OPM_WELLS_HEADER_INCLUDED
 #define OPM_WELLS_HEADER_INCLUDED
 
-#include <dune/common/ErrorMacros.hpp>
-#include <dune/common/SparseTable.hpp>
+#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/core/utility/SparseTable.hpp>
 #include <vector>
 
 // Forward declaration.
@@ -41,7 +41,7 @@ namespace Opm
     class Wells
     {
     public:
-        void init(const Dune::EclipseGridParser& parser);
+        void init(const Opm::EclipseGridParser& parser);
 
         // Well-centric interface.
         int numWells() const;
@@ -76,7 +76,7 @@ namespace Opm
 
     // ------------ Method implementations --------------
 
-    inline void Wells::init(const Dune::EclipseGridParser& parser)
+    inline void Wells::init(const Opm::EclipseGridParser& parser)
     {
     }
 

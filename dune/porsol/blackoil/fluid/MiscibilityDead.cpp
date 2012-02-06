@@ -30,9 +30,9 @@
 
 #include <algorithm>
 #include "MiscibilityDead.hpp"
-#include <dune/common/ErrorMacros.hpp>
-#include <dune/common/linInt.hpp>
-#include <dune/porsol/common/buildUniformMonotoneTable.hpp>
+#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/core/utility/linInt.hpp>
+#include <opm/core/utility/buildUniformMonotoneTable.hpp>
 #include <boost/lexical_cast.hpp>
 #include <string>
 #include <fstream>

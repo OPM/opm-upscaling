@@ -46,7 +46,7 @@ using namespace Dune;
 
 int main(int argc, char** argv)
 {
-    parameter::ParameterGroup param(argc, argv);
+    Opm::parameter::ParameterGroup param(argc, argv);
     MPIHelper::instance(argc,argv);
     EulerSolverTester tester;
     tester.init(param);

@@ -21,7 +21,7 @@
 #define OPM_ABSTRACTLINEARSOLVER_HEADER_INCLUDED
 
 
-#include <dune/common/param/ParameterGroup.hpp>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
 
 
 namespace Dune
@@ -35,7 +35,7 @@ namespace Dune
         {
         }
 
-        virtual void init(const parameter::ParameterGroup& param) = 0;
+        virtual void init(const Opm::parameter::ParameterGroup& param) = 0;
 
         struct LinearSolverResults
         {

@@ -42,11 +42,11 @@
 
 #include <boost/lexical_cast.hpp>
 
-#include <dune/common/param/ParameterGroup.hpp>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
 
-#include <dune/common/SparseVector.hpp>
-#include <dune/common/SparseTable.hpp>
-#include <dune/common/Units.hpp>
+#include <opm/core/utility/SparseVector.hpp>
+#include <opm/core/utility/SparseTable.hpp>
+#include <opm/core/utility/Units.hpp>
 
 #include <dune/grid/common/Volumes.hpp>
 #include <dune/grid/CpGrid.hpp>

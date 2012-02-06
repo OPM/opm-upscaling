@@ -39,8 +39,8 @@
 
 #include <boost/array.hpp>
 
-#include <dune/common/Units.hpp>
-#include <dune/common/param/ParameterGroup.hpp>
+#include <opm/core/utility/Units.hpp>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>>
 
 #include <dune/grid/CpGrid.hpp>
 

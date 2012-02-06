@@ -30,15 +30,15 @@
 
 #include <dune/common/array.hh>
 #include <dune/common/mpihelper.hh>
-#include <dune/common/Units.hpp>
+#include <opm/core/utility/Units.hpp>
 
 #include <dune/porsol/common/SimulatorUtilities.hpp>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/CpGrid.hpp>
-#include <dune/common/EclipseGridParser.hpp>
-#include <dune/common/EclipseGridInspector.hpp>
+#include opm/core/eclipse/EclipseGridParser.hpp>
+#include opm/core/eclipse/EclipseGridInspector.hpp>
 
 #include <dune/porsol/common/fortran.hpp>
 #include <dune/porsol/common/blas_lapack.hpp>
@@ -48,7 +48,7 @@
 #include <dune/porsol/common/BoundaryConditions.hpp>
 
 #include <dune/porsol/mimetic/TpfaInterface.hpp>
-#include <dune/common/param/ParameterGroup.hpp>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>>
 #include <dune/porsol/common/setupGridAndProps.hpp>
 
 #include <dune/porsol/mimetic/MimeticIPEvaluator.hpp>

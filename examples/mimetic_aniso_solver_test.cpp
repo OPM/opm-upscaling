@@ -45,12 +45,12 @@
 
 #include <dune/common/array.hh>
 #include <dune/common/mpihelper.hh>
-#include <dune/common/Units.hpp>
+#include <opm/core/utility/Units.hpp>
 
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/CpGrid.hpp>
-#include <dune/common/EclipseGridParser.hpp>
-#include <dune/common/EclipseGridInspector.hpp>
+#include opm/core/eclipse/EclipseGridParser.hpp>
+#include opm/core/eclipse/EclipseGridInspector.hpp>
 
 #include <dune/porsol/common/fortran.hpp>
 #include <dune/porsol/common/blas_lapack.hpp>
@@ -61,7 +61,7 @@
 
 #include <dune/porsol/mimetic/MimeticIPAnisoRelpermEvaluator.hpp>
 #include <dune/porsol/mimetic/IncompFlowSolverHybrid.hpp>
-#include <dune/common/param/ParameterGroup.hpp>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>>
 
 
 template <int dim, class Interface>
@@ -113,11 +113,11 @@ void test_evaluator(const Interface& g)
 }
 
 
-void build_grid(const Dune::EclipseGridParser& parser,
+void build_grid(const Opm::EclipseGridParser& parser,
                 const double z_tol, Dune::CpGrid& grid,
                 boost::array<int,3>& cartDims)
 {
-    Dune::EclipseGridInspector insp(parser);
+    Opm::EclipseGridInspector insp(parser);
 
     grdecl g;
     cartDims[0] = g.dims[0] = insp.gridSize()[0];
@@ -222,7 +222,7 @@ int main(int argc, char** argv)
     // Make a grid
     Dune::CpGrid grid;
 
-    Dune::EclipseGridParser parser(param.get<std::string>("filename"));
+    Opm::EclipseGridParser parser(param.get<std::string>("filename"));
     double z_tol = param.getDefault<double>("z_tolerance", 0.0);
     boost::array<int,3> cartDims;
     build_grid(parser, z_tol, grid, cartDims);

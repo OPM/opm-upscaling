@@ -43,9 +43,9 @@
 //#include <cmath>
 //#include <algorithm>
 
-//#include <dune/common/ErrorMacros.hpp>
-#include <dune/common/Average.hpp>
-//#include <dune/common/Units.hpp>
+//#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/core/utility/Average.hpp>
+//#include <opm/core/utility/Units.hpp>
 //#include <dune/grid/common/Volumes.hpp>
 
 #ifdef USE_TBB
@@ -66,7 +66,7 @@ namespace Dune
         arithAver(const FullMatrix<T, StoragePolicy, OrderingPolicy>& m1,
                   const FullMatrix<T, StoragePolicy, OrderingPolicy>& m2)
 	{
-	    return utils::arithmeticAverage<FullMatrix<T, StoragePolicy, OrderingPolicy>,
+	    return Opm::utils::arithmeticAverage<FullMatrix<T, StoragePolicy, OrderingPolicy>,
 		FullMatrix<T, OwnData, OrderingPolicy> >(m1, m2);
 	}
 
@@ -186,7 +186,7 @@ namespace Dune
                     // 2) we cannot define G, since the lambdas do not commute with the dot product.
 
                     typedef typename UpstreamSolver::RP::Mobility Mob;
-                    using utils::arithmeticAverage;
+                    using Opm::utils::arithmeticAverage;
                     // Doing arithmetic averages. Should we consider harmonic or geometric instead?
                     const MutablePermTensor aver_perm
                         = arithAver(s.preservoir_properties_->permeability(cell[0]),
@@ -222,7 +222,7 @@ namespace Dune
 
 
                     const double aver_sat
-                        = arithmeticAverage<double, double>(cell_sat[0], cell_sat[1]);
+                        = Opm::utils::arithmeticAverage<double, double>(cell_sat[0], cell_sat[1]);
 
                     Mob m1c0, m1c1, m2c0, m2c1;
                     s.preservoir_properties_->phaseMobility(0, cell[0], aver_sat, m1c0.mob);
@@ -471,7 +471,7 @@ namespace Dune
     computeResidual(const std::vector<double>& saturation,
                     const typename GI::Vector& gravity,
                     const PressureSolution& pressure_sol,
-                    const SparseVector<double>& injection_rates,
+                    const Opm::SparseVector<double>& injection_rates,
                     const bool method_viscous,
                     const bool method_gravity,
                     const bool method_capillary,

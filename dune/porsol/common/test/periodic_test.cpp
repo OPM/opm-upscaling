@@ -38,13 +38,13 @@
 #include <dune/porsol/common/GridInterfaceEuler.hpp>
 #include <dune/grid/CpGrid.hpp>
 #include <dune/common/array.hh>
-#include <dune/common/param/ParameterGroup.hpp>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
 
 using namespace Dune;
 
 int main(int argc, char** argv)
 {
-    parameter::ParameterGroup param(argc, argv);
+    Opm::parameter::ParameterGroup param(argc, argv);
     CpGrid grid;
     grid.init(param);
     grid.setUniqueBoundaryIds(true);

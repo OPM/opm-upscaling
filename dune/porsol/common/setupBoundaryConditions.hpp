@@ -36,7 +36,7 @@
 #ifndef OPENRS_SETUPBOUNDARYCONDITIONS_HEADER
 #define OPENRS_SETUPBOUNDARYCONDITIONS_HEADER
 
-#include <dune/common/param/ParameterGroup.hpp>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <dune/porsol/common/BoundaryConditions.hpp>
 #include <dune/porsol/common/PeriodicHelpers.hpp>
 

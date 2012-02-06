@@ -44,12 +44,12 @@
 #include <algorithm>
 #include <limits>
 
-#include <dune/common/ErrorMacros.hpp>
-#include <dune/common/Average.hpp>
-#include <dune/common/Units.hpp>
+#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/core/utility/Average.hpp>
+#include <opm/core/utility/Units.hpp>
 #include <dune/grid/common/Volumes.hpp>
 #include <dune/porsol/euler/CflCalculator.hpp>
-#include <dune/common/StopWatch.hpp>
+#include <opm/core/utility/StopWatch.hpp>
 
 namespace Dune
 {
@@ -91,7 +91,7 @@ namespace Dune
 
 
     template <class GI, class RP, class BC>
-    inline void EulerUpstream<GI, RP, BC>::init(const parameter::ParameterGroup& param)
+    inline void EulerUpstream<GI, RP, BC>::init(const Opm::parameter::ParameterGroup& param)
     {
 	courant_number_ = param.getDefault("courant_number", courant_number_);
 	method_viscous_ = param.getDefault("method_viscous", method_viscous_);
@@ -107,7 +107,7 @@ namespace Dune
     }
 
     template <class GI, class RP, class BC>
-    inline void EulerUpstream<GI, RP, BC>::init(const parameter::ParameterGroup& param,
+    inline void EulerUpstream<GI, RP, BC>::init(const Opm::parameter::ParameterGroup& param,
 						const GI& g, const RP& r, const BC& b)
     {
 	init(param);
@@ -153,7 +153,7 @@ namespace Dune
 						   const double time,
 						   const typename GI::Vector& gravity,
 						   const PressureSolution& pressure_sol,
-						   const SparseVector<double>& injection_rates) const
+						   const Opm::SparseVector<double>& injection_rates) const
     {
 	// Compute the cfl time-step.
 	double cfl_dt = computeCflTime(saturation, time, gravity, pressure_sol);
@@ -181,7 +181,7 @@ namespace Dune
 	bool finished = false;
 	int repeats = 0;
 	const int max_repeats = 10;
-        time::StopWatch clock;
+	Opm::time::StopWatch clock;
         clock.start();
 	while (!finished) {
 	    try {
@@ -283,7 +283,7 @@ namespace Dune
 #ifdef VERBOSE
 	    std::cout << "CFL dt for velocity is  "
                       << cfl_dt_v << " seconds   ("
-                      << Dune::unit::convert::to(cfl_dt_v, Dune::unit::day)
+                      << Opm::unit::convert::to(cfl_dt_v, Opm::unit::day)
                       << " days)." << std::endl;
 #endif // VERBOSE
 	}
@@ -296,7 +296,7 @@ namespace Dune
 #ifdef VERBOSE
 	    std::cout << "CFL dt for gravity is   "
                       << cfl_dt_g << " seconds   ("
-                      << Dune::unit::convert::to(cfl_dt_g, Dune::unit::day)
+                      << Opm::unit::convert::to(cfl_dt_g, Opm::unit::day)
                       << " days)." << std::endl;
 #endif // VERBOSE
 	}
@@ -308,7 +308,7 @@ namespace Dune
 #ifdef VERBOSE
 	    std::cout << "CFL dt for capillary term is "
                       << cfl_dt_c << " seconds   ("
-                      << Dune::unit::convert::to(cfl_dt_c, Dune::unit::day)
+                      << Opm::unit::convert::to(cfl_dt_c, Opm::unit::day)
                       << " days)." << std::endl;
 #endif // VERBOSE
 	}
@@ -318,12 +318,12 @@ namespace Dune
 #ifdef VERBOSE
         std::cout << "Total impes time is          "
                   << time << " seconds   ("
-                  << Dune::unit::convert::to(time, Dune::unit::day)
+                  << Opm::unit::convert::to(time, Opm::unit::day)
                   << " days)." << std::endl;
 
 	std::cout << "Final modified CFL dt is     "
                   << cfl_dt << " seconds   ("
-                  << Dune::unit::convert::to(cfl_dt, Dune::unit::day)
+                  << Opm::unit::convert::to(cfl_dt, Opm::unit::day)
                   << " days)." << std::endl;
 #endif // VERBOSE
 	return cfl_dt;
@@ -357,7 +357,7 @@ namespace Dune
 							 const double dt,
 							 const typename GI::Vector& gravity,
 							 const PressureSolution& pressure_sol,
-                                                         const SparseVector<double>& injection_rates) const
+                                                         const Opm::SparseVector<double>& injection_rates) const
     {
         if (method_capillary_) {
             residual_computer_.computeCapPressures(saturation);
