@@ -40,9 +40,9 @@
 #if HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <dune/common/param/ParameterGroup.hpp>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <dune/grid/CpGrid.hpp>
-#include <dune/common/EclipseGridParser.hpp>
+#include <opm/core/eclipse/EclipseGridParser.hpp>
 #include <dune/porsol/common/GridInterfaceEuler.hpp>
 #include <dune/porsol/common/BoundaryConditions.hpp>
 
@@ -77,10 +77,10 @@ namespace Dune
         virtual ~UpscalerBase() {;} ;
 
 	/// Initializes the upscaler from parameters.
-	void init(const parameter::ParameterGroup& param);
+	void init(const Opm::parameter::ParameterGroup& param);
 
 	/// Initializes the upscaler from given arguments.
-	void init(const EclipseGridParser& parser,
+	void init(const Opm::EclipseGridParser& parser,
                   BoundaryConditionType bctype,
                   double perm_threshold,
                   double z_tolerance = 0.0,
@@ -127,9 +127,9 @@ namespace Dune
         template <class FluidInterface>
         permtensor_t upscaleEffectivePerm(const FluidInterface& fluid);
 
-	virtual void initImpl(const parameter::ParameterGroup& param);
+	virtual void initImpl(const Opm::parameter::ParameterGroup& param);
 
-	virtual void initFinal(const parameter::ParameterGroup& param);
+	virtual void initFinal(const Opm::parameter::ParameterGroup& param);
 
 	// ------- Data members -------
 	BoundaryConditionType bctype_;

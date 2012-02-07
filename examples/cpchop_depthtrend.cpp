@@ -18,10 +18,10 @@
 */
 
 
-#include <dune/common/CornerpointChopper.hpp>
+#include <opm/core/eclipse/CornerpointChopper.hpp>
 #include <dune/upscaling/SinglePhaseUpscaler.hpp>
 #include <dune/porsol/common/setupBoundaryConditions.hpp>
-#include <dune/common/Units.hpp>
+#include <opm/core/utility/Units.hpp>
 
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int.hpp>
@@ -58,9 +58,9 @@ int main(int argc, char** argv)
         exit(1);
     }
 
-    Dune::parameter::ParameterGroup param(argc, argv);
+    Opm::parameter::ParameterGroup param(argc, argv);
     std::string gridfilename = param.get<std::string>("gridfilename");
-    Dune::CornerPointChopper ch(gridfilename);
+    Opm::CornerPointChopper ch(gridfilename);
 
     // The cells with i coordinate in [imin, imax) are included, similar for j.
     // The z limits may be changed inside the chopper to match actual min/max z.
@@ -84,7 +84,7 @@ int main(int argc, char** argv)
     std::string resultfile = param.getDefault<std::string>("resultfile", "");
 
     double minperm = param.getDefault("minperm", 1e-9);
-    double minpermSI = Dune::unit::convert::from(minperm, Dune::prefix::milli*Dune::unit::darcy);
+    double minpermSI = Opm::unit::convert::from(minperm, Opm::prefix::milli*Opm::unit::darcy);
 
     double z_tolerance = param.getDefault("z_tolerance", 0.0);
     double residual_tolerance = param.getDefault("residual_tolerance", 1e-8);
@@ -151,14 +151,14 @@ int main(int argc, char** argv)
 
         try { /* The upscaling may fail to converge on icky grids, lets just pass by those */
             if (upscale) {
-                Dune::EclipseGridParser subparser = ch.subparser();
+                Opm::EclipseGridParser subparser = ch.subparser();
                 subparser.convertToSI();
                 Dune::SinglePhaseUpscaler upscaler;
                 upscaler.init(subparser, Dune::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
                               residual_tolerance, linsolver_verbosity, linsolver_type, false);
                 
                 Dune::SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
-                upscaled_K *= (1.0/(Dune::prefix::milli*Dune::unit::darcy));
+                upscaled_K *= (1.0/(Opm::prefix::milli*Opm::unit::darcy));
                 
                 
                 zstarts.push_back(zstart);

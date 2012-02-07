@@ -39,8 +39,8 @@
 
 #include <dune/upscaling/SteadyStateUpscaler.hpp>
 #include <dune/upscaling/UpscalingTraits.hpp>
-#include <dune/common/Units.hpp>
-#include <dune/common/SparseTable.hpp>
+#include <opm/core/utility/Units.hpp>
+#include <opm/core/utility/SparseTable.hpp>
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -52,12 +52,12 @@ namespace Dune
 
     /// Reads saturation and pressure drop data from an input stream.
     template <class Istream>
-    void readControl(Istream& is, std::vector<double>& saturations, SparseTable<double>& all_pdrops)
+    void readControl(Istream& is, std::vector<double>& saturations, Opm::SparseTable<double>& all_pdrops)
     {
         int num_sats;
         is >> num_sats;
         std::vector<double> sat(num_sats);
-        SparseTable<double> ap;
+        Opm::SparseTable<double> ap;
         std::vector<double> tmp_pd;
         for (int i = 0; i < num_sats; ++i) {
             is >> sat[i];
@@ -78,7 +78,7 @@ namespace Dune
 
     /// Writes saturation and pressure drop data to an output stream.
     template <class Ostream>
-    void writeControl(Ostream& os, const std::vector<double>& saturations, const SparseTable<double>& all_pdrops)
+    void writeControl(Ostream& os, const std::vector<double>& saturations, const Opm::SparseTable<double>& all_pdrops)
     {
         int num_sats = saturations.size();
         os << num_sats << '\n';
@@ -137,11 +137,11 @@ namespace Dune
     class SteadyStateUpscalerManager
     {
     public:
-        void upscale(const parameter::ParameterGroup& param)
+        void upscale(const Opm::parameter::ParameterGroup& param)
         {
             // Control structure.
             std::vector<double> saturations;
-            SparseTable<double> all_pdrops;
+            Opm::SparseTable<double> all_pdrops;
             bool from_file = param.has("sat_pdrop_filename");
             if (from_file) {
                 std::string filename = param.get<std::string>("sat_pdrop_filename");
@@ -189,7 +189,7 @@ namespace Dune
             // First, compute an upscaled permeability.
             permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
             permtensor_t upscaled_K_copy = upscaled_K;
-            upscaled_K_copy *= (1.0/(prefix::milli*unit::darcy));
+            upscaled_K_copy *= (1.0/(Opm::prefix::milli*Opm::unit::darcy));
             std::cout.precision(15);
             std::cout << "Upscaled K in millidarcy:\n" << upscaled_K_copy << std::endl;
             std::cout << "Upscaled porosity: " << upscaler.upscalePorosity() << std::endl;
@@ -216,7 +216,7 @@ namespace Dune
             for (int i = 0; i < num_sats; ++i) {
                 // Starting every computation with a trio of uniform profiles.
                 std::vector<double> init_sat(num_cells, saturations[i]);
-                const SparseTable<double>::row_type pdrops = all_pdrops[i];
+                const Opm::SparseTable<double>::row_type pdrops = all_pdrops[i];
                 int num_pdrops = pdrops.size();
                 for (int j = 0; j < num_pdrops; ++j) {
                     double pdrop = pdrops[j];

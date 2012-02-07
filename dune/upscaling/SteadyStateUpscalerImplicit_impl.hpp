@@ -42,7 +42,7 @@
 #include <dune/porsol/common/SimulatorUtilities.hpp>
 #include <dune/porsol/common/ReservoirPropertyFixedMobility.hpp>
 #include <dune/porsol/euler/MatchSaturatedVolumeFunctor.hpp>
-#include <dune/common/Units.hpp>
+#include <opm/core/utility/Units.hpp>
 #include <algorithm>
 
 namespace Dune
@@ -70,20 +70,20 @@ namespace Dune
 
 
     template <class Traits>
-    inline void SteadyStateUpscalerImplicit<Traits>::initImpl(const parameter::ParameterGroup& param)
+    inline void SteadyStateUpscalerImplicit<Traits>::initImpl(const Opm::parameter::ParameterGroup& param)
     {
         Super::initImpl(param);
         output_vtk_ = param.getDefault("output_vtk", output_vtk_);
         print_inoutflows_ = param.getDefault("print_inoutflows", print_inoutflows_);
         simulation_steps_ = param.getDefault("simulation_steps", simulation_steps_);
-        init_stepsize_ = Dune::unit::convert::from(param.getDefault("init_stepsize", init_stepsize_),
-                                                   Dune::unit::day);
+        init_stepsize_ = Opm::unit::convert::from(param.getDefault("init_stepsize", init_stepsize_),
+                                                   Opm::unit::day);
         relperm_threshold_ = param.getDefault("relperm_threshold", relperm_threshold_);
         maximum_mobility_contrast_ = param.getDefault("maximum_mobility_contrast", maximum_mobility_contrast_);
         sat_change_year_ = param.getDefault("sat_change_year", sat_change_year_);
         dt_sat_tol_ = param.getDefault("dt_sat_tol", dt_sat_tol_);
         max_it_               = param.getDefault("max_it", max_it_);
-        max_stepsize_        = Dune::unit::convert::from(param.getDefault("max_stepsize", max_stepsize_),Dune::unit::year);
+        max_stepsize_        = Opm::unit::convert::from(param.getDefault("max_stepsize", max_stepsize_),Opm::unit::year);
         transport_solver_.init(param);
         // Set viscosities and densities if given.
         double v1_default = this->res_prop_.viscosityFirstPhase();
@@ -144,10 +144,10 @@ namespace Dune
         int num_cells = this->ginterf_.numberOfCells();
         // No source or sink.
         std::vector<double> src(num_cells, 0.0);
-        SparseVector<double> injection(num_cells);
+	Opm::SparseVector<double> injection(num_cells);
         // Gravity.
         FieldVector<double, 3> gravity(0.0);
-        // gravity[2] = -Dune::unit::gravity;
+        // gravity[2] = -Opm::unit::gravity;
         if (gravity.two_norm() > 0.0) {
             MESSAGE("Warning: Gravity not yet handled by flow solver.");
         }
@@ -182,7 +182,7 @@ namespace Dune
         while((!stationary) & (it_count < max_it_)){// & transport_cost < max_transport_cost_)
             //for (int iter = 0; iter < simulation_steps_; ++iter) {
             // Run transport solver.
-            std::cout << "Running transport step " << it_count <<" with stepsize " << stepsize/Dune::unit::year << " year \n";
+            std::cout << "Running transport step " << it_count <<" with stepsize " << stepsize/Opm::unit::year << " year \n";
             bool converged=transport_solver_.transportSolve(saturation, stepsize, gravity, this->flow_solver_.getSolution(), injection);
             // Run pressure solver.
             if(converged){
@@ -221,7 +221,7 @@ namespace Dune
                 for (int i = 0; i < num_cells; ++i) {
                     maxdiff = std::max(maxdiff, std::fabs(saturation[i] - saturation_old[i]));
                 }
-                double ds_year=maxdiff*Dune::unit::year/stepsize;
+                double ds_year=maxdiff*Opm::unit::year/stepsize;
                 std::cout << "Maximum saturation change/year: " << ds_year << std::endl;
 
                 if( ds_year < sat_change_year_){
@@ -349,11 +349,11 @@ namespace Dune
         double cap_press_range = 1e2;
         double mod_low = 1e100;
         double mod_high = -1e100;
-        bracketZero(func, 0.0, cap_press_range, mod_low, mod_high);
+	Opm::bracketZero(func, 0.0, cap_press_range, mod_low, mod_high);
         const int max_iter = 40;
         const double nonlinear_tolerance = 1e-12;
         int iterations_used = -1;
-        double mod_correct = modifiedRegulaFalsi(func, mod_low, mod_high, max_iter, nonlinear_tolerance, iterations_used);
+        double mod_correct = Opm::modifiedRegulaFalsi(func, mod_low, mod_high, max_iter, nonlinear_tolerance, iterations_used);
         std::cout << "Moved capillary pressure solution by " << mod_correct << " after "
                   << iterations_used << " iterations." << std::endl;
         s = func.lastSaturations();

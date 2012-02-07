@@ -30,10 +30,10 @@
 
 */
 
-#include <dune/common/CornerpointChopper.hpp>
+#include <opm/core/eclipse/CornerpointChopper.hpp>
 #include <dune/upscaling/SinglePhaseUpscaler.hpp>
 #include <dune/porsol/common/setupBoundaryConditions.hpp>
-#include <dune/common/Units.hpp>
+#include <opm/core/utility/Units.hpp>
 
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int.hpp>
@@ -52,9 +52,9 @@
 
 int main(int argc, char** argv)
 {
-    Dune::parameter::ParameterGroup param(argc, argv);
+    Opm::parameter::ParameterGroup param(argc, argv);
     std::string gridfilename = param.get<std::string>("gridfilename");
-    Dune::CornerPointChopper ch(gridfilename);
+    Opm::CornerPointChopper ch(gridfilename);
 
     // The cells with i coordinate in [imin, imax) are included, similar for j.
     // The z limits may be changed inside the chopper to match actual min/max z.
@@ -76,7 +76,7 @@ int main(int argc, char** argv)
     std::string resultfile = param.getDefault<std::string>("resultfile", "");
 
     double minperm = param.getDefault("minperm", 1e-9);
-    double minpermSI = Dune::unit::convert::from(minperm, Dune::prefix::milli*Dune::unit::darcy);
+    double minpermSI = Opm::unit::convert::from(minperm, Opm::prefix::milli*Opm::unit::darcy);
     double z_tolerance = param.getDefault("z_tolerance", 0.0);
     double residual_tolerance = param.getDefault("residual_tolerance", 1e-8);
     int linsolver_verbosity = param.getDefault("linsolver_verbosity", 0);
@@ -163,13 +163,13 @@ int main(int argc, char** argv)
         double zstart_1 = rz();
         ch.chop(istart_1, istart_1 + ilen, jstart_1, jstart_1 + jlen, zstart_1, zstart_1 + zlen, false);
 	
-        Dune::EclipseGridParser subparser_1 = ch.subparser();
+        Opm::EclipseGridParser subparser_1 = ch.subparser();
         subparser_1.convertToSI();
         Dune::SinglePhaseUpscaler upscaler_1;
         upscaler_1.init(subparser_1, Dune::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
 			residual_tolerance, linsolver_verbosity, linsolver_type, false);
         Dune::SinglePhaseUpscaler::permtensor_t upscaled_K_1 = upscaler_1.upscaleSinglePhase();
-        upscaled_K_1 *= (1.0/(Dune::prefix::milli*Dune::unit::darcy));
+        upscaled_K_1 *= (1.0/(Opm::prefix::milli*Opm::unit::darcy));
 	double porosity_1 = upscaler_1.upscalePorosity();
 
         // Pick another location to form a location-pair to be compared
@@ -187,13 +187,13 @@ int main(int argc, char** argv)
         }   
         ch.chop(istart_2, istart_2 + ilen, jstart_2, jstart_2 + jlen, zstart_2, zstart_2 + zlen, false);
 	
-        Dune::EclipseGridParser subparser_2 = ch.subparser();
+        Opm::EclipseGridParser subparser_2 = ch.subparser();
 	subparser_2.convertToSI();
         Dune::SinglePhaseUpscaler upscaler_2;
         upscaler_2.init(subparser_2, Dune::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
 			residual_tolerance, linsolver_verbosity, linsolver_type, false);
         Dune::SinglePhaseUpscaler::permtensor_t upscaled_K_2 = upscaler_2.upscaleSinglePhase();
-        upscaled_K_2 *= (1.0/(Dune::prefix::milli*Dune::unit::darcy));
+        upscaled_K_2 *= (1.0/(Opm::prefix::milli*Opm::unit::darcy));
 	double porosity_2 = upscaler_2.upscalePorosity();
 
         if (variogram_direction == horizontal) {

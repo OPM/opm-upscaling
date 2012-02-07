@@ -72,7 +72,7 @@
 #include <mpi.h>
 #endif
 
-#include <dune/common/MonotCubicInterpolator.hpp>
+#include <opm/core/utility/MonotCubicInterpolator.hpp>
 #include <dune/upscaling/SinglePhaseUpscaler.hpp>
 
 using namespace Dune;
@@ -339,7 +339,7 @@ int main(int varnum, char** vararg)
 
    if (isMaster) cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... ";
    flush(cout);   start = clock();
-   EclipseGridParser eclParser(ECLIPSEFILENAME, false);
+   Opm::EclipseGridParser eclParser(ECLIPSEFILENAME, false);
    finish = clock();   timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
    if (isMaster) cout << " (" << timeused <<" secs)" << endl;
 
@@ -666,7 +666,7 @@ int main(int varnum, char** vararg)
    bool twodim_hack = false;
    eclParser.convertToSI();
    upscaler.init(eclParser, boundaryCondition,
-                 unit::convert::from(minPerm, prefix::milli*unit::darcy),
+                 Opm::unit::convert::from(minPerm, Opm::prefix::milli*Opm::unit::darcy),
                  ztol, linsolver_tolerance, linsolver_verbosity, linsolver_type, twodim_hack);
 
    finish = clock();   timeused_tesselation = (double(finish)-double(start))/CLOCKS_PER_SEC;

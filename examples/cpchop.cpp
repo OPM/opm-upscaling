@@ -18,11 +18,11 @@
 */
 
 
-#include <dune/common/CornerpointChopper.hpp>
+#include <opm/core/eclipse/CornerpointChopper.hpp>
 #include <dune/upscaling/SinglePhaseUpscaler.hpp>
-#include <dune/common/MonotCubicInterpolator.hpp>
+#include <opm/core/utility/MonotCubicInterpolator.hpp>
 #include <dune/porsol/common/setupBoundaryConditions.hpp>
-#include <dune/common/Units.hpp>
+#include <opm/core/utility/Units.hpp>
 
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int.hpp>
@@ -50,9 +50,9 @@ int main(int argc, char** argv)
         std::cout << "       [rock_list=] [anisotropicrocks=false]" << std::endl;
         exit(1);
     }
-    Dune::parameter::ParameterGroup param(argc, argv);
+    Opm::parameter::ParameterGroup param(argc, argv);
     std::string gridfilename = param.get<std::string>("gridfilename");
-    Dune::CornerPointChopper ch(gridfilename);
+    Opm::CornerPointChopper ch(gridfilename);
 
     // The cells with i coordinate in [imin, imax) are included, similar for j.
     // The z limits may be changed inside the chopper to match actual min/max z.
@@ -77,7 +77,7 @@ int main(int argc, char** argv)
     std::string resultfile = param.getDefault<std::string>("resultfile", "");
 
     double minperm = param.getDefault("minperm", 1e-9);
-    double minpermSI = Dune::unit::convert::from(minperm, Dune::prefix::milli*Dune::unit::darcy);
+    double minpermSI = Opm::unit::convert::from(minperm, Opm::prefix::milli*Opm::unit::darcy);
 
     // Following two options are for dip upscaling (slope of cell top and bottom edges)
     bool dips = param.getDefault("dips", false);  // whether to do dip averaging
@@ -291,7 +291,7 @@ int main(int argc, char** argv)
 
         try { /* The upscaling may fail to converge on icky grids, lets just pass by those */
             if (upscale) {
-                Dune::EclipseGridParser subparser = ch.subparser();
+                Opm::EclipseGridParser subparser = ch.subparser();
                 subparser.convertToSI();
                 Dune::SinglePhaseUpscaler upscaler;
                 
@@ -299,7 +299,7 @@ int main(int argc, char** argv)
                               residual_tolerance, linsolver_verbosity, linsolver_type, false);
 
                 Dune::SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
-                upscaled_K *= (1.0/(Dune::prefix::milli*Dune::unit::darcy));
+                upscaled_K *= (1.0/(Opm::prefix::milli*Opm::unit::darcy));
 
 
                 porosities.push_back(upscaler.upscalePorosity());
@@ -315,7 +315,7 @@ int main(int argc, char** argv)
             if (endpoints) {
                 // Calculate minimum and maximum water volume in each cell
                 // Create single-phase upscaling object to get poro and perm values from the grid
-                Dune::EclipseGridParser subparser = ch.subparser();
+                Opm::EclipseGridParser subparser = ch.subparser();
                 std::vector<double>  perms = subparser.getFloatingPointValue("PERMX");
                 subparser.convertToSI();
                 Dune::SinglePhaseUpscaler upscaler;                
@@ -450,11 +450,11 @@ int main(int argc, char** argv)
 
 
 	    if (dips) {
-		Dune::EclipseGridParser subparser = ch.subparser();
+		Opm::EclipseGridParser subparser = ch.subparser();
 		std::vector<int>  griddims = subparser.getSPECGRID().dimensions;
 		std::vector<double> xdips_subsample, ydips_subsample;
 
-		Dune::EclipseGridInspector gridinspector(subparser);
+		Opm::EclipseGridInspector gridinspector(subparser);
 		for (int k=0; k < griddims[2]; ++k) {
 		    for (int j=0; j < griddims[1]; ++j) {
 			for (int i=0; i < griddims[0]; ++i) {
@@ -485,8 +485,8 @@ int main(int argc, char** argv)
 	    }
 
 	    if (satnumvolumes) {
-		Dune::EclipseGridParser subparser = ch.subparser();
-		Dune::EclipseGridInspector subinspector(subparser);
+		Opm::EclipseGridParser subparser = ch.subparser();
+		Opm::EclipseGridInspector subinspector(subparser);
 		std::vector<int>  griddims = subparser.getSPECGRID().dimensions;
 		int number_of_subsamplecells = griddims[0] * griddims[1] * griddims[2];
 

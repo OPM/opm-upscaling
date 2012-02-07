@@ -66,14 +66,14 @@ namespace Dune
 
 
     template <class Traits>
-    inline void SteadyStateUpscaler<Traits>::initImpl(const parameter::ParameterGroup& param)
+    inline void SteadyStateUpscaler<Traits>::initImpl(const Opm::parameter::ParameterGroup& param)
     {
 	Super::initImpl(param);
 	output_vtk_ = param.getDefault("output_vtk", output_vtk_);
 	print_inoutflows_ = param.getDefault("print_inoutflows", print_inoutflows_);
 	simulation_steps_ = param.getDefault("simulation_steps", simulation_steps_);
-	stepsize_ = Dune::unit::convert::from(param.getDefault("stepsize", stepsize_),
-					      Dune::unit::day);
+	stepsize_ = Opm::unit::convert::from(param.getDefault("stepsize", stepsize_),
+					      Opm::unit::day);
 	relperm_threshold_ = param.getDefault("relperm_threshold", relperm_threshold_);
         maximum_mobility_contrast_ = param.getDefault("maximum_mobility_contrast", maximum_mobility_contrast_);
         sat_change_threshold_ = param.getDefault("sat_change_threshold", sat_change_threshold_);
@@ -138,10 +138,10 @@ namespace Dune
 	int num_cells = this->ginterf_.numberOfCells();
 	// No source or sink.
 	std::vector<double> src(num_cells, 0.0);
-	SparseVector<double> injection(num_cells);
+	Opm::SparseVector<double> injection(num_cells);
 	// Gravity.
 	FieldVector<double, 3> gravity(0.0);
-	// gravity[2] = -Dune::unit::gravity;
+	// gravity[2] = -Opm::unit::gravity;
 	if (gravity.two_norm() > 0.0) {
 	    MESSAGE("Warning: Gravity not yet handled by flow solver.");
 	}

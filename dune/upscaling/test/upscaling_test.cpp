@@ -38,15 +38,15 @@
 #endif
 
 #include <dune/upscaling/SinglePhaseUpscaler.hpp>
-#include <dune/common/Units.hpp>
+#include <opm/core/utility/Units.hpp>
 
 using namespace Dune;
-using namespace Dune::prefix;
-using namespace Dune::unit;
+using namespace Opm::prefix;
+using namespace Opm::unit;
 
 int main(int argc, char** argv)
 {
-    parameter::ParameterGroup param(argc, argv);
+    Opm::parameter::ParameterGroup param(argc, argv);
     // MPIHelper::instance(argc,argv);
     SinglePhaseUpscaler upscaler;
     upscaler.init(param);

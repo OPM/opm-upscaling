@@ -33,12 +33,12 @@
 
 */
 
-#include <dune/common/CornerpointChopper.hpp>
-#include <dune/common/EclipseGridParser.hpp>
-#include <dune/common/EclipseGridInspector.hpp>
+#include <opm/core/eclipse/CornerpointChopper.hpp>
+#include <opm/core/eclipse/EclipseGridParser.hpp>
+#include <opm/core/eclipse/EclipseGridInspector.hpp>
 #include <dune/upscaling/SinglePhaseUpscaler.hpp>
 #include <dune/porsol/common/setupBoundaryConditions.hpp>
-#include <dune/common/Units.hpp>
+#include <opm/core/utility/Units.hpp>
 
 #include <ios>
 #include <iomanip>
@@ -59,9 +59,9 @@ int main(int argc, char** argv)
         exit(1);
     }
   
-    Dune::parameter::ParameterGroup param(argc, argv);
+    Opm::parameter::ParameterGroup param(argc, argv);
     std::string gridfilename = param.get<std::string>("gridfilename");
-    Dune::CornerPointChopper ch(gridfilename);
+    Opm::CornerPointChopper ch(gridfilename);
 
     // The cells with i coordinate in [imin, imax) are included, similar for j.
     // The z limits may be changed inside the chopper to match actual min/max z.
@@ -79,7 +79,7 @@ int main(int argc, char** argv)
     std::string resultgrid = param.getDefault<std::string>("resultgrid", "regularizedgrid.grdecl");
 
     double minperm = param.getDefault("minperm", 1e-9);
-    double minpermSI = Dune::unit::convert::from(minperm, Dune::prefix::milli*Dune::unit::darcy);
+    double minpermSI = Opm::unit::convert::from(minperm, Opm::prefix::milli*Opm::unit::darcy);
     double z_tolerance = param.getDefault("z_tolerance", 1e-8);
     double residual_tolerance = param.getDefault("residual_tolerance", 1e-8);
     double linsolver_verbosity = param.getDefault("linsolver_verbosity", 0);
@@ -108,9 +108,9 @@ int main(int argc, char** argv)
 
 
     // Original x/y resolution in terms of coordinate values (not indices)
-    Dune::EclipseGridParser gridparser(gridfilename); // TODO: REFACTOR!!!! it is stupid to parse this again
-    Dune::EclipseGridInspector gridinspector(gridparser);
-    boost::array<double, 6> gridlimits=gridinspector.getGridLimits();
+    Opm::EclipseGridParser gridparser(gridfilename); // TODO: REFACTOR!!!! it is stupid to parse this again
+    Opm::EclipseGridInspector gridinspector(gridparser);
+    std::tr1::array<double, 6> gridlimits=gridinspector.getGridLimits();
     double finegridxresolution = (gridlimits[1]-gridlimits[0])/dims[0];
     double finegridyresolution = (gridlimits[3]-gridlimits[2])/dims[1];
 
@@ -156,14 +156,14 @@ int main(int argc, char** argv)
 			zcorn_c[zidx_c], zcorn_c[zidx_c+1],
 			false);
 		try {
-		    Dune::EclipseGridParser subparser = ch.subparser();
+		    Opm::EclipseGridParser subparser = ch.subparser();
                     subparser.convertToSI(); // Because the upscaler expects SI units.
 		    Dune::SinglePhaseUpscaler upscaler;
 		    upscaler.init(subparser, Dune::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
 				  residual_tolerance, linsolver_verbosity, linsolver_type, false);
             
 		    Dune::SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
-		    upscaled_K *= (1.0/(Dune::prefix::milli*Dune::unit::darcy));
+		    upscaled_K *= (1.0/(Opm::prefix::milli*Opm::unit::darcy));
 		    poro.push_back(upscaler.upscalePorosity());
 		    permx.push_back(upscaled_K(0,0));
 		    permy.push_back(upscaled_K(1,1));

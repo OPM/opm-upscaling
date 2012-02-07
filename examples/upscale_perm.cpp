@@ -179,16 +179,16 @@ int main(int varnum, char** vararg) {
     */
     cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... ";
     flush(cout);   start = clock();
-    Dune::EclipseGridParser * eclParser_p;
+    Opm::EclipseGridParser * eclParser_p;
     try {
-        eclParser_p = new Dune::EclipseGridParser(ECLIPSEFILENAME);
+        eclParser_p = new Opm::EclipseGridParser(ECLIPSEFILENAME);
     }
     catch (...) {
         cout << "Error: Filename " << ECLIPSEFILENAME << " does not look like an eclipse grid file." << endl;
         usage();
         exit(1);
     }
-    Dune::EclipseGridParser& eclParser = *eclParser_p;
+    Opm::EclipseGridParser& eclParser = *eclParser_p;
 
     finish = clock();   timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
     cout << " (" << timeused <<" secs)" << endl;
@@ -221,8 +221,8 @@ int main(int varnum, char** vararg) {
     SinglePhaseUpscaler upscaler_nonperiodic;
     SinglePhaseUpscaler upscaler_periodic;
 
-    const double minPerm = Dune::unit::convert::from(atof(options["minPerm"].c_str()),
-                                                     Dune::prefix::milli*Dune::unit::darcy);
+    const double minPerm = Opm::unit::convert::from(atof(options["minPerm"].c_str()),
+                                                     Opm::prefix::milli*Opm::unit::darcy);
 
     if (isFixed || isLinear)  {
         cout << "Tesselating non-periodic grid ...";
@@ -271,7 +271,7 @@ int main(int varnum, char** vararg) {
         start = clock();
         upscaler_nonperiodic.setBoundaryConditionType(SinglePhaseUpscaler::Fixed);
         Kfixed = upscaler_nonperiodic.upscaleSinglePhase();
-        Kfixed *= 1.0/(Dune::prefix::milli*Dune::unit::darcy);
+        Kfixed *= 1.0/(Opm::prefix::milli*Opm::unit::darcy);
         finish = clock();
         timeused_fixed = (double(finish)-double(start))/CLOCKS_PER_SEC;
         cout << " ( " << timeused_fixed << " secs)" << endl;
@@ -284,7 +284,7 @@ int main(int varnum, char** vararg) {
         start = clock();
         upscaler_nonperiodic.setBoundaryConditionType(SinglePhaseUpscaler::Linear);
         Klinear = upscaler_nonperiodic.upscaleSinglePhase();
-        Klinear *= 1.0/(Dune::prefix::milli*Dune::unit::darcy);
+        Klinear *= 1.0/(Opm::prefix::milli*Opm::unit::darcy);
         finish = clock();
         timeused_linear = (double(finish)-double(start))/CLOCKS_PER_SEC;
         cout << Klinear << endl;
@@ -297,7 +297,7 @@ int main(int varnum, char** vararg) {
         start = clock();
         upscaler_periodic.setBoundaryConditionType(SinglePhaseUpscaler::Periodic);
         Kperiodic = upscaler_periodic.upscaleSinglePhase();
-        Kperiodic *= 1.0/(Dune::prefix::milli*Dune::unit::darcy);
+        Kperiodic *= 1.0/(Opm::prefix::milli*Opm::unit::darcy);
         finish = clock();
         timeused_periodic =  (double(finish)-double(start))/CLOCKS_PER_SEC;     
         cout << " (" << timeused_periodic << " secs)" << endl;           

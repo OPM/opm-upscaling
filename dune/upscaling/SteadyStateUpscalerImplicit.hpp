@@ -112,7 +112,7 @@ namespace Dune
                            const FlowSol& flow_solution,
                            const std::vector<double>& saturations) const;
 	/// Override from superclass.
-	virtual void initImpl(const parameter::ParameterGroup& param);
+	virtual void initImpl(const Opm::parameter::ParameterGroup& param);
 
 
 	// ------- Data members -------

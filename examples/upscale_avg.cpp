@@ -144,12 +144,12 @@ int main(int varnum, char** vararg) {
     */
     cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... ";
     flush(cout);   start = clock();
-    // eclParser_p is here a pointer to an object of type EclipseGridParser
+    // eclParser_p is here a pointer to an object of type Opm::EclipseGridParser
     // (this pointer trick is necessary for the try-catch-clause to work)
     
-    EclipseGridParser eclParser(ECLIPSEFILENAME, false);
+    Opm::EclipseGridParser eclParser(ECLIPSEFILENAME, false);
 
-    EclipseGridInspector eclInspector(eclParser);
+    Opm::EclipseGridInspector eclInspector(eclParser);
 
     finish = clock();   timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
     cout << " (" << timeused <<" secs)" << endl;
@@ -163,7 +163,7 @@ int main(int varnum, char** vararg) {
 
    SinglePhaseUpscaler upscaler;
    upscaler.init(eclParser, SinglePhaseUpscaler::Fixed,
-                 unit::convert::from(1e-9, prefix::milli*unit::darcy),
+                 Opm::unit::convert::from(1e-9, Opm::prefix::milli*Opm::unit::darcy),
                  0.0, 1e-8, 0, 1, false);
 
 
@@ -216,7 +216,7 @@ int main(int varnum, char** vararg) {
         " x " << griddims[1]+1 << ")" << endl;
     
     // Find max and min in x-, y- and z-directions
-    boost::array<double, 6> gridlimits = eclInspector.getGridLimits();
+    std::tr1::array<double, 6> gridlimits = eclInspector.getGridLimits();
     cout << "                 x-limits: " << gridlimits[0] << " -- " << gridlimits[1] << endl;
     cout << "                 y-limits: " << gridlimits[2] << " -- " << gridlimits[3] << endl;
     cout << "                 z-limits: " << gridlimits[4] << " -- " << gridlimits[5] << endl;

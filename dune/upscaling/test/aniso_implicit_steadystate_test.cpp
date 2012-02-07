@@ -43,7 +43,7 @@ using namespace Dune;
 int main(int argc, char** argv)
 {
     // Initialize.
-    parameter::ParameterGroup param(argc, argv);
+    Opm::parameter::ParameterGroup param(argc, argv);
     SteadyStateUpscalerManager<SimulatorTraits<Anisotropic, ImplicitCap> > mgr;
     mgr.upscale(param);
 }

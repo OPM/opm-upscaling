@@ -64,7 +64,7 @@ using namespace Dune;
 int main(int argc, char** argv)
 {
     // Initialize.
-    parameter::ParameterGroup param(argc, argv);
+    Opm::parameter::ParameterGroup param(argc, argv);
     // MPIHelper::instance(argc,argv) ;
     typedef SteadyStateUpscalerImplicit<UpscalingTraitsBasicImplicit> upscaler_t;
     SteadyStateUpscalerManagerImplicit<upscaler_t> mgr;

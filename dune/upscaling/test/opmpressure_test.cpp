@@ -24,13 +24,13 @@
 #endif
 
 #include <dune/upscaling/UpscalerBase.hpp>
-#include <dune/common/Units.hpp>
+#include <opm/core/utility/Units.hpp>
 #include <dune/porsol/common/SimulatorTraits.hpp>
 #include <dune/porsol/mimetic/IfshInterface.hpp>
 
 using namespace Dune;
-using namespace Dune::prefix;
-using namespace Dune::unit;
+using namespace Opm::prefix;
+using namespace Opm::unit;
 
 
 /// Combines the component traits into a single, parametrized type.
@@ -51,7 +51,7 @@ typedef UpscalerBase<MyTraits<Isotropic, Explicit> > Upscaler;
 
 int main(int argc, char** argv)
 {
-    parameter::ParameterGroup param(argc, argv);
+    Opm::parameter::ParameterGroup param(argc, argv);
     // MPIHelper::instance(argc,argv);
     Upscaler upscaler;
     upscaler.init(param);

@@ -28,14 +28,14 @@
 #include <numeric>
 #include <sys/utsname.h>
 
-#include <dune/common/EclipseGridParser.hpp>
-#include <dune/common/EclipseGridInspector.hpp>
-#include <dune/common/param/ParameterGroup.hpp>
+#include <opm/core/eclipse/EclipseGridParser.hpp>
+#include <opm/core/eclipse/EclipseGridInspector.hpp>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
 
-#include <dune/common/CornerpointChopper.hpp>
+#include <opm/core/eclipse/CornerpointChopper.hpp>
 #include <dune/upscaling/SinglePhaseUpscaler.hpp>
 #include <dune/porsol/common/setupBoundaryConditions.hpp>
-#include <dune/common/Units.hpp>
+#include <opm/core/utility/Units.hpp>
 
 
 
@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
         cout << "       [listallcells=false] [output=filename.txt]" << endl;
         exit(1);
     } 
-    Dune::parameter::ParameterGroup param(argc, argv);
+    Opm::parameter::ParameterGroup param(argc, argv);
     
     std::string gridfilename = param.get<std::string>("gridfilename");
     double minCellVolume = param.getDefault("mincellvolume", 1e-8);
@@ -61,12 +61,12 @@ int main(int argc, char** argv) {
 	param.displayUsage();
     }
     
-    //eclParser_p = new Dune::EclipseGridParser(gridfilename);
-    //Dune::EclipseGridParser& eclParser = *eclParser_p;
+    //eclParser_p = new Opm::EclipseGridParser(gridfilename);
+    //Opm::EclipseGridParser& eclParser = *eclParser_p;
     
-    Dune::EclipseGridParser eclParser(gridfilename);
+    Opm::EclipseGridParser eclParser(gridfilename);
     
-    Dune::EclipseGridInspector gridinspector(eclParser);
+    Opm::EclipseGridInspector gridinspector(eclParser);
     
     // Check that we have the information we need from the eclipse file, we will check PERM-fields later
     if (! (eclParser.hasField("SPECGRID") && eclParser.hasField("COORD") && eclParser.hasField("ZCORN"))) {  

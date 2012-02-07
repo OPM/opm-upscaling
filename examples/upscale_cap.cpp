@@ -63,7 +63,7 @@
 #include <map>
 #include <sys/utsname.h>
 
-#include <dune/common/MonotCubicInterpolator.hpp>
+#include <opm/core/utility/MonotCubicInterpolator.hpp>
 #include <dune/upscaling/SinglePhaseUpscaler.hpp>
 
 using namespace Dune;
@@ -214,7 +214,7 @@ int main(int varnum, char** vararg)
    eclipsefile.close(); 
 
    cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... " << endl;
-   EclipseGridParser eclParser(ECLIPSEFILENAME, false);
+   Opm::EclipseGridParser eclParser(ECLIPSEFILENAME, false);
    
    // Check that we have the information we need from the eclipse file:  
    if (! (eclParser.hasField("SPECGRID") && eclParser.hasField("COORD") && eclParser.hasField("ZCORN")  
@@ -390,7 +390,7 @@ int main(int varnum, char** vararg)
    SinglePhaseUpscaler upscaler;
    eclParser.convertToSI();
    upscaler.init(eclParser, SinglePhaseUpscaler::Fixed,
-                 unit::convert::from(minPerm, prefix::milli*unit::darcy),
+                 Opm::unit::convert::from(minPerm, Opm::prefix::milli*Opm::unit::darcy),
                  0.0, 1e-8, 0, 1, false);  // options on this line are noops for upscale_cap
 
    vector<double> cellVolumes, cellPoreVolumes; 
