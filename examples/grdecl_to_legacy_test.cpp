@@ -37,7 +37,7 @@
 #if HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <opm/core/utility/parameters/ParameterGroup.hpp>>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 #include <dune/grid/CpGrid.hpp>
 #include <dune/porsol/common/ReservoirPropertyCapillary.hpp>
@@ -47,7 +47,7 @@ using namespace Dune;
 
 int main(int argc, char** argv)
 {
-    parameter::ParameterGroup param(argc, argv);
+    Opm::parameter::ParameterGroup param(argc, argv);
     CpGrid grid;
     ReservoirPropertyCapillary<3> res_prop;
     setupGridAndProps(param, grid, res_prop);

@@ -143,7 +143,7 @@ typedef Opm::ImplicitTransport<TransportModel  ,
 int
 main(int argc, char** argv)
 {
-    Dune::parameter::ParameterGroup param(argc, argv);
+    Opm::parameter::ParameterGroup param(argc, argv);
 
     Dune::CpGrid                        cp_grid;
     Dune::ReservoirPropertyCapillary<3> res_prop;

@@ -215,7 +215,7 @@ namespace Dune
             // Solve system.
             TPFAPressureSolver::LinearSystem s;
             psolver_.linearSystem(s);
-            parameter::ParameterGroup params;
+            Opm::parameter::ParameterGroup params;
             params.insertParameter("linsolver_tolerance", boost::lexical_cast<std::string>(residual_tolerance));
             params.insertParameter("linsolver_verbosity", boost::lexical_cast<std::string>(linsolver_verbosity));
             params.insertParameter("linsolver_type", boost::lexical_cast<std::string>(linsolver_type));
@@ -288,7 +288,7 @@ namespace Dune
         {
             typedef typename GridInterface::CellIterator CI;
             typedef typename CI           ::FaceIterator FI;
-            SparseTable<double>& cflux = flow_solution_.outflux_;
+	    Opm::SparseTable<double>& cflux = flow_solution_.outflux_;
 
             FaceFluxes face_fluxes(pgrid_->numberOfFaces());
             // First pass: compute projected fluxes.
@@ -376,7 +376,7 @@ namespace Dune
             }
         private:
             std::vector<Scalar> pressure_;
-            SparseTable<Scalar> outflux_;
+	    Opm::SparseTable<Scalar> outflux_;
 
             void clear()
             {

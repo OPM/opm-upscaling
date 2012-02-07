@@ -49,8 +49,8 @@
 
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/CpGrid.hpp>
-#include opm/core/eclipse/EclipseGridParser.hpp>
-#include opm/core/eclipse/EclipseGridInspector.hpp>
+#include <opm/core/eclipse/EclipseGridParser.hpp>
+#include <opm/core/eclipse/EclipseGridInspector.hpp>
 
 #include <dune/porsol/common/fortran.hpp>
 #include <dune/porsol/common/blas_lapack.hpp>
@@ -60,7 +60,7 @@
 #include <dune/porsol/common/BoundaryConditions.hpp>
 
 #include <dune/porsol/mimetic/IfshInterface.hpp>
-#include <opm/core/utility/parameters/ParameterGroup.hpp>>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <dune/porsol/common/setupGridAndProps.hpp>
 
 #include <dune/porsol/mimetic/MimeticIPEvaluator.hpp>
@@ -83,8 +83,8 @@ void test_flowsolver(const GI& g, const RI& r)
     typedef Dune::FlowBC BC;
     FBC flow_bc(7);
 
-    flow_bc.flowCond(5) = BC(BC::Dirichlet, 100.0*Dune::unit::barsa);
-    flow_bc.flowCond(6) = BC(BC::Dirichlet, 0.0*Dune::unit::barsa);
+    flow_bc.flowCond(5) = BC(BC::Dirichlet, 100.0*Opm::unit::barsa);
+    flow_bc.flowCond(6) = BC(BC::Dirichlet, 0.0*Opm::unit::barsa);
 
     typename CI::Vector gravity(0.0);
 //     gravity[2] = Dune::unit::gravity;
@@ -124,7 +124,7 @@ using namespace Dune;
 
 int main(int argc, char** argv)
 {
-    Dune::parameter::ParameterGroup param(argc, argv);
+    Opm::parameter::ParameterGroup param(argc, argv);
     Dune::MPIHelper::instance(argc,argv);
 
     // Make a grid and props.

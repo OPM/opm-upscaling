@@ -43,7 +43,7 @@
 #include <boost/array.hpp>
 
 #include <opm/core/utility/Units.hpp>
-#include <opm/core/utility/parameters/ParameterGroup.hpp>>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
 
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 
@@ -68,7 +68,7 @@ void fill_perm(std::vector<double>& k)
     k.clear(); k.reserve(3 * 60 * 220 * 85);
     double perm;
     while (permdata >> perm) {
-        k.push_back(unit::convert::from(perm, prefix::milli*unit::darcy));
+        k.push_back(Opm::unit::convert::from(perm, Opm::prefix::milli*Opm::unit::darcy));
     }
 }
 
@@ -83,7 +83,7 @@ int main(int argc, char** argv)
     typedef Dune::IncompFlowSolverHybrid<GI, RI, BCs,
         Dune::MimeticIPEvaluator> FlowSolver;
 
-    parameter::ParameterGroup param(argc, argv);
+    Opm::parameter::ParameterGroup param(argc, argv);
     CpGrid grid;
     grid.init(param);
     //grid.setUniqueBoundaryIds(true);
@@ -93,16 +93,16 @@ int main(int argc, char** argv)
     BCs flow_bc(7);
 #define BCDIR 4
 #if BCDIR == 1
-    flow_bc.flowCond(1) = BC(BC::Dirichlet, 1.0*Dune::unit::barsa);
-    flow_bc.flowCond(2) = BC(BC::Dirichlet, 0.0*Dune::unit::barsa);
+    flow_bc.flowCond(1) = BC(BC::Dirichlet, 1.0*Opm::unit::barsa);
+    flow_bc.flowCond(2) = BC(BC::Dirichlet, 0.0*Opm::unit::barsa);
 #elif BCDIR == 2
-    flow_bc.flowCond(3) = BC(BC::Dirichlet, 1.0*Dune::unit::barsa);
-    flow_bc.flowCond(4) = BC(BC::Dirichlet, 0.0*Dune::unit::barsa);
+    flow_bc.flowCond(3) = BC(BC::Dirichlet, 1.0*Opm::unit::barsa);
+    flow_bc.flowCond(4) = BC(BC::Dirichlet, 0.0*Opm::unit::barsa);
 #elif BCDIR == 3
-    flow_bc.flowCond(5) = BC(BC::Dirichlet, 1.0*Dune::unit::barsa);
-    flow_bc.flowCond(6) = BC(BC::Dirichlet, 0.0*Dune::unit::barsa);
+    flow_bc.flowCond(5) = BC(BC::Dirichlet, 1.0*Opm::unit::barsa);
+    flow_bc.flowCond(6) = BC(BC::Dirichlet, 0.0*Opm::unit::barsa);
 #elif BCDIR == 4
-    flow_bc.flowCond(5) = BC(BC::Dirichlet, 1.0*Dune::unit::barsa);
+    flow_bc.flowCond(5) = BC(BC::Dirichlet, 1.0*Opm::unit::barsa);
 #endif
 
     RI r;
@@ -122,9 +122,9 @@ int main(int argc, char** argv)
         const int gc = ijk[0] + 60*(ijk[1] + 220*ijk[2]);
         
         RI::SharedPermTensor K = r.permeabilityModifiable(c);
-        K(0,0) = 0*0.1*unit::darcy + 1*Perm(gc,0);
-        K(1,1) = 0*0.1*unit::darcy + 1*Perm(gc,1);
-        K(2,2) = 0*0.1*unit::darcy + 1*Perm(gc,2);
+        K(0,0) = 0*0.1*Opm::unit::darcy + 1*Perm(gc,0);
+        K(1,1) = 0*0.1*Opm::unit::darcy + 1*Perm(gc,1);
+        K(2,2) = 0*0.1*Opm::unit::darcy + 1*Perm(gc,2);
     }
 
 
@@ -132,8 +132,8 @@ int main(int argc, char** argv)
     CI::Vector gravity;
     gravity[0] = gravity[1] = gravity[2] = 0.0;
 #if 1
-    gravity[2] = Dune::unit::gravity;
-    gravity[2] = 10; //Dune::unit::gravity;
+    gravity[2] = Opm::unit::gravity;
+    gravity[2] = 10; //Opm::unit::gravity;
 #endif
 #endif
 

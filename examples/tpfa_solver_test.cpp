@@ -37,8 +37,8 @@
 
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/CpGrid.hpp>
-#include opm/core/eclipse/EclipseGridParser.hpp>
-#include opm/core/eclipse/EclipseGridInspector.hpp>
+#include <opm/core/eclipse/EclipseGridParser.hpp>
+#include <opm/core/eclipse/EclipseGridInspector.hpp>
 
 #include <dune/porsol/common/fortran.hpp>
 #include <dune/porsol/common/blas_lapack.hpp>
@@ -48,7 +48,7 @@
 #include <dune/porsol/common/BoundaryConditions.hpp>
 
 #include <dune/porsol/mimetic/TpfaInterface.hpp>
-#include <opm/core/utility/parameters/ParameterGroup.hpp>>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <dune/porsol/common/setupGridAndProps.hpp>
 
 #include <dune/porsol/mimetic/MimeticIPEvaluator.hpp>
@@ -113,7 +113,7 @@ using namespace Dune;
 
 int main(int argc, char** argv)
 {
-    Dune::parameter::ParameterGroup param(argc, argv);
+    Opm::parameter::ParameterGroup param(argc, argv);
     Dune::MPIHelper::instance(argc,argv);
 
     // Make a grid and props.

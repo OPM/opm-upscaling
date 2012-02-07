@@ -57,7 +57,7 @@ typedef SimulatorTesterFlexibleBC<SimTraits> Simulator;
 
 int main(int argc, char** argv)
 {
-    parameter::ParameterGroup param(argc, argv);
+    Opm::parameter::ParameterGroup param(argc, argv);
     MPIHelper::instance(argc,argv);
 #ifdef USE_TBB
     int num_threads = param.getDefault("num_threads", tbb::task_scheduler_init::default_num_threads());

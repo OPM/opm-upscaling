@@ -53,8 +53,8 @@ namespace Dune
 		//   (Two options: ...,s1_i,s2_i,s3_i,...   versus  s1_1,...,s1_N,s2_1,...,s2_N,s3_1,...,s3_N,...) 
 		void phaseLayout(double satMin, double satMax, unsigned int iBegin, unsigned int iEnd, unsigned int iStride);
 		
-		void init(const parameter::ParameterGroup& param) {} // TODO: What need to be tunable from command line?
-		void reset(const parameter::ParameterGroup& param) {} // TODO:  Needed for repeated use without destruct/construct ...
+		void init(const Opm::parameter::ParameterGroup& param) {} // TODO: What need to be tunable from command line?
+		void reset(const Opm::parameter::ParameterGroup& param) {} // TODO:  Needed for repeated use without destruct/construct ...
 		
 		bool continueUpdate();  // TODO: 
 		                        //   Reduced timestep: Try to reach timeEnd via micro-steps or immediately 

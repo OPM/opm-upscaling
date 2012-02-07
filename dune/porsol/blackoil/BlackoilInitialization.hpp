@@ -34,7 +34,7 @@ namespace Opm
         typedef typename Simulator::Grid Grid;
         typedef typename Simulator::Fluid Fluid;
 
-        virtual void init(const Dune::parameter::ParameterGroup& param,
+        virtual void init(const Opm::parameter::ParameterGroup& param,
                           const Grid& grid,
                           const Fluid& fluid,
                           typename Grid::Vector gravity,
@@ -52,7 +52,7 @@ namespace Opm
         typedef typename Simulator::Grid Grid;
         typedef typename Simulator::Fluid Fluid;
 
-        virtual void init(const Dune::parameter::ParameterGroup& param,
+        virtual void init(const Opm::parameter::ParameterGroup& param,
                           const Grid& grid,
                           const Fluid& fluid,
                           typename Grid::Vector gravity,
@@ -70,7 +70,7 @@ namespace Opm
                 std::fill(simstate.cell_z_.begin(), simstate.cell_z_.begin() + simstate.cell_z_.size()/2, init_oil);
                 std::fill(simstate.cell_z_.begin() + simstate.cell_z_.size()/2, simstate.cell_z_.end(), init_water);
                 MESSAGE("******* Assuming zero capillary pressures *******");
-                PhaseVec init_p(100.0*Dune::unit::barsa);
+                PhaseVec init_p(100.0*Opm::unit::barsa);
                 simstate.cell_pressure_.resize(grid.numCells(), init_p);
                 //         if (gravity.two_norm() != 0.0) {
                 //             double ref_gravpot = grid.cellCentroid(0)*gravity;
@@ -99,7 +99,7 @@ namespace Opm
                           simstate.cell_z_.end(),
                           init_gas);
                 MESSAGE("******* Assuming zero capillary pressures *******");
-                PhaseVec init_p(100.0*Dune::unit::barsa);
+                PhaseVec init_p(100.0*Opm::unit::barsa);
                 simstate.cell_pressure_.resize(grid.numCells(), init_p);
 
                 if (gravity.two_norm() != 0.0) {
@@ -135,7 +135,7 @@ namespace Opm
 
                 simstate.cell_z_.resize(grid.numCells(), init_z);
                 MESSAGE("******* Assuming zero capillary pressures *******");
-                PhaseVec init_p(param.getDefault("initial_pressure", 100.0*Dune::unit::barsa));
+                PhaseVec init_p(param.getDefault("initial_pressure", 100.0*Opm::unit::barsa));
                 simstate.cell_pressure_.resize(grid.numCells(), init_p);
                 if (gravity.two_norm() != 0.0) {
                     double ref_gravpot = grid.cellCentroid(0)*gravity;
@@ -163,7 +163,7 @@ namespace Opm
         typedef typename Simulator::Grid Grid;
         typedef typename Simulator::Fluid Fluid;
 
-        virtual void init(const Dune::parameter::ParameterGroup& param,
+        virtual void init(const Opm::parameter::ParameterGroup& param,
                           const Grid& grid,
                           const Fluid& fluid,
                           typename Grid::Vector gravity,
@@ -178,7 +178,7 @@ namespace Opm
         
             // double datum_depth = param.getDefault<double>("datum_depth", 2753.87) - zeroDepth;
             double datum_pressure_barsa = param.getDefault<double>("datum_pressure", 248.22);
-            double datum_pressure = Dune::unit::convert::from(datum_pressure_barsa, Dune::unit::barsa);
+            double datum_pressure = Opm::unit::convert::from(datum_pressure_barsa, Opm::unit::barsa);
             double wo_contact_depth = param.getDefault<double>("wo_contact_depth", 3032.76) - zeroDepth;
             double go_contact_depth = param.getDefault<double>("go_contact_depth", 2682.24) - zeroDepth;
         

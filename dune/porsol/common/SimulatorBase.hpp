@@ -94,7 +94,7 @@ namespace Dune
 
 	/// @brief Initialization from parameters.
 	/// @param param a parameter object
-	void init(const parameter::ParameterGroup& param)
+	void init(const Opm::parameter::ParameterGroup& param)
 	{
 	    initControl(param);
 	    initGridAndProps(param);
@@ -133,20 +133,20 @@ namespace Dune
 	GridInterface ginterf_;
 	ResProp res_prop_;
 	BCs bcond_;
-        SparseVector<double> injection_rates_;
+	Opm::SparseVector<double> injection_rates_;
         std::vector<double> injection_rates_psolver_;	// Should modify psolver to take SparseVector
         FlowSolver flow_solver_;
 	TransportSolver transport_solver_;
 
 
-	virtual void initControl(const parameter::ParameterGroup& param)
+	virtual void initControl(const Opm::parameter::ParameterGroup& param)
 	{
 	    simulation_steps_ = param.getDefault("simulation_steps", simulation_steps_);
-	    stepsize_ = Dune::unit::convert::from(param.getDefault("stepsize", stepsize_),
-                                                  Dune::unit::day);
+	    stepsize_ = Opm::unit::convert::from(param.getDefault("stepsize", stepsize_),
+                                                  Opm::unit::day);
 	}
 
-	virtual void initGridAndProps(const parameter::ParameterGroup& param)
+	virtual void initGridAndProps(const Opm::parameter::ParameterGroup& param)
 	{
 	    setupGridAndProps(param, grid_, res_prop_);
 	    ginterf_.init(grid_);
@@ -156,7 +156,7 @@ namespace Dune
             gravity_[2] = param.getDefault("gz", 0.0); //Dune::unit::gravity);
 	}
 
-	virtual void initInitialConditions(const parameter::ParameterGroup& param)
+	virtual void initInitialConditions(const Opm::parameter::ParameterGroup& param)
 	{
             if (param.getDefault("init_saturation_from_file", false)) {
                 std::string filename = param.get<std::string>("init_saturation_filename");
@@ -184,15 +184,15 @@ namespace Dune
             }
 	}
 
-	virtual void initBoundaryConditions(const parameter::ParameterGroup& param)
+	virtual void initBoundaryConditions(const Opm::parameter::ParameterGroup& param)
 	{
 	    setupBoundaryConditions(param, ginterf_, bcond_);
 	}
 
-        virtual void initSources(const parameter::ParameterGroup& param)
+        virtual void initSources(const Opm::parameter::ParameterGroup& param)
         {
             int nc = ginterf_.numberOfCells();
-	    injection_rates_ = SparseVector<double>(nc);
+	    injection_rates_ = Opm::SparseVector<double>(nc);
 	    injection_rates_psolver_.resize(nc, 0.0);
 //             injection_rates_.addElement(1.0, 0);
 //             injection_rates_.addElement(-1.0, nc - 1);
@@ -200,7 +200,7 @@ namespace Dune
 //             injection_rates_psolver_[nc - 1] = -1.0;
         }
 
-	virtual void initSolvers(const parameter::ParameterGroup& param)
+	virtual void initSolvers(const Opm::parameter::ParameterGroup& param)
 	{
 	    // Initialize flow solver.
 	    flow_solver_.init(ginterf_, res_prop_, gravity_, bcond_);

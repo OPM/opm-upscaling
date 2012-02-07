@@ -40,7 +40,7 @@
 #include <boost/array.hpp>
 
 #include <opm/core/utility/Units.hpp>
-#include <opm/core/utility/parameters/ParameterGroup.hpp>>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
 
 #include <dune/grid/CpGrid.hpp>
 
@@ -64,14 +64,14 @@ int main(int argc, char** argv)
     typedef Dune::IncompFlowSolverHybrid<GI, RI, BCs,
                                          Dune::MimeticIPEvaluator> FlowSolver;
 
-    parameter::ParameterGroup param(argc, argv);
+    Opm::parameter::ParameterGroup param(argc, argv);
     CpGrid grid;
     grid.init(param);
     grid.setUniqueBoundaryIds(true);
     GridInterfaceEuler<CpGrid> g(grid);
     typedef FlowBC FBC;
-    array<FBC, 6> cond = {{ FBC(FBC::Periodic,  1.0*unit::barsa),
-                            FBC(FBC::Periodic, -1.0*unit::barsa),
+    array<FBC, 6> cond = {{ FBC(FBC::Periodic,  1.0*Opm::unit::barsa),
+                            FBC(FBC::Periodic, -1.0*Opm::unit::barsa),
                             FBC(FBC::Periodic,  0.0),
                             FBC(FBC::Periodic,  0.0),
                             FBC(FBC::Neumann,   0.0),

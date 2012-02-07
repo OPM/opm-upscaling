@@ -47,7 +47,7 @@ namespace Dune
     /// It is assumed that the boundary ids are 1-6, similar to cartesian case/Yaspgrid,
     /// unless periodic, in which case we assume unique boundary ids.
     template <class GridInterface, class BCs>
-    inline void setupBoundaryConditions(const parameter::ParameterGroup& param,
+    inline void setupBoundaryConditions(const Opm::parameter::ParameterGroup& param,
 					const GridInterface& g,
 					BCs& bcs)
     {
@@ -70,7 +70,7 @@ namespace Dune
 	// and that boundary id 0 means interiour face/intersection.
 	std::string flow_bc_type = param.getDefault<std::string>("flow_bc_type", "dirichlet");
 	FlowBC::BCType bct = FlowBC::Dirichlet;
-	double leftval = 1.0*Dune::unit::barsa;
+	double leftval = 1.0*Opm::unit::barsa;
 	double rightval = 0.0;
 	if (flow_bc_type == "neumann") {
 	    bct = FlowBC::Neumann;
@@ -179,7 +179,7 @@ namespace Dune
 
 
     template <class GridInterface, class BCs>
-    inline void setupRegionBasedConditions(const parameter::ParameterGroup& param,
+    inline void setupRegionBasedConditions(const Opm::parameter::ParameterGroup& param,
                                            const GridInterface& g,
                                            BCs& bcs)
     {

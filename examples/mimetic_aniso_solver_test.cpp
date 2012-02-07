@@ -49,8 +49,8 @@
 
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/CpGrid.hpp>
-#include opm/core/eclipse/EclipseGridParser.hpp>
-#include opm/core/eclipse/EclipseGridInspector.hpp>
+#include <opm/core/eclipse/EclipseGridParser.hpp>
+#include <opm/core/eclipse/EclipseGridInspector.hpp>
 
 #include <dune/porsol/common/fortran.hpp>
 #include <dune/porsol/common/blas_lapack.hpp>
@@ -61,7 +61,7 @@
 
 #include <dune/porsol/mimetic/MimeticIPAnisoRelpermEvaluator.hpp>
 #include <dune/porsol/mimetic/IncompFlowSolverHybrid.hpp>
-#include <opm/core/utility/parameters/ParameterGroup.hpp>>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
 
 
 template <int dim, class Interface>
@@ -115,7 +115,7 @@ void test_evaluator(const Interface& g)
 
 void build_grid(const Opm::EclipseGridParser& parser,
                 const double z_tol, Dune::CpGrid& grid,
-                boost::array<int,3>& cartDims)
+                std::tr1::array<int,3>& cartDims)
 {
     Opm::EclipseGridInspector insp(parser);
 
@@ -165,13 +165,13 @@ void test_flowsolver(const GI& g, const RI& r)
 
     typedef Dune::FlowBC BC;
     FBC flow_bc(7);
-    //flow_bc.flowCond(1) = BC(BC::Dirichlet, 1.0*Dune::unit::barsa);
-    //flow_bc.flowCond(2) = BC(BC::Dirichlet, 0.0*Dune::unit::barsa);
-    flow_bc.flowCond(5) = BC(BC::Dirichlet, 100.0*Dune::unit::barsa);
+    //flow_bc.flowCond(1) = BC(BC::Dirichlet, 1.0*Opm::unit::barsa);
+    //flow_bc.flowCond(2) = BC(BC::Dirichlet, 0.0*Opm::unit::barsa);
+    flow_bc.flowCond(5) = BC(BC::Dirichlet, 100.0*Opm::unit::barsa);
 
     typename CI::Vector gravity;
     gravity[0] = gravity[1] = 0.0;
-    gravity[2] = Dune::unit::gravity;
+    gravity[2] = Opm::unit::gravity;
 
     solver.init(g, r, gravity, flow_bc);
     // solver.printStats(std::cout);
@@ -216,7 +216,7 @@ using namespace Dune;
 
 int main(int argc, char** argv)
 {
-    Dune::parameter::ParameterGroup param(argc, argv);
+    Opm::parameter::ParameterGroup param(argc, argv);
     Dune::MPIHelper::instance(argc,argv);
 
     // Make a grid
@@ -224,7 +224,7 @@ int main(int argc, char** argv)
 
     Opm::EclipseGridParser parser(param.get<std::string>("filename"));
     double z_tol = param.getDefault<double>("z_tolerance", 0.0);
-    boost::array<int,3> cartDims;
+    std::tr1::array<int,3> cartDims;
     build_grid(parser, z_tol, grid, cartDims);
 
     // Make the grid interface
@@ -235,7 +235,7 @@ int main(int argc, char** argv)
     RP res_prop;
     res_prop.init(parser, grid.globalCell());
 
-    assign_permeability<3>(res_prop, g.numberOfCells(), 0.1*Dune::unit::darcy);
+    assign_permeability<3>(res_prop, g.numberOfCells(), 0.1*Opm::unit::darcy);
     test_flowsolver<3>(g, res_prop);
 
 #if 0

@@ -57,7 +57,7 @@ typedef SimulatorTesterFlexibleBC<SimTraits> Simulator;
 
 int main(int argc, char** argv)
 {
-    parameter::ParameterGroup param(argc, argv);
+    Opm::parameter::ParameterGroup param(argc, argv);
     MPIHelper::instance(argc,argv);
     Simulator sim;
     sim.init(param);

@@ -71,7 +71,7 @@ namespace Dune
     }
 
     template <class GI, class RP, class BC>
-    inline void EulerUpstreamImplicit<GI, RP, BC>::init(const parameter::ParameterGroup& param)
+    inline void EulerUpstreamImplicit<GI, RP, BC>::init(const Opm::parameter::ParameterGroup& param)
     {
         check_sat_ = param.getDefault("check_sat", check_sat_);
         clamp_sat_ = param.getDefault("clamp_sat", clamp_sat_);
@@ -86,7 +86,7 @@ namespace Dune
     }
 
     template <class GI, class RP, class BC>
-    inline void EulerUpstreamImplicit<GI, RP, BC>::init(const parameter::ParameterGroup& param,
+    inline void EulerUpstreamImplicit<GI, RP, BC>::init(const Opm::parameter::ParameterGroup& param,
                                                         const GI& g, const RP& r, const BC& b)
     {
         init(param);
@@ -228,7 +228,7 @@ namespace Dune
                                                            const double time,
                                                            const typename GI::Vector& gravity,
                                                            const PressureSolution& pressure_sol,
-                                                           const SparseVector<double>& injection_rates) const
+                                                           const Opm::SparseVector<double>& injection_rates) const
     {
 
         Opm::ReservoirState<2> state(mygrid_.c_grid());
@@ -263,7 +263,7 @@ namespace Dune
 
         double dt_transport = time;
         int nr_transport_steps = 1;
-        time::StopWatch clock;
+	Opm::time::StopWatch clock;
         int repeats = 0;
         bool finished = false;
         clock.start();
@@ -304,7 +304,7 @@ namespace Dune
                     dt_transport = time/nr_transport_steps;
                     if (ctrl_.verbosity){
                         std::cout << "Warning: Transport failed, retrying with more steps. dt = "
-                                  << dt_transport/Dune::unit::year << " year.\n";
+                                  << dt_transport/Opm::unit::year << " year.\n";
                     }
 
                     std::vector<double>& sat = state.saturation();

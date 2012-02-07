@@ -204,7 +204,7 @@ class LinearSolverISTLAMG {
 public:
     LinearSolverISTLAMG()
     {
-        Dune::parameter::ParameterGroup params;
+        Opm::parameter::ParameterGroup params;
 
         params.insertParameter("linsolver_tolerance",
                                boost::lexical_cast<std::string>(5.0e-9));

@@ -73,11 +73,11 @@ namespace Dune {
 	/// @brief
 	/// @todo Doc me
 	/// @param
-	void init(const parameter::ParameterGroup& param);
+	void init(const Opm::parameter::ParameterGroup& param);
 	/// @brief
 	/// @todo Doc me
 	/// @param
-	void init(const parameter::ParameterGroup& param,
+	void init(const Opm::parameter::ParameterGroup& param,
 		  const GridInterface& grid,
 		  const ReservoirProperties& resprop,
 		  const BoundaryConditions& boundary);
@@ -101,7 +101,7 @@ namespace Dune {
 			    const double time,
 			    const typename GridInterface::Vector& gravity,
 			    const PressureSolution& pressure_sol,
-			    const SparseVector<double>& injection_rates) const;
+			    const Opm::SparseVector<double>& injection_rates) const;
 
     protected:
 	// typedef typename GridInterface::CellIterator CIt;
@@ -114,7 +114,7 @@ namespace Dune {
 			   const double time,
 			   const typename GridInterface::Vector& gravity,
 			   const PressureSolution& pressure_sol,
-                           const SparseVector<double>& injection_rates) const;
+                           const Opm::SparseVector<double>& injection_rates) const;
 
 	void checkAndPossiblyClampSat(std::vector<double>& s) const;
 

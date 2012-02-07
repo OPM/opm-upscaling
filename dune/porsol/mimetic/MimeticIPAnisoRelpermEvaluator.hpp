@@ -419,9 +419,9 @@ namespace Dune {
     private:
         int                           max_nf_      ;
         mutable std::vector<Scalar>   fa_, t1_, t2_;
-        SparseTable<Scalar>           second_term_ ;
-        SparseTable<Scalar>           n_           ;
-        SparseTable<Scalar>           Kg_          ;
+	Opm::SparseTable<Scalar>           second_term_ ;
+	Opm::SparseTable<Scalar>           n_           ;
+	Opm::SparseTable<Scalar>           Kg_          ;
         boost::array<Scalar, dim>     dyn_Kg_      ;
         boost::array<double, dim*dim> lambdaK_     ;
         const RockInterface*          prock_       ;

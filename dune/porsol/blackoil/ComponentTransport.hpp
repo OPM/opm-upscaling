@@ -51,7 +51,7 @@ public:
     {
     }
 
-    void init(const Dune::parameter::ParameterGroup& param)
+    void init(const Opm::parameter::ParameterGroup& param)
     {
         min_surfvol_threshold_ = param.getDefault("min_surfvol_threshold", min_surfvol_threshold_);
         single_step_only_ = param.getDefault("single_step_only", single_step_only_);

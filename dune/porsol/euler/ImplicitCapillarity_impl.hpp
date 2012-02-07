@@ -45,7 +45,7 @@
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/utility/Average.hpp>
 #include <opm/core/utility/Units.hpp>
-#include <opm-core/opm/core/utility/RootFinders.hpp>
+#include <opm/core/utility/RootFinders.hpp>
 #include <dune/grid/common/Volumes.hpp>
 #include <dune/porsol/common/ReservoirPropertyFixedMobility.hpp>
 #include <dune/porsol/euler/MatchSaturatedVolumeFunctor.hpp>
@@ -86,7 +86,7 @@ namespace Dune
 
 
     template <class GI, class RP, class BC, template <class, class> class IP>
-    inline void ImplicitCapillarity<GI, RP, BC, IP>::init(const parameter::ParameterGroup& param)
+    inline void ImplicitCapillarity<GI, RP, BC, IP>::init(const Opm::parameter::ParameterGroup& param)
     {
 	method_viscous_ = param.getDefault("method_viscous", method_viscous_);
 	method_gravity_ = param.getDefault("method_gravity", method_gravity_);
@@ -99,7 +99,7 @@ namespace Dune
     }
 
     template <class GI, class RP, class BC, template <class, class> class IP>
-    inline void ImplicitCapillarity<GI, RP, BC, IP>::init(const parameter::ParameterGroup& param,
+    inline void ImplicitCapillarity<GI, RP, BC, IP>::init(const Opm::parameter::ParameterGroup& param,
                                                           const GI& g, const RP& r, const BC& b)
     {
 	init(param);
@@ -141,10 +141,10 @@ namespace Dune
                                                              const double /*time*/,
                                                              const typename GI::Vector& gravity,
                                                              const PressureSolution& pressure_sol,
-                                                             const SparseVector<double>& injection_rates) const
+                                                             const Opm::SparseVector<double>& injection_rates) const
     {
         // Start a timer.
-        time::StopWatch clock;
+	Opm::time::StopWatch clock;
         clock.start();
 
         // Compute capillary mobilities.
@@ -204,11 +204,11 @@ namespace Dune
         double cap_press_range = max_cap_press - min_cap_press;
         double mod_low = 1e100;
         double mod_high = -1e100;
-        bracketZero(functor, 0.0, cap_press_range, mod_low, mod_high);
+	Opm::bracketZero(functor, 0.0, cap_press_range, mod_low, mod_high);
         const int max_iter = 40;
         const double nonlinear_tolerance = 1e-12;
         int iterations_used = -1;
-        double mod_correct = modifiedRegulaFalsi(functor, mod_low, mod_high, max_iter, nonlinear_tolerance, iterations_used);
+        double mod_correct = Opm::modifiedRegulaFalsi(functor, mod_low, mod_high, max_iter, nonlinear_tolerance, iterations_used);
         std::cout << "Moved capillary pressure solution by " << mod_correct << " after "
                   << iterations_used << " iterations." << std::endl;
         // saturation = functor.lastSaturations();

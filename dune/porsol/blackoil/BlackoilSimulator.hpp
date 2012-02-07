@@ -44,7 +44,7 @@ namespace Opm
     class BlackoilSimulator
     {
     public:
-        void init(const Dune::parameter::ParameterGroup& param);
+        void init(const Opm::parameter::ParameterGroup& param);
         void simulate();
 
         typedef GridT Grid;
@@ -109,7 +109,7 @@ namespace Opm
 template<class Grid, class Rock, class Fluid, class Wells, class FlowSolver, class TransportSolver>
 void
 BlackoilSimulator<Grid, Rock, Fluid, Wells, FlowSolver, TransportSolver>::
-init(const Dune::parameter::ParameterGroup& param)
+init(const Opm::parameter::ParameterGroup& param)
 {
     using namespace Dune;
     std::string fileformat = param.getDefault<std::string>("fileformat", "cartesian");
@@ -120,7 +120,7 @@ init(const Dune::parameter::ParameterGroup& param)
         bool turn_normals = param.getDefault<bool>("turn_normals", false);
         grid_.processEclipseFormat(parser, z_tolerance, periodic_extension, turn_normals);
         double perm_threshold_md = param.getDefault("perm_threshold_md", 0.0);
-        double perm_threshold = Dune::unit::convert::from(perm_threshold_md, Dune::prefix::milli*Dune::unit::darcy);
+        double perm_threshold = Opm::unit::convert::from(perm_threshold_md, Opm::prefix::milli*Opm::unit::darcy);
         rock_.init(parser, grid_.globalCell(), perm_threshold);
         fluid_.init(parser);
         wells_.init(parser, grid_, rock_);
@@ -189,7 +189,7 @@ init(const Dune::parameter::ParameterGroup& param)
     if (param.has("gravity")) {
         std::string g = param.get<std::string>("gravity");
         if (g == "standard") {
-            gravity_[2] = Dune::unit::gravity;
+            gravity_[2] = Opm::unit::gravity;
         } else {
             gravity_[2] = boost::lexical_cast<double>(g);
         }
@@ -238,8 +238,8 @@ init(const Dune::parameter::ParameterGroup& param)
     */
 
     bdy_z_ = flow_solver_.inflowMixture();
-    bdy_pressure_ = 300.0*Dune::unit::barsa;
-    // PhaseVec bdy_pressure_(100.0*Dune::unit::barsa); // WELLS
+    bdy_pressure_ = 300.0*Opm::unit::barsa;
+    // PhaseVec bdy_pressure_(100.0*Opm::unit::barsa); // WELLS
     // Rescale z values so that pore volume is filled exactly
     // (to get zero initial volume discrepancy).
     for (int cell = 0; cell < grid_.numCells(); ++cell) {
@@ -331,9 +331,9 @@ simulate()
         }
         std::cout << "\n\n================    Simulation step number " << step
                   << "    ==============="
-                  << "\n      Current time (days)     " << Dune::unit::convert::to(current_time, Dune::unit::day)
-                  << "\n      Current stepsize (days) " << Dune::unit::convert::to(stepsize, Dune::unit::day)
-                  << "\n      Total time (days)       " << Dune::unit::convert::to(total_time_, Dune::unit::day)
+                  << "\n      Current time (days)     " << Opm::unit::convert::to(current_time, Opm::unit::day)
+                  << "\n      Current stepsize (days) " << Opm::unit::convert::to(stepsize, Opm::unit::day)
+                  << "\n      Total time (days)       " << Opm::unit::convert::to(total_time_, Opm::unit::day)
                   << "\n" << std::endl;
 
         // Solve flow system.

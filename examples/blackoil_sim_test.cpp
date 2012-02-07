@@ -48,7 +48,7 @@ typedef Opm::BlackoilSimulator<Grid, Rock, Fluid, Wells, FlowSolver, TransportSo
 
 int main(int argc, char** argv)
 {
-    Dune::parameter::ParameterGroup param(argc, argv);
+    Opm::parameter::ParameterGroup param(argc, argv);
     Dune::MPIHelper::instance(argc,argv);
 
     // Initialize.
@@ -56,7 +56,7 @@ int main(int argc, char** argv)
     sim.init(param);
 
     // Run simulation.
-    Dune::time::StopWatch clock;
+    Opm::time::StopWatch clock;
     clock.start();
     sim.simulate();
     clock.stop();

@@ -37,8 +37,8 @@
 
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/CpGrid.hpp>
-#include opm/core/eclipse/EclipseGridParser.hpp>
-#include opm/core/eclipse/EclipseGridInspector.hpp>
+#include <opm/core/eclipse/EclipseGridParser.hpp>
+#include <opm/core/eclipse/EclipseGridInspector.hpp>
 
 #include <dune/porsol/common/fortran.hpp>
 #include <dune/porsol/common/blas_lapack.hpp>
@@ -48,7 +48,7 @@
 #include <dune/porsol/common/BoundaryConditions.hpp>
 
 #include <dune/porsol/mimetic/TpfaCompressible.hpp>
-#include <opm/core/utility/parameters/ParameterGroup.hpp>>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <dune/porsol/common/setupGridAndProps.hpp>
 #include <dune/porsol/common/Wells.hpp>
 #include <dune/porsol/blackoil/fluid/FluidMatrixInteractionBlackoil.hpp>
@@ -66,8 +66,8 @@ void test_flowsolver(const Grid& grid,
     typedef Dune::FlowBC BC;
     typedef Dune::BasicBoundaryConditions<true, false>  FBC;
     FBC flow_bc(7);
-    flow_bc.flowCond(1) = BC(BC::Dirichlet, 300.0*Dune::unit::barsa);
-    flow_bc.flowCond(2) = BC(BC::Dirichlet, 100.0*Dune::unit::barsa);
+    flow_bc.flowCond(1) = BC(BC::Dirichlet, 300.0*Opm::unit::barsa);
+    flow_bc.flowCond(2) = BC(BC::Dirichlet, 100.0*Opm::unit::barsa);
 
     // Gravity.
     typename Grid::Vector gravity(0.0);
@@ -95,7 +95,7 @@ void test_flowsolver(const Grid& grid,
     init_z[Fluid::Oil] = 1.0;
     std::vector<CompVec> z(grid.numCells(), init_z);
     MESSAGE("******* Assuming zero capillary pressures *******");
-    PhaseVec init_p(100.0*Dune::unit::barsa);
+    PhaseVec init_p(100.0*Opm::unit::barsa);
     std::vector<PhaseVec> cell_pressure(grid.numCells(), init_p);
     // Rescale z values so that pore volume is filled exactly
     // (to get zero initial volume discrepancy).
@@ -161,7 +161,7 @@ typedef Dune::TpfaCompressible<Grid, Rock, Fluid, Opm::Wells, FBC> FlowSolver;
 
 int main(int argc, char** argv)
 {
-    Dune::parameter::ParameterGroup param(argc, argv);
+    Opm::parameter::ParameterGroup param(argc, argv);
     Dune::MPIHelper::instance(argc,argv);
 
     // Make a grid and props.
@@ -181,23 +181,23 @@ int main(int argc, char** argv)
         bool turn_normals = param.getDefault<bool>("turn_normals", false);
         grid.processEclipseFormat(parser, z_tolerance, periodic_extension, turn_normals);
         double perm_threshold_md = param.getDefault("perm_threshold_md", 0.0);
-        double perm_threshold = Dune::unit::convert::from(perm_threshold_md, Dune::prefix::milli*Dune::unit::darcy);
+        double perm_threshold = Opm::unit::convert::from(perm_threshold_md, Opm::prefix::milli*Opm::unit::darcy);
         rock.init(parser, grid.globalCell(), perm_threshold);
         fluid.init(parser);
     } else if (fileformat == "cartesian") {
         Dune::array<int, 3> dims = {{ param.getDefault<int>("nx", 1),
                                       param.getDefault<int>("ny", 1),
                                       param.getDefault<int>("nz", 1) }};
-        Dune::array<double, 3> cellsz = {{ param.getDefault<double>("dx", 1.0),
+	Dune::array<double, 3> cellsz = {{ param.getDefault<double>("dx", 1.0),
                                            param.getDefault<double>("dy", 1.0),
                                            param.getDefault<double>("dz", 1.0) }};
         grid.createCartesian(dims, cellsz);
         double default_poro = param.getDefault("default_poro", 1.0);
         double default_perm_md = param.getDefault("default_perm_md", 100.0);
-        double default_perm = unit::convert::from(default_perm_md, prefix::milli*unit::darcy);
+        double default_perm = Opm::unit::convert::from(default_perm_md, Opm::prefix::milli*Opm::unit::darcy);
         MESSAGE("Warning: For generated cartesian grids, we use uniform rock properties.");
         rock.init(grid.size(0), default_poro, default_perm);
-        EclipseGridParser parser(param.get<std::string>("filename")); // Need a parser for the fluids anyway.
+	Opm::EclipseGridParser parser(param.get<std::string>("filename")); // Need a parser for the fluids anyway.
         fluid.init(parser);
     } else {
         THROW("Unknown file format string: " << fileformat);

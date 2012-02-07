@@ -70,7 +70,7 @@ namespace Opm
 	struct WellData { WellType type; WellControl control; double target; double reference_bhp_depth; };
         std::vector<WellData> well_data_;
         struct PerfData { int cell; double well_index; double pdelta; };
-        Dune::SparseTable<PerfData> perf_data_;
+        Opm::SparseTable<PerfData> perf_data_;
     };
 
 

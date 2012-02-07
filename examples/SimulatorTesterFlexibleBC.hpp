@@ -49,11 +49,11 @@ namespace Dune
         typedef typename Super::GridInterface GI;
         typedef typename Super::Vector Vector;
 
-        virtual void initSources(const parameter::ParameterGroup& param)
+        virtual void initSources(const Opm::parameter::ParameterGroup& param)
         {
             // Zero-initializing first.
             int nc = this->ginterf_.numberOfCells();
-	    this->injection_rates_ = SparseVector<double>(nc);
+	    this->injection_rates_ = Opm::SparseVector<double>(nc);
 	    this->injection_rates_psolver_.resize(nc, 0.0);
 
 //             this->injection_rates_.addElement(1.0, 0);
@@ -97,7 +97,7 @@ namespace Dune
             }
         }
 
-	virtual void initBoundaryConditions(const parameter::ParameterGroup& param)
+	virtual void initBoundaryConditions(const Opm::parameter::ParameterGroup& param)
 	{
 	    setupBoundaryConditions(param, this->ginterf_, this->bcond_);
 	}

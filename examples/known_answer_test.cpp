@@ -60,8 +60,8 @@
 
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/CpGrid.hpp>
-#include opm/core/eclipse/EclipseGridParser.hpp>
-#include opm/core/eclipse/EclipseGridInspector.hpp>
+#include <opm/core/eclipse/EclipseGridParser.hpp>
+#include <opm/core/eclipse/EclipseGridInspector.hpp>
 
 #include <dune/porsol/common/fortran.hpp>
 #include <dune/porsol/common/blas_lapack.hpp>
@@ -72,7 +72,7 @@
 
 #include <dune/porsol/mimetic/MimeticIPEvaluator.hpp>
 #include <dune/porsol/mimetic/IncompFlowSolverHybrid.hpp>
-#include <opm/core/utility/parameters/ParameterGroup.hpp>>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/core/utility/StopWatch.hpp>
 
 
@@ -251,7 +251,7 @@ void test_flowsolver(const GI& g, const RI& r, double tol, int kind)
     typename CI::Vector gravity(0.0);
 
     std::cout << "========== Init pressure solver =============" << std::endl;
-    Dune::time::StopWatch rolex;
+    Opm::time::StopWatch rolex;
     rolex.start();
     solver.init(g, r, gravity, flow_bc);
     rolex.stop();
@@ -292,7 +292,7 @@ void test_flowsolver(const GI& g, const RI& r, double tol, int kind)
 
 int main(int argc, char** argv)
 {
-    Dune::parameter::ParameterGroup param(argc, argv);
+    Opm::parameter::ParameterGroup param(argc, argv);
     Dune::MPIHelper::instance(argc,argv);
 
     // Make a grid
