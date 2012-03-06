@@ -96,7 +96,10 @@ public:
         // No gravity
         ::std::fill(gpress_.begin(), gpress_.end(), double(0.0));
 
-        ifs_tpfa_assemble(g, &trans_[0], &src[0], &gpress_[0], h_);
+        ifs_tpfa_forces f;
+        f.src = &src[0];
+
+        ifs_tpfa_assemble(g, &f, &trans_[0], &gpress_[0], h_);
 
         Opm::LinearSolverISTLAMG linsolve;
         linsolve.solve(h_->A, h_->b, h_->x);
