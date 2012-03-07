@@ -98,13 +98,14 @@ public:
 
         ifs_tpfa_forces f;
         f.src = &src[0];
+	f.bc = 0;
 
         ifs_tpfa_assemble(g, &f, &trans_[0], &gpress_[0], h_);
 
         Opm::LinearSolverISTLAMG linsolve;
         linsolve.solve(h_->A, h_->b, h_->x);
         
-        ifs_tpfa_press_flux(g, &trans_[0], h_,
+        ifs_tpfa_press_flux(g, &f, &trans_[0], h_,
                             &state.pressure()[0],
                             &state.faceflux()[0]);
     }
