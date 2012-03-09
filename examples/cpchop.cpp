@@ -367,6 +367,11 @@ int main(int argc, char** argv)
                     ++tesselatedCells; // keep count.
                 }
 
+                // If upscling=false, we still (may) want to have porosities together with endpoints
+                if (!upscale) {
+                    porosities.push_back(upscaler.upscalePorosity());
+                }
+
                 // Total porevolume and total volume -> upscaled porosity:
                 double poreVolume = std::accumulate(cellPoreVolumes.begin(), 
                                                     cellPoreVolumes.end(),
@@ -554,6 +559,9 @@ int main(int argc, char** argv)
         }
     }
     if (endpoints) {
+        if (!upscale) {
+            outputtmp << "                  Sw";
+        }
         outputtmp << "                  Swir                    Swor";
         if (cappres) {
             outputtmp << "                  Pc(Swir)                Pc2                     Pc3                     Pc4                     Pc(Swor)";            
@@ -586,6 +594,10 @@ int main(int argc, char** argv)
             }
 	}
 	if (endpoints) {
+            if (!upscale) {
+                outputtmp <<
+                    std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << porosities[sample-1] << '\t';
+            }
 	    outputtmp <<
 		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << minsws[sample-1] << '\t' <<
 		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << maxsws[sample-1];
