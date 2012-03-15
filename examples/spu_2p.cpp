@@ -77,7 +77,7 @@ public:
     {
         tpfa_htrans_compute(g, &rock.perm()[0], &htrans_[0]);
 
-        h_ = ifs_tpfa_construct(g);
+        h_ = ifs_tpfa_construct(g, 0);
     }
 
     ~PressureSolver() {
