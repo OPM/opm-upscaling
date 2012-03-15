@@ -104,10 +104,12 @@ public:
 
         Opm::LinearSolverISTLAMG linsolve;
         linsolve.solve(h_->A, h_->b, h_->x);
-        
-        ifs_tpfa_press_flux(g, &f, &trans_[0], h_,
-                            &state.pressure()[0],
-                            &state.faceflux()[0]);
+
+        ifs_tpfa_solution soln = { 0 };
+        soln.cell_press = &state.pressure()[0];
+        soln.face_flux  = &state.faceflux()[0];
+
+        ifs_tpfa_press_flux(g, &f, &trans_[0], h_, &soln);
     }
 
 private:
