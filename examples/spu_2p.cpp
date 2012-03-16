@@ -96,9 +96,8 @@ public:
         // No gravity
         ::std::fill(gpress_.begin(), gpress_.end(), double(0.0));
 
-        ifs_tpfa_forces f;
+        ifs_tpfa_forces f = { 0 };
         f.src = &src[0];
-	f.bc = 0;
 
         ifs_tpfa_assemble(g, &f, &trans_[0], &gpress_[0], h_);
 
