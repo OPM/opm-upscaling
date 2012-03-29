@@ -560,7 +560,7 @@ int main(int argc, char** argv)
     }
     if (endpoints) {
         if (!upscale) {
-            outputtmp << "                  Sw";
+            outputtmp << "          porosity";
         }
         outputtmp << "                  Swir                    Swor";
         if (cappres) {
