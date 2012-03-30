@@ -47,12 +47,14 @@
 #include <dune/porsol/common/Rock.hpp>
 #include <dune/porsol/common/BoundaryConditions.hpp>
 
+#include <dune/porsol/blackoil/fluid/BlackoilPVT.hpp>
+#include <dune/porsol/blackoil/BlackoilFluid.hpp>
+
 #include <dune/porsol/mimetic/TpfaCompressible.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <dune/porsol/common/setupGridAndProps.hpp>
 #include <dune/porsol/common/Wells.hpp>
 #include <dune/porsol/blackoil/fluid/FluidMatrixInteractionBlackoil.hpp>
-#include <dune/porsol/blackoil/BlackoilFluid.hpp>
 
 
 template<int dim, class Grid, class Rock, class Fluid, class FlowSolver>

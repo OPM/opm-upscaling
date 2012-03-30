@@ -21,6 +21,9 @@
 
 #include "config.h"
 
+#include <dune/porsol/blackoil/fluid/BlackoilPVT.hpp>
+#include <dune/porsol/blackoil/BlackoilFluid.hpp>
+
 #include <dune/porsol/blackoil/BlackoilSimulator.hpp>
 #include <dune/common/mpihelper.hh>
 #include <dune/porsol/common/SimulatorUtilities.hpp>
@@ -28,7 +31,6 @@
 #include <dune/porsol/common/Rock.hpp>
 #include <dune/porsol/mimetic/TpfaCompressible.hpp>
 #include <opm/core/utility/StopWatch.hpp>
-#include <dune/porsol/blackoil/BlackoilFluid.hpp>
 #include <dune/porsol/blackoil/BlackoilWells.hpp>
 #include <dune/porsol/blackoil/ComponentTransport.hpp>
 
