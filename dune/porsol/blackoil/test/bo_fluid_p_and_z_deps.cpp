@@ -20,9 +20,11 @@
 
 #include "config.h"
 
+#include <dune/porsol/blackoil/fluid/BlackoilPVT.hpp>
+#include <dune/porsol/blackoil/BlackoilFluid.hpp>
+
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/core/eclipse/EclipseGridParser.hpp>
-#include <dune/porsol/blackoil/BlackoilFluid.hpp>
 
 
 int main(int argc, char** argv)
