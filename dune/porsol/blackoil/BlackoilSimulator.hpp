@@ -537,6 +537,17 @@ output(const Grid& grid,
     // Total fluid volume
     std::copy(totflvol_dens.begin(), totflvol_dens.end(),
               std::ostream_iterator<double>(dump, " "));
+    dump << '\n'; 
+    // Well report ...
+    const double seconds_pr_day = 3600.*24.;
+    for (unsigned int perf=0; perf<Wells::WellReport::report()->perfPressure.size(); ++perf) {
+      dump << std::setw(8) << Wells::WellReport::report()->cellId[perf] << " "
+           << std::setw(22) << Wells::WellReport::report()->perfPressure[perf] << " "
+           << std::setw(22) << Wells::WellReport::report()->cellPressure[perf] << " "
+           << std::setw(22) << seconds_pr_day*Wells::WellReport::report()->massRate[perf][Fluid::Water] << " "
+           << std::setw(22) << seconds_pr_day*Wells::WellReport::report()->massRate[perf][Fluid::Oil] << " "
+           << std::setw(22) << seconds_pr_day*Wells::WellReport::report()->massRate[perf][Fluid::Gas] << '\n';
+    }
     dump << '\n';
 }
 

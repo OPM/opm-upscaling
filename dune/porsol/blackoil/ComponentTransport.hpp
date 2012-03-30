@@ -267,6 +267,7 @@ private: // Methods
         perf_cells_.clear();
         perf_flow_.clear();
         perf_props_.clear();
+        Wells::WellReport::report()->clearAll();
         int num_cells = pgrid_->numCells();
         for (int cell = 0; cell < num_cells; ++cell) {
             double flow = pwells_->wellToReservoirFlux(cell);
@@ -277,6 +278,9 @@ private: // Methods
                 PhaseVec well_pressure = flow > 0.0 ? PhaseVec(pwells_->perforationPressure(cell)) : cell_pressure[cell];
                 CompVec well_mixture = flow > 0.0 ? pwells_->injectionMixture(cell) : cell_z[cell];
                 perf_props_.push_back(computeProps(well_pressure, well_mixture));
+                Wells::WellReport::report()->perfPressure.push_back(pwells_->perforationPressure(cell));
+                Wells::WellReport::report()->cellPressure.push_back(cell_pressure[cell][0]);
+                Wells::WellReport::report()->cellId.push_back(cell);
             }
         }
     }
@@ -475,6 +479,7 @@ private: // Methods
                 change += z_in_phase;
             }
             comp_change[cell] += change;
+            Wells::WellReport::report()->massRate.push_back(change);
         }
     }
 

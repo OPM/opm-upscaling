@@ -62,6 +62,33 @@ namespace Opm
         double perforationPressure(int cell) const;
         double wellToReservoirFlux(int cell) const;
         CompVec injectionMixture(int cell) const;
+   
+        // Simple well report ...
+        class WellReport
+        {
+        public:
+            static WellReport* report()
+            {
+                if (well_report_ == 0x0)
+                  well_report_ = new WellReport;
+                return well_report_;
+            }
+            void clearAll()
+            {
+                perfPressure.clear();
+                cellPressure.clear();
+                massRate.clear();
+                cellId.clear();
+            }       
+            std::vector<double> perfPressure;
+            std::vector<double> cellPressure;
+            std::vector<BlackoilDefs::CompVec>  massRate; // (surface volumes)
+            std::vector<int> cellId;
+        protected:
+            WellReport() {}
+        private:
+            static WellReport* well_report_;
+        };
 
     private:
 	// Use the Peaceman well model to compute well indices
@@ -78,6 +105,7 @@ namespace Opm
 	std::vector<std::string> well_names_;
     };
 
+    BlackoilWells::WellReport* BlackoilWells::WellReport::well_report_ = 0x0;
 
     // ------------ Method implementations --------------
 
