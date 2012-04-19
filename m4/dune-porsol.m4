@@ -8,6 +8,11 @@ dnl -*- autoconf -*-
 # well as by dune-porsol itself
 AC_DEFUN([DUNE_PORSOL_CHECKS],
 [
+        dnl Check for "constexpr" support.
+        dnl Needed in some (optional) parts of the fluid system
+        dnl implementation.
+        AC_REQUIRE([AX_CXX0X_CONSTEXPR])
+
         # BLAS and LAPACK support.
         #
         # NOTE: ACX_LAPACK internally AC_REQUIRE's ACX_BLAS which,

@@ -22,6 +22,10 @@ AM_CONFIG_HEADER([config.h])
 # this implies checking for [dune-common], [dune-grid], [dune-istl], [dune-cornerpoint]
 DUNE_CHECK_ALL
 
+# Whether or not to enable features that depend on "constexpr" support.
+AM_CONDITIONAL([HAVE_CXX0X_CONSTEXPR],dnl
+  [test x"$HAVE_CXX0X_CONSTEXPR" = x"yes"])[]dnl
+
 # implicitly set the Dune-flags everywhere
 AC_SUBST(AM_CPPFLAGS, $DUNE_CPPFLAGS)
 AC_SUBST(AM_LDFLAGS, $DUNE_LDFLAGS)
