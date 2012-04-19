@@ -5,7 +5,6 @@ noinst_PROGRAMS =				\
 aniso_implicitcap_test				\
 aniso_simulator_test				\
 blackoil_sim_test				\
-co2_sim_test					\
 grdecl_to_legacy_test				\
 ifsh_solver_test				\
 implicitcap_test				\
@@ -67,12 +66,20 @@ aniso_implicitcap_test_SOURCES = aniso_implicitcap_test.cpp
 blackoil_sim_test_SOURCES = blackoil_sim_test.cpp
 blackoil_sim_test_LDADD = $(LDADD) ../lib/libduneporsol.la
 
-co2_sim_test_SOURCES = co2_sim_test.cpp
-co2_sim_test_LDADD = $(LDADD) ../lib/libduneporsol.la
-
 twophase2_test_SOURCES = twophase2_test.cpp
 twophase2_test_LDADD = $(LDADD) ../lib/libduneporsol.la
 
+# ----------------------------------------------------------------------
+# Tests programs reliant on recent compiler support, notably the
+# "constexpr" feature.
+#
+if HAVE_CXX0X_CONSTEXPR
+noinst_PROGRAMS +=				\
+co2_sim_test
+
+co2_sim_test_SOURCES = co2_sim_test.cpp
+co2_sim_test_LDADD = $(LDADD) ../lib/libduneporsol.la
+endif
 
 
 TESTS = $(check_PROGRAMS)
