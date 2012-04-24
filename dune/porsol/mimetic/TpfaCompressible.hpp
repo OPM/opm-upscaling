@@ -127,12 +127,17 @@ namespace Dune
         /// @param [in] bc
         ///    Boundary conditions.
         ///
+        /// @param [in] face_pressure
+        ///    Face pressures.  Allow optional micromanagement of 
+        ///    pressure boundary conditions.
+        ///
         void setup(const GridInterface&         grid,
                    const RockInterface&         rock,
                    const FluidInterface&        fluid,
                    const WellsInterface&        wells,
                    const typename GridInterface::Vector& grav,
-                   const BCInterface& bc)
+                   const BCInterface& bc,
+                   const std::vector<typename FluidInterface::PhaseVec>* face_pressure = 0)
         {
             pgrid_ = &grid;
             prock_ = &rock;
@@ -166,6 +171,9 @@ namespace Dune
                 if (face_bc.isDirichlet()) {
                     bctypes_[face] = PressureSolver::FBC_PRESSURE;
                     bcvalues_[face] = face_bc.pressure();
+                    if (face_bc.pressure() < 0.0) {
+                       bcvalues_[face] = (*face_pressure)[face][FluidInterface::Liquid];
+                    }
                 } else if (face_bc.isNeumann()) {
                     bctypes_[face] = PressureSolver::FBC_FLUX;
                     bcvalues_[face] = face_bc.outflux(); // TODO: may have to switch sign here depending on orientation.

@@ -182,6 +182,11 @@ init(const Opm::parameter::ParameterGroup& param)
     if (bdy_dirichlet) {
         flow_bc_.flowCond(1) = BC(BC::Dirichlet, param.get<double>("bdy_pressure_left"));
         flow_bc_.flowCond(2) = BC(BC::Dirichlet, param.get<double>("bdy_pressure_right"));
+    } else if (param.getDefault("lateral_dirichlet", false)) {
+        flow_bc_.flowCond(1) = BC(BC::Dirichlet, -17.0); // Use a negative value to instruct flow solver
+        flow_bc_.flowCond(2) = BC(BC::Dirichlet, -17.0); // to use initial face pressures (hydrostatic) 
+        flow_bc_.flowCond(3) = BC(BC::Dirichlet, -17.0); // as boundary conditions.
+        flow_bc_.flowCond(4) = BC(BC::Dirichlet, -17.0);
     }
 
     // Gravity.
@@ -194,16 +199,6 @@ init(const Opm::parameter::ParameterGroup& param)
             gravity_[2] = boost::lexical_cast<double>(g);
         }
     }
-
-    // Flow solver setup.
-    flow_solver_.setup(grid_, rock_, fluid_, wells_, gravity_, flow_bc_);
-
-    // Transport solver setup.
-    transport_solver_.setup(grid_, rock_, fluid_, wells_, flow_solver_.faceTransmissibilities(), gravity_);
-
-    // Simple source terms.
-    src_.resize(grid_.numCells(), 0.0);
-
 
     // Initial state.
     if (param.getDefault("spe9_init", false)) {
@@ -251,7 +246,7 @@ init(const Opm::parameter::ParameterGroup& param)
     state_.face_pressure_.resize(num_faces);
     for (int face = 0; face < num_faces; ++face) {
         int bid = grid_.boundaryId(face);
-        if (flow_bc_.flowCond(bid).isDirichlet()) {
+        if (flow_bc_.flowCond(bid).isDirichlet() && flow_bc_.flowCond(bid).pressure() >= 0.0) {
             state_.face_pressure_[face] = flow_bc_.flowCond(bid).pressure();
         } else {
             int c[2] = { grid_.faceCell(face, 0), grid_.faceCell(face, 1) };
@@ -266,6 +261,15 @@ init(const Opm::parameter::ParameterGroup& param)
             state_.face_pressure_[face] /= double(num);
         }
     }
+
+    // Flow solver setup.
+    flow_solver_.setup(grid_, rock_, fluid_, wells_, gravity_, flow_bc_, &(state_.face_pressure_));
+
+    // Transport solver setup.
+    transport_solver_.setup(grid_, rock_, fluid_, wells_, flow_solver_.faceTransmissibilities(), gravity_);
+
+    // Simple source terms.
+    src_.resize(grid_.numCells(), 0.0);
 
     // Set initial well perforation pressures equal to cell pressures,
     // and perforation fluxes equal to zero.
