@@ -197,10 +197,14 @@ namespace Dune
 
             // Create output streams for upscaled relative permeabilities
             std::string kr_filename = param.getDefault<std::string>("kr_filename", "upscaled_relperm");
-            std::string krw_filename = kr_filename + "_water";
-            std::string kro_filename = kr_filename + "_oil";
-            std::ofstream krw_out(krw_filename.c_str());
-            std::ofstream kro_out(kro_filename.c_str());
+            std::string krwtmpname = kr_filename + "_water";
+            std::string krotmpname = kr_filename + "_oil";
+            std::string krw_filename = param.getDefault<std::string>("outputWater", krwtmpname);
+            std::string kro_filename = param.getDefault<std::string>("outputOil", krotmpname);
+            //std::ofstream krw_out(krw_filename.c_str());
+            //std::ofstream kro_out(kro_filename.c_str());
+            std::stringstream krw_out; 
+            std::stringstream kro_out;
             krw_out << "# Result from steady state upscaling" << std::endl;
             krw_out << "# Pressuredrop  Sw  Krxx  Kryy  Krzz" << std::endl;
             kro_out << "# Result from steady state upscaling" << std::endl;
@@ -255,7 +259,23 @@ namespace Dune
 
                 }
             }
-        }
+            std::cout << krw_out << std::endl;
+            std::cout << kro_out << std::endl;
+            if (param.get<std::string>("outputWater") != "") {
+                // write water results to file
+                std::ofstream krw_outfile;
+                krw_outfile.open(krw_filename.c_str(), std::ios::out | std::ios::trunc);
+                krw_outfile << krw_out.str();
+                krw_outfile.close();
+            }
+            if (param.get<std::string>("outputOil") != "") {
+                // write water results to file
+                std::ofstream kro_outfile;
+                kro_outfile.open(kro_filename.c_str());
+                kro_outfile << kro_out.str();
+                kro_outfile.close();
+            }
+         }
     };
 
 
