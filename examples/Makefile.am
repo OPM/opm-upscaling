@@ -13,7 +13,8 @@ upscale_cap					\
 upscale_cond					\
 upscale_perm					\
 upscale_relperm					\
-upscale_relpermvisc
+upscale_relpermvisc                             \
+upscale_steadystate_implicit
 
 
 cpchop_SOURCES = cpchop.cpp
@@ -37,6 +38,8 @@ upscale_perm_SOURCES = upscale_perm.cpp
 upscale_relperm_SOURCES = upscale_relperm.cpp
 
 upscale_relpermvisc_SOURCES = upscale_relpermvisc.cpp
+
+upscale_steadystate_implicit_SOURCES = upscale_steadystate_implicit.cpp
 
 AM_CPPFLAGS += $(DUNEMPICPPFLAGS) $(BOOST_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 AM_LDFLAGS  += $(DUNEMPILDFLAGS) $(BOOST_LDFLAGS) $(SUPERLU_LDFLAGS)
