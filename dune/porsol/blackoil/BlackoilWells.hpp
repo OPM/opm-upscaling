@@ -255,7 +255,7 @@ namespace Opm
                             break;
                         case 1:  // RESV
                             well_data_[wix].control = Rate;
-                            well_data_[wix].target = wconinjes.wconinje[kw].fluid_volume_max_rate_;
+                            well_data_[wix].target = wconinjes.wconinje[kw].reservoir_flow_max_rate_;
                             break;
                         case 2:  // BHP
                             well_data_[wix].control = Pressure;
@@ -343,7 +343,7 @@ namespace Opm
                             break;
                         case 4:  // RESV 
                             well_data_[wix].control = Rate;
-                            well_data_[wix].target = wconprods.wconprod[kw].fluid_volume_max_rate_;
+                            well_data_[wix].target = wconprods.wconprod[kw].reservoir_flow_max_rate_;
                             break;
                         case 5:  // BHP
                             well_data_[wix].control = Pressure; 
