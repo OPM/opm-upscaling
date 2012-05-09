@@ -89,11 +89,16 @@ void usage()
         "  -points <integer>            -- Number of saturation points to upscale for." << endl <<
         "                                  Uniformly distributed within saturation endpoints." << endl <<
         "                                  Default 30." << endl << 
-        "  -relPermCurve <integer>      -- the column number in the stone-files that" << endl <<
-        "                                  represents the phase to be upscaled," << endl << 
+        "  -relPermCurve <integer>      -- For isotropic input, the column number in the stone-files" << endl <<
+        "                                  that represents the phase to be upscaled," << endl << 
         "                                  typically 2 (default) for water and 3 for oil." << endl <<
         "  -jFunctionCurve <integer>    -- the column number in the stone-files that" << endl << 
         "                                  represent the Leverett J-function. Default 4." << endl <<
+        "  -upscaleBothPhases <bool>    -- If this is true, relperm for both phases will be upscaled" << endl <<
+        "                                  and both will be outputted to Eclipse format. Default true." << endl <<
+        "                                  For isotropic input, relPermCurves is assumed to be 2 and 3," << endl <<
+        "                                  for anisotropic input, relPermCurves are assumed to be 3-5" << endl <<
+        "                                  and 6-8 respectively for the two phases" << endl <<
         "  -gravity <float>             -- use 9.81 for standard gravity. Default zero. Unit m/s^2." << endl <<
         "  -surfaceTension <float>      -- Surface tension to use in J-function/Pc conversion." << endl << 
         "                                  Default 11 dynes/cm (oil-water systems). In absence of" << endl <<  
@@ -118,6 +123,20 @@ void usage()
         "  -maxPerm <float>             -- Maximum floating point value allowed for" << endl <<
         "                                  permeability. " << endl <<
         "                                  Default 100000. Unit Millidarcy." << endl <<
+        "  -fluids <string>             -- Either ow for oil/water systems or go for gas/oil systems. Default ow." << endl <<
+        "                                  In case of go, the waterDensity option should be set to gas density" << endl <<
+        "                                  Also remember to specify the correct surface tension" << endl <<
+        "  -krowxswirr <float>          -- Oil relative permeability in x-direction at Swirr(from SWOF table)." << endl <<
+        "                                  In case of oil/gas, this value is needed to ensure consistensy" << endl <<
+        "                                  between SWOF and SGOF tables. Only has affect if fluids is set to go" << endl <<
+        "                                  and upscaleBothPhases is true." << endl <<
+        "                                  If not set, the point is not inserted into the final table." << endl <<
+        "  -krowyswirr <float>          -- Oil relative permeability in y-direction at Swirr(from SWOF table). See krowxswirr." << endl <<
+        "  -krowzswirr <float>          -- Oil relative permeability in z-direction at Swirr(from SWOF table). See krowxswirr." << endl <<
+        "  -doEclipseCheck <bool>       -- Default true. Check that input relperm curves includes relperms at critical" << endl <<
+        "                                  saturation points, i.e. that krw(swcrit)=0 and krow(swmax) = 0 and similar for oil/gas." << endl <<
+        "  -critRelpermThresh <float>   -- If minimum relperm values are less than this threshold, they are set to zero" << endl <<
+        "                                  and will pass the EclipseCheck. Default 10^-6" << endl <<
         "If only one stone-file is supplied, it is used for all stone-types defined" << endl <<
         "in the geometry. If more than one, it corresponds to the SATNUM-values." << endl;
     // "minPoro" intentionally left undocumented
@@ -206,6 +225,7 @@ int main(int varnum, char** vararg)
    options.insert(make_pair("bc",                 "f"     )); // Fixed boundary conditions 
    options.insert(make_pair("points",             "30"   )); // Number of saturation points (uniformly distributed within saturation endpoints)
    options.insert(make_pair("relPermCurve",       "2")); // Which column in the rock types are upscaled
+   options.insert(make_pair("upscaleBothPhases",  "true")); // Wheater to upscale for both phases in the same run. Default true.
    options.insert(make_pair("jFunctionCurve",     "4")); // Which column in the rock type file is the J-function curve
    options.insert(make_pair("surfaceTension",     "11")); // Surface tension given in dynes/cm
    options.insert(make_pair("output",             "")); // If this is set, output goes to screen and to this file. 
@@ -224,6 +244,13 @@ int main(int varnum, char** vararg)
    options.insert(make_pair("linsolver_tolerance", "1e-12"));  // residual tolerance for linear solver
    options.insert(make_pair("linsolver_verbosity", "0"));     // verbosity level for linear solver
    options.insert(make_pair("linsolver_type",      "1"));     // type of linear solver: 0 = ILU/BiCGStab, 1 = AMG/CG
+   options.insert(make_pair("fluids",              "ow")); // wheater upscaling for oil/water (ow) or gas/oil (go)
+   options.insert(make_pair("krowxswirr",          "-1")); // relative permeability in x direction of oil in corresponding oil/water system
+   options.insert(make_pair("krowyswirr",          "-1")); // relative permeability in y direction of oil in corresponding oil/water system
+   options.insert(make_pair("krowzswirr",          "-1")); // relative permeability in z direction of oil in corresponding oil/water system
+   options.insert(make_pair("doEclipseCheck",      "true")); // Check if minimum relpermvalues in input are zero (specify critical saturations)
+   options.insert(make_pair("critRelpermThresh",   "1e-6")); // Threshold for setting minimum relperm to 0 (thus specify critical saturations)
+   
 
    // Conversion factor, multiply mD numbers with this to get m² numbers
    const double milliDarcyToSqMetre = 9.869233e-16;
@@ -268,11 +295,27 @@ int main(int varnum, char** vararg)
        }
    }
      
+   // What fluid system are we dealing with? (oil/water or gas/oil)
+   bool owsystem;
+   string saturationstring = "";
+   if (options["fluids"] == "ow" || options["fluids"] == "wo") {
+       owsystem=true;
+       saturationstring = "Sw";
+   }
+   else if (options["fluids"] == "go" || options["fluids"] == "og") {
+       owsystem=false;
+       saturationstring = "Sg";
+   }
+   else {
+       if (isMaster) cerr << "Fluidsystem " << options["fluids"] << " not valid (-fluids option). Should be ow or go" << endl << endl;
+       usageandexit();
+   }
+
    // argeclindex should now point to the eclipse file
    static char* ECLIPSEFILENAME(vararg[argeclindex]);
    argeclindex += 1; // argeclindex jumps to next input argument, now it points to the stone files.
 
-   // Boolean set to true of input permeability in eclipse-file has diagonal anisotropy.
+   // Boolean set to true if input permeability in eclipse-file has diagonal anisotropy.
    // (full-tensor anisotropy will be ignored)
    bool anisotropic_input = false;
    
@@ -502,17 +545,21 @@ int main(int varnum, char** vararg)
    
    // If isotropic input && J-function scaling active
    std::vector<MonotCubicInterpolator> InvJfunctions; // Holds the inverse of the loaded J-functions.
-   std::vector<MonotCubicInterpolator> Krfunctions; // Holds relperm-curves for each stone type
+   std::vector<MonotCubicInterpolator> Krfunctions; // Holds relperm-curves for phase 1 for each stone type
+   std::vector<MonotCubicInterpolator> Krfunctions2; // Holds relperm-curves for phase 2 for each stone type
+
    
    
    // If anisotropic input
    std::vector<MonotCubicInterpolator> SwPcfunctions; // Holds Sw(Pc) for each rocktype.
-   std::vector<MonotCubicInterpolator> Krxfunctions, Kryfunctions, Krzfunctions;
+   std::vector<MonotCubicInterpolator> Krxfunctions, Kryfunctions, Krzfunctions, Krxfunctions2, Kryfunctions2, Krzfunctions2;
 
    std::vector<string> JfunctionNames; // Placeholder for the names of the loaded J-functions.
 
    // This decides whether we are upscaling water or oil relative permeability
    const int relPermCurve = atoi(options["relPermCurve"].c_str());
+   // This decides whether we are upscaling both phases in this run or only one
+   const bool upscaleBothPhases = (options["upscaleBothPhases"] == "true");
 
    const int jFunctionCurve        = atoi(options["jFunctionCurve"].c_str());
    const int points                = atoi(options["points"].c_str());
@@ -556,7 +603,13 @@ int main(int varnum, char** vararg)
              if (Jtmp.isStrictlyMonotone()) {
                  InvJfunctions.push_back(MonotCubicInterpolator(Jtmp.get_fVector(), Jtmp.get_xVector()));
                  JfunctionNames.push_back(ROCKFILENAME);
-                 Krfunctions.push_back(MonotCubicInterpolator(ROCKFILENAME, 1, relPermCurve));
+                 if (upscaleBothPhases) {
+                     Krfunctions.push_back(MonotCubicInterpolator(ROCKFILENAME, 1, 2));
+                     Krfunctions2.push_back(MonotCubicInterpolator(ROCKFILENAME, 1, 3));
+                 }
+                 else {
+                     Krfunctions.push_back(MonotCubicInterpolator(ROCKFILENAME, 1, relPermCurve));
+                 }
              }
              else {
                  if (isMaster) cerr << "Error: Jfunction " << i+1 << " in rock file " << ROCKFILENAME << " was not invertible." << endl;
@@ -570,7 +623,7 @@ int main(int varnum, char** vararg)
              }
              catch (const char * errormessage) {
                  if (isMaster) cerr << "Error: " << errormessage << endl;
-                 if (isMaster) cerr << "Check filename and columns 1 and 2 (Pc and Sw)" << endl;
+                 if (isMaster) cerr << "Check filename and columns 1 and 2 (Pc and " << saturationstring <<")" << endl;
                  usageandexit();
              }
              
@@ -581,9 +634,14 @@ int main(int varnum, char** vararg)
                  Krxfunctions.push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 3));
                  Kryfunctions.push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 4));
                  Krzfunctions.push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 5));
-             }
+                 if (upscaleBothPhases) {
+                     Krxfunctions2.push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 6));
+                     Kryfunctions2.push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 7));
+                     Krzfunctions2.push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 8));
+                 }
+              }
              else {
-                 if (isMaster) cerr << "Error: Pc(Sw) curve " << i+1 << " in rock file " << ROCKFILENAME << " was not invertible." << endl;
+                 if (isMaster) cerr << "Error: Pc(" << saturationstring << ") curve " << i+1 << " in rock file " << ROCKFILENAME << " was not invertible." << endl;
                  usageandexit();
              }
          }
@@ -593,51 +651,268 @@ int main(int varnum, char** vararg)
    // the file. This is stone_types-1 more than strictly necessary, so
    // it could have been simplified.
    else if (varnum == rockfileindex + 1) {
-      for (int i=0; i < stone_types; ++i) {
-         const char* ROCKFILENAME = vararg[rockfileindex];
-         // Check if rock file exists and is readable:
-         ifstream rockfile(ROCKFILENAME, ios::in);
-         if (rockfile.fail()) {
-            if (isMaster) cerr << "Error: Filename " << ROCKFILENAME << " not found or not readable." << endl;
-            usageandexit();
-         }
-         rockfile.close(); 
-
-         if (! anisotropic_input) {
-             MonotCubicInterpolator Jtmp; 
-             try {
-                 Jtmp = MonotCubicInterpolator(ROCKFILENAME, 1, jFunctionCurve);
-             }
-             catch (const char * errormessage) {
-                 if (isMaster) cerr << "Error: " << errormessage << endl;
-                 if (isMaster) cerr << "Check filename and -jFunctionCurve" << endl;
-                 usageandexit();
-             }
-             
-             // Invert J-function, now we get saturation as a function of pressure:
-             if (Jtmp.isStrictlyMonotone()) {
-                 InvJfunctions.push_back(MonotCubicInterpolator(Jtmp.get_fVector(), Jtmp.get_xVector()));
-                 JfunctionNames.push_back(vararg[rockfileindex]);
-                 Krfunctions.push_back(MonotCubicInterpolator(vararg[rockfileindex], 1, relPermCurve));
-             }
-             else {
-                 if (isMaster) cerr << "Error: Jfunction " << i+1 << " in rock file " << ROCKFILENAME << " was not invertible." << endl;
-                 usageandexit();
-             }
-         }
-         else { 
-             if (isMaster) cerr << "This functionality is not yet implemented." << endl;
-             usageandexit();
-         }
-      }
+       const char* ROCKFILENAME = vararg[rockfileindex];
+       // Check if rock file exists and is readable:
+       ifstream rockfile(ROCKFILENAME, ios::in);
+       if (rockfile.fail()) {
+           if (isMaster) cerr << "Error: Filename " << ROCKFILENAME << " not found or not readable." << endl;
+           usageandexit();
+       }
+       rockfile.close(); 
+       if (! anisotropic_input) {
+           MonotCubicInterpolator Jtmp; 
+           try {
+               Jtmp = MonotCubicInterpolator(ROCKFILENAME, 1, jFunctionCurve);
+           }
+           catch (const char * errormessage) {
+               if (isMaster) cerr << "Error: " << errormessage << endl;
+               if (isMaster) cerr << "Check filename and -jFunctionCurve" << endl;
+               usageandexit();
+           }
+           if (Jtmp.isStrictlyMonotone()) {
+               for (int i=0; i < stone_types; ++i) {
+                   // Invert J-function, now we get saturation as a function of pressure:
+                   InvJfunctions.push_back(MonotCubicInterpolator(Jtmp.get_fVector(), Jtmp.get_xVector()));
+                   JfunctionNames.push_back(vararg[rockfileindex]);
+                   if (upscaleBothPhases) {
+                       Krfunctions.push_back(MonotCubicInterpolator(vararg[rockfileindex], 1, 2));
+                       Krfunctions2.push_back(MonotCubicInterpolator(vararg[rockfileindex], 1, 3));
+                   }
+                   else {
+                       Krfunctions.push_back(MonotCubicInterpolator(vararg[rockfileindex], 1, relPermCurve));
+                   }
+               }
+           }
+           else {
+               if (isMaster) cerr << "Error: Jfunction " << 1 << " in rock file " << ROCKFILENAME << " was not invertible." << endl;
+               usageandexit();
+           }
+       }
+       else {
+           MonotCubicInterpolator Pctmp;
+           try {
+               Pctmp = MonotCubicInterpolator(ROCKFILENAME, 2, 1);
+           }
+           catch (const char * errormessage) {
+               if (isMaster) cerr << "Error: " << errormessage << endl;
+               if (isMaster) cerr << "Check filename and columns 1 and 2 (Pc and " << saturationstring <<")" << endl;
+               usageandexit();
+           }
+           // Invert Pc(Sw) curve into Sw(Pc):
+           if (Pctmp.isStrictlyMonotone()) {
+               for (int i=0; i < stone_types; ++i) { 
+                   SwPcfunctions.push_back(MonotCubicInterpolator(Pctmp.get_fVector(), Pctmp.get_xVector()));
+                   JfunctionNames.push_back(ROCKFILENAME);
+                   Krxfunctions.push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 3));
+                   Kryfunctions.push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 4));
+                   Krzfunctions.push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 5));
+                   if (upscaleBothPhases) {
+                       Krxfunctions2.push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 6));
+                       Kryfunctions2.push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 7));
+                       Krzfunctions2.push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 8));
+                   }
+               }
+           }
+           else {
+               if (isMaster) cerr << "Error: Pc(" << saturationstring << ") curve " << 1 << " in rock file " << ROCKFILENAME << " was not invertible." << endl;
+               usageandexit();
+           }           
+       }
    }
    else {
-      if (isMaster) cerr << "Error:  Wrong number of stone-functions provided. " << endl;
-      usageandexit();
+       if (isMaster) cerr << "Error:  Wrong number of stone-functions provided. " << endl;
+       usageandexit();
+   }
+   
+   // Check if input relperm curves satisfy Eclipse requirement of specifying critical saturations
+   const bool doEclipseCheck = (options["doEclipseCheck"] == "true");
+   double critRelpThresh = atof(options["critRelpermThresh"].c_str());
+   int numberofrockstocheck;
+   if (varnum == rockfileindex + stone_types) numberofrockstocheck = stone_types;
+   else numberofrockstocheck = 1;
+   if (doEclipseCheck) {
+       for (int i=0 ; i < numberofrockstocheck; ++i) {
+           if (anisotropic_input) {
+               double minrelpx = Krxfunctions[i].getMinimumF().second;
+               double minrelpy = Kryfunctions[i].getMinimumF().second;
+               double minrelpz = Krzfunctions[i].getMinimumF().second;
+               if (minrelpx == 0) ; // Do nothing
+               else if (minrelpx < critRelpThresh) {
+                   // set to 0
+                   vector<double> svec, kvec;
+                   svec = Krxfunctions[i].get_xVector();
+                   kvec = Krxfunctions[i].get_fVector();
+                   if (kvec[0] < critRelpThresh) {
+                       kvec[0] = 0.0;
+                   }
+                   else if (kvec[kvec.size()-1] < critRelpThresh) {
+                       kvec[kvec.size()-1] = 0.0;
+                   }
+                   Krxfunctions[i] = MonotCubicInterpolator(svec, kvec);
+               }
+               else {
+                   // Error message
+                   cerr << "Relperm curve for rock " << i << " does not specify critical saturation." << endl
+                        << "Minimum relperm value is " << minrelpx << ", critRelpermThresh is " << critRelpThresh << endl;
+                   usageandexit();
+               }
+               //
+               if (minrelpy == 0) ; // Do nothing
+               else if (minrelpy < critRelpThresh) {
+                   // set to 0
+                   vector<double> svec, kvec;
+                   svec = Kryfunctions[i].get_xVector();
+                   kvec = Kryfunctions[i].get_fVector();
+                   if (kvec[0] < critRelpThresh) {
+                       kvec[0] = 0.0;
+                   }
+                   else if (kvec[kvec.size()-1] < critRelpThresh) {
+                       kvec[kvec.size()-1] = 0.0;
+                   }
+                   Kryfunctions[i] = MonotCubicInterpolator(svec, kvec);
+               }
+               else {
+                   // Error message
+                   cerr << "Relperm curve for rock " << i << " does not specify critical saturation." << endl
+                        << "Minimum relperm value is " << minrelpy << ", critRelpermThresh is " << critRelpThresh << endl;
+                   usageandexit();
+               }
+               //
+               if (minrelpz == 0) ; // Do nothing
+               else if (minrelpz < critRelpThresh) {
+                   // set to 0
+                   vector<double> svec, kvec;
+                   svec = Krzfunctions[i].get_xVector();
+                   kvec = Krzfunctions[i].get_fVector();
+                   if (kvec[0] < critRelpThresh) {
+                       kvec[0] = 0.0;
+                   }
+                   else if (kvec[kvec.size()-1] < critRelpThresh) {
+                       kvec[kvec.size()-1] = 0.0;
+                   }
+                   Krzfunctions[i] = MonotCubicInterpolator(svec, kvec);
+               }
+               else {
+                   // Error message
+                   cerr << "Relperm curve for rock " << i << " does not specify critical saturation." << endl
+                        << "Minimum relperm value is " << minrelpz << ", critRelpermThresh is " << critRelpThresh << endl;
+                   usageandexit();
+               }
+               //
+               if (upscaleBothPhases) {
+                   minrelpx = Krxfunctions2[i].getMinimumF().second;
+                   minrelpy = Kryfunctions2[i].getMinimumF().second;
+                   minrelpz = Krzfunctions2[i].getMinimumF().second;
+                   if (minrelpx == 0) ; // Do nothing
+                   else if (minrelpx < critRelpThresh) {
+                       // set to 0
+                       vector<double> svec, kvec;
+                       svec = Krxfunctions2[i].get_xVector();
+                       kvec = Krxfunctions2[i].get_fVector();
+                       if (kvec[0] < critRelpThresh) {
+                           kvec[0] = 0.0;
+                       }
+                       else if (kvec[kvec.size()-1] < critRelpThresh) {
+                           kvec[kvec.size()-1] = 0.0;
+                       }
+                       Krxfunctions2[i] = MonotCubicInterpolator(svec, kvec);
+                   }
+                   else {
+                       // Error message
+                       cerr << "Relperm curve for rock " << i << " does not specify critical saturation." << endl
+                            << "Minimum relperm value is " << minrelpx << ", critRelpermThresh is " << critRelpThresh << endl;
+                       usageandexit();
+                   }
+                   //
+                   if (minrelpy == 0) ; // Do nothing
+                   else if (minrelpy < critRelpThresh) {
+                       // set to 0
+                       vector<double> svec, kvec;
+                       svec = Kryfunctions2[i].get_xVector();
+                       kvec = Kryfunctions2[i].get_fVector();
+                       if (kvec[0] < critRelpThresh) {
+                           kvec[0] = 0.0;
+                       }
+                       else if (kvec[kvec.size()-1] < critRelpThresh) {
+                           kvec[kvec.size()-1] = 0.0;
+                       }
+                       Kryfunctions2[i] = MonotCubicInterpolator(svec, kvec);
+                   }
+                   else {
+                       // Error message
+                       cerr << "Relperm curve for rock " << i << " does not specify critical saturation." << endl
+                            << "Minimum relperm value is " << minrelpy << ", critRelpermThresh is " << critRelpThresh << endl;
+                       usageandexit();
+                   }
+                   //
+                   if (minrelpz == 0) ; // Do nothing
+                   else if (minrelpz < critRelpThresh) {
+                       // set to 0
+                       vector<double> svec, kvec;
+                       svec = Krzfunctions2[i].get_xVector();
+                       kvec = Krzfunctions2[i].get_fVector();
+                       if (kvec[0] < critRelpThresh) {
+                           kvec[0] = 0.0;
+                       }
+                       else if (kvec[kvec.size()-1] < critRelpThresh) {
+                           kvec[kvec.size()-1] = 0.0;
+                       }
+                       Krzfunctions2[i] = MonotCubicInterpolator(svec, kvec);
+                   }
+                   else {
+                       // Error message
+                       cerr << "Relperm curve for rock " << i << " does not specify critical saturation." << endl
+                            << "Minimum relperm value is " << minrelpz << ", critRelpermThresh is " << critRelpThresh << endl;
+                       usageandexit();
+                   }
+                   //
+               }                   
+           }
+           else {
+               double minrelp = Krfunctions[i].getMinimumF().second;
+               if (minrelp == 0) ; // Do nothing
+               else if (minrelp < critRelpThresh) {
+                   // set to 0
+                   vector<double> svec, kvec;
+                   svec = Krfunctions[i].get_xVector();
+                   kvec = Krfunctions[i].get_fVector();
+                   if (kvec[0] < critRelpThresh) {
+                       kvec[0] = 0.0;
+                   }
+                   else if (kvec[kvec.size()-1] < critRelpThresh) {
+                       kvec[kvec.size()-1] = 0.0;
+                   }
+                   Krfunctions[i] = MonotCubicInterpolator(svec, kvec);
+               }
+               else {
+                   // Error message
+                   cerr << "Relperm curve for rock " << i << " does not specify critical saturation." << endl
+                        << "Minimum relperm value is " << minrelp << ", critRelpermThresh is " << critRelpThresh << endl;
+                   usageandexit();
+               }
+               if (upscaleBothPhases) {
+                   minrelp = Krfunctions2[i].getMinimumF().second;
+                   if (minrelp == 0) ;
+                   else if (minrelp < critRelpThresh) {
+                       // set to 0
+                       vector<double> svec, kvec;
+                       svec = Krfunctions2[i].get_xVector();
+                       kvec = Krfunctions2[i].get_fVector();
+                       if (kvec[0] < critRelpThresh) kvec[0] = 0.0;
+                       else if (kvec[kvec.size()-1] < critRelpThresh) kvec[kvec.size()-1] = 0.0;
+                       Krfunctions2[i] = MonotCubicInterpolator(svec, kvec);
+                   }
+                   else {
+                       // Error message
+                       cerr << "Relperm curve for rock " << i << " does not specify critical saturation." 
+                            << "Minimum relperm value is " << minrelp << ", critRelpermThresh is " << critRelpThresh << endl;
+                       usageandexit();
+                   }
+               }
+           }
+       }
    }
 
-
-   
    /*****************************************************************************
     * Step 4:
     * Generate tesselated grid:
@@ -844,8 +1119,8 @@ int main(int varnum, char** vararg)
        cout << "LF Pore volume:    " << poreVolume << endl;
        cout << "LF Volume:         " << volume << endl;
        cout << "Upscaled porosity: " << poreVolume/volume << endl;
-       cout << "Upscaled Swir:     " << Swir << endl;
-       cout << "Upscaled Swmax:    " << Swor << endl; //Swor=1-Swmax
+       cout << "Upscaled " << saturationstring << "ir:     " << Swir << endl;
+       cout << "Upscaled " << saturationstring << "max:    " << Swor << endl; //Swor=1-Swmax
        cout << "Saturation points to be computed: " << points << endl;
    }
 
@@ -860,7 +1135,7 @@ int main(int varnum, char** vararg)
        Swir = 0.0;
    }
    if (Swir < 0 || Swir > 1 || Swor < 0 || Swor > 1) {
-       if (isMaster) cerr << "ERROR: Swir/Swor unsensible. Check your input. Exiting";
+       if (isMaster) cerr << "ERROR: " << saturationstring << "ir/" << saturationstring << "or unsensible. Check your input. Exiting";
        usageandexit();
    }      
    
@@ -960,10 +1235,10 @@ int main(int varnum, char** vararg)
        if (isMaster) {
            cerr << "Error: Upscaled water saturation not strictly monotone in capillary pressure." << endl;
            cerr << "       Unphysical input data, exiting." << endl;
-           cerr << "       Trying to dump Sw vs Pc to file swvspc_debug.txt for inspection" << endl; 
+           cerr << "       Trying to dump " << saturationstring << " vs Pc to file swvspc_debug.txt for inspection" << endl; 
            ofstream outfile; 
            outfile.open("swvspc_debug.txt", ios::out | ios::trunc); 
-           outfile << "# Pc      Sw" << endl; 
+           outfile << "# Pc      " << saturationstring << endl; 
            outfile << WaterSaturationVsCapPressure.toString(); 
            outfile.close();   
        }
@@ -1030,6 +1305,7 @@ int main(int varnum, char** vararg)
    // Empty vectors for computed data. Will be null for some of the data in an MPI-setting
    vector<double> WaterSaturation; // This will hold re-upscaled water saturation for the computed pressure points.
    vector<vector<double> > PhasePerm;  // 'tensorElementCount' phaseperm values per pressurepoint.
+   vector<vector<double> > Phase2Perm;  // 'tensorElementCount' phaseperm values per pressurepoint. for phase 2
 
 
    // Put correct number of zeros in, just to be able to access RelPerm[index] later 
@@ -1040,6 +1316,12 @@ int main(int varnum, char** vararg)
        for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) { 
            PhasePerm[idx].push_back(0.0); 
        } 
+       if (upscaleBothPhases){
+           Phase2Perm.push_back(tmp);
+           for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) { 
+               Phase2Perm[idx].push_back(0.0); 
+           }            
+       }
    }
 
    // Make vector of capillary pressure points corresponding to uniformly distribued
@@ -1085,86 +1367,114 @@ int main(int varnum, char** vararg)
 
        // Should "I" (mpi-wise) compute this pressure point?
        if (node_vs_pressurepoint[pointidx] == mpi_rank) {
-                  
+           
            Ptestvalue = pressurePoints[pointidx];
            
            double accPhasePerm = 0.0;
+           double accPhase2Perm = 0.0;
            
            double maxPhasePerm = 0.0;
+           double maxPhase2Perm = 0.0;
            
-           vector<double> phasePermValues;
-           vector<vector<double> > phasePermValuesDiag;
+           vector<double> phasePermValues, phase2PermValues;
+           vector<vector<double> > phasePermValuesDiag, phase2PermValuesDiag;
            phasePermValues.resize(satnums.size());
            phasePermValuesDiag.resize(satnums.size());
+           if (upscaleBothPhases) {
+               phase2PermValues.resize(satnums.size());
+               phase2PermValuesDiag.resize(satnums.size());
+           }
            waterVolumeLF = 0.0;
            for (unsigned int i = 0; i < ecl_idx.size(); ++i) {
                unsigned int cell_idx = ecl_idx[i];
-                   double cellPhasePerm = minPerm;
-                   vector<double>  cellPhasePermDiag;
-                   cellPhasePermDiag.push_back(minPerm);
-                   cellPhasePermDiag.push_back(minPerm);
-                   cellPhasePermDiag.push_back(minPerm);
+               double cellPhasePerm = minPerm;
+               double cellPhase2Perm = minPerm;
+               vector<double>  cellPhasePermDiag, cellPhase2PermDiag;
+               cellPhasePermDiag.push_back(minPerm);
+               cellPhasePermDiag.push_back(minPerm);
+               cellPhasePermDiag.push_back(minPerm);
+               if (upscaleBothPhases) {
+                   cellPhase2PermDiag.push_back(minPerm);
+                   cellPhase2PermDiag.push_back(minPerm);
+                   cellPhase2PermDiag.push_back(minPerm);
+               }
+               
+               if (satnums[cell_idx] > 0) { // handle "no rock" cells with satnum zero
+                   //            cout << endl << "Cell no. " << cell_idx << endl;
+                   double PtestvalueCell;
+                   if (includeGravity) {
+                       PtestvalueCell = Ptestvalue - dP[cell_idx];
+                   }
+                   else {
+                       PtestvalueCell = Ptestvalue;
+                   }
                    
- 
-                   if (satnums[cell_idx] > 0) { // handle "no rock" cells with satnum zero
-                       //            cout << endl << "Cell no. " << cell_idx << endl;
-                       double PtestvalueCell;
-                       if (includeGravity) {
-                           PtestvalueCell = Ptestvalue - dP[cell_idx];
-                       }
-                       else {
-                           PtestvalueCell = Ptestvalue;
-                       }
+                   if (! anisotropic_input) {
                        
-                       if (! anisotropic_input) {
-                           
-                           double Jvalue = sqrt(permxs[cell_idx] * milliDarcyToSqMetre/poros[cell_idx]) * PtestvalueCell / surfaceTension;
-                           //cout << "JvalueCell: " << Jvalue << endl;
-                           double waterSaturationCell 
-                               = InvJfunctions[int(satnums[cell_idx])-1].evaluate(Jvalue);
-                           waterVolumeLF += waterSaturationCell * cellPoreVolumes[cell_idx];
-                           
-                           // Compute cell relative permeability. We use a lower cutoff-value as we
-                           // easily divide by zero here.  When water saturation is
-                           // zero, we get 'inf', which is circumvented by the cutoff value.
-                           
-                           cellPhasePerm = 
-                               Krfunctions[int(satnums[cell_idx])-1].evaluate(waterSaturationCell) * 
+                       double Jvalue = sqrt(permxs[cell_idx] * milliDarcyToSqMetre/poros[cell_idx]) * PtestvalueCell / surfaceTension;
+                       //cout << "JvalueCell: " << Jvalue << endl;
+                       double waterSaturationCell 
+                           = InvJfunctions[int(satnums[cell_idx])-1].evaluate(Jvalue);
+                       waterVolumeLF += waterSaturationCell * cellPoreVolumes[cell_idx];
+                       
+                       // Compute cell relative permeability. We use a lower cutoff-value as we
+                       // easily divide by zero here.  When water saturation is
+                       // zero, we get 'inf', which is circumvented by the cutoff value.
+                       cellPhasePerm = 
+                           Krfunctions[int(satnums[cell_idx])-1].evaluate(waterSaturationCell) * 
+                           permxs[cell_idx];
+                       cout << "cell: " << cell_idx << " sw: " << waterSaturationCell << " relperm: " << Krfunctions[int(satnums[cell_idx])-1].evaluate(waterSaturationCell) 
+                            << " cellphaseperm: " << cellPhasePerm << endl;
+                       if (upscaleBothPhases) {
+                           cellPhase2Perm = 
+                               Krfunctions2[int(satnums[cell_idx])-1].evaluate(waterSaturationCell) * 
                                permxs[cell_idx];
                        }
-                       else {
-                           double waterSaturationCell = SwPcfunctions[int(satnums[cell_idx])-1].evaluate(PtestvalueCell);
-                           //cout << PtestvalueCell << "\t" << waterSaturationCell << endl;
-                           waterVolumeLF += waterSaturationCell * cellPoreVolumes[cell_idx];
-
-                           cellPhasePermDiag[0] = Krxfunctions[int(satnums[cell_idx])-1].evaluate(waterSaturationCell) * 
+                   }
+                   else {
+                       double waterSaturationCell = SwPcfunctions[int(satnums[cell_idx])-1].evaluate(PtestvalueCell);
+                       //cout << PtestvalueCell << "\t" << waterSaturationCell << endl;
+                       waterVolumeLF += waterSaturationCell * cellPoreVolumes[cell_idx];
+                       
+                       cellPhasePermDiag[0] = Krxfunctions[int(satnums[cell_idx])-1].evaluate(waterSaturationCell) * 
+                           permxs[cell_idx];
+                       cellPhasePermDiag[1] = Kryfunctions[int(satnums[cell_idx])-1].evaluate(waterSaturationCell) * 
+                           permys[cell_idx];
+                       cellPhasePermDiag[2] = Krzfunctions[int(satnums[cell_idx])-1].evaluate(waterSaturationCell) * 
+                           permzs[cell_idx];
+                       if (upscaleBothPhases) {
+                           cellPhase2PermDiag[0] = Krxfunctions2[int(satnums[cell_idx])-1].evaluate(waterSaturationCell) * 
                                permxs[cell_idx];
-                           cellPhasePermDiag[1] = Kryfunctions[int(satnums[cell_idx])-1].evaluate(waterSaturationCell) * 
+                           cellPhase2PermDiag[1] = Kryfunctions2[int(satnums[cell_idx])-1].evaluate(waterSaturationCell) * 
                                permys[cell_idx];
-                           cellPhasePermDiag[2] = Krzfunctions[int(satnums[cell_idx])-1].evaluate(waterSaturationCell) * 
-                               permzs[cell_idx];
-                           //cout << permxs[cell_idx] << " " << permys[cell_idx] <<  " " << cellPhasePermDiag[0] << " " << cellPhasePermDiag[1] << endl;
-                           
-//                        }
+                           cellPhase2PermDiag[2] = Krzfunctions2[int(satnums[cell_idx])-1].evaluate(waterSaturationCell) * 
+                               permzs[cell_idx];                           
+                       }
                    }
                    
                    phasePermValues[cell_idx] = cellPhasePerm;
                    phasePermValuesDiag[cell_idx] = cellPhasePermDiag;
                    maxPhasePerm = max(maxPhasePerm, cellPhasePerm);
                    maxPhasePerm = max(maxPhasePerm, *max_element(cellPhasePermDiag.begin(),
-                                                                cellPhasePermDiag.end()));
+                                                                 cellPhasePermDiag.end()));
+                   if (upscaleBothPhases) {
+                       phase2PermValues[cell_idx] = cellPhase2Perm;
+                       phase2PermValuesDiag[cell_idx] = cellPhase2PermDiag;
+                       maxPhase2Perm = max(maxPhase2Perm, cellPhase2Perm);
+                       maxPhase2Perm = max(maxPhase2Perm, *max_element(cellPhase2PermDiag.begin(),
+                                                                     cellPhase2PermDiag.end()));
+                   }
                }
-
            }
            // Now we can determine the smallest permitted permeability we can calculate for
-
 
            // We have both a fixed bottom limit, as well as a possible higher limit determined
            // by a maximum allowable permeability.
            double minPhasePerm = max(maxPhasePerm/maxPermContrast, minPerm);
-           
+           double minPhase2Perm;
+           if (upscaleBothPhases) minPhase2Perm = max(maxPhase2Perm/maxPermContrast, minPerm);
 
-           // Now remodel the phase permeabilities obeying minPhasePerm.
+           // Now remodel the phase permeabilities obeying minPhasePerm
            Matrix cellperm = zeroMatrix;
            for (unsigned int i = 0; i < ecl_idx.size(); ++i) {
                unsigned int cell_idx = ecl_idx[i];
@@ -1196,6 +1506,36 @@ int main(int varnum, char** vararg)
            //  Call single-phase upscaling code 
            Matrix phasePermTensor = upscaler.upscaleSinglePhase();
            
+           // Now upscale phase permeability for phase 2
+           Matrix phase2PermTensor;
+           if (upscaleBothPhases) {
+               cellperm = zeroMatrix;
+               for (unsigned int i = 0; i < ecl_idx.size(); ++i) {
+                   unsigned int cell_idx = ecl_idx[i];
+                   zero(cellperm);
+                   if (! anisotropic_input) {
+                       double cellPhase2Perm = max(minPhase2Perm, phase2PermValues[cell_idx]);
+                       accPhase2Perm += cellPhase2Perm;
+                       double kval = max(minPhase2Perm, cellPhase2Perm);
+                       cellperm(0,0) = kval;
+                       cellperm(1,1) = kval;
+                       cellperm(2,2) = kval;
+                   }
+                   else { // anisotropic_input
+                       // Truncate values lower than minPhasePerm upwards.
+                       phase2PermValuesDiag[cell_idx][0] = max(minPhase2Perm, phase2PermValuesDiag[cell_idx][0]);
+                       phase2PermValuesDiag[cell_idx][1] = max(minPhase2Perm, phase2PermValuesDiag[cell_idx][1]);
+                       phase2PermValuesDiag[cell_idx][2] = max(minPhase2Perm, phase2PermValuesDiag[cell_idx][2]);
+                       accPhase2Perm += phase2PermValuesDiag[cell_idx][0]; // not correct anyway                   
+                       cellperm(0,0) = phase2PermValuesDiag[cell_idx][0];
+                       cellperm(1,1) = phase2PermValuesDiag[cell_idx][1];
+                       cellperm(2,2) = phase2PermValuesDiag[cell_idx][2];
+                   }
+                   upscaler.setPermeability(i, cellperm);
+               }
+               phase2PermTensor = upscaler.upscaleSinglePhase();
+           }
+
            //cout << phasePermTensor << endl;
 
 
@@ -1216,6 +1556,10 @@ int main(int varnum, char** vararg)
            for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) { 
                PhasePerm[pointidx][voigtIdx] = getVoigtValue(phasePermTensor, voigtIdx); 
                cout << "\t" << getVoigtValue(phasePermTensor, voigtIdx);
+               if (upscaleBothPhases){
+                   Phase2Perm[pointidx][voigtIdx] = getVoigtValue(phase2PermTensor, voigtIdx);
+                   cout << "\t" << getVoigtValue(phase2PermTensor, voigtIdx);
+               }
            } 
            cout << endl;
        }
@@ -1235,13 +1579,28 @@ int main(int varnum, char** vararg)
        for (int idx=0; idx < points; ++idx) {
            if (node_vs_pressurepoint[idx] != 0) {
                // Receive data
-               double recvbuffer[2+tensorElementCount];
-               MPI_Recv(recvbuffer, 2+tensorElementCount, MPI_DOUBLE, 
-                        node_vs_pressurepoint[idx], 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-               // Put received data into correct place.
-               WaterSaturation[(int)recvbuffer[0]] = recvbuffer[1];
-               for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) {
-                   PhasePerm[(int)recvbuffer[0]][voigtIdx] = recvbuffer[2+voigtIdx];
+               if (upscaleBothPhases) {
+                   double recvbuffer[2+2*tensorElementCount];
+                   MPI_Recv(recvbuffer, 2+2*tensorElementCount, MPI_DOUBLE, 
+                            node_vs_pressurepoint[idx], 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                   // Put received data into correct place.
+                   WaterSaturation[(int)recvbuffer[0]] = recvbuffer[1];
+                   for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) {
+                       PhasePerm[(int)recvbuffer[0]][voigtIdx] = recvbuffer[2+voigtIdx];
+                   }
+                   for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) {
+                       Phase2Perm[(int)recvbuffer[0]][voigtIdx] = recvbuffer[2+tensorElementCount+voigtIdx];
+                   }
+               }
+               else {
+                   double recvbuffer[2+tensorElementCount];
+                   MPI_Recv(recvbuffer, 2+tensorElementCount, MPI_DOUBLE, 
+                            node_vs_pressurepoint[idx], 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                   // Put received data into correct place.
+                   WaterSaturation[(int)recvbuffer[0]] = recvbuffer[1];
+                   for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) {
+                       PhasePerm[(int)recvbuffer[0]][voigtIdx] = recvbuffer[2+voigtIdx];
+                   }
                }
            }
        }
@@ -1250,13 +1609,27 @@ int main(int varnum, char** vararg)
        for (int idx=0; idx < points; ++idx) {
            if (node_vs_pressurepoint[idx] == mpi_rank) {
                // Pack and send data. C-style.
-               double sendbuffer[2+tensorElementCount];
-               sendbuffer[0] = (double)idx;
-               sendbuffer[1] = WaterSaturation[idx];
-               for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) {
-                   sendbuffer[2+voigtIdx] = PhasePerm[idx][voigtIdx];
+               if (upscaleBothPhases) {
+                   double sendbuffer[2+2*tensorElementCount];
+                   sendbuffer[0] = (double)idx;
+                   sendbuffer[1] = WaterSaturation[idx];
+                   for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) {
+                       sendbuffer[2+voigtIdx] = PhasePerm[idx][voigtIdx];
+                   }
+                   for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) {
+                       sendbuffer[2+tensorElementCount+voigtIdx] = Phase2Perm[idx][voigtIdx];
+                   }                   
+                   MPI_Send(sendbuffer, 2+tensorElementCount, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
                }
-               MPI_Send(sendbuffer, 2+tensorElementCount, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+               else {
+                   double sendbuffer[2+tensorElementCount];
+                   sendbuffer[0] = (double)idx;
+                   sendbuffer[1] = WaterSaturation[idx];
+                   for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) {
+                       sendbuffer[2+voigtIdx] = PhasePerm[idx][voigtIdx];
+                   }
+                   MPI_Send(sendbuffer, 2+tensorElementCount, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+               }
            }
        }
    }
@@ -1305,6 +1678,63 @@ int main(int varnum, char** vararg)
        }
    }
 
+   vector<vector <double> > RelPermValues2; // voigtIdx is first index.
+   if (upscaleBothPhases) {
+       for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) {
+           vector<double> tmp;
+           RelPermValues2.push_back(tmp);
+       }
+       if (isMaster) {
+           // Loop over all pressure points 
+           for (int idx=0; idx < points; ++idx) {
+               Matrix phasePermTensor = zeroMatrix;
+               zero(phasePermTensor);
+               for (int voigtIdx = 0; voigtIdx < tensorElementCount; ++voigtIdx) {
+                   setVoigtValue(phasePermTensor, voigtIdx, Phase2Perm[idx][voigtIdx]);
+               }
+               //cout << phasePermTensor << endl;
+               Matrix relPermTensor = zeroMatrix;
+               // relPermTensor = phasePermTensor;
+               // relPermTensor *= permTensorInv;
+               prod(phasePermTensor, permTensorInv, relPermTensor);
+               for (int voigtIdx = 0; voigtIdx < tensorElementCount; ++voigtIdx) {
+                   RelPermValues2[voigtIdx].push_back(getVoigtValue(relPermTensor, voigtIdx));
+               }
+               //cout << relPermTensor << endl;
+           }
+       }
+   }
+
+   // If doEclipseCheck, critical saturation points should be specified by 0 relperm
+   // Numerical errors and maxpermcontrast violate this even if the input has specified
+   // these points
+   if (isMaster) {
+       if (doEclipseCheck) {
+           for (int voigtIdx = 0; voigtIdx < tensorElementCount; ++voigtIdx) {
+               int minidx;
+               if (RelPermValues[voigtIdx][0] < RelPermValues[voigtIdx][points-1]) minidx = 0; else minidx = points-1;
+               if (RelPermValues[voigtIdx][minidx] < critRelpThresh) {
+                   RelPermValues[voigtIdx][minidx] = 0.0;
+               }
+               else {
+                   cerr << "Minimum upscaled relperm value is " << RelPermValues[voigtIdx][minidx] << ", larger than critRelpermThresh." << endl
+                        << "(voigtidx = " << voigtIdx << ")" << endl;
+                   usageandexit();
+               }
+               if (upscaleBothPhases) {
+                   if (RelPermValues2[voigtIdx][0] < RelPermValues2[voigtIdx][points-1]) minidx = 0; else minidx = points-1;
+                   if (RelPermValues2[voigtIdx][minidx] < critRelpThresh) {
+                       RelPermValues2[voigtIdx][minidx] = 0.0;
+                   }
+                   else {
+                       cerr << "Minimum upscaled relperm value for phase 2 is " << RelPermValues2[voigtIdx][minidx] << endl 
+                            << ", larger than critRelpermThresh.(voigtidx = " << voigtIdx << ")" << endl;
+                       usageandexit();
+                   }
+               }
+           }
+       }
+   }
 
    /*********************************************************************************
     *  Step 9
@@ -1341,7 +1771,7 @@ int main(int varnum, char** vararg)
                outputtmp << "# Stone " << i+1 << ": " << JfunctionNames[i] << " (" << InvJfunctions[i].getSize() << " points)" <<  endl;
            }
            outputtmp << "#         jFunctionCurve: " << options["jFunctionCurve"] << endl;
-           outputtmp << "#           relPermCurve: " << options["relPermCurve"] << endl;
+           if (!upscaleBothPhases) outputtmp << "#           relPermCurve: " << options["relPermCurve"] << endl;
        }
        else { // anisotropic input, not J-functions that are supplied on command line (but vector JfunctionNames is still used)
            for (int i=0; i < stone_types ; ++i) {
@@ -1376,7 +1806,8 @@ int main(int varnum, char** vararg)
        outputtmp << "#          surfaceTension: " << options["surfaceTension"] << " dynes/cm" << endl;
        if (includeGravity) {
            outputtmp << "#                 gravity: " << options["gravity"] << " m/s²" << endl;
-           outputtmp << "#            waterDensity: " << options["waterDensity"] << " g/cm³" << endl;
+           if (owsystem) outputtmp << "#            waterDensity: " << options["waterDensity"] << " g/cm³" << endl;
+           else outputtmp << "#              gasDensity: " << options["waterDensity"] << " g/cm³" << endl;
            outputtmp << "#              oilDensity: " << options["oilDensity"] << " g/cm³" << endl;
        }
        else {
@@ -1395,12 +1826,29 @@ int main(int varnum, char** vararg)
            outputtmp << "# NB: Data points shown are interpolated." << endl;
        }
        outputtmp << "######################################################################" << endl;
-       if (isFixed) { 
-           outputtmp << "#         Pc (Pa)         Sw              Krxx           Kryy            Krzz" << endl; 
-       } 
-       else if (isPeriodic || isLinear) { 
-           outputtmp << "#         Pc (Pa)         Sw              Krxx           Kryy            Krzz           Kryz           Krxz            Krxy            Krzy            Krzx            Kryx" << endl;           
-       } 
+       if (upscaleBothPhases) {
+           string phase1, phase2;
+           if (owsystem) phase1="w"; else phase1="g";
+           phase2="o";
+           if (isFixed) { 
+               outputtmp << "#  Pc (Pa)        " << saturationstring << "           Kr" << phase1 << "xx       Kr" << phase1 << "yy       Kr" << phase1 << "zz" 
+                         <<  "       Kr" << phase2 << "xx       Kr" << phase2 << "yy       Kr" << phase2 << "zz" <<  endl; 
+           } 
+           else if (isPeriodic || isLinear) { 
+               outputtmp << "#  Pc (Pa)        " << saturationstring << "           Kr" << phase1 << "xx       Kr" << phase1 << "yy       Kr" << phase1 << "zz       Kr" 
+                         << phase1 << "yz       Kr" << phase1 << "xz       Kr" << phase1 << "xy       Kr" << phase1 << "zy       Kr" << phase1 << "zx       Kr" << phase1 << "yx" 
+                         << "       Kr" << phase2 << "xx       Kr" << phase2 << "yy       Kr" << phase2 << "zz       Kr" 
+                         << phase2 << "yz       Kr" << phase2 << "xz       Kr" << phase2 << "xy       Kr" << phase2 << "zy       Kr" << phase2 << "zx       Kr" << phase2 << "yx" << endl;
+           }
+       }
+       else {
+           if (isFixed) { 
+               outputtmp << "#  Pc (Pa)        " << saturationstring << "            Krxx        Kryy        Krzz" << endl; 
+           } 
+           else if (isPeriodic || isLinear) { 
+               outputtmp << "#  Pc (Pa)        " << saturationstring << "            Krxx        Kryy        Krzz        Kryz        Krxz        Krxy        Krzy        Krzx        Kryx" << endl;
+           }
+       }
        
        vector<double> Pvalues = pressurePoints; //WaterSaturation.get_xVector(); 
        vector<double> Satvalues = WaterSaturation; //.get_fVector(); 
@@ -1440,6 +1888,16 @@ int main(int varnum, char** vararg)
                    RelPermValues[voigtIdx].push_back(RelPermVsSaturation.evaluate(SatvaluesInterp[i]));
                }
            }
+           if (upscaleBothPhases) {
+               for (int voigtIdx = 0; voigtIdx < tensorElementCount; ++voigtIdx) {
+                   MonotCubicInterpolator RelPermVsSaturation(Satvalues, RelPermValues2[voigtIdx]);
+                   RelPermValues2[voigtIdx].clear();
+                   for (int i=0; i < interpolationPoints; ++i) {
+                       RelPermValues2[voigtIdx].push_back(RelPermVsSaturation.evaluate(SatvaluesInterp[i]));
+                   }
+               }
+           }
+           
            // Now also overwrite Satvalues
            Satvalues.clear();
            Satvalues = SatvaluesInterp;
@@ -1455,6 +1913,12 @@ int main(int varnum, char** vararg)
                outputtmp << showpoint << setw(fieldwidth) << setprecision(outputprecision) 
                          << RelPermValues[voigtIdx][i]; 
            } 
+           if (upscaleBothPhases) {
+               for (int voigtIdx = 0; voigtIdx < tensorElementCount; ++voigtIdx) { 
+                   outputtmp << showpoint << setw(fieldwidth) << setprecision(outputprecision) 
+                             << RelPermValues2[voigtIdx][i]; 
+               } 
+           }
            outputtmp << endl; 
            
        }
@@ -1468,6 +1932,99 @@ int main(int varnum, char** vararg)
            outfile << outputtmp.str();
            outfile.close();      
        }
+       
+       // If both phases are upscaled and output is specyfied, create SWOF or SGOF files for Eclipse
+       if (options["output"] != "" && upscaleBothPhases) {
+           // krow(swirr)-values if given
+           double krowxswirr = atof(options["krowxswirr"].c_str());
+           double krowyswirr = atof(options["krowyswirr"].c_str());
+           double krowzswirr = atof(options["krowzswirr"].c_str());
+
+           stringstream swofx, swofy, swofz;
+           string satstringCap = ""; if (owsystem) satstringCap = "W"; else satstringCap = "G"; 
+           string satstring = ""; if (owsystem) satstring = "w"; else satstring = "g"; 
+           // x-direction
+           swofx << "// This file is based on the results in " << endl 
+                 << "// " << options["output"] << endl
+                 << "// for relperm in x-direction." << endl
+                 << "// Pressure values (Pc) given in bars." << endl
+                 << "//        S" << satstring << "       Kr" << satstring << "xx      Kro" << satstring << "xx      Pc(bar)" << endl
+                 << "//S" << satstringCap << "OF" << endl;
+           if (krowxswirr > 0){
+               swofx << showpoint << setw(fieldwidth) << setprecision(outputprecision) << 0
+                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << 0
+                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << krowxswirr
+                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << 0 << endl;
+           }
+           for (unsigned int i=0; i < Satvalues.size(); ++i) {
+               swofx << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Satvalues[i]
+                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << RelPermValues[0][i]
+                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << RelPermValues2[0][i]
+                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Pvalues[i]/100000.0 << endl;
+           }
+           swofx << "/" << endl;
+           // y-direction
+           swofy << "// This file is based on the results in " << endl 
+                 << "// " << options["output"] << endl
+                 << "// for relperm in y-direction." << endl
+                 << "// Pressure values (Pc) given in bars." << endl
+                 << "//        S" << satstring << "       Kr" << satstring << "yy      Kro" << satstring << "yy      Pc(bar)" << endl
+                 << "//S" << satstringCap << "OF" << endl;
+           if (krowyswirr > 0){
+               swofy << showpoint << setw(fieldwidth) << setprecision(outputprecision) << 0
+                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << 0
+                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << krowyswirr
+                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << 0 << endl;
+           }
+           for (unsigned int i=0; i < Satvalues.size(); ++i) {
+               swofy << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Satvalues[i]
+                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << RelPermValues[1][i]
+                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << RelPermValues2[1][i]
+                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Pvalues[i]/100000.0 << endl;
+           }
+           swofy << "/" << endl;
+           // z-direction
+           swofz << "// This file is based on the results in " << endl 
+                 << "// " << options["output"] << endl
+                 << "// for relperm in z-direction." << endl
+                 << "// Pressure values (Pc) given in bars." << endl
+                 << "//        S" << satstring << "       Kr" << satstring << "zz      Kro" << satstring << "zz      Pc(bar)" << endl
+                 << "//S" << satstringCap << "OF" << endl;
+           if (krowzswirr > 0){
+               swofz << showpoint << setw(fieldwidth) << setprecision(outputprecision) << 0
+                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << 0
+                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << krowzswirr
+                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << 0 << endl;
+           }
+           for (unsigned int i=0; i < Satvalues.size(); ++i) {
+               swofz << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Satvalues[i]
+                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << RelPermValues[2][i]
+                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << RelPermValues2[2][i]
+                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Pvalues[i]/100000.0 << endl;
+           }
+           swofz << "/" << endl;
+           //cout << swofx.str() << endl;
+           //cout << swofy.str() << endl;
+           //cout << swofz.str() << endl;
+           ofstream xfile, yfile, zfile;
+           string opfname = options["output"];
+           string fnbase = opfname.substr(0,opfname.find_first_of('.'));
+           string xfilename = fnbase + "-x.S" + satstringCap + "OF";
+           string yfilename = fnbase + "-y.S" + satstringCap + "OF";
+           string zfilename = fnbase + "-z.S" + satstringCap + "OF";
+           
+           cout << "Writing Eclipse compatible files to " << xfilename << ", " << yfilename << " and " << zfilename << endl;
+           xfile.open(xfilename.c_str(), ios::out | ios::trunc);
+           xfile << swofx.str();
+           xfile.close();
+           yfile.open(yfilename.c_str(), ios::out | ios::trunc);
+           yfile << swofy.str();
+           yfile.close();
+           zfile.open(zfilename.c_str(), ios::out | ios::trunc);
+           zfile << swofz.str();
+           zfile.close();
+       }
+
    }
 
 #if USEMPI
