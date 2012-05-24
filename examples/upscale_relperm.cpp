@@ -1944,12 +1944,12 @@ int main(int varnum, char** vararg)
            string satstringCap = ""; if (owsystem) satstringCap = "W"; else satstringCap = "G"; 
            string satstring = ""; if (owsystem) satstring = "w"; else satstring = "g"; 
            // x-direction
-           swofx << "// This file is based on the results in " << endl 
-                 << "// " << options["output"] << endl
-                 << "// for relperm in x-direction." << endl
-                 << "// Pressure values (Pc) given in bars." << endl
-                 << "//        S" << satstring << "       Kr" << satstring << "xx      Kro" << satstring << "xx      Pc(bar)" << endl
-                 << "//S" << satstringCap << "OF" << endl;
+           swofx << "-- This file is based on the results in " << endl 
+                 << "-- " << options["output"] << endl
+                 << "-- for relperm in x-direction." << endl
+                 << "-- Pressure values (Pc) given in bars." << endl
+                 << "--        S" << satstring << "       Kr" << satstring << "xx      Kro" << satstring << "xx      Pc(bar)" << endl
+                 << "--S" << satstringCap << "OF" << endl;
            if (krowxswirr > 0){
                swofx << showpoint << setw(fieldwidth) << setprecision(outputprecision) << 0
                      << showpoint << setw(fieldwidth) << setprecision(outputprecision) << 0
@@ -1964,12 +1964,12 @@ int main(int varnum, char** vararg)
            }
            swofx << "/" << endl;
            // y-direction
-           swofy << "// This file is based on the results in " << endl 
-                 << "// " << options["output"] << endl
-                 << "// for relperm in y-direction." << endl
-                 << "// Pressure values (Pc) given in bars." << endl
-                 << "//        S" << satstring << "       Kr" << satstring << "yy      Kro" << satstring << "yy      Pc(bar)" << endl
-                 << "//S" << satstringCap << "OF" << endl;
+           swofy << "-- This file is based on the results in " << endl 
+                 << "-- " << options["output"] << endl
+                 << "-- for relperm in y-direction." << endl
+                 << "-- Pressure values (Pc) given in bars." << endl
+                 << "--        S" << satstring << "       Kr" << satstring << "yy      Kro" << satstring << "yy      Pc(bar)" << endl
+                 << "--S" << satstringCap << "OF" << endl;
            if (krowyswirr > 0){
                swofy << showpoint << setw(fieldwidth) << setprecision(outputprecision) << 0
                      << showpoint << setw(fieldwidth) << setprecision(outputprecision) << 0
@@ -1984,12 +1984,12 @@ int main(int varnum, char** vararg)
            }
            swofy << "/" << endl;
            // z-direction
-           swofz << "// This file is based on the results in " << endl 
-                 << "// " << options["output"] << endl
-                 << "// for relperm in z-direction." << endl
-                 << "// Pressure values (Pc) given in bars." << endl
-                 << "//        S" << satstring << "       Kr" << satstring << "zz      Kro" << satstring << "zz      Pc(bar)" << endl
-                 << "//S" << satstringCap << "OF" << endl;
+           swofz << "-- This file is based on the results in " << endl 
+                 << "-- " << options["output"] << endl
+                 << "-- for relperm in z-direction." << endl
+                 << "-- Pressure values (Pc) given in bars." << endl
+                 << "--        S" << satstring << "       Kr" << satstring << "zz      Kro" << satstring << "zz      Pc(bar)" << endl
+                 << "--S" << satstringCap << "OF" << endl;
            if (krowzswirr > 0){
                swofz << showpoint << setw(fieldwidth) << setprecision(outputprecision) << 0
                      << showpoint << setw(fieldwidth) << setprecision(outputprecision) << 0
