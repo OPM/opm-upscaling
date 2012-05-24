@@ -208,7 +208,8 @@ namespace Dune
         const int max_iter = 40;
         const double nonlinear_tolerance = 1e-12;
         int iterations_used = -1;
-        double mod_correct = Opm::modifiedRegulaFalsi(functor, mod_low, mod_high, max_iter, nonlinear_tolerance, iterations_used);
+        typedef Opm::RegulaFalsi<Opm::ThrowOnError> RootFinder;
+        double mod_correct = RootFinder::solve(functor, mod_low, mod_high, max_iter, nonlinear_tolerance, iterations_used);
         std::cout << "Moved capillary pressure solution by " << mod_correct << " after "
                   << iterations_used << " iterations." << std::endl;
         // saturation = functor.lastSaturations();
