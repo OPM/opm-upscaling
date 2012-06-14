@@ -1423,8 +1423,6 @@ int main(int varnum, char** vararg)
                        cellPhasePerm = 
                            Krfunctions[int(satnums[cell_idx])-1].evaluate(waterSaturationCell) * 
                            permxs[cell_idx];
-                       cout << "cell: " << cell_idx << " sw: " << waterSaturationCell << " relperm: " << Krfunctions[int(satnums[cell_idx])-1].evaluate(waterSaturationCell) 
-                            << " cellphaseperm: " << cellPhasePerm << endl;
                        if (upscaleBothPhases) {
                            cellPhase2Perm = 
                                Krfunctions2[int(satnums[cell_idx])-1].evaluate(waterSaturationCell) * 
