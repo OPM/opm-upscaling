@@ -9,7 +9,7 @@ DEPENDENCIES=@REQUIRES@
 Name: @PACKAGE_NAME@
 Version: @VERSION@
 Description: A Dune module containing single-phase and steady-state upscaling methods.
-URL: http://public.ict.sintef.no/openrs
+URL: http://www.opm-project.org
 Requires: ${DEPENDENCIES}
-Libs: -L${libdir} -lduneupscaling
+Libs: -L${libdir} -lopmupscaling
 Cflags: -I${includedir}

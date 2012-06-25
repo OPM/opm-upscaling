@@ -18,8 +18,8 @@ AM_CONFIG_HEADER([config.h])
 
 
 # we need no more than the standard DE-stuff
-# this module depends on dune-common dune-grid dune-istl dune-cornerpoint dune-porsol
-# this implies checking for [dune-common], [dune-grid], [dune-istl], [dune-cornerpoint], [dune-porsol]
+# this module depends on dune-common dune-grid dune-istl dune-cornerpoint opm-porsol
+# this implies checking for [dune-common], [dune-grid], [dune-istl], [dune-cornerpoint], [opm-porsol]
 DUNE_CHECK_ALL
 
 # implicitly set the Dune-flags everywhere
@@ -36,7 +36,7 @@ AC_CONFIG_FILES([
   dune/Makefile
   dune/upscaling/Makefile
   dune/upscaling/test/Makefile
-  dune-upscaling.pc
+  opm-upscaling.pc
   examples/Makefile
 ])
 AC_OUTPUT

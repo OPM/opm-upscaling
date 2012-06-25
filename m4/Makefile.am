@@ -1,4 +1,4 @@
-M4FILES = dune-upscaling.m4
+M4FILES = opm-upscaling.m4
 
 aclocaldir = $(datadir)/aclocal
 aclocal_DATA = $(M4FILES)

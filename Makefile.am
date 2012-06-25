@@ -19,7 +19,7 @@ DISTCHECK_CONFIGURE_FLAGS = --with-dune-common=$(DUNE_COMMON_ROOT) \
                             --with-dune-grid=$(DUNE_GRID_ROOT) \
                             --with-dune-istl=$(DUNE_ISTL_ROOT) \
                             --with-dune-cornerpoint=$(DUNE_CORNERPOINT_ROOT) \
-                            --with-dune-porsol=$(DUNE_PORSOL_ROOT)  \
+                            --with-opm-porsol=$(OPM_PORSOL_ROOT)  \
                             CXX="$(CXX)" CC="$(CC)"
 
 include $(top_srcdir)/am/top-rules
