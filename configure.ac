@@ -53,7 +53,7 @@ AC_CONFIG_FILES([
   dune/porsol/twophase2/OPMKvasiSophusCode/Makefile
   lib/Makefile
   examples/Makefile
-  dune-porsol.pc
+  opm-porsol.pc
 ])
 
 #  dune/porsol/opmtransport/Makefile

@@ -1,4 +1,4 @@
-M4FILES = dune-porsol.m4
+M4FILES = opm-porsol.m4
 
 aclocaldir = $(datadir)/aclocal
 aclocal_DATA = $(M4FILES)

@@ -9,7 +9,7 @@ DEPENDENCIES=@REQUIRES@
 Name: @PACKAGE_NAME@
 Version: @VERSION@
 Description: A Dune module containing porous media pde solvers.
-URL: http://public.ict.sintef.no/openrs
+URL: http://www.opm-project.org
 Requires: ${DEPENDENCIES}
-Libs: -L${libdir} -lduneporsol
+Libs: -L${libdir} -lopmporsol
 Cflags: -I${includedir}
