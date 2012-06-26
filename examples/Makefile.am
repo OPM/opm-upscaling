@@ -29,7 +29,7 @@ grdecl_to_legacy_test_SOURCES = grdecl_to_legacy_test.cpp
 make_vtk_test_SOURCES  = make_vtk_test.cpp
 
 ifsh_solver_test_SOURCES = ifsh_solver_test.cpp
-ifsh_solver_test_LDADD = $(LDADD) ../lib/libduneporsol.la
+ifsh_solver_test_LDADD = $(LDADD) ../lib/libopmporsol.la
 
 mimetic_solver_test_SOURCES = mimetic_solver_test.cpp
 
@@ -40,15 +40,15 @@ mimetic_periodic_test_SOURCES = mimetic_periodic_test.cpp
 istl_test_SOURCES = istl_test.cpp
 
 spu_2p_SOURCES = spu_2p.cpp
-spu_2p_LDADD = $(LDADD) ../lib/libduneporsol.la
+spu_2p_LDADD = $(LDADD) ../lib/libopmporsol.la
 
 spe10_test_SOURCES = spe10_test.cpp
 
 tpfa_solver_test_SOURCES = tpfa_solver_test.cpp
-tpfa_solver_test_LDADD = $(LDADD) ../lib/libduneporsol.la
+tpfa_solver_test_LDADD = $(LDADD) ../lib/libopmporsol.la
 
 tpfa_compressible_solver_test_SOURCES = tpfa_compressible_solver_test.cpp
-tpfa_compressible_solver_test_LDADD = $(LDADD) ../lib/libduneporsol.la
+tpfa_compressible_solver_test_LDADD = $(LDADD) ../lib/libopmporsol.la
 
 known_answer_test_SOURCES = known_answer_test.cpp
 
@@ -64,10 +64,10 @@ implicitcap_test_SOURCES = implicitcap_test.cpp
 aniso_implicitcap_test_SOURCES = aniso_implicitcap_test.cpp
 
 blackoil_sim_test_SOURCES = blackoil_sim_test.cpp
-blackoil_sim_test_LDADD = $(LDADD) ../lib/libduneporsol.la
+blackoil_sim_test_LDADD = $(LDADD) ../lib/libopmporsol.la
 
 twophase2_test_SOURCES = twophase2_test.cpp
-twophase2_test_LDADD = $(LDADD) ../lib/libduneporsol.la
+twophase2_test_LDADD = $(LDADD) ../lib/libopmporsol.la
 
 # ----------------------------------------------------------------------
 # Tests programs reliant on recent compiler support, notably the
@@ -78,7 +78,7 @@ noinst_PROGRAMS +=				\
 co2_sim_test
 
 co2_sim_test_SOURCES = co2_sim_test.cpp
-co2_sim_test_LDADD = $(LDADD) ../lib/libduneporsol.la
+co2_sim_test_LDADD = $(LDADD) ../lib/libopmporsol.la
 endif
 
 

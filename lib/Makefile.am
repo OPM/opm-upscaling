@@ -1,17 +1,17 @@
 # $Date$
 # $Revision$
 
-# The dune-porsol library
-lib_LTLIBRARIES = libduneporsol.la
+# The opm-porsol library
+lib_LTLIBRARIES = libopmporsol.la
 
-libduneporsol_la_SOURCES =
+libopmporsol_la_SOURCES =
 
 # Dummy C++ source to cause C++ linking.
-nodist_EXTRA_libduneporsol_la_SOURCES = dummy.cpp
+nodist_EXTRA_libopmporsol_la_SOURCES = dummy.cpp
 
 # Collect constituent parts into module library.
-libduneporsol_la_LIBADD =                                                   \
-../dune/porsol/common/libduneporsolcommon.la                                \
+libopmporsol_la_LIBADD =                                                   \
+../dune/porsol/common/libopmporsolcommon.la                                \
 ../dune/porsol/blackoil/fluid/libblackoilfluid_noinst.la                    \
 ../dune/porsol/twophase2/OPMKvasiSophusCode/libOPMKvasiSophusCode_noinst.la \
 ../dune/porsol/twophase2/OPMIRISCode/libOPMIRISCode_noinst.la
