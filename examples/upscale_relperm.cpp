@@ -1187,7 +1187,7 @@ int main(int varnum, char** vararg)
        }
        
        // Check for saneness of Ptestvalue:
-       if (isnan(Ptestvalue) | isinf(Ptestvalue)) {
+       if (std::isnan(Ptestvalue) || std::isinf(Ptestvalue)) {
            if (isMaster) cerr << "ERROR: Ptestvalue was inf or nan" << endl;
            break; // Jump out of while-loop, just print out the results
            // up to now and exit the program

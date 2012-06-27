@@ -1081,7 +1081,7 @@ int main(int varnum, char** vararg)
         }
             
         // Check for saneness of fracFlowRatioTestvalue
-        if (isnan(fracFlowRatioTestvalue) || isinf(fracFlowRatioTestvalue)) {
+        if (std::isnan(fracFlowRatioTestvalue) || std::isinf(fracFlowRatioTestvalue)) {
             if (isMaster) cerr << "ERROR: fracFlowRatioTestvalue was inf or nan." << endl;
             break; // Jump out out while-loop, just print the results up to now and exit
         }
