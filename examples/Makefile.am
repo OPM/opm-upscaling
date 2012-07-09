@@ -19,8 +19,9 @@ simulator_implicit_test				\
 spe10_test					\
 spu_2p						\
 tpfa_compressible_solver_test			\
-tpfa_solver_test				\
-twophase2_test
+tpfa_solver_test
+#				\
+#twophase2_test
 
 
 
@@ -66,8 +67,8 @@ aniso_implicitcap_test_SOURCES = aniso_implicitcap_test.cpp
 blackoil_sim_test_SOURCES = blackoil_sim_test.cpp
 blackoil_sim_test_LDADD = $(LDADD) ../lib/libopmporsol.la
 
-twophase2_test_SOURCES = twophase2_test.cpp
-twophase2_test_LDADD = $(LDADD) ../lib/libopmporsol.la
+#twophase2_test_SOURCES = twophase2_test.cpp
+#twophase2_test_LDADD = $(LDADD) ../lib/libopmporsol.la
 
 # ----------------------------------------------------------------------
 # Tests programs reliant on recent compiler support, notably the
