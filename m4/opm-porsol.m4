@@ -20,9 +20,9 @@ AC_DEFUN([OPM_PORSOL_CHECKS],
         # the $FLIBS macro.
         AC_REQUIRE([AC_F77_WRAPPERS])
         AC_REQUIRE([AX_LAPACK])
-	AS_IF([test "$ax_lapack_ok" != "yes"],dnl
-	      [AC_MSG_ERROR([No suitable LAPACK library found!])],dnl
-	      [:])
+        AS_IF([test "$ax_lapack_ok" != "yes"],dnl
+              [AC_MSG_ERROR([No suitable LAPACK library found!])],dnl
+              [:])
 
         DUNE_ADD_MODULE_DEPS([OPM_PORSOL],dnl
                              [OPM_PORSOL],dnl
