@@ -19,8 +19,8 @@ AC_DEFUN([OPM_PORSOL_CHECKS],
         # subsequently, AC_REQUIRE's AC_F77_LIBRARY_LDFLAGS which sets
         # the $FLIBS macro.
         AC_REQUIRE([AC_F77_WRAPPERS])
-        AC_REQUIRE([ACX_LAPACK])
-	AS_IF([test "$acx_lapack_ok" != "yes"],dnl
+        AC_REQUIRE([AX_LAPACK])
+	AS_IF([test "$ax_lapack_ok" != "yes"],dnl
 	      [AC_MSG_ERROR([No suitable LAPACK library found!])],dnl
 	      [:])
 
@@ -30,8 +30,8 @@ AC_DEFUN([OPM_PORSOL_CHECKS],
           [[$LAPACK_LIBS] [$BLAS_LIBS] [$FLIBS]])
 
         # Additional summary entries.
-        DUNE_ADD_SUMMARY_ENTRY([BLAS], [$acx_blas_ok])
-        DUNE_ADD_SUMMARY_ENTRY([LAPACK], [$acx_lapack_ok])
+        DUNE_ADD_SUMMARY_ENTRY([BLAS], [$ax_blas_ok])
+        DUNE_ADD_SUMMARY_ENTRY([LAPACK], [$ax_lapack_ok])
 ])
 
 # Additional checks needed to find opm-porsol
