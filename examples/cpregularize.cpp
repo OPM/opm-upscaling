@@ -32,6 +32,9 @@
    - Be careful with non-flat top and bottom boundary.
 
 */
+#include <config.h>
+
+#include <opm/core/utility/have_boost_redef.hpp>
 
 #include <opm/core/eclipse/CornerpointChopper.hpp>
 #include <opm/core/eclipse/EclipseGridParser.hpp>

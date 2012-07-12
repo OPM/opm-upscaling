@@ -41,6 +41,9 @@
  *  full-tensor (symmetric) anisotropic permeability is assumed in each cell.
  *
  */
+#include <config.h>
+
+#include <opm/core/utility/have_boost_redef.hpp>
 
 #include <iostream>
 #include <fstream>

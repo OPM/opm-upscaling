@@ -49,6 +49,9 @@
      - Outputted capillary pressure is in Pascals.
 
  */
+#include <config.h>
+
+#include <opm/core/utility/have_boost_redef.hpp>
 
 #include <iostream>
 #include <fstream>

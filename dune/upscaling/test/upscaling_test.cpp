@@ -37,6 +37,8 @@
 #include "config.h"
 #endif
 
+#include <opm/core/utility/have_boost_redef.hpp>
+
 #include <dune/upscaling/SinglePhaseUpscaler.hpp>
 #include <opm/core/utility/Units.hpp>
 

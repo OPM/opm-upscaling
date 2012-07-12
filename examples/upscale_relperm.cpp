@@ -57,6 +57,9 @@
    9: Print output to screen and optionally to file.
 
  */
+#include <config.h>
+
+#include <opm/core/utility/have_boost_redef.hpp>
 
 #include <iostream>
 #include <fstream>

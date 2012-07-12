@@ -29,6 +29,9 @@
   Direction for pairing is set from the command line
 
 */
+#include <config.h>
+
+#include <opm/core/utility/have_boost_redef.hpp>
 
 #include <opm/core/eclipse/CornerpointChopper.hpp>
 #include <dune/upscaling/SinglePhaseUpscaler.hpp>

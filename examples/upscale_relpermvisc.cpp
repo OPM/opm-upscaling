@@ -67,6 +67,9 @@
   Units for (dynamic) viscosity are assumed to be in Pascal seconds. (Pa s)
   1000 Pa s = 1 centiPoise.
  */
+#include <config.h>
+
+#include <opm/core/utility/have_boost_redef.hpp>
 
 #include <iostream>
 #include <fstream>
