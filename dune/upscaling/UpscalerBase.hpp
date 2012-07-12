@@ -35,11 +35,6 @@
 #ifndef OPENRS_UPSCALERBASE_HEADER
 #define OPENRS_UPSCALERBASE_HEADER
 
-
-
-#if HAVE_CONFIG_H
-#include "config.h"
-#endif
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <dune/grid/CpGrid.hpp>
 #include <opm/core/eclipse/EclipseGridParser.hpp>
