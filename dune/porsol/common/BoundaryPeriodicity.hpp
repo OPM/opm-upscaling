@@ -24,6 +24,8 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/array.hh>
 #include <opm/core/utility/ErrorMacros.hpp>
+
+#include <algorithm>
 #include <vector>
 
 namespace Dune
