@@ -20,6 +20,9 @@
 
 
 #include "config.h"
+
+#include <opm/core/utility/have_boost_redef.hpp>
+
 #include <opm/core/eclipse/EclipseGridParser.hpp>
 #include <dune/porsol/blackoil/BlackoilSimulator.hpp>
 #include <dune/common/mpihelper.hh>

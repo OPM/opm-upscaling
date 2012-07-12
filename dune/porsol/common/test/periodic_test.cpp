@@ -33,6 +33,10 @@
   along with OpenRS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <config.h>
+
+#include <opm/core/utility/have_boost_redef.hpp>
+
 #include "../PeriodicHelpers.hpp"
 #include <dune/porsol/common/BoundaryConditions.hpp>
 #include <dune/porsol/common/GridInterfaceEuler.hpp>

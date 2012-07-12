@@ -37,6 +37,8 @@
 #include "config.h"
 #endif
 
+#include <opm/core/utility/have_boost_redef.hpp>
+
 #include <iostream>
 #include <fstream>
 

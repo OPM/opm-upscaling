@@ -19,6 +19,8 @@
 
 #include "config.h"
 
+#include <opm/core/utility/have_boost_redef.hpp>
+
 #include <dune/porsol/blackoil/fluid/FluidMatrixInteractionBlackoil.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <dune/common/fvector.hh>

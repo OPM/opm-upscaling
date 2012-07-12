@@ -41,6 +41,8 @@
 #include "config.h"
 #endif // HAVE_CONFIG_H
 
+#include <opm/core/utility/have_boost_redef.hpp>
+
 #include "SimulatorTester.hpp"
 #include "SimulatorTesterFlexibleBC.hpp"
 #include <dune/porsol/common/SimulatorTraits.hpp>

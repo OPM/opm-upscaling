@@ -19,6 +19,8 @@
 
 #include "config.h"
 
+#include <opm/core/utility/have_boost_redef.hpp>
+
 #include <dune/porsol/blackoil/fluid/BlackoilPVT.hpp>
 #include <dune/porsol/blackoil/BlackoilFluid.hpp>
 

@@ -35,6 +35,8 @@
 
 #include "config.h"
 
+#include <opm/core/utility/have_boost_redef.hpp>
+
 
 #if HAVE_MPI // #else clause at bottom of file
 

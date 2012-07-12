@@ -21,6 +21,9 @@
 #ifdef HAVE_CONFIG_H
 # include "config.h"     
 #endif
+
+#include <opm/core/utility/have_boost_redef.hpp>
+
 #include <iostream>
 #include"dune/common/mpihelper.hh" // An initializer of MPI
 #include"dune/common/exceptions.hh" // We use exceptions
