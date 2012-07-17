@@ -71,7 +71,7 @@
 #include <map>
 #include <sys/utsname.h>
 
-#ifdef USEMPI
+#ifdef HAVE_MPI
 #include <mpi.h>
 #endif
 
@@ -149,7 +149,7 @@ void usage()
 
 void usageandexit() {
     usage();
-#ifdef USEMPI
+#ifdef HAVE_MPI
     MPI_Finalize();
 #endif
     exit(1);
@@ -209,7 +209,7 @@ int main(int varnum, char** vararg)
     */
 
    int mpi_rank = 0;
-#ifdef USEMPI
+#ifdef HAVE_MPI
    int mpi_nodecount = 1;
    MPI_Init(&varnum, &vararg);
    MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
@@ -1348,7 +1348,7 @@ int main(int varnum, char** vararg)
        node_vs_pressurepoint.push_back(0);
    }
    
-#if USEMPI
+#if HAVE_MPI
    // Distribute work load over mpi nodes.
    for (int idx=0; idx < points; ++idx) {
        // Ensure master node gets equal or less work than the other nodes, since
@@ -1549,7 +1549,7 @@ int main(int varnum, char** vararg)
            WaterSaturation[pointidx] =  waterVolumeLF/poreVolume;
 
            
-#ifdef USEMPI
+#ifdef HAVE_MPI
            cout << "Rank " << mpi_rank << ": ";
 #endif
            cout << Ptestvalue << "\t" << WaterSaturation[pointidx];
@@ -1569,7 +1569,7 @@ int main(int varnum, char** vararg)
    clock_t finish_upscale_wallclock = clock();
    timeused_upscale_wallclock = (double(finish_upscale_wallclock)-double(start_upscale_wallclock))/CLOCKS_PER_SEC;
 
-#ifdef USEMPI   
+#ifdef HAVE_MPI   
    /* Step 8b: Transfer all computed data to master node.
       Master node should post a receive for all values missing,
       other nodes should post a send for all the values they have.
@@ -1637,7 +1637,7 @@ int main(int varnum, char** vararg)
 #endif
 
    // Average time pr. upscaling point:
-#ifdef USEMPI
+#ifdef HAVE_MPI
    // Sum the upscaling time used by all processes
    double timeused_total;
    MPI_Reduce(&timeused_upscale_wallclock, &timeused_total, 1, MPI_DOUBLE, 
@@ -1751,7 +1751,7 @@ int main(int varnum, char** vararg)
        outputtmp << "######################################################################" << endl;
        outputtmp << "# Results from upscaling relative permeability."<< endl;
        outputtmp << "#" << endl;
-#if USEMPI
+#if HAVE_MPI
        outputtmp << "#          (MPI-version)" << endl;
 #endif
        time_t now = std::time(NULL);
@@ -1783,7 +1783,7 @@ int main(int varnum, char** vararg)
        outputtmp << "#" << endl;
        outputtmp << "# Timings:   Tesselation: " << timeused_tesselation << " secs" << endl;
        outputtmp << "#              Upscaling: " << timeused_upscale_wallclock << " secs";
-#ifdef USEMPI
+#ifdef HAVE_MPI
        outputtmp << " (wallclock time)" << endl;
        outputtmp << "#                         " << avg_upscaling_time_pr_point << " secs pr. saturation point" << endl;
        outputtmp << "#              MPI-nodes: " << mpi_nodecount << endl;
@@ -2028,7 +2028,7 @@ int main(int varnum, char** vararg)
 
    }
 
-#if USEMPI
+#if HAVE_MPI
    MPI_Finalize();
 #endif
 
