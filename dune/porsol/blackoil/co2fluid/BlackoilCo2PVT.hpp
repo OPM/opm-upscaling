@@ -110,9 +110,9 @@ namespace Opm
 
     void BlackoilCo2PVT::init(const Opm::EclipseGridParser& ep)
     {
-	surfaceDensities_[Aqua]   = 1000.;
-	surfaceDensities_[Vapour] = 2.0;
-	surfaceDensities_[Liquid] = 1000.;
+	surfaceDensities_[Water]   = 1000.;
+	surfaceDensities_[Gas] = 2.0;
+	surfaceDensities_[Oil] = 1000.;
 
         brineCo2_.init();
     }
@@ -125,7 +125,7 @@ namespace Opm
     double BlackoilCo2PVT::getViscosity(double press, const CompVec& surfvol, PhaseIndex phase) const
     {
         SubState ss;
-        computeState(ss, surfvol[Liquid], surfvol[Vapour], press);
+        computeState(ss, surfvol[Oil], surfvol[Gas], press);
         switch(phase) {
         case Aqua: return 1.0e-10;
         case Liquid: return ss.phaseViscosity[wPhase];
@@ -138,7 +138,7 @@ namespace Opm
     double BlackoilCo2PVT::getSaturation(double press, const CompVec& surfvol, PhaseIndex phase) const
     {
         SubState ss;
-        computeState(ss, surfvol[Liquid], surfvol[Vapour], press);
+        computeState(ss, surfvol[Oil], surfvol[Gas], press);
         switch(phase) {
         case Aqua: return 0.0;
         case Liquid: return ss.saturation;
@@ -151,11 +151,11 @@ namespace Opm
     double BlackoilCo2PVT::B(double press, const CompVec& surfvol, PhaseIndex phase) const
     {
         SubState ss;
-        computeState(ss, surfvol[Liquid], surfvol[Vapour], press);
+        computeState(ss, surfvol[Oil], surfvol[Gas], press);
         switch(phase) {
         case Aqua: return 1.0;
-        case Liquid: return surfaceDensities_[Liquid]/(ss.massfrac[wPhase][wComp]*ss.density[wPhase]+1.0e-10);
-        case Vapour: return surfaceDensities_[Vapour]/(ss.massfrac[nPhase][nComp]*ss.density[nPhase]+1.0e-10);
+        case Liquid: return surfaceDensities_[Oil]/(ss.massfrac[wPhase][wComp]*ss.density[wPhase]+1.0e-10);
+        case Vapour: return surfaceDensities_[Gas]/(ss.massfrac[nPhase][nComp]*ss.density[nPhase]+1.0e-10);
         };
         return 1.0;
     }
@@ -172,8 +172,8 @@ namespace Opm
         computeState(ss, surfvol[Oil], surfvol[Gas], press);
         switch(phase) {
         case Aqua: return 0.0;
-        case Liquid: return (ss.massfrac[wPhase][nComp]*surfaceDensities_[Liquid])/(ss.massfrac[wPhase][wComp]*surfaceDensities_[Vapour]+1.0e-10);
-        case Vapour: return (ss.massfrac[nPhase][wComp]*surfaceDensities_[Vapour])/(ss.massfrac[nPhase][nComp]*surfaceDensities_[Liquid]+1.0e-10);
+        case Liquid: return (ss.massfrac[wPhase][nComp]*surfaceDensities_[Oil])/(ss.massfrac[wPhase][wComp]*surfaceDensities_[Gas]+1.0e-10);
+        case Vapour: return (ss.massfrac[nPhase][wComp]*surfaceDensities_[Gas])/(ss.massfrac[nPhase][nComp]*surfaceDensities_[Oil]+1.0e-10);
         };
         return 0.0;
     }
@@ -190,10 +190,12 @@ namespace Opm
     {
         int num = pressures.size();
         output.resize(num);
+        SubState ss;
         for (int i = 0; i < num; ++i) {
-            output[i][Aqua] = getViscosity(pressures[i][Aqua],surfvol[i],Aqua);
-            output[i][Liquid] = getViscosity(pressures[i][Liquid],surfvol[i],Liquid);
-            output[i][Vapour] = getViscosity(pressures[i][Vapour],surfvol[i],Vapour);
+            computeState(ss, surfvol[i][Oil], surfvol[i][Gas], pressures[i][Liquid]);
+            output[i][Aqua] = 1.0e-10;
+            output[i][Liquid] = ss.phaseViscosity[wPhase];
+            output[i][Vapour] = ss.phaseViscosity[nPhase];
         }
     }
 
@@ -203,10 +205,12 @@ namespace Opm
     {
         int num = pressures.size();
         output.resize(num);
+        SubState ss;
         for (int i = 0; i < num; ++i) {
-            output[i][Aqua] = B(pressures[i][Aqua],surfvol[i],Aqua);
-            output[i][Liquid] = B(pressures[i][Liquid],surfvol[i],Liquid);
-            output[i][Vapour] = B(pressures[i][Vapour],surfvol[i],Vapour);
+            computeState(ss, surfvol[i][Oil], surfvol[i][Gas], pressures[i][Liquid]);
+            output[i][Aqua] = 1.0;
+            output[i][Liquid] = surfaceDensities_[Oil]/(ss.massfrac[wPhase][wComp]*ss.density[wPhase]+1.0e-10);
+            output[i][Vapour] = surfaceDensities_[Gas]/(ss.massfrac[nPhase][nComp]*ss.density[nPhase]+1.0e-10);
         }
     }
 
@@ -218,13 +222,17 @@ namespace Opm
         int num = pressures.size();
         output_B.resize(num);
         output_dBdp.resize(num);
+        SubState ss;
+        const double dp = 100.;
         for (int i = 0; i < num; ++i) {
-            output_B[i][Aqua] = B(pressures[i][Aqua],surfvol[i],Aqua);
-            output_B[i][Liquid] = B(pressures[i][Liquid],surfvol[i],Liquid);
-            output_B[i][Vapour] = B(pressures[i][Vapour],surfvol[i],Vapour);
-            output_dBdp[i][Aqua] = dBdp(pressures[i][Aqua],surfvol[i],Aqua);
-            output_dBdp[i][Liquid] = dBdp(pressures[i][Liquid],surfvol[i],Liquid);
-            output_dBdp[i][Vapour] = dBdp(pressures[i][Vapour],surfvol[i],Vapour);
+            computeState(ss, surfvol[i][Oil], surfvol[i][Gas], pressures[i][Liquid]);
+            output_B[i][Aqua] = 1.0;
+            output_B[i][Liquid] = surfaceDensities_[Oil]/(ss.massfrac[wPhase][wComp]*ss.density[wPhase]+1.0e-10);
+            output_B[i][Vapour] = surfaceDensities_[Gas]/(ss.massfrac[nPhase][nComp]*ss.density[nPhase]+1.0e-10);
+            computeState(ss, surfvol[i][Oil], surfvol[i][Gas], pressures[i][Liquid]+dp);
+            output_dBdp[i][Aqua] = 0.0;
+            output_dBdp[i][Liquid] = (surfaceDensities_[Oil]/(ss.massfrac[wPhase][wComp]*ss.density[wPhase]+1.0e-10) - output_B[i][Liquid])/dp;
+            output_dBdp[i][Vapour] = (surfaceDensities_[Gas]/(ss.massfrac[nPhase][nComp]*ss.density[nPhase]+1.0e-10) - output_B[i][Vapour])/dp;
         }
     }
 
@@ -234,10 +242,12 @@ namespace Opm
     {
         int num = pressures.size();
         output.resize(num);
+        SubState ss;
         for (int i = 0; i < num; ++i) {
-            output[i][Aqua] = R(pressures[i][Aqua],surfvol[i],Aqua);
-            output[i][Liquid] = R(pressures[i][Liquid],surfvol[i],Liquid);
-            output[i][Vapour] = R(pressures[i][Vapour],surfvol[i],Vapour);
+            computeState(ss, surfvol[i][Oil], surfvol[i][Gas], pressures[i][Liquid]);
+            output[i][Aqua] = 0.0;
+            output[i][Liquid] = (ss.massfrac[wPhase][nComp]*surfaceDensities_[Oil])/(ss.massfrac[wPhase][wComp]*surfaceDensities_[Gas]+1.0e-10);
+            output[i][Vapour] = (ss.massfrac[nPhase][wComp]*surfaceDensities_[Gas])/(ss.massfrac[nPhase][nComp]*surfaceDensities_[Oil]+1.0e-10);
         }
     }
 
@@ -249,13 +259,17 @@ namespace Opm
         int num = pressures.size();
         output_R.resize(num);
         output_dRdp.resize(num);
+        SubState ss;
+        const double dp = 100.;
         for (int i = 0; i < num; ++i) {
-            output_R[i][Aqua] = R(pressures[i][Aqua],surfvol[i],Aqua);
-            output_R[i][Liquid] = R(pressures[i][Liquid],surfvol[i],Liquid);
-            output_R[i][Vapour] = R(pressures[i][Vapour],surfvol[i],Vapour);
-            output_dRdp[i][Aqua] = dRdp(pressures[i][Aqua],surfvol[i],Aqua);
-            output_dRdp[i][Liquid] = dRdp(pressures[i][Liquid],surfvol[i],Liquid);
-            output_dRdp[i][Vapour] = dRdp(pressures[i][Vapour],surfvol[i],Vapour);
+            computeState(ss, surfvol[i][Oil], surfvol[i][Gas], pressures[i][Liquid]);
+            output_R[i][Aqua] = 0.0;
+            output_R[i][Liquid] = (ss.massfrac[wPhase][nComp]*surfaceDensities_[Oil])/(ss.massfrac[wPhase][wComp]*surfaceDensities_[Gas]+1.0e-10);
+            output_R[i][Vapour] = (ss.massfrac[nPhase][wComp]*surfaceDensities_[Gas])/(ss.massfrac[nPhase][nComp]*surfaceDensities_[Oil]+1.0e-10);
+            computeState(ss, surfvol[i][Oil], surfvol[i][Gas], pressures[i][Liquid]+dp);
+            output_dRdp[i][Aqua] = 0.0;
+            output_dRdp[i][Liquid] = ((ss.massfrac[wPhase][nComp]*surfaceDensities_[Oil])/(ss.massfrac[wPhase][wComp]*surfaceDensities_[Gas]+1.0e-10) - output_R[i][Liquid])/dp;
+            output_dRdp[i][Vapour] = ((ss.massfrac[nPhase][wComp]*surfaceDensities_[Gas])/(ss.massfrac[nPhase][nComp]*surfaceDensities_[Oil]+1.0e-10) - output_R[i][Vapour])/dp;
         }
     }
     
@@ -267,8 +281,8 @@ namespace Opm
         state.setPressure(wPhase, pressure);
         state.setPressure(nPhase, pressure);
         
-        double massH20 = surfaceDensities_[Liquid]*zBrine;
-        double massCO2 = surfaceDensities_[Vapour]*zCO2;
+        double massH20 = surfaceDensities_[Oil]*zBrine;
+        double massCO2 = surfaceDensities_[Gas]*zCO2;
         
         // A priori, assume presence of both phases
         brineCo2_.computeEquilibrium(state); 
