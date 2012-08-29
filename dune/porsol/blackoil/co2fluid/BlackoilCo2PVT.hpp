@@ -46,6 +46,8 @@ namespace Opm
 	
 	void init(const Opm::EclipseGridParser& ep);
 
+        void generateBlackOilTables(double temperature);
+
         double getViscosity(double press,
                             const CompVec& surfvol,
 			    PhaseIndex phase) const;
@@ -87,6 +89,7 @@ namespace Opm
     private:
 	CompVec surfaceDensities_;
 	FluidSystem brineCo2_;
+        double temperature_;
         struct SubState
         {               
             Opm::FieldVector<double,2> density;
@@ -95,7 +98,7 @@ namespace Opm
             Opm::FieldVector<double,2> phaseViscosity;
             double saturation;
         };
-        void computeState(SubState& ss, double zBrine, double zCO2, double pressure, double temperature = 300.0) const;
+        void computeState(SubState& ss, double zBrine, double zCO2, double pressure) const;
         enum {
             wPhase = FluidSystem::wPhaseIdx,
             nPhase = FluidSystem::nPhaseIdx,
@@ -114,7 +117,119 @@ namespace Opm
 	surfaceDensities_[Gas] = 2.0;
 	surfaceDensities_[Oil] = 1000.;
 
+        temperature_ = 300.;
+
         brineCo2_.init();
+    }
+
+    void BlackoilCo2PVT::generateBlackOilTables(double temperature)
+    {
+        std::cout << "\n Generating pvt tables for the eclipse black oil formulation\n using the oil component as brine and the gas component as co_2." << std::endl;
+        if (std::fabs(temperature-400.) > 100.0) {
+            std::cout << "T=" << temperature << " is outside the allowed range [300,500] Kelvin" << std::endl;
+            exit(-1);
+        }
+
+        temperature_ = temperature;
+
+        CompVec z;
+        z[Water] = 0.0;
+        z[Oil] = 1.0;
+        z[Gas] = 1.0e6;
+
+        std::ofstream black("blackoil_pvt");
+        black.precision(8);
+        black << std::fixed << std::showpoint;
+
+        const double pMin=150.e5;
+        const double pMax=400.e5;
+        const unsigned int np=11;
+        std::vector<double> pValue(np+1,0.0);
+        std::vector<double> rs(np+1,0.0);
+
+        pValue[0] = 101330.0;
+        rs[0] = 0.0;
+
+        // Buble points 
+        z[Gas] = 1.0e4;
+        for (unsigned int i=0; i<np; ++i) {
+            pValue[i+1] = pMin + i*(pMax-pMin)/(np-1);
+            rs[i+1] = R(pValue[i+1], z, Liquid);       
+        }
+
+        const unsigned int np_fill_in = 10;
+        const double dr = (rs[1] - rs[0])/(np_fill_in+1);
+        const double dp = (pValue[1] - pValue[0])/(np_fill_in+1);
+        rs.insert(rs.begin()+1,np_fill_in,0.0);
+        pValue.insert(pValue.begin()+1,np_fill_in,0.0);
+        for (unsigned int i=1; i<=np_fill_in; ++i) {
+           rs[i] = rs[i-1] + dr;
+           pValue[i] = pValue[i-1] + dp;
+        }
+
+        // Brine with dissolved co_2 ("live oil")
+        black << "PVTO\n";
+        black << "--     Rs       Pbub        Bo          Vo\n";
+        black << "--  sm3/sm3     barsa       rm3/sm3     cP\n";
+
+        // Undersaturated
+        for (unsigned int i=0; i<np+np_fill_in; ++i) {
+            z[Gas] = rs[i];
+            black << std::setw(14) << rs[i];
+            for (unsigned int j=i; j<np+1+np_fill_in; ++j) {
+                if (j<=np_fill_in) {
+                   if (j==i) black << std::setw(14) << pValue[j]*1.e-5 << std::setw(14) << 1.0-j*0.001 << std::setw(14) << 1.06499;
+                   continue; 
+                }
+                if (j>i) black << std::endl << std::setw(14) << ' ';
+                black << std::setw(14) << pValue[j]*1.e-5
+                      << std::setw(14) << B(pValue[j], z, Liquid)
+                      << std::setw(14) << getViscosity(pValue[j], z, Liquid)*1.e3;     
+            }
+            black << " /" <<  std::endl;
+        }
+        black << "/ " <<  std::endl;
+
+        // We provide tables for co_2 both with and without dissolved water:
+
+        // Co_2 neglecting dissolved water ("dry gas")
+        black << "\nPVDG\n";
+        black << "--    Pg          Bg            Vg\n";
+        black << "--   barsa        rm3/sm3       cP\n";
+ 
+        for (unsigned int i=0; i<np; ++i) {
+            z[Oil] = 0.0;
+            z[Gas] = 1.0;
+            black << std::setw(14) << pValue[i+np_fill_in+1]*1.e-5
+                  << std::setw(14) << B(pValue[i+np_fill_in+1], z, Vapour)
+                  << std::setw(14) << getViscosity(pValue[i+np_fill_in+1], z, Vapour)*1.e3
+                  << std::endl;     
+        }
+        black << "/ " <<  std::endl;
+
+        // Co_2 with dissolved water ("wet gas")
+        black << "\nPVTG\n";
+        black << "--    Pg          Rv            Bg            Vg\n";
+        black << "--   barsa        sm3/sm3       rm3/sm3       cP\n";
+        for (unsigned int i=0; i<np; ++i) {
+            z[Oil] = 1000.0;
+            z[Gas] = 1.0;
+            black << std::setw(14) << pValue[i+np_fill_in+1]*1.e-5
+                  << std::setw(14) << R(pValue[i+np_fill_in+1], z, Vapour)
+                  << std::setw(14) << B(pValue[i+np_fill_in+1], z, Vapour)
+                  << std::setw(14) << getViscosity(pValue[i+np_fill_in+1], z, Vapour)*1.e3
+                  << std::endl;
+            z[Oil] = 0.0;
+            black << std::setw(14) << ' '
+                  << std::setw(14) << R(pValue[i+np_fill_in+1], z, Vapour)
+                  << std::setw(14) << B(pValue[i+np_fill_in+1], z, Vapour)
+                  << std::setw(14) << getViscosity(pValue[i+np_fill_in+1], z, Vapour)*1.e3
+                  << " /" << std::endl;          
+        }
+        black << "/ " <<  std::endl;
+        black << std::endl;
+        std::cout << " Pvt tables for temperature=" << temperature << " Kelvin is written to file blackoil_pvt. " << std::endl;
+        std::cout << " NOTE that the file contains tables for both PVDG (dry gas) and PVTG (wet gas)." << std::endl;
     }
 
     BlackoilCo2PVT::CompVec BlackoilCo2PVT::surfaceDensities() const
@@ -273,11 +388,11 @@ namespace Opm
         }
     }
     
-    void BlackoilCo2PVT::computeState(BlackoilCo2PVT::SubState& ss, double zBrine, double zCO2, double pressure, double temperature) const
+    void BlackoilCo2PVT::computeState(BlackoilCo2PVT::SubState& ss, double zBrine, double zCO2, double pressure) const
     {
                
         CompositionalFluidState state;     
-        state.setTemperature(temperature);
+        state.setTemperature(temperature_);
         state.setPressure(wPhase, pressure);
         state.setPressure(nPhase, pressure);
         
@@ -348,8 +463,8 @@ namespace Opm
             state.setSaturation(nPhase, 1.0 - ss.saturation);
         } 
         
-        ss.phaseViscosity[wPhase] = brineCo2_.phaseViscosity(wPhase, temperature, pressure, state);
-        ss.phaseViscosity[nPhase] = brineCo2_.phaseViscosity(nPhase, temperature, pressure, state);        
+        ss.phaseViscosity[wPhase] = brineCo2_.phaseViscosity(wPhase, temperature_, pressure, state);
+        ss.phaseViscosity[nPhase] = brineCo2_.phaseViscosity(nPhase, temperature_, pressure, state);        
 
     }
     

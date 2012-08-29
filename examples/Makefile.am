@@ -76,10 +76,13 @@ blackoil_sim_test_LDADD = $(LDADD) ../lib/libopmporsol.la
 #
 if HAVE_CXX0X_CONSTEXPR
 noinst_PROGRAMS +=				\
-co2_sim_test
+co2_sim_test                                    \
+co2_blackoil_pvt
 
 co2_sim_test_SOURCES = co2_sim_test.cpp
 co2_sim_test_LDADD = $(LDADD) ../lib/libopmporsol.la
+co2_blackoil_pvt_SOURCES = co2_blackoil_pvt.cpp
+co2_blackoil_pvt_LDADD = $(LDADD) ../lib/libopmporsol.la
 endif
 
 
