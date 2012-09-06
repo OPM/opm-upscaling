@@ -17,7 +17,7 @@ libopmporsolcommon_la_SOURCES = \
 	LinearSolverISTL.cpp
 
 
-libopmporsolcommon_la_CPPFLAGS = $(DUNE_CPPFLAGS) $(OPM_BOOST_CPPFLAGS)
+libopmporsolcommon_la_CPPFLAGS = $(AM_CPPFLAGS) $(DUNE_CPPFLAGS) $(OPM_BOOST_CPPFLAGS)
 libopmporsolcommon_la_LDFLAGS  = $(DUNE_LDFLAGS) $(OPM_BOOST_LDFLAGS)
 
 include $(top_srcdir)/am/global-rules
