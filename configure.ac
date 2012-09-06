@@ -27,7 +27,7 @@ AM_CONDITIONAL([HAVE_CXX0X_CONSTEXPR],dnl
   [test x"$HAVE_CXX0X_CONSTEXPR" = x"yes"])[]dnl
 
 # implicitly set the Dune-flags everywhere
-AC_SUBST(AM_CPPFLAGS, $DUNE_CPPFLAGS)
+AC_SUBST(AM_CPPFLAGS, '$(DUNE_CPPFLAGS)  -I$(top_srcdir)')
 AC_SUBST(AM_LDFLAGS, $DUNE_LDFLAGS)
 LIBS="$DUNE_LIBS"
 
