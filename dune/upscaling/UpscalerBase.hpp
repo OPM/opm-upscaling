@@ -85,9 +85,12 @@ namespace Dune
                   double perm_threshold,
                   double z_tolerance = 0.0,
                   double residual_tolerance = 1e-8,
+                  int linsolver_maxit = 0,
+                  double linsolver_prolongate_factor =1.6,
                   int linsolver_verbosity = 0,
                   int linsolver_type = 1,
-                  bool twodim_hack = false);
+                  bool twodim_hack = false,
+                  int linsolver_smooth_steps=2);
 
 	/// Access the grid.
 	const GridType& grid() const;
@@ -135,8 +138,11 @@ namespace Dune
 	BoundaryConditionType bctype_;
 	bool twodim_hack_;
 	double residual_tolerance_;
+        int linsolver_maxit_;
+        double linsolver_prolongate_factor_;
 	int linsolver_verbosity_;
         int linsolver_type_;
+        int linsolver_smooth_steps_;
 
 	GridType grid_;
 	GridInterface ginterf_;

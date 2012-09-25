@@ -176,6 +176,7 @@ void setVoigtValue(SinglePhaseUpscaler::permtensor_t& K, int voigt_idx, double v
 
 int main(int varnum, char** vararg)
 {
+  try{
    // Variables used for timing/profiling:
    clock_t start, finish;
    double timeused = 0.0, timeused_tesselation = 0.0;
@@ -223,7 +224,10 @@ int main(int varnum, char** vararg)
                                                               // give so small contributions near endpoints.
    options.insert(make_pair("linsolver_tolerance", "1e-12"));  // residual tolerance for linear solver
    options.insert(make_pair("linsolver_verbosity", "0"));     // verbosity level for linear solver
+   options.insert(make_pair("linsolver_max_iterations", "0"));         // Maximum number of iterations allow, specify 0 for default
+   options.insert(make_pair("linsolver_prolongate_factor", "1.6")); // Factor to scale the prolongate coarse grid correction,
    options.insert(make_pair("linsolver_type",      "1"));     // type of linear solver: 0 = ILU/BiCGStab, 1 = AMG/CG
+   options.insert(make_pair("linsolver_smooth_steps", "2")); // Number of pre and postsmoothing steps for AMG
 
    // Conversion factor, multiply mD numbers with this to get m² numbers
    const double milliDarcyToSqMetre = 9.869233e-16;
@@ -663,11 +667,15 @@ int main(int varnum, char** vararg)
    double linsolver_tolerance = atof(options["linsolver_tolerance"].c_str());
    int linsolver_verbosity = atoi(options["linsolver_verbosity"].c_str());
    int linsolver_type = atoi(options["linsolver_type"].c_str());
+   int linsolver_maxit = atoi(options["linsolver_max_iterations"].c_str()); 
+   int smooth_steps = atoi(options["linsolver_smooth_steps"].c_str());
+   double linsolver_prolongate_factor = atof(options["linsolver_prolongate_factor"].c_str());
    bool twodim_hack = false;
    eclParser.convertToSI();
    upscaler.init(eclParser, boundaryCondition,
                  Opm::unit::convert::from(minPerm, Opm::prefix::milli*Opm::unit::darcy),
-                 ztol, linsolver_tolerance, linsolver_verbosity, linsolver_type, twodim_hack);
+                 ztol, linsolver_tolerance, linsolver_maxit, linsolver_prolongate_factor,
+                 linsolver_verbosity, linsolver_type, twodim_hack, smooth_steps);
 
    finish = clock();   timeused_tesselation = (double(finish)-double(start))/CLOCKS_PER_SEC;
    if (isMaster) cout << " (" << timeused_tesselation <<" secs)" << endl;
@@ -1469,6 +1477,18 @@ int main(int varnum, char** vararg)
            outfile.close();      
        }
    }
+  }catch (Dune::Exception &e){
+  std::cerr << "Dune reported error: " << e << std::endl;
+ }
+ catch(std::exception &e2){
+   std::cerr<<"std::exception:"<<e2.what()<<std::endl;
+ }
+ catch(const char* s){
+   std::cout<<"const char* ("<<s<<") thrown"<<std::endl;
+}
+ catch (...){
+   std::cerr << "Unknown exception thrown!" << std::endl;
+ }
 
 #if USEMPI
    MPI_Finalize();

@@ -13,6 +13,10 @@ upscale_cap					\
 upscale_cond					\
 upscale_perm					\
 upscale_relperm					\
+upscale_relperm_ssor                            \
+upscale_relperm_bgs                             \
+upscale_relperm_aniso                           \
+upscale_relperm_aniso_ssor                      \
 upscale_relpermvisc
 
 
@@ -35,6 +39,18 @@ upscale_cond_SOURCES = upscale_cond.cpp
 upscale_perm_SOURCES = upscale_perm.cpp
 
 upscale_relperm_SOURCES = upscale_relperm.cpp
+
+upscale_relperm_ssor_SOURCES = upscale_relperm.cpp
+upscale_relperm_ssor_CXXFLAGS = -DSMOOTHER_ILU=0 $(AM_CPPFLAGS)
+
+upscale_relperm_bgs_SOURCES = upscale_relperm.cpp
+upscale_relperm_bgs_CXXFLAGS = -DSMOOTHER_ILU=0 -DSMOOTHER_BGS=1 $(AM_CPPFLAGS)
+
+upscale_relperm_aniso_SOURCES = upscale_relperm.cpp
+upscale_relperm_aniso_CXXFLAGS = -DANISOTROPIC_3D=1
+
+upscale_relperm_aniso_ssor_SOURCES = upscale_relperm.cpp
+upscale_relperm_aniso_ssor_CXXFLAGS = -DANISOTROPIC_3D=1 -DSMOOTHER_ILU=0 $(AM_CPPFLAGS)
 
 upscale_relpermvisc_SOURCES = upscale_relpermvisc.cpp
 
