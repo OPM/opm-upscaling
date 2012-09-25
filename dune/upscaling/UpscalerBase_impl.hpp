@@ -88,7 +88,7 @@ namespace Dune
 	linsolver_verbosity_ = param.getDefault("linsolver_verbosity", linsolver_verbosity_);
         linsolver_type_ = param.getDefault("linsolver_type", linsolver_type_);
         linsolver_maxit_ = param.getDefault("linsolver_max_iterations", linsolver_maxit_);
-        linsolver_prolongate_factor_ = param.getDefault("linsolver_prolongate_factor", linsolver_prolongate_factor_)
+        linsolver_prolongate_factor_ = param.getDefault("linsolver_prolongate_factor", linsolver_prolongate_factor_);
         linsolver_smooth_steps_ = param.getDefault("linsolver_smooth_steps", linsolver_smooth_steps_);
 
         // Ensure sufficient grid support for requested boundary
