@@ -11,6 +11,7 @@ grdecldips                   			\
 upscale_avg					\
 upscale_cap					\
 upscale_cond					\
+upscale_elasticity				\
 upscale_perm					\
 upscale_relperm					\
 upscale_relpermvisc                             \
@@ -32,6 +33,10 @@ upscale_avg_SOURCES = upscale_avg.cpp
 upscale_cap_SOURCES = upscale_cap.cpp
 
 upscale_cond_SOURCES = upscale_cond.cpp
+
+upscale_elasticity_SOURCES = upscale_elasticity.cpp
+upscale_elasticity_CXXFLAGS = ${OPENMP_CXXFLAGS}
+upscale_elasticity_LDADD = $(top_srcdir)/dune/elasticity/libelasticityupscale_noinst.la
 
 upscale_perm_SOURCES = upscale_perm.cpp
 

@@ -37,6 +37,7 @@ AC_CONFIG_FILES([
   doc/doxygen/Doxyfile
   dune/Makefile
   dune/upscaling/Makefile
+  dune/elasticity/Makefile
   dune/upscaling/test/Makefile
   opm-upscaling.pc
   examples/Makefile
