@@ -60,6 +60,7 @@
 #include <dune/istl/bcrsmatrix.hh>
 #include <dune/istl/operators.hh>
 #include <dune/istl/io.hh>
+#include <dune/istl/matrixmarket.hh>
 
 #include <dune/istl/overlappingschwarz.hh>
 #include <dune/istl/schwarz.hh>
@@ -67,6 +68,7 @@
 #include <dune/istl/solvers.hh>
 #include <dune/istl/owneroverlapcopy.hh>
 #include <dune/istl/paamg/amg.hh>
+#include <dune/istl/paamg/kamg.hh>
 #include <dune/istl/paamg/pinfo.hh>
 
 #include <dune/porsol/common/BoundaryConditions.hpp>
@@ -634,15 +636,22 @@ namespace Dune {
         ///    Control parameter for iterative linear solver software.
         ///    Type 0 selects a BiCGStab solver, type 1 selects AMG/CG.
         ///
+        /// @param [in] linsolver_maxit maximum iterations allowed
+        /// @param [in] prolongate_factor Factor to scale the prolongated coarse 
+        ///    coarse grid correction
+        ///
         template<class FluidInterface>
         void solve(const FluidInterface&      r  ,
                    const std::vector<double>& sat,
                    const BCInterface&         bc ,
                    const std::vector<double>& src,
                    double residual_tolerance = 1e-8,
+                   int linsolver_maxit = 0,
+                   double prolongate_factor = 1.6,
                    int linsolver_verbosity = 1,
                    int linsolver_type = 1,
-                   bool same_matrix = false)
+                   bool same_matrix = false,
+                   int smooth_steps = 1)
         {
             assembleDynamic(r, sat, bc, src);
 //             static int count = 0;
@@ -650,10 +659,16 @@ namespace Dune {
 //             printSystem(std::string("linsys_mimetic-") + boost::lexical_cast<std::string>(count));
             switch (linsolver_type) {
             case 0: // ILU0 preconditioned BiCGStab
-                solveLinearSystem(residual_tolerance, linsolver_verbosity);
+              solveLinearSystem(residual_tolerance, linsolver_verbosity, linsolver_maxit);
                 break;
             case 1: // AMG
-                solveLinearSystemAMG(residual_tolerance, linsolver_verbosity, same_matrix);
+                solveLinearSystemAMG(residual_tolerance, linsolver_verbosity, 
+				     linsolver_maxit, prolongate_factor, same_matrix, smooth_steps);
+                break;
+		
+            case 2: // KAMG
+                solveLinearSystemKAMG(residual_tolerance, linsolver_verbosity, 
+				      linsolver_maxit, prolongate_factor, same_matrix,smooth_steps);
                 break;
             default:
                 std::cerr << "Unknown linsolver_type: " << linsolver_type << '\n';
@@ -1341,7 +1356,7 @@ namespace Dune {
 
 
         // ----------------------------------------------------------------
-        void solveLinearSystem(double residual_tolerance, int verbosity_level)
+        void solveLinearSystem(double residual_tolerance, int verbosity_level, int maxit)
         // ----------------------------------------------------------------
         {
             // Adapted from DuMux...
@@ -1362,7 +1377,7 @@ namespace Dune {
 
             // Construct solver for system of linear equations.
             Dune::CGSolver<Vector> linsolve(opS, precond, residTol,
-                                                  S_.N(), verbosity_level);
+                                            (maxit>0)?maxit:S_.N(), verbosity_level);
 
             Dune::InverseOperatorResult result;
             soln_ = 0.0;
@@ -1388,10 +1403,21 @@ namespace Dune {
         // AMG specific types.
         // Old:   FIRST_DIAGONAL 1, SYMMETRIC 1, SMOOTHER_ILU 1, ANISOTROPIC_3D 0
         // SPE10: FIRST_DIAGONAL 0, SYMMETRIC 1, SMOOTHER_ILU 0, ANISOTROPIC_3D 1
+#ifndef FIRST_DIAGONAL
 #define FIRST_DIAGONAL 1
+#endif
+#ifndef SYMMETRIC
 #define SYMMETRIC 1
+#endif
+#ifndef SMOOTHER_ILU
 #define SMOOTHER_ILU 1
+#endif
+#ifndef SMOOTHER_BGS
+#define SMOOTHER_BGS 0
+#endif
+#ifndef ANISOTROPIC_3D
 #define ANISOTROPIC_3D 0
+#endif
 
 #if FIRST_DIAGONAL
         typedef Amg::FirstDiagonal CouplingMetric;
@@ -1405,24 +1431,30 @@ namespace Dune {
         typedef Amg::UnSymmetricCriterion<Matrix,CouplingMetric> CriterionBase;
 #endif
 
+#if SMOOTHER_BGS
+      typedef SeqOverlappingSchwarz<Matrix,Vector,Dune::MultiplicativeSchwarzMode> Smoother;
+#else
 #if SMOOTHER_ILU
         typedef SeqILU0<Matrix,Vector,Vector>        Smoother;
 #else
         typedef SeqSSOR<Matrix,Vector,Vector>        Smoother;
 #endif
+#endif
         typedef Amg::CoarsenCriterion<CriterionBase> Criterion;
-        typedef Amg::AMG<Operator,Vector,Smoother>   Precond;
 
 
         // --------- storing the AMG operator and preconditioner --------
         boost::scoped_ptr<Operator> opS_;
-        boost::scoped_ptr<Precond> precond_;
 
 
         // ----------------------------------------------------------------
-        void solveLinearSystemAMG(double residual_tolerance, int verbosity_level, bool same_matrix)
+        void solveLinearSystemAMG(double residual_tolerance, int verbosity_level,
+                                  int maxit, double prolong_factor, bool same_matrix, int smooth_steps)
         // ----------------------------------------------------------------
         {
+            typedef Amg::AMG<Operator,Vector,Smoother>   Precond;
+            boost::scoped_ptr<Precond> precond_;
+
             // Adapted from upscaling.cc by Arne Rekdal, 2009
             Scalar residTol = residual_tolerance;
 
@@ -1432,26 +1464,106 @@ namespace Dune {
                     S_[0][0] *= 2;
                 }
                 opS_.reset(new Operator(S_));
+		
                 // Construct preconditioner.
                 double relax = 1;
                 typename Precond::SmootherArgs smootherArgs;
                 smootherArgs.relaxationFactor = relax;
-
+#if SMOOTHER_BGS
+                smootherArgs.overlap =  Precond::SmootherArgs::none;
+                smootherArgs.onthefly = false;
+#endif
                 Criterion criterion;
                 criterion.setDebugLevel(verbosity_level);
+                criterion.setSkipIsolated(true);
 #if ANISOTROPIC_3D
                 criterion.setDefaultValuesAnisotropic(3, 2);
 #endif
-                precond_.reset(new Precond(*opS_, criterion, smootherArgs));
+                criterion.setProlongationDampingFactor(prolong_factor);
+                precond_.reset(new Precond(*opS_, criterion, smootherArgs,
+				           1, smooth_steps, smooth_steps));
             }
-
-
             // Construct solver for system of linear equations.
-            CGSolver<Vector> linsolve(*opS_, *precond_, residTol, S_.N(), verbosity_level);
+            CGSolver<Vector> linsolve(*opS_, *precond_, residTol, (maxit>0)?maxit:S_.N(), verbosity_level);
 
             InverseOperatorResult result;
             soln_ = 0.0;
+            // Adapt initial guess such Dirichlet boundary conditions are 
+            // represented, i.e. soln_i=A_{ii}^-1 rhs_i
+            typedef typename BCRSMatrix <MatrixBlockType>::ConstRowIterator RowIter;
+            typedef typename BCRSMatrix <MatrixBlockType>::ConstColIterator ColIter;
+            for(RowIter ri=S_.begin(); ri!=S_.end(); ++ri){
+                bool isDirichlet=true;
+                for(ColIter ci=ri->begin(); ci!=ri->end(); ++ci)
+                    if(ci.index()!=ri.index() && *ci!=0.0)
+                        isDirichlet=false;
+                if(isDirichlet)
+                    soln_[ri.index()]=rhs_[ri.index()]/S_[ri.index()][ri.index()];
+            }
+            // Solve system of linear equations to recover
+            // face/contact pressure values (soln_).
+            linsolve.apply(soln_, rhs_, result);
+            if (!result.converged) {
+                THROW("Linear solver failed to converge in " << result.iterations << " iterations.\n"
+                      << "Residual reduction achieved is " << result.reduction << '\n');
+            }
 
+        }
+
+
+        // ----------------------------------------------------------------
+        void solveLinearSystemKAMG(double residual_tolerance, int verbosity_level,
+                                   int maxit, double prolong_factor, bool same_matrix, int smooth_steps)
+        // ----------------------------------------------------------------
+        {
+          typedef Amg::KAMG<Operator,Vector,Smoother,Amg::SequentialInformation,
+                            CGSolver<Vector> >   Precond;
+            boost::scoped_ptr<Precond> precond_;
+        
+            // Adapted from upscaling.cc by Arne Rekdal, 2009
+            Scalar residTol = residual_tolerance;
+            if (!same_matrix) {
+                // Regularize the matrix (only for pure Neumann problems...)
+                if (do_regularization_) {
+                    S_[0][0] *= 2;
+                }
+                opS_.reset(new Operator(S_));
+                
+                //writeMatrixMarket(S_, std::cerr);
+                // Construct preconditioner.
+                double relax = 1;
+                typename Precond::SmootherArgs smootherArgs;
+                smootherArgs.relaxationFactor = relax;
+#if SMOOTHER_BGS
+                smootherArgs.overlap =  Precond::SmootherArgs::none;
+                smootherArgs.onthefly = false;
+#endif
+                Criterion criterion;
+                criterion.setDebugLevel(verbosity_level);
+                criterion.setSkipIsolated(true);
+#if ANISOTROPIC_3D
+                criterion.setDefaultValuesAnisotropic(3, 2);
+#endif
+                criterion.setProlongationDampingFactor(prolong_factor);
+                precond_.reset(new Precond(*opS_, criterion, smootherArgs, 2, smooth_steps, smooth_steps));
+            }
+            // Construct solver for system of linear equations.
+            CGSolver<Vector> linsolve(*opS_, *precond_, residTol, (maxit>0)?maxit:S_.N(), verbosity_level);
+
+            InverseOperatorResult result;
+            soln_ = 0.0;
+            // Adapt initial guess such Dirichlet boundary conditions are 
+            // represented, i.e. soln_i=A_{ii}^-1 rhs_i
+            typedef typename BCRSMatrix <MatrixBlockType>::ConstRowIterator RowIter;
+            typedef typename BCRSMatrix <MatrixBlockType>::ConstColIterator ColIter;
+            for(RowIter ri=S_.begin(); ri!=S_.end(); ++ri){
+                bool isDirichlet=true;
+                for(ColIter ci=ri->begin(); ci!=ri->end(); ++ci)
+                    if(ci.index()!=ri.index() && *ci!=0.0)
+                        isDirichlet=false;
+                if(isDirichlet)
+                    soln_[ri.index()]=rhs_[ri.index()]/S_[ri.index()][ri.index()];
+            }
             // Solve system of linear equations to recover
             // face/contact pressure values (soln_).
             linsolve.apply(soln_, rhs_, result);
