@@ -181,6 +181,8 @@ namespace Dune
                    const BCInterface&         bc ,
                    const std::vector<double>& src,
                    double residual_tolerance = 1e-8,
+                   int linsolver_maxit =0,
+                   double linsolver_prolongate_factor = 1.6,
                    int linsolver_verbosity = 1,
                    int linsolver_type = 1,
                    bool same_matrix = false)
@@ -235,6 +237,8 @@ namespace Dune
             params.insertParameter("linsolver_tolerance", boost::lexical_cast<std::string>(residual_tolerance));
             params.insertParameter("linsolver_verbosity", boost::lexical_cast<std::string>(linsolver_verbosity));
             params.insertParameter("linsolver_type", boost::lexical_cast<std::string>(linsolver_type));
+            params.insertParameter("linsolver_max_iterations", boost::lexical_cast<std::string>(linsolver_maxit));
+            params.insertParameter("linsolver_prolongate_factor", boost::lexical_cast<std::string>(linsolver_prolongate_factor));
             linsolver_.init(params);
             LinearSolverISTL::LinearSolverResults res = linsolver_.solve(s.n, s.nnz, s.ia, s.ja, s.sa, s.b, s.x);
             if (!res.converged) {
