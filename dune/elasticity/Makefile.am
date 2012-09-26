@@ -1,6 +1,6 @@
-noinst_LTLIBRARIES = libelasticityupscale_noinst.la
+lib_LTLIBRARIES = libelasticityupscale.la
 
-libelasticityupscale_noinst_la_SOURCES = \
+libelasticityupscale_la_SOURCES = \
         boundarygrid.cpp \
         material.cpp \
         materials.cpp \
