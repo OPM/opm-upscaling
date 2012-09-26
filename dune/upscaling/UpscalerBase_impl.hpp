@@ -47,8 +47,11 @@ namespace Dune
 	: bctype_(Fixed),
 	  twodim_hack_(false),
 	  residual_tolerance_(1e-8),
+	  linsolver_maxit_(0),
+	  linsolver_prolongate_factor_(1.6),
 	  linsolver_verbosity_(0),
-          linsolver_type_(1)
+          linsolver_type_(1),
+          linsolver_smooth_steps_(2)
     {
     }
 
@@ -84,6 +87,9 @@ namespace Dune
 	residual_tolerance_ = param.getDefault("residual_tolerance", residual_tolerance_);
 	linsolver_verbosity_ = param.getDefault("linsolver_verbosity", linsolver_verbosity_);
         linsolver_type_ = param.getDefault("linsolver_type", linsolver_type_);
+        linsolver_maxit_ = param.getDefault("linsolver_max_iterations", linsolver_maxit_);
+        linsolver_prolongate_factor_ = param.getDefault("linsolver_prolongate_factor", linsolver_prolongate_factor_);
+        linsolver_smooth_steps_ = param.getDefault("linsolver_smooth_steps", linsolver_smooth_steps_);
 
         // Ensure sufficient grid support for requested boundary
         // condition type.
@@ -125,14 +131,20 @@ namespace Dune
                                                   double perm_threshold,
                                                   double z_tolerance,
                                                   double residual_tolerance,
+                                                  int linsolver_maxit,
+                                                  double linsolver_prolongate_factor,
                                                   int linsolver_verbosity,
                                                   int linsolver_type,
-                                                  bool twodim_hack)
+                                                  bool twodim_hack,
+                                                  int linsolver_smooth_steps)
     {
 	bctype_ = bctype;
 	residual_tolerance_ = residual_tolerance;
 	linsolver_verbosity_ = linsolver_verbosity;
         linsolver_type_ = linsolver_type;
+	    linsolver_maxit_ = linsolver_maxit;
+         linsolver_prolongate_factor_ = linsolver_prolongate_factor;
+        linsolver_smooth_steps_ = linsolver_smooth_steps;
 	twodim_hack_ = twodim_hack;
 
 	// Faking some parameters depending on bc type.
@@ -231,7 +243,9 @@ namespace Dune
 	    // Run pressure solver.
             bool same_matrix = (bctype_ != Fixed) && (pdd != 0);
 	    flow_solver_.solve(fluid, sat, bcond_, src, residual_tolerance_,
-                               linsolver_verbosity_, linsolver_type_, same_matrix);
+                               linsolver_maxit_, linsolver_prolongate_factor_,
+                               linsolver_verbosity_, 
+                               linsolver_type_, same_matrix, linsolver_smooth_steps_);
             double max_mod = flow_solver_.postProcessFluxes();
             std::cout << "Max mod = " << max_mod << std::endl;
 
@@ -291,8 +305,8 @@ namespace Dune
 			if (canon_bid - 1 == 2*flow_dir) {
 			    ++num_side1;
 			    if (flow_dir == pdrop_dir && flux > 0.0) {
-				std::cerr << "Flow may be in wrong direction at bid: " << f->boundaryId()
-					  << " Magnitude: " << std::fabs(flux) << std::endl;
+			      std::cerr << "Flow may be in wrong direction at bid: " << f->boundaryId()<<" (canonical: "<<canon_bid
+					  << ") Magnitude: " << std::fabs(flux) << std::endl;
 				// THROW("Detected outflow at entry face: " << face);
 			    }
 			    side1_flux += flux*norm_comp;
