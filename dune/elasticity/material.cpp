@@ -14,6 +14,8 @@
 #include "materials.hh"
 #include <fstream>
 
+namespace Opm {
+namespace Elasticity {
 
 Material* Material::create (int ID, const Dune::DynamicVector<double>& params)
 {
@@ -134,4 +136,7 @@ Material* Material::create(int ID, const std::string& file)
       
       return new Isotropic(ID,E,nu,rho);
   }
+}
+
+}
 }

@@ -19,6 +19,9 @@
 
 #include <vector>
 
+namespace Opm {
+namespace Elasticity {
+
 //! \brief A class describing a quad grid
 class BoundaryGrid {
   public:
@@ -477,3 +480,6 @@ BoundaryGrid::Vertex maxXmaxY(std::vector<BoundaryGrid::Vertex>& in);
 //! \brief Find the vertex in the vector with minimum X and maximum Y
 //! \returns The requested vertex
 BoundaryGrid::Vertex minXmaxY(std::vector<BoundaryGrid::Vertex>& in);
+
+}
+}

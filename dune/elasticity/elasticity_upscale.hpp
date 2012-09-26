@@ -35,6 +35,9 @@
 #include <dune/elasticity/materials.hh>
 #include <dune/elasticity/mpc.hh>
 
+namespace Opm {
+namespace Elasticity {
+
 //! \brief An enumeration of available linear solvers
 enum Solver {
   SLU,
@@ -332,3 +335,6 @@ class ElasticityUpscale
 };
 
 #include "elasticity_upscale_impl.hpp"
+
+}
+}

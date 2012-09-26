@@ -23,6 +23,10 @@ typedef Dune::BlockVector<Dune::FieldVector<double,1> > Vector;
 
 #include <iostream>
 
+namespace Opm {
+namespace Elasticity {
+
+
 //!\brief Class handling finite element assembly
   template<class GridType>
 class ASMHandler {
@@ -221,3 +225,6 @@ class ASMHandler {
 };
 
 #include "asmhandler_impl.hpp"
+
+}
+}

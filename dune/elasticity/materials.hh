@@ -14,6 +14,9 @@
 #include "material.hh"
 
 
+namespace Opm {
+namespace Elasticity {
+
 /*!
   \brief Isotropic linear elastic material.
 */
@@ -167,3 +170,6 @@ protected:
 private:
   double Cupper[21]; //!< Upper triangle of the symmetric constitutive matrix
 };
+
+}
+}

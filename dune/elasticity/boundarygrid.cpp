@@ -11,6 +11,9 @@
 //==============================================================================
 #include "boundarygrid.hh"
 
+namespace Opm {
+namespace Elasticity {
+
 BoundaryGrid BoundaryGrid::uniform(const FaceCoord& min, const FaceCoord& max,
                                    int k1, int k2, bool dc)
 {
@@ -376,4 +379,7 @@ BoundaryGrid::Vertex minXmaxY(std::vector<BoundaryGrid::Vertex>& in)
   std::sort(s.begin(),s.end(),BoundaryGrid::VertexLess(0));
   std::sort(s.begin(),s.begin()+2,BoundaryGrid::VertexLess(1));
   return *(s.begin()+1);
+}
+
+}
 }

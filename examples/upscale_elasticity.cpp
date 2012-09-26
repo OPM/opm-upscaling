@@ -76,7 +76,7 @@ struct Params {
   //! \brief Maximum grid coordinates
   double max[3];
   //! \brief The linear solver to employ
-  Solver solver;
+  Opm::Elasticity::Solver solver;
 
   // Debugging options
   //! \brief Number of elements on interface grid in the x direction (LLM)
@@ -119,9 +119,9 @@ void parseCommandLine(int argc, char** argv, Params& p)
   //std::string solver = param.getDefault<std::string>("linsolver_type","slu");
   std::string solver = param.getDefault<std::string>("linsolver_type","cg");
   if (solver == "cg")
-    p.solver = CG;
+    p.solver = Opm::Elasticity::CG;
   else
-    p.solver = SLU;
+    p.solver = Opm::Elasticity::SLU;
   if (p.file == "uniform") {
     p.cellsx   = param.getDefault("cellsx",3);
     p.cellsy   = param.getDefault("cellsy",3);
@@ -178,8 +178,9 @@ void writeOutput(const Params& p, Opm::time::StopWatch& watch, int cells,
   }
   f << "# Options used:" << std::endl
     << "#\t         method: " << method << std::endl
-    << "#\t linsolver_type: " << (p.solver==SLU?"slu":"cg") << std::endl;
-  if (p.solver == CG)
+    << "#\t linsolver_type: " << (p.solver==Opm::Elasticity::SLU?"slu":"cg")
+                              << std::endl;
+  if (p.solver == Opm::Elasticity::CG)
     f << "#\t           ltol: " << p.ltol << std::endl;
   if (p.file == "uniform") {
     f << "#\t          cellsx: " << p.cellsx << std::endl
@@ -229,7 +230,7 @@ int main(int argc, char** argv)
       grid.readEclipseFormat(p.file,p.ctol,false);
 
     typedef GridType::ctype ctype;
-    ElasticityUpscale<GridType> upscale(grid, p.ctol, p.Emin, p.file, p.rocklist);
+    Opm::Elasticity::ElasticityUpscale<GridType> upscale(grid, p.ctol, p.Emin, p.file, p.rocklist);
     if (p.max[0] < 0 || p.min[0] < 0) {
       std::cout << "determine side coordinates..." << std::endl;
       upscale.findBoundaries(p.min,p.max);

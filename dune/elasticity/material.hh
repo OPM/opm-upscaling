@@ -14,6 +14,9 @@
 #include <dune/common/fmatrix.hh>
 #include <dune/common/dynvector.hh>
 
+namespace Opm {
+namespace Elasticity {
+
 
 /*!
   \brief This is a base class for linear elastic materials.
@@ -91,3 +94,6 @@ private:
   int  id;  //!< External material number
   double rho; //!< Mass density
 };
+
+}
+}

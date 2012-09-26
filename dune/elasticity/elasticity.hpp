@@ -11,6 +11,9 @@
 //==============================================================================
 #pragma once
 
+namespace Opm {
+namespace Elasticity {
+
 //! \brief Elasticity helper class
   template<class GridType>
 class Elasticity {
@@ -63,3 +66,6 @@ class Elasticity {
 };
 
 #include "elasticity_impl.hpp"
+
+}
+}

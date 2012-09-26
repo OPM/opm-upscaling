@@ -13,6 +13,9 @@
 
 #include <dune/istl/bcrsmatrix.hh>
 
+namespace Opm {
+namespace Elasticity {
+
 //! \brief A sparse matrix holding our operator
 typedef Dune::BCRSMatrix<Dune::FieldMatrix<double,1,1> > Matrix;
 
@@ -52,3 +55,6 @@ class MatrixOps {
 };
 
 #include "matrixops_impl.hpp"
+
+}
+}

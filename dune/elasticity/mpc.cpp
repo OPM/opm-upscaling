@@ -12,6 +12,9 @@
 
 #include "mpc.hh"
 
+namespace Opm {
+namespace Elasticity {
+
 bool MPC::Less::compareSlaveDofOnly = false;
 
 
@@ -76,4 +79,7 @@ std::ostream& operator<< (std::ostream& s, const MPC& mpc)
     s <<"*("<< mpc.master[i].node <<","<< mpc.master[i].dof <<")";
   }
   return s << std::endl;
+}
+
+}
 }

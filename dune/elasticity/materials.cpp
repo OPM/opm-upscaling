@@ -13,6 +13,8 @@
 #include "materials.hh"
 #include <string.h>
 
+namespace Opm {
+namespace Elasticity {
 
 std::ostream& Isotropic::write (std::ostream& os) const
 {
@@ -213,4 +215,7 @@ bool OrthotropicSym::getConstitutiveMatrix (Dune::FieldMatrix<double,3,3>& C,
                                             bool invers) const
 {
   return false;
+}
+
+}
 }

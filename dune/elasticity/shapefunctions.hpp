@@ -13,6 +13,9 @@
 
 #include <dune/common/fvector.hh>
 
+namespace Opm {
+namespace Elasticity {
+
 //! \brief Represents a linear shape function on a Q4/Q8 element
   template<class ctype, class rtype, int dim>
 class LinearShapeFunction
@@ -169,3 +172,6 @@ private:
     //! \brief Our shape functions
     ShapeFunction f[n];
 };
+
+}
+}
