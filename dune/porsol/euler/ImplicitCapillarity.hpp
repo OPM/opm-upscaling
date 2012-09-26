@@ -102,7 +102,6 @@ namespace Dune {
 	typedef typename GridInterface::CellIterator CIt;
 	typedef typename CIt::FaceIterator FIt;
 	typedef typename FIt::Vector Vector;
-        typedef ReservoirProperties RP;
 
         mutable PressureSolver psolver_;
 
