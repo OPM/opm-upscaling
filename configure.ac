@@ -23,6 +23,7 @@ AM_CONFIG_HEADER([config.h])
 DUNE_CHECK_ALL
 AC_LANG_PUSH([C++])
 m4_ifdef([AC_OPENMP], [AC_OPENMP])
+AC_LANG_POP([C++])
 
 # implicitly set the Dune-flags everywhere
 AC_SUBST(AM_CPPFLAGS, '$(DUNE_CPPFLAGS) -I$(top_srcdir)')
