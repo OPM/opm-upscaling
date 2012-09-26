@@ -1051,10 +1051,13 @@ void ElasticityUpscale<GridType>::solve(Solver solver, double tol, int loadcase)
   u[loadcase].resize(A.getOperator().N(), false);
   u[loadcase] = 2.0;
 
+#if HAVE_SUPERLU
   if (solver == SLU) {
     slu->apply(u[loadcase], b[loadcase], r);
   }
-  else if (solver == CG) {
+  else 
+#endif
+  if (solver == CG) {
     cgsolver->apply(u[loadcase], b[loadcase], r);
   }
   std::cout << "\t solution norm: " << u[loadcase].two_norm() << std::endl;
