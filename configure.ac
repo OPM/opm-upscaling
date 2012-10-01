@@ -21,6 +21,9 @@ AM_CONFIG_HEADER([config.h])
 # this module depends on dune-common dune-grid dune-istl dune-cornerpoint opm-porsol
 # this implies checking for [dune-common], [dune-grid], [dune-istl], [dune-cornerpoint], [opm-porsol]
 DUNE_CHECK_ALL
+AC_LANG_PUSH([C++])
+m4_ifdef([AC_OPENMP], [AC_OPENMP])
+AC_LANG_POP([C++])
 
 # implicitly set the Dune-flags everywhere
 AC_SUBST(AM_CPPFLAGS, '$(DUNE_CPPFLAGS) -I$(top_srcdir)')
@@ -35,6 +38,7 @@ AC_CONFIG_FILES([
   doc/doxygen/Doxyfile
   dune/Makefile
   dune/upscaling/Makefile
+  dune/elasticity/Makefile
   dune/upscaling/test/Makefile
   opm-upscaling.pc
   examples/Makefile
