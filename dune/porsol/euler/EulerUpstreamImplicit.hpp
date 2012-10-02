@@ -107,7 +107,6 @@ namespace Dune {
 	// typedef typename GridInterface::CellIterator CIt;
 	// typedef typename CIt::FaceIterator FIt;
 	// typedef typename FIt::Vector Vector;
-     typedef ReservoirProperties RP;
 
 	template <class PressureSolution>
 	void smallTimeStep(std::vector<double>& saturation,
