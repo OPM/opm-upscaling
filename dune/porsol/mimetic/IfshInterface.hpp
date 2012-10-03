@@ -181,9 +181,12 @@ namespace Dune
                    const BCInterface&         bc ,
                    const std::vector<double>& src,
                    double residual_tolerance = 1e-8,
+                   int linsolver_maxit =0,
+                   double linsolver_prolongate_factor = 1.6,
                    int linsolver_verbosity = 1,
                    int linsolver_type = 1,
-                   bool same_matrix = false)
+                   bool same_matrix = false,
+                   int linsolver_smooth_steps=2)
         {
             if (same_matrix) {
                 MESSAGE("Requested reuse of preconditioner, not implemented so far.");
@@ -235,6 +238,9 @@ namespace Dune
             params.insertParameter("linsolver_tolerance", boost::lexical_cast<std::string>(residual_tolerance));
             params.insertParameter("linsolver_verbosity", boost::lexical_cast<std::string>(linsolver_verbosity));
             params.insertParameter("linsolver_type", boost::lexical_cast<std::string>(linsolver_type));
+            params.insertParameter("linsolver_max_iterations", boost::lexical_cast<std::string>(linsolver_maxit));
+            params.insertParameter("linsolver_prolongate_factor", boost::lexical_cast<std::string>(linsolver_prolongate_factor));
+            params.insertParameter("linsolver_smooth_steps", boost::lexical_cast<std::string>(linsolver_smooth_steps));
             linsolver_.init(params);
             LinearSolverISTL::LinearSolverResults res = linsolver_.solve(s.n, s.nnz, s.ia, s.ja, s.sa, s.b, s.x);
             if (!res.converged) {
