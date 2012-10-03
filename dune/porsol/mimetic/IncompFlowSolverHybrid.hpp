@@ -60,7 +60,6 @@
 #include <dune/istl/bcrsmatrix.hh>
 #include <dune/istl/operators.hh>
 #include <dune/istl/io.hh>
-#include <dune/istl/matrixmarket.hh>
 
 #include <dune/istl/overlappingschwarz.hh>
 #include <dune/istl/schwarz.hh>
@@ -1475,7 +1474,6 @@ namespace Dune {
 #endif
                 Criterion criterion;
                 criterion.setDebugLevel(verbosity_level);
-                criterion.setSkipIsolated(true);
 #if ANISOTROPIC_3D
                 criterion.setDefaultValuesAnisotropic(3, 2);
 #endif
@@ -1529,7 +1527,6 @@ namespace Dune {
                 }
                 opS_.reset(new Operator(S_));
                 
-                //writeMatrixMarket(S_, std::cerr);
                 // Construct preconditioner.
                 double relax = 1;
                 typename Precond::SmootherArgs smootherArgs;
@@ -1540,7 +1537,6 @@ namespace Dune {
 #endif
                 Criterion criterion;
                 criterion.setDebugLevel(verbosity_level);
-                criterion.setSkipIsolated(true);
 #if ANISOTROPIC_3D
                 criterion.setDefaultValuesAnisotropic(3, 2);
 #endif
