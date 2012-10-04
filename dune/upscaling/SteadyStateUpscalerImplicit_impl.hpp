@@ -53,6 +53,7 @@ namespace Dune
     template <class Traits>
     inline SteadyStateUpscalerImplicit<Traits>::SteadyStateUpscalerImplicit()
         : Super(),
+          use_gravity_(false),
           output_vtk_(false),
           print_inoutflows_(false),
           simulation_steps_(10),
@@ -73,6 +74,7 @@ namespace Dune
     inline void SteadyStateUpscalerImplicit<Traits>::initImpl(const Opm::parameter::ParameterGroup& param)
     {
         Super::initImpl(param);
+        use_gravity_ = param.getDefault("output_vtk", use_gravity_);
         output_vtk_ = param.getDefault("output_vtk", output_vtk_);
         print_inoutflows_ = param.getDefault("print_inoutflows", print_inoutflows_);
         simulation_steps_ = param.getDefault("simulation_steps", simulation_steps_);
@@ -147,9 +149,12 @@ namespace Dune
 	Opm::SparseVector<double> injection(num_cells);
         // Gravity.
         FieldVector<double, 3> gravity(0.0);
-        // gravity[2] = -Opm::unit::gravity;
+        if(use_gravity_){
+            gravity[2] = -Opm::unit::gravity;
+        }
+        
         if (gravity.two_norm() > 0.0) {
-            MESSAGE("Warning: Gravity not yet handled by flow solver.");
+            MESSAGE("Warning: Gravity is experimental for flow solver.");
         }
 
         // Set up initial saturation profile.
