@@ -633,7 +633,7 @@ namespace Dune {
         ///
         /// @param [in] linsolver_type
         ///    Control parameter for iterative linear solver software.
-        ///    Type 0 selects a BiCGStab solver, type 1 selects AMG/CG.
+        ///    Type 0 selects a ILU0/CG solver, type 1 selects AMG/CG.
         ///
         /// @param [in] linsolver_maxit maximum iterations allowed
         /// @param [in] prolongate_factor Factor to scale the prolongated coarse 
@@ -657,7 +657,7 @@ namespace Dune {
 //             ++count;
 //             printSystem(std::string("linsys_mimetic-") + boost::lexical_cast<std::string>(count));
             switch (linsolver_type) {
-            case 0: // ILU0 preconditioned BiCGStab
+            case 0: // ILU0 preconditioned CG
               solveLinearSystem(residual_tolerance, linsolver_verbosity, linsolver_maxit);
                 break;
             case 1: // AMG
