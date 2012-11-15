@@ -11,10 +11,6 @@
 //==============================================================================
 #pragma once
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
-
 #include <dune/common/fmatrix.hh>
 #include <opm/core/eclipse/EclipseGridParser.hpp>
 #include <dune/grid/common/mcmgmapper.hh>
