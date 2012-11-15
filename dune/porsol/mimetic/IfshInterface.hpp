@@ -181,12 +181,12 @@ namespace Dune
                    const BCInterface&         bc ,
                    const std::vector<double>& src,
                    double residual_tolerance = 1e-8,
-                   int linsolver_maxit =0,
-                   double linsolver_prolongate_factor = 1.6,
                    int linsolver_verbosity = 1,
                    int linsolver_type = 1,
                    bool same_matrix = false,
-                   int linsolver_smooth_steps=2)
+                   int linsolver_maxit = 0,
+                   double linsolver_prolongate_factor = 1.6,
+                   int linsolver_smooth_steps = 2)
         {
             if (same_matrix) {
                 MESSAGE("Requested reuse of preconditioner, not implemented so far.");
