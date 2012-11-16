@@ -187,7 +187,7 @@ namespace Dune
         // Compute capillary pressure.
         // Note that the saturation is just a dummy for this call, since the mobilities are fixed.
         psolver_.solve(capillary_mobilities, saturation, cap_press_bcs, injection_rates_residual,
-                        residual_tolerance_, linsolver_verbosity_, linsolver_type_);
+                       residual_tolerance_, linsolver_verbosity_, linsolver_type_);
 
         // Solve for constant to change capillary pressure solution by.
         std::vector<double> cap_press(num_cells);
