@@ -219,6 +219,9 @@ int main(int varnum, char** vararg) {
     double linsolver_tolerance = atof(options["linsolver_tolerance"].c_str());
     int linsolver_verbosity = atoi(options["linsolver_verbosity"].c_str());
     int linsolver_type = atoi(options["linsolver_type"].c_str());
+    int linsolver_maxit = atoi(options["linsolver_max_iterations"].c_str());
+    int smooth_steps = atoi(options["linsolver_smooth_steps"].c_str());
+    double linsolver_prolongate_factor = atof(options["linsolver_prolongate_factor"].c_str());
     bool twodim_hack = false;
 
     SinglePhaseUpscaler upscaler_nonperiodic;
@@ -232,7 +235,8 @@ int main(int varnum, char** vararg) {
         start = clock();
         upscaler_nonperiodic.init(eclParser, 
                                   isFixed ? SinglePhaseUpscaler::Fixed : SinglePhaseUpscaler::Linear,
-                                  minPerm, ztol,  linsolver_tolerance, linsolver_verbosity, linsolver_type, twodim_hack);
+                                  minPerm, ztol,  linsolver_tolerance, linsolver_verbosity, linsolver_type, 
+				  twodim_hack, linsolver_maxit, linsolver_prolongate_factor, smooth_steps);
         finish = clock();
         timeused_nonperiodic_tesselation = (double(finish)-double(start))/CLOCKS_PER_SEC;
         cout << " (" << timeused_nonperiodic_tesselation << " secs)" << endl << endl;
@@ -241,7 +245,8 @@ int main(int varnum, char** vararg) {
         cout << "Tesselating periodic grid ...  ";
         start = clock();
         upscaler_periodic.init(eclParser, SinglePhaseUpscaler::Periodic, minPerm,
-                               ztol,  linsolver_tolerance, linsolver_verbosity, linsolver_type, twodim_hack);
+                               ztol,  linsolver_tolerance, linsolver_verbosity, linsolver_type, twodim_hack,
+			       linsolver_maxit, linsolver_prolongate_factor, smooth_steps);
         finish = clock();
         timeused_periodic_tesselation = (double(finish)-double(start))/CLOCKS_PER_SEC;
         cout << " (" << timeused_periodic_tesselation << " secs)" << endl << endl;
