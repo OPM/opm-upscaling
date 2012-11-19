@@ -1,3 +1,5 @@
+// -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set ts=8 sw=4 et sts=4:
 
 /*
   Copyright 2010 Statoil ASA.
@@ -53,6 +55,7 @@
 #include <sys/utsname.h>
 
 #include <dune/upscaling/SinglePhaseUpscaler.hpp>
+#include <dune/common/mpihelper.hh>
 
 using namespace std;
 
@@ -81,14 +84,14 @@ void usage() {
    @param vararg Input arguments
    @return int
 */
-int main(int varnum, char** vararg) {        
+int upscale(int varnum, char** vararg) {
+    Dune::MPIHelper& mpi=Dune::MPIHelper::instance(varnum, vararg);
+    mpi.rank();
     if (varnum ==  1) { // If no arguments supplied ("upscale_perm" is the first argument)
         cout << "Error: No eclipsefile provided" << endl;
         usage();
         exit(1);
     } 
-    
-    
     map<string,string> options;
     options.insert(make_pair("output", "")); // If this is set, output goes to screen and to this file 
     options.insert(make_pair("bc",     "f")); // Fixed boundary conditions are default    
@@ -180,8 +183,8 @@ int main(int varnum, char** vararg) {
    
 
     /***********************************************************************
-    * Load geometry and data from Eclipse file
-    */
+     * Load geometry and data from Eclipse file
+     */
     cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... ";
     flush(cout);   start = clock();
     Opm::EclipseGridParser * eclParser_p;
@@ -230,7 +233,7 @@ int main(int varnum, char** vararg) {
     SinglePhaseUpscaler upscaler_periodic;
 
     const double minPerm = Opm::unit::convert::from(atof(options["minPerm"].c_str()),
-                                                     Opm::prefix::milli*Opm::unit::darcy);
+                                                    Opm::prefix::milli*Opm::unit::darcy);
 
     if (isFixed || isLinear)  {
         cout << "Tesselating non-periodic grid ...";
@@ -238,7 +241,7 @@ int main(int varnum, char** vararg) {
         upscaler_nonperiodic.init(eclParser, 
                                   isFixed ? SinglePhaseUpscaler::Fixed : SinglePhaseUpscaler::Linear,
                                   minPerm, ztol,  linsolver_tolerance, linsolver_verbosity, linsolver_type, 
-				  twodim_hack, linsolver_maxit, linsolver_prolongate_factor, smooth_steps);
+                                  twodim_hack, linsolver_maxit, linsolver_prolongate_factor, smooth_steps);
         finish = clock();
         timeused_nonperiodic_tesselation = (double(finish)-double(start))/CLOCKS_PER_SEC;
         cout << " (" << timeused_nonperiodic_tesselation << " secs)" << endl << endl;
@@ -248,7 +251,7 @@ int main(int varnum, char** vararg) {
         start = clock();
         upscaler_periodic.init(eclParser, SinglePhaseUpscaler::Periodic, minPerm,
                                ztol,  linsolver_tolerance, linsolver_verbosity, linsolver_type, twodim_hack,
-			       linsolver_maxit, linsolver_prolongate_factor, smooth_steps);
+                               linsolver_maxit, linsolver_prolongate_factor, smooth_steps);
         finish = clock();
         timeused_periodic_tesselation = (double(finish)-double(start))/CLOCKS_PER_SEC;
         cout << " (" << timeused_periodic_tesselation << " secs)" << endl << endl;
@@ -375,7 +378,16 @@ int main(int varnum, char** vararg) {
         outfile << outputtmp.str();
         outfile.close();
     }
-    
-    return 0;
-    
-};
+    return 0;   
+}
+
+/**
+   @brief Upscales permeability
+   
+   @param varnum Number of input arguments
+   @param vararg Input arguments
+   @return int
+*/
+int main(int varnum, char** vararg) {
+    return upscale(varnum, vararg);
+}
