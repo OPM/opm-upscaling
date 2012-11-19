@@ -1,3 +1,5 @@
+// -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set ts=8 sw=4 et sts=4:
 //===========================================================================
 //
 // File: IncompFlowSolverHybrid.hpp
@@ -429,7 +431,7 @@ namespace Dune {
 	    Opm::SparseTable< int  > cellFaces_;
             std::vector<Scalar> pressure_;
 	    Opm::SparseTable<Scalar> outflux_;
-
+	    
             void clear() {
                 std::vector<int>().swap(cellno_);
                 cellFaces_.clear();
@@ -1445,6 +1447,8 @@ namespace Dune {
 
         // --------- storing the AMG operator and preconditioner --------
         boost::scoped_ptr<Operator> opS_;
+        typedef Dune::Preconditioner<Vector,Vector>   PrecondBase;
+        boost::scoped_ptr<PrecondBase> precond_;
 
 
         // ----------------------------------------------------------------
@@ -1452,8 +1456,8 @@ namespace Dune {
                                   int maxit, double prolong_factor, bool same_matrix, int smooth_steps)
         // ----------------------------------------------------------------
         {
-            typedef Amg::AMG<Operator,Vector,Smoother>   Precond;
-            boost::scoped_ptr<Precond> precond_;
+            typedef Amg::AMG<Operator,Vector,Smoother,Amg::SequentialInformation>
+                Precond;
 
             // Adapted from upscaling.cc by Arne Rekdal, 2009
             Scalar residTol = residual_tolerance;
@@ -1483,7 +1487,7 @@ namespace Dune {
 				           1, smooth_steps, smooth_steps));
             }
             // Construct solver for system of linear equations.
-            CGSolver<Vector> linsolve(*opS_, *precond_, residTol, (maxit>0)?maxit:S_.N(), verbosity_level);
+            CGSolver<Vector> linsolve(*opS_, dynamic_cast<Precond&>(*precond_), residTol, (maxit>0)?maxit:S_.N(), verbosity_level);
 
             InverseOperatorResult result;
             soln_ = 0.0;
@@ -1514,11 +1518,10 @@ namespace Dune {
         void solveLinearSystemKAMG(double residual_tolerance, int verbosity_level,
                                    int maxit, double prolong_factor, bool same_matrix, int smooth_steps)
         // ----------------------------------------------------------------
-        {
-          typedef Amg::KAMG<Operator,Vector,Smoother,Amg::SequentialInformation,
-                            CGSolver<Vector> >   Precond;
-            boost::scoped_ptr<Precond> precond_;
-        
+        {        
+            
+            typedef Amg::KAMG<Operator,Vector,Smoother,Amg::SequentialInformation,
+                              CGSolver<Vector> >   Precond;
             // Adapted from upscaling.cc by Arne Rekdal, 2009
             Scalar residTol = residual_tolerance;
             if (!same_matrix) {
@@ -1545,7 +1548,7 @@ namespace Dune {
                 precond_.reset(new Precond(*opS_, criterion, smootherArgs, 2, smooth_steps, smooth_steps));
             }
             // Construct solver for system of linear equations.
-            CGSolver<Vector> linsolve(*opS_, *precond_, residTol, (maxit>0)?maxit:S_.N(), verbosity_level);
+            CGSolver<Vector> linsolve(*opS_, dynamic_cast<Precond&>(*precond_), residTol, (maxit>0)?maxit:S_.N(), verbosity_level);
 
             InverseOperatorResult result;
             soln_ = 0.0;
