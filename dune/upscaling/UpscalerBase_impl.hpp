@@ -127,16 +127,16 @@ namespace Dune
 
     template <class Traits>
     inline void UpscalerBase<Traits>::init(const Opm::EclipseGridParser& parser,
-                                                  BoundaryConditionType bctype,
-                                                  double perm_threshold,
-                                                  double z_tolerance,
-                                                  double residual_tolerance,
-                                                  int linsolver_maxit,
-                                                  double linsolver_prolongate_factor,
-                                                  int linsolver_verbosity,
-                                                  int linsolver_type,
-                                                  bool twodim_hack,
-                                                  int linsolver_smooth_steps)
+                                           BoundaryConditionType bctype,
+                                           double perm_threshold,
+                                           double z_tolerance,
+                                           double residual_tolerance,
+                                           int linsolver_verbosity,
+                                           int linsolver_type,
+                                           bool twodim_hack,
+                                           int linsolver_maxit,
+                                           double linsolver_prolongate_factor,
+                                           int linsolver_smooth_steps)
     {
 	bctype_ = bctype;
 	residual_tolerance_ = residual_tolerance;

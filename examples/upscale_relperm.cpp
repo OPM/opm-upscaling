@@ -950,8 +950,9 @@ int main(int varnum, char** vararg)
    eclParser.convertToSI();
    upscaler.init(eclParser, boundaryCondition,
                  Opm::unit::convert::from(minPerm, Opm::prefix::milli*Opm::unit::darcy),
-                 ztol, linsolver_tolerance, linsolver_maxit, linsolver_prolongate_factor,
-                 linsolver_verbosity, linsolver_type, twodim_hack, smooth_steps);
+                 ztol, linsolver_tolerance,
+                 linsolver_verbosity, linsolver_type, twodim_hack,
+                 linsolver_maxit, linsolver_prolongate_factor, smooth_steps);
 
    finish = clock();   timeused_tesselation = (double(finish)-double(start))/CLOCKS_PER_SEC;
    if (isMaster) cout << " (" << timeused_tesselation <<" secs)" << endl;
