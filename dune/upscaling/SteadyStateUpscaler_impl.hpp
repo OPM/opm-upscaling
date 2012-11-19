@@ -161,7 +161,10 @@ namespace Dune
 
         // Run pressure solver.
         this->flow_solver_.solve(this->res_prop_, saturation, this->bcond_, src,
-                                 this->residual_tolerance_, this->linsolver_verbosity_, this->linsolver_type_);
+                                 this->residual_tolerance_, this->linsolver_verbosity_, 
+                                 this->linsolver_type_, false,
+                                 this->linsolver_maxit_, this->linsolver_prolongate_factor_,
+                                 this->linsolver_smooth_steps_);
         double max_mod = this->flow_solver_.postProcessFluxes();
         std::cout << "Max mod = " << max_mod << std::endl;
 
@@ -173,7 +176,10 @@ namespace Dune
 
             // Run pressure solver.
             this->flow_solver_.solve(this->res_prop_, saturation, this->bcond_, src,
-                                     this->residual_tolerance_, this->linsolver_verbosity_, this->linsolver_type_);
+                                     this->residual_tolerance_, this->linsolver_verbosity_,
+                                     this->linsolver_type_, false,
+                                     this->linsolver_maxit_, this->linsolver_prolongate_factor_,
+                                     this->linsolver_smooth_steps_);
             max_mod = this->flow_solver_.postProcessFluxes();
             std::cout << "Max mod = " << max_mod << std::endl;
 

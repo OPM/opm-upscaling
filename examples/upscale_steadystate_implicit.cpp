@@ -192,6 +192,9 @@ int main(int argc, char** argv)
     double linsolver_tolerance = param.getDefault("residual_tolerance", 1e-8);
     int linsolver_verbosity = param.getDefault("linsolver_verbosity", 0);
     int linsolver_type = param.getDefault("linsolver_type", 1);
+    int linsolver_maxit = param.getDefault("linsolver_max_iterations", 0);
+    int linsolver_smooth_steps = param.getDefault("linsolver_smooth_steps", 2);
+    double linsolver_prolongate_factor = param.getDefault("linsolver_prolongate_factor", 1.6);
     std::string bc=param.getDefault<std::string>("bc","fixed");
     double gravity = param.getDefault("gravity", 0);
     double surfaceTension = param.getDefault("surfaceTension", 11);
@@ -272,7 +275,8 @@ int main(int argc, char** argv)
     }
     Dune::SinglePhaseUpscaler spupscaler; // needed to access porosities and cell volumes
     spupscaler.init(eclparser, Dune::SinglePhaseUpscaler::Fixed,
-                  0.0,0.0, linsolver_tolerance, linsolver_verbosity, linsolver_type, false);
+                    0.0,0.0, linsolver_tolerance, linsolver_verbosity, linsolver_type, false, linsolver_maxit,
+                    linsolver_prolongate_factor, linsolver_smooth_steps);
     std::vector<double>  cellPoreVolumes; 
     cellPoreVolumes.resize(satnums.size(), 0.0);
     double swirvolume = 0.0;
@@ -390,7 +394,7 @@ int main(int argc, char** argv)
     outputtmp << "#" << std::endl;
     outputtmp << "# Rock list: " << rock_list << std::endl;
     outputtmp << "#   with the following rock files: " << std::endl;    
-    for (int ridx=0; ridx<rockfiles.size(); ++ridx) {
+    for (std::size_t ridx=0; ridx<rockfiles.size(); ++ridx) {
         outputtmp << "#   " << rockfiles[ridx] << std::endl;
     }
     outputtmp << "#" << std::endl;
