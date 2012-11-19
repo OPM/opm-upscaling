@@ -80,24 +80,24 @@ namespace Dune
                   double perm_threshold,
                   double z_tolerance = 0.0,
                   double residual_tolerance = 1e-8,
-                  int linsolver_maxit = 0,
-                  double linsolver_prolongate_factor =1.6,
                   int linsolver_verbosity = 0,
                   int linsolver_type = 1,
                   bool twodim_hack = false,
-                  int linsolver_smooth_steps=2);
+                  int linsolver_maxit = 0,
+                  double linsolver_prolongate_factor = 1.6,
+                  int linsolver_smooth_steps = 2);
 
 	/// Access the grid.
 	const GridType& grid() const;
 
-    /// Set boundary condition type. This may not be used to swicth
-    /// between Periodic and the other types, since the grid is
-    /// modified for Periodic conditions.
-    void setBoundaryConditionType(BoundaryConditionType type);
+        /// Set boundary condition type. This may not be used to swicth
+        /// between Periodic and the other types, since the grid is
+        /// modified for Periodic conditions.
+        void setBoundaryConditionType(BoundaryConditionType type);
 
-    /// Set the permeability of a cell directly. This will override
-    /// the permeability that was read from the eclipse file.
-    void setPermeability(const int cell_index, const permtensor_t& k);
+        /// Set the permeability of a cell directly. This will override
+        /// the permeability that was read from the eclipse file.
+        void setPermeability(const int cell_index, const permtensor_t& k);
 
 	/// Does a single-phase upscaling.
 	/// @return an upscaled permeability tensor.
