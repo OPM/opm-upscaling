@@ -96,8 +96,10 @@ int main(int varnum, char** vararg) {
     
     options.insert(make_pair("linsolver_tolerance", "1e-8"));  // residual tolerance for linear solver
     options.insert(make_pair("linsolver_verbosity", "0"));     // verbosity level for linear solver
+    options.insert(make_pair("linsolver_max_iterations", "0"));         // Maximum number of iterations allow, specify 0 for default
+    options.insert(make_pair("linsolver_prolongate_factor", "1.6")); // Factor to scale the prolongate coarse grid correction
     options.insert(make_pair("linsolver_type",      "1"));     // type of linear solver: 0 = ILU/BiCGStab, 1 = AMG/CG
-
+    options.insert(make_pair("linsolver_smooth_steps", "2")); // Number of pre and postsmoothing steps for AMG
 
     // Parse options from command line
     int eclipseindex = 1; // Index for the eclipsefile in the command line options
@@ -219,6 +221,9 @@ int main(int varnum, char** vararg) {
     double linsolver_tolerance = atof(options["linsolver_tolerance"].c_str());
     int linsolver_verbosity = atoi(options["linsolver_verbosity"].c_str());
     int linsolver_type = atoi(options["linsolver_type"].c_str());
+    int linsolver_maxit = atoi(options["linsolver_max_iterations"].c_str());
+    int smooth_steps = atoi(options["linsolver_smooth_steps"].c_str());
+    double linsolver_prolongate_factor = atof(options["linsolver_prolongate_factor"].c_str());
     bool twodim_hack = false;
 
     SinglePhaseUpscaler upscaler_nonperiodic;
@@ -232,7 +237,8 @@ int main(int varnum, char** vararg) {
         start = clock();
         upscaler_nonperiodic.init(eclParser, 
                                   isFixed ? SinglePhaseUpscaler::Fixed : SinglePhaseUpscaler::Linear,
-                                  minPerm, ztol,  linsolver_tolerance, linsolver_verbosity, linsolver_type, twodim_hack);
+                                  minPerm, ztol,  linsolver_tolerance, linsolver_verbosity, linsolver_type, 
+				  twodim_hack, linsolver_maxit, linsolver_prolongate_factor, smooth_steps);
         finish = clock();
         timeused_nonperiodic_tesselation = (double(finish)-double(start))/CLOCKS_PER_SEC;
         cout << " (" << timeused_nonperiodic_tesselation << " secs)" << endl << endl;
@@ -241,7 +247,8 @@ int main(int varnum, char** vararg) {
         cout << "Tesselating periodic grid ...  ";
         start = clock();
         upscaler_periodic.init(eclParser, SinglePhaseUpscaler::Periodic, minPerm,
-                               ztol,  linsolver_tolerance, linsolver_verbosity, linsolver_type, twodim_hack);
+                               ztol,  linsolver_tolerance, linsolver_verbosity, linsolver_type, twodim_hack,
+			       linsolver_maxit, linsolver_prolongate_factor, smooth_steps);
         finish = clock();
         timeused_periodic_tesselation = (double(finish)-double(start))/CLOCKS_PER_SEC;
         cout << " (" << timeused_periodic_tesselation << " secs)" << endl << endl;
