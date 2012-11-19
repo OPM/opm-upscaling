@@ -1447,8 +1447,8 @@ namespace Dune {
 
         // --------- storing the AMG operator and preconditioner --------
         boost::scoped_ptr<Operator> opS_;
-        typedef Dune::Preconditioner<Vector,Vector>   Precond;
-        boost::scoped_ptr<Precond> precond_;
+        typedef Dune::Preconditioner<Vector,Vector>   PrecondBase;
+        boost::scoped_ptr<PrecondBase> precond_;
 
 
         // ----------------------------------------------------------------
@@ -1487,7 +1487,7 @@ namespace Dune {
 				           1, smooth_steps, smooth_steps));
             }
             // Construct solver for system of linear equations.
-            CGSolver<Vector> linsolve(*opS_, static_cast<Precond&>(*precond_), residTol, (maxit>0)?maxit:S_.N(), verbosity_level);
+            CGSolver<Vector> linsolve(*opS_, dynamic_cast<Precond&>(*precond_), residTol, (maxit>0)?maxit:S_.N(), verbosity_level);
 
             InverseOperatorResult result;
             soln_ = 0.0;
@@ -1548,7 +1548,7 @@ namespace Dune {
                 precond_.reset(new Precond(*opS_, criterion, smootherArgs, 2, smooth_steps, smooth_steps));
             }
             // Construct solver for system of linear equations.
-            CGSolver<Vector> linsolve(*opS_, static_cast<Precond&>(*precond_), residTol, (maxit>0)?maxit:S_.N(), verbosity_level);
+            CGSolver<Vector> linsolve(*opS_, dynamic_cast<Precond&>(*precond_), residTol, (maxit>0)?maxit:S_.N(), verbosity_level);
 
             InverseOperatorResult result;
             soln_ = 0.0;
