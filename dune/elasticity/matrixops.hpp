@@ -22,6 +22,9 @@ typedef Dune::BCRSMatrix<Dune::FieldMatrix<double,1,1> > Matrix;
 //! \brief For storing matrix adjacency/sparsity patterns
 typedef std::vector< std::set<int> > AdjacencyPattern;
 
+//! \brief A vector holding our RHS
+typedef Dune::BlockVector<Dune::FieldVector<double,1> > Vector;
+
 //! \brief Helper class with some matrix operations
 class MatrixOps {
   public:

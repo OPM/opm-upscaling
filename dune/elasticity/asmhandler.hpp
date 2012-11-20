@@ -11,9 +11,6 @@
 //==============================================================================
 #pragma once
 
-//! \brief A vector holding our RHS
-typedef Dune::BlockVector<Dune::FieldVector<double,1> > Vector;
-
 #include <dune/geometry/referenceelements.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/istl/bvector.hh>

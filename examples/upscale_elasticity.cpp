@@ -258,7 +258,7 @@ int main(int argc, char** argv)
     } 
     Dune::FieldMatrix<double,6,6> C;
     Dune::VTKWriter<GridType::LeafGridView> vtkwriter(grid.leafView());
-    Vector field[6];
+    Opm::Elasticity::Vector field[6];
     std::cout << "assembling..." << "\n";
     upscale.assemble(-1,true);
     upscale.setupSolvers(p.solver);
