@@ -578,8 +578,13 @@ void ElasticityUpscale<GridType>::assemble(int loadcase, bool matrix)
         it->geometry().jacobianInverseTransposed(r->position());
 
       ctype detJ = it->geometry().integrationElement(r->position());
-      if (detJ <= 0)
-        continue;
+      if (detJ <= 1.e-4) {
+        std::cout << "cell " << m << " is (close to) degenerated, detJ " << detJ << std::endl;
+        double zdiff=0.0;
+        for (int i=0;i<4;++i)
+          zdiff = std::max(zdiff, it->geometry().corner(i+4)[2]-it->geometry().corner(i)[2]);
+        std::cout << "  - Consider setting ctol larger than " << zdiff << std::endl;
+      }
 
       Dune::FieldMatrix<ctype,comp,dim*bfunc> B;
       E.getBmatrix(B,r->position(),jacInvTra);
