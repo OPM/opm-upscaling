@@ -157,6 +157,11 @@ class ElasticityUpscale
                            const double* max, int n1, int n2,
                            int p1, int p2);
 
+    //! \brief Fix corner nodes
+    //! \param[in] min The minimum coordinates on the grid
+    //! \param[in] max The maximum coordinates on the grid
+    void fixCorners(const double* min, const double* max);
+
     //! \brief Assemble (optionally) stiffness matrix A and load vector
     //! \param[in] loadcase The strain load case. Set to -1 to skip
     //! \param[in] matrix Whether or not to assemble the matrix
@@ -212,11 +217,6 @@ class ElasticityUpscale
 
     //! \brief Vector holding material parameters for each active grid cell
     std::vector<Material*> materials;
-
-    //! \brief Fix corner nodes
-    //! \param[in] min The minimum coordinates on the grid
-    //! \param[in] max The maximum coordinates on the grid
-    void fixCorners(const double* min, const double* max);
 
     //! \brief Extract the vertices on a given face
     //! \param[in] dir The direction of the face normal

@@ -53,6 +53,7 @@ void syntax(char** argv)
 
 
 enum UpscaleMethod {
+  UPSCALE_NONE   = 0,
   UPSCALE_MPC    = 1,
   UPSCALE_LLM    = 2,
   UPSCALE_MORTAR = 3
@@ -102,12 +103,12 @@ struct Params {
 void parseCommandLine(int argc, char** argv, Params& p)
 {
   Opm::parameter::ParameterGroup param(argc, argv);
-  p.max[0]   = param.getDefault("xmax",-1);
-  p.max[1]   = param.getDefault("ymax",-1);
-  p.max[2]   = param.getDefault("zmax",-1);
-  p.min[0]   = param.getDefault("xmin",-1);
-  p.min[1]   = param.getDefault("ymin",-1);
-  p.min[2]   = param.getDefault("zmin",-1);
+  p.max[0]    = param.getDefault("xmax",-1);
+  p.max[1]    = param.getDefault("ymax",-1);
+  p.max[2]    = param.getDefault("zmax",-1);
+  p.min[0]    = param.getDefault("xmin",-1);
+  p.min[1]    = param.getDefault("ymin",-1);
+  p.min[2]    = param.getDefault("zmin",-1);
   p.lambda[0] = param.getDefault("lambdax", 1);
   p.lambda[1] = param.getDefault("lambday", 1);
   std::string method = param.getDefault<std::string>("method","mortar");
@@ -117,6 +118,8 @@ void parseCommandLine(int argc, char** argv, Params& p)
     p.method = UPSCALE_LLM;
   if (!strcasecmp(method.c_str(),"mortar"))
     p.method = UPSCALE_MORTAR;
+  if (!strcasecmp(method.c_str(),"none"))
+    p.method = UPSCALE_NONE;
   p.Emin     = param.getDefault<double>("Emin",0.0);
   p.ctol     = param.getDefault<double>("ctol",1.e-8);
   p.ltol     = param.getDefault<double>("ltol",1.e-10);
@@ -162,6 +165,8 @@ void writeOutput(const Params& p, Opm::time::StopWatch& watch, int cells,
     method = "llm";
   if (p.method == UPSCALE_MPC)
     method = "mpc";
+  if (p.method == UPSCALE_NONE)
+    method = "none";
 
   // write log
   std::ofstream f;
@@ -264,6 +269,10 @@ int main(int argc, char** argv)
     } else if (p.method == UPSCALE_MORTAR) {
       std::cout << "using Mortar couplings.." << std::endl;
       upscale.periodicBCsMortar(p.min,p.max,p.n1,p.n2,p.lambda[0], p.lambda[1]);
+    } else if (p.method == UPSCALE_NONE) {
+      std::cout << "no periodicity approach applied.." << std::endl;
+      upscale.fixCorners(p.min, p.max);
+      upscale.A.initForAssembly();
     }
     Dune::FieldMatrix<double,6,6> C;
     Dune::VTKWriter<GridType::LeafGridView> vtkwriter(grid.leafView());
