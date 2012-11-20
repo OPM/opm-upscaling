@@ -70,7 +70,7 @@ void ASMHandler<GridType>::addDOF(int row, int erow,
       }
     }
   }
-  if (S)
+  if (S && b)
     (*b)[row] += scale*(*S)[erow];
 }
 
