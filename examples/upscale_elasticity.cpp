@@ -51,6 +51,13 @@ void syntax(char** argv)
             << "\t linsolver_type=slu    - use the SuperLU sparse direct solver" << std::endl;
 }
 
+
+enum UpscaleMethod {
+  UPSCALE_MPC    = 1,
+  UPSCALE_LLM    = 2,
+  UPSCALE_MORTAR = 3
+};
+
 //! \brief Structure holding parameters configurable from command line
 struct Params {
   //! \brief The eclipse grid file
@@ -61,12 +68,8 @@ struct Params {
   std::string vtufile;
   //! \brief Text output file
   std::string output;
-  //! \brief Whether or not to use LLM couplings
-  bool LLM; 
-  //! \brief Whether or not to use Mortar couplings
-  bool mortar;
-  //! \brief Whether or not to use MPC couplings
-  bool mpc;
+  //! \brief Method
+  UpscaleMethod method;
   //! \brief A scaling parameter for the E-modulus to avoid numerical issues
   double Emin;
   //! \brief The tolerance for collapsing nodes in the Z direction
@@ -105,14 +108,16 @@ void parseCommandLine(int argc, char** argv, Params& p)
   p.min[0]   = param.getDefault("xmin",-1);
   p.min[1]   = param.getDefault("ymin",-1);
   p.min[2]   = param.getDefault("zmin",-1);
-  //std::string method = param.getDefault<std::string>("method","mpc");
   p.lambda[0] = param.getDefault("lambdax", 1);
   p.lambda[1] = param.getDefault("lambday", 1);
   std::string method = param.getDefault<std::string>("method","mortar");
-  p.LLM      = (strcasecmp(method.c_str(),"llm") == 0);
-  //p.mortar   = (strcasecmp(method.c_str(),"mortar") == 0);
-  p.mpc   = (strcasecmp(method.c_str(),"mpc") == 0);
-  p.Emin     = param.getDefault<double>("Emin",0.f);
+  if (!strcasecmp(method.c_str(),"mpc"))
+    p.method = UPSCALE_MPC;
+  if (!strcasecmp(method.c_str(),"llm"))
+    p.method = UPSCALE_LLM;
+  if (!strcasecmp(method.c_str(),"mortar"))
+    p.method = UPSCALE_MORTAR;
+  p.Emin     = param.getDefault<double>("Emin",0.0);
   p.ctol     = param.getDefault<double>("ctol",1.e-8);
   p.ltol     = param.getDefault<double>("ltol",1.e-10);
   p.file     = param.get<std::string>("gridfilename");
@@ -153,9 +158,9 @@ void writeOutput(const Params& p, Opm::time::StopWatch& watch, int cells,
   gethostname(hostname,1024);
 
   std::string method = "mortar";
-  if (p.LLM)
+  if (p.method == UPSCALE_LLM)
     method = "llm";
-  if (p.mpc)
+  if (p.method == UPSCALE_MPC)
     method = "mpc";
 
   // write log
@@ -248,15 +253,15 @@ int main(int argc, char** argv)
       p.n2 = grid.logicalCartesianSize()[1];
     }
 
-    if (p.LLM) {
+    if (p.method == UPSCALE_LLM) {
       std::cout << "using LLM couplings..." << std::endl;
       upscale.periodicBCsLLM(p.min,p.max,p.n1,p.n2);
-    } else if (p.mpc) {
+    } else if (p.method == UPSCALE_MPC) {
       std::cout << "using MPC couplings in all directions..." << std::endl;
       upscale.periodicBCs(p.min,p.max);
       std::cout << "preprocessing grid..." << std::endl;
       upscale.A.initForAssembly();
-    } else {
+    } else if (p.method == UPSCALE_MORTAR) {
       std::cout << "using Mortar couplings.." << std::endl;
       upscale.periodicBCsMortar(p.min,p.max,p.n1,p.n2,p.lambda[0], p.lambda[1]);
     }
