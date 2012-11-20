@@ -282,7 +282,7 @@ int main(int argc, char** argv)
 #pragma omp parallel for schedule(static)
     for (int i=0;i<6;++i) {
       upscale.assemble(i,false);
-      std::cout << "solving case " << i << "..." << "\n";
+      std::cout << "solving case " << i+1 << "..." << "\n";
       upscale.solve(p.solver,p.ltol,i);
       upscale.A.expandSolution(field[i],upscale.u[i]);
 #define CLAMP(x) (fabs(x)<1.e-5?0.f:x)
