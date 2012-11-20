@@ -552,6 +552,7 @@ void ElasticityUpscale<GridType>::assemble(int loadcase, bool matrix)
     EP = &ES;
     eps0[loadcase] = 1;
     A.getLoadVector() = 0;
+    b[loadcase] = 0;
   }
   int m=0;
   Dune::FieldMatrix<ctype,dim*bfunc,dim*bfunc>* KP=0;
