@@ -55,6 +55,11 @@ class MatrixOps {
     //! \param[in] symmetric If true, augment symmetrically
     static Matrix augment(const Matrix& A, const Matrix& B,
                           size_t r0, size_t c0, bool symmetric);
+
+    //! \brief Extract the diagonal of a matrix into a new matrix
+    //! \param[in] The matrix to extract the diagonal from
+    //! \returns M = diag(A)
+    static Matrix extractDiagonal(const Matrix& A);
 };
 
 #include "matrixops_impl.hpp"

@@ -144,3 +144,17 @@ Matrix MatrixOps::augment(const Matrix& A, const Matrix& B,
   
   return result;
 }
+
+Matrix MatrixOps::extractDiagonal(const Matrix& A)
+{
+  AdjacencyPattern adj;
+  adj.resize(A.M());
+  for (size_t i=0;i<A.M();++i)
+    adj[i].insert(i);
+  Matrix result;
+  fromAdjacency(result,adj,A.M(),A.M());
+  for (size_t i=0;i<A.M();++i)
+    result[i][i] = A[i][i];
+
+  return result;
+}
