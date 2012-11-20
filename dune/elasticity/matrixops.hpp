@@ -60,6 +60,12 @@ class MatrixOps {
     //! \param[in] The matrix to extract the diagonal from
     //! \returns M = diag(A)
     static Matrix extractDiagonal(const Matrix& A);
+
+    //! \brief Save a matrix as a dense asc file
+    //! \param[in] A The matrix to save
+    //! \param[in] file File name
+    //! \details This is only useful for debugging as the files grow very big
+    static void saveAsc(const Matrix& A, const std::string& file);
 };
 
 #include "matrixops_impl.hpp"

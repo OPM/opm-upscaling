@@ -158,3 +158,33 @@ Matrix MatrixOps::extractDiagonal(const Matrix& A)
 
   return result;
 }
+
+void MatrixOps::saveAsc(const Matrix& A, const std::string& file)
+{
+  std::ofstream f;
+  f.open(file.c_str());
+  f << "% " << A.N() << " " << A.M() << std::endl;
+  int prevrow=-1;
+  for (Matrix::ConstIterator it  = A.begin();
+                             it != A.end(); ++it) {
+    for (int i=0;i<int(it.index())-prevrow-1;++i) {
+      for (size_t j=0;j<A.M();++j)
+        f << "0 ";
+      f << std::endl;
+    }
+    int prevcol=-1;
+    for (Matrix::ConstColIterator it2  = it->begin();
+                                  it2 != it->end();++it2) {
+      for (int j=0;j<int(it2.index())-prevcol-1;++j)
+        f << "0 ";
+      double val = *it2;
+      f << val << " ";
+      prevcol = it2.index();
+    }
+    for (int j=0;j<int(A.M())-prevcol-1;++j)
+      f << "0 ";
+    prevrow = it.index();
+    f << std::endl;
+  }
+  f.close();
+}
