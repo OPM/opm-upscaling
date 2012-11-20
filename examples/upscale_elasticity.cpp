@@ -91,6 +91,8 @@ struct Params {
   int cellsy;
   //! \brief cell in z
   int cellsz;
+  //! \brief Polynomial order of multipliers in first / second direction
+  int lambda[2];
 };
 
 //! \brief Parse the command line arguments
@@ -104,6 +106,8 @@ void parseCommandLine(int argc, char** argv, Params& p)
   p.min[1]   = param.getDefault("ymin",-1);
   p.min[2]   = param.getDefault("zmin",-1);
   //std::string method = param.getDefault<std::string>("method","mpc");
+  p.lambda[0] = param.getDefault("lambdax", 1);
+  p.lambda[1] = param.getDefault("lambday", 1);
   std::string method = param.getDefault<std::string>("method","mortar");
   p.LLM      = (strcasecmp(method.c_str(),"llm") == 0);
   //p.mortar   = (strcasecmp(method.c_str(),"mortar") == 0);
@@ -254,8 +258,8 @@ int main(int argc, char** argv)
       upscale.A.initForAssembly();
     } else {
       std::cout << "using Mortar couplings.." << std::endl;
-      upscale.periodicBCsMortar(p.min,p.max,p.n1,p.n2);
-    } 
+      upscale.periodicBCsMortar(p.min,p.max,p.n1,p.n2,p.lambda[0], p.lambda[1]);
+    }
     Dune::FieldMatrix<double,6,6> C;
     Dune::VTKWriter<GridType::LeafGridView> vtkwriter(grid.leafView());
     Opm::Elasticity::Vector field[6];

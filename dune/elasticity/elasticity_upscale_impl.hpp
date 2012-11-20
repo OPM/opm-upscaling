@@ -56,6 +56,9 @@ BoundaryGrid ElasticityUpscale<GridType>::extractMasterFace(Direction dir,
   int c = 0;
   int i = log2(dir);
   BoundaryGrid result;
+  // we first group nodes into this map through the coordinate of lower left 
+  // vertex. we then split this up into pillars for easy processing later
+  std::map<double, std::vector<BoundaryGrid::Quad> > nodeMap;
   for (LeafIterator cell  = gv.leafView().template begin<0>(); 
                     cell != cellend; ++cell, ++c) {
     std::vector<BoundaryGrid::Vertex> verts;
@@ -99,8 +102,25 @@ BoundaryGrid ElasticityUpscale<GridType>::extractMasterFace(Direction dir,
         q.v[2] = maxXmaxY(verts);
         q.v[3] = minXmaxY(verts);
       }
+      std::map<double, std::vector<BoundaryGrid::Quad> >::iterator it;
+      for (it  = nodeMap.begin(); it != nodeMap.end(); ++it) {
+        if (fabs(it->first-q.v[0].c[0]) < 1.e-7) {
+          it->second.push_back(q);
+          break;
+        }
+      }
+      if (it == nodeMap.end())
+        nodeMap[q.v[0].c[0]].push_back(q);
+
       result.add(q);
     }
+  }
+
+  int p=0;
+  std::map<double, std::vector<BoundaryGrid::Quad> >::const_iterator it;
+  for (it = nodeMap.begin(); it != nodeMap.end(); ++it, ++p) {
+    for (size_t i=0;i<it->second.size();++i)
+      result.addToColumn(p,it->second[i]);
   }
 
   return result;
@@ -301,34 +321,65 @@ Matrix ElasticityUpscale<GridType>::findLMatrixLLM(const SlaveGrid& slave,
   return L;
 }
 
+static std::vector< std::vector<int> > renumber(const BoundaryGrid& b,
+                                                int n1, int n2)
+{
+  std::vector<std::vector<int> > nodes;
+  nodes.resize(b.size());
+  // loop over elements
+  int ofs = 0;
+  for (size_t e=0; e < b.size(); ++e) {
+    // first direction major ordered nodes within each element
+    for (int i2=0; i2 < n2; ++i2) {
+      if (e != 0)
+        nodes[e].push_back(nodes[e-1][i2*n1+n1-1]);
+      for (int i1=(e==0?0:1); i1 < n1; ++i1)
+        nodes[e].push_back(ofs++);
+    }
+  }
+
+  return nodes;
+}
+
   template<class GridType>
 Matrix ElasticityUpscale<GridType>::findLMatrixMortar(const BoundaryGrid& b1,
-                                                  const BoundaryGrid& interface,
-                                                  int dir)
+                                                      const BoundaryGrid& interface,
+                                                      int dir, int n1, int n2)
 {
   std::vector< std::set<int> > adj;
   adj.resize(A.getEqns());
 
+#define QINDEX(p,q,dir) (q)
+
+  // get a set of P1 shape functions for the displacements
+  P1ShapeFunctionSet<ctype,ctype,2> ubasis = 
+                P1ShapeFunctionSet<ctype,ctype,2>::instance();
+
+  // get a set of PN shape functions for the multipliers
+  PNShapeFunctionSet<2> lbasis(n1+1, n2+1);
+
+  std::vector<std::vector<int> > lnodes = renumber(interface,n1,n2);
+  int totalNodes = lnodes.back().back()+1;
+
   // process pillar by pillar
-  size_t per_pillar = b1.size()/interface.size();
   for (size_t p=0;p<interface.size();++p) {
-    for (size_t q=0;q<per_pillar;++q) {
-      for (size_t i=0;i<4;++i) {
+    for (size_t q=0;q<b1.colSize(p);++q) {
+      for (size_t i=0;i<ubasis.n;++i) {
         for (size_t d=0;d<3;++d) {
-          MPC* mpc = A.getMPC(b1[p*per_pillar+q].v[i].i,d);
+          MPC* mpc = A.getMPC(b1.getQuad(p,QINDEX(p,q,dir)).v[i].i,d);
           if (mpc) {
-            for (int n=0;n<mpc->getNoMaster();++n) {
+            for (size_t n=0;n<mpc->getNoMaster();++n) {
               int dof = A.getEquationForDof(mpc->getMaster(n).node,d);
               if (dof > -1) {
-                for (int j=0;j<4;++j)
-                  adj[dof].insert(3*interface[p].v[j].i+d);
+                for (size_t j=0;j<lnodes[p].size();++j)
+                  adj[dof].insert(3*lnodes[p][j]+d);
               }
             }
           } else {
-            int dof = A.getEquationForDof(b1[p*per_pillar+q].v[i].i,d);
+            int dof = A.getEquationForDof(b1.getQuad(p,QINDEX(p,q,dir)).v[i].i,d);
             if (dof > -1) {
-              for (int j=0;j<4;++j)
-                adj[dof].insert(3*interface[p].v[j].i+d);
+              for (size_t j=0;j<lnodes[p].size();++j)
+                adj[dof].insert(3*lnodes[p][j]+d);
             }
           }
         }
@@ -337,41 +388,40 @@ Matrix ElasticityUpscale<GridType>::findLMatrixMortar(const BoundaryGrid& b1,
   }
 
   Matrix B;
-  MatrixOps::fromAdjacency(B,adj,A.getEqns(),3*interface.totalNodes());
+  MatrixOps::fromAdjacency(B,adj,A.getEqns(),3*totalNodes);
 
-  // get a set of P1 shape functions for the velocity
-  P1ShapeFunctionSet<ctype,ctype,2> ubasis = P1ShapeFunctionSet<ctype,ctype,2>::instance();
-  // get a set of P1 shape functions for multipliers
-  P1ShapeFunctionSet<ctype,ctype,2> lbasis = P1ShapeFunctionSet<ctype,ctype,2>::instance();
   // get a reference element
   Dune::GeometryType gt;
   gt.makeCube(2);
-  const Dune::template GenericReferenceElement<ctype,2> &ref =
-    Dune::GenericReferenceElements<ctype,2>::general(gt);
   // get a quadrature rule
+  int quadorder = std::max((1.0+n1+0.5)/2.0,(1.0+n2+0.5)/2.0);
+  quadorder = std::max(quadorder, 2);
   const Dune::QuadratureRule<ctype,2>& rule = 
-                        Dune::QuadratureRules<ctype,2>::rule(gt,2);
+                  Dune::QuadratureRules<ctype,2>::rule(gt,quadorder);
 
   // do the assembly loop
   typename Dune::QuadratureRule<ctype,2>::const_iterator r;
+  Dune::DynamicMatrix<ctype> E(ubasis.n,(n1+1)*(n2+1),0.0);
   for (size_t p=0;p<interface.size();++p) {
     const BoundaryGrid::Quad& qi(interface[p]);
     HexGeometry<2,2,GridType> lg(qi);
-    for (size_t q=0;q<per_pillar;++q) {
-      const BoundaryGrid::Quad& qu(b1[p*per_pillar+q]);
+    for (size_t q=0;q<b1.colSize(p);++q) {
+      const BoundaryGrid::Quad& qu = b1.getQuad(p,q);
       HexGeometry<2,2,GridType> hex(qu,gv,dir);
-      Dune::FieldMatrix<ctype,4,4> E;
       E = 0;
       for (r = rule.begin(); r != rule.end();++r) {
         ctype detJ = hex.integrationElement(r->position());
-        if (detJ < 0)
-          continue;
+        if (detJ < 1.e-4 && r == rule.begin())
+          std::cerr << "warning: interface cell (close to) degenerated, |J|=" << detJ << std::endl;
+
         typename HexGeometry<2,2,GridType>::LocalCoordinate loc = 
                                         lg.local(hex.global(r->position()));
-        for (int i=0;i<4;++i) {
-          for (int j=0;j<4;++j)
+        assert(loc[0] <= 1.0+1.e-4 && loc[0] >= 0.0 && loc[1] <= 1.0+1.e-4 && loc[1] >= 0.0);
+        for (int i=0;i<ubasis.n;++i) {
+          for (int j=0;j<lbasis.size();++j) {
             E[i][j] += ubasis[i].evaluateFunction(r->position())*
                        lbasis[j].evaluateFunction(loc)*detJ*r->weight();
+          }
         }
       }
       // and assemble element contributions
@@ -379,11 +429,11 @@ Matrix ElasticityUpscale<GridType>::findLMatrixMortar(const BoundaryGrid& b1,
         for (int i=0;i<4;++i) {
           MPC* mpc = A.getMPC(qu.v[i].i,d);
           if (mpc) {
-            for (int n=0;n<mpc->getNoMaster();++n) {
+            for (size_t n=0;n<mpc->getNoMaster();++n) {
               int indexi = A.getEquationForDof(mpc->getMaster(n).node,d);
               if (indexi > -1) {
-                for (int j=0;j<4;++j) {
-                  int indexj = qi.v[j].i*3+d;
+                for (size_t j=0;j<lnodes[p].size();++j) {
+                  int indexj = lnodes[p][j]*3+d;
                   B[indexi][indexj] += E[i][j];
                 }
               }
@@ -391,8 +441,8 @@ Matrix ElasticityUpscale<GridType>::findLMatrixMortar(const BoundaryGrid& b1,
           } else {
             int indexi = A.getEquationForDof(qu.v[i].i,d);
             if (indexi > -1) {
-              for (int j=0;j<4;++j) {
-                int indexj = qi.v[j].i*3+d;
+              for (size_t j=0;j<lnodes[p].size();++j) {
+                int indexj = lnodes[p][j]*3+d;
                 B[indexi][indexj] += E[i][j];
               }
             }
@@ -802,7 +852,8 @@ void ElasticityUpscale<GridType>::periodicBCs(const double* min,
   template<class GridType>
 void ElasticityUpscale<GridType>::periodicBCsMortar(const double* min, 
                                                     const double* max,
-                                                    int n1, int n2)
+                                                    int n1, int n2,
+                                                    int p1, int p2)
 {
   // this method
   // 1. fixes the primal corner dofs
@@ -844,13 +895,13 @@ void ElasticityUpscale<GridType>::periodicBCsMortar(const double* min,
   BoundaryGrid lambday = BoundaryGrid::uniform(fmin,fmax,n1,1,true);
 
   // step 5
-  Matrix L1 = findLMatrixMortar(master[0],lambdax,0);
-  Matrix L2 = findLMatrixMortar(master[1],lambdax,0);
+  Matrix L1 = findLMatrixMortar(master[0],lambdax,0, p2, 1);
+  Matrix L2 = findLMatrixMortar(master[1],lambdax,0, p2, 1);
   L.push_back(MatrixOps::Axpy(L1,L2,-1));
 
   // step 6
-  Matrix L3 = findLMatrixMortar(master[2],lambday,1);
-  Matrix L4 = findLMatrixMortar(master[3],lambday,1);
+  Matrix L3 = findLMatrixMortar(master[2],lambday,1, p1, 1);
+  Matrix L4 = findLMatrixMortar(master[3],lambday,1, p1, 1);
   L.push_back(MatrixOps::Axpy(L3,L4,-1));
 }
 

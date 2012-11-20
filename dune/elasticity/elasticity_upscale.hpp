@@ -151,8 +151,11 @@ class ElasticityUpscale
     //! \param[in] max The maximum coordinates of the grid
     //! \param[in] n1 The number of elements on the lambda grid in the X direction
     //! \param[in] n2 The number of elements on the lambda grid in the Y direction
+    //! \param[in] p1 The order of multipliers in the X direction
+    //! \param[in] p2 The order of multipliers in the Y direction
     void periodicBCsMortar(const double* min,
-                           const double* max, int n1, int n2);
+                           const double* max, int n1, int n2,
+                           int p1, int p2);
 
     //! \brief Assemble (optionally) stiffness matrix A and load vector
     //! \param[in] loadcase The strain load case. Set to -1 to skip
@@ -283,8 +286,11 @@ class ElasticityUpscale
     //! \param[in] b1 The primal boundary to match
     //! \param[in] interface The interface/multiplier grid
     //! \param[in] dir The normal direction on the boundary (0/1)
+    //! \param[in] n1 The multipler order in the first direction
+    //! \param[in] n2 The multipler order in the second direction
     Matrix findLMatrixMortar(const BoundaryGrid& b1,
-                             const BoundaryGrid& interface, int dir);
+                             const BoundaryGrid& interface, int dir,
+                             int n1, int n2);
 
     //! \brief This function loads and maps materials to active grid cells
     //! \param[in] file The eclipse grid to read materials from

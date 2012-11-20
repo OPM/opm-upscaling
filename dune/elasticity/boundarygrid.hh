@@ -113,6 +113,13 @@ class BoundaryGrid {
     //! \param[in] quad The quad to add
     void add(const Quad& quad);
 
+    void addToColumn(size_t col, const Quad& quad)
+    {
+      if (col >= colGrids.size())
+        colGrids.resize(col+1);
+      colGrids[col].push_back(quad);
+    }
+
     //! \brief Obtain a reference to a quad
     //! \param[in] index The index of the requested quad
     //! \returns A reference to the requested quad
@@ -129,10 +136,20 @@ class BoundaryGrid {
       return grid[index];
     }
 
+    const Quad& getQuad(int col, int index) const
+    {
+      return colGrids[col][index];
+    }
+
     //! \brief Obtain the number of quads in the grid
     size_t size() const
     {
       return grid.size();
+    }
+
+    size_t colSize(int i) const
+    {
+      return colGrids[i].size();
     }
 
     //! \brief Return the total number of nodes on the grid when known
@@ -209,6 +226,7 @@ class BoundaryGrid {
   protected:
     //! \brief Our quadrilateral elements
     std::vector<Quad> grid;
+    std::vector<std::vector<Quad> > colGrids;
 
     //! \brief Whether or not a given node is marked as fixed
     std::vector<bool> fixNodes;
