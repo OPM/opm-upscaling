@@ -782,6 +782,10 @@ void ElasticityUpscale<GridType>::loadMaterialsFromRocklist(const std::string& f
     std::vector<int> cells = gv.globalCell();
     for (size_t i=0;i<cells.size();++i) {
       int k = cells[i];
+      if (satnum[k]-1 >= cache.size()) {
+        std::cerr << "Material " << satnum[k] << " referenced but not available. Check your rocklist." << std::endl;
+        exit(1);
+      }
       materials.push_back(cache[satnum[k]-1]);
       volume[satnum[k]-1] += gv.cellVolume(i);
     }
