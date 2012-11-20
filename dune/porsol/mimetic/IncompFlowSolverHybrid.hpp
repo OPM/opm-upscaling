@@ -1483,6 +1483,7 @@ namespace Dune {
                 criterion.setDefaultValuesAnisotropic(3, 2);
 #endif
                 criterion.setProlongationDampingFactor(prolong_factor);
+                criterion.setBeta(1e-10);
                 precond_.reset(new Precond(*opS_, criterion, smootherArgs,
 				           1, smooth_steps, smooth_steps));
             }
@@ -1545,6 +1546,7 @@ namespace Dune {
                 criterion.setDefaultValuesAnisotropic(3, 2);
 #endif
                 criterion.setProlongationDampingFactor(prolong_factor);
+                criterion.setBeta(1e-10);
                 precond_.reset(new Precond(*opS_, criterion, smootherArgs, 2, smooth_steps, smooth_steps));
             }
             // Construct solver for system of linear equations.
