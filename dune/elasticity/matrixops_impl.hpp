@@ -19,7 +19,7 @@ void MatrixOps::fromAdjacency(Matrix& A, const std::vector< std::set<int> >& adj
   A.setSize(rows, cols, sum);
   A.setBuildMode(Matrix::random);
 
-  for (int i = 0; i < adj.size(); i++)
+  for (size_t i = 0; i < adj.size(); i++)
     A.setrowsize(i,adj[i].size());
   A.endrowsizes();
 
@@ -53,7 +53,7 @@ Matrix MatrixOps::Axpy(const Matrix& A, const Matrix& B, double alpha)
   assert(A.M() == B.M() && A.N() == B.N());
 
   // establish union adjacency pattern
-  std::vector<std::set<int> > adj;
+  AdjacencyPattern adj;
   adj.resize(A.N());
   for (Matrix::ConstIterator it  = A.begin();
                              it != A.end(); ++it) {
@@ -120,7 +120,7 @@ Matrix MatrixOps::augment(const Matrix& A, const Matrix& B,
   }
   if (symmetric) {
     // always establish diagonal elements or superLU crashes
-    for (int i=0;i<nrow;++i)
+    for (size_t i=0;i<nrow;++i)
       adj[i].insert(i);
   }
   Matrix result;

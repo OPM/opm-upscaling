@@ -237,7 +237,7 @@ class BoundaryGrid {
     //! \brief Print to a stream
     friend std::ostream& operator <<(std::ostream& os, const BoundaryGrid& g)
     {
-      for (int i=0;i<g.size();++i)
+      for (size_t i=0;i<g.size();++i)
         os << g[i] << std::endl;
       return os;
     }
@@ -326,7 +326,7 @@ class HexGeometry<2, cdim, GridImp>
       const typename GridImp::LeafGridView::template Codim<3>::Iterator itend = gv.leafView().template end<3>();
       for (int i=0;i<4;++i) {
         typename GridImp::LeafGridView::template Codim<3>::Iterator it=start;
-        for (it ; it != itend; ++it) {
+        for (; it != itend; ++it) {
           if (mapper.map(*it) == q.v[i].i)
             break;
         }
@@ -414,7 +414,6 @@ class HexGeometry<2, cdim, GridImp>
         Dune::GenericReferenceElements< ctype, 2 >::general(type());
       LocalCoordinate x = refElement.position(0,0);
       LocalCoordinate dx;
-      int i=0;
       do {
         using namespace Dune::GenericGeometry;
         // DF^n dx^n = F^n, x^{n+1} -= dx^n

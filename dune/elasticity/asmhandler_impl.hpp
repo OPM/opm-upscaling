@@ -59,7 +59,7 @@ void ASMHandler<GridType>::addDOF(int row, int erow,
       for (int l=0;l<dim;++l) {
         MPC* mpc = getMPC(index2,l);
         if (mpc) {
-          for (int n=0;n<mpc->getNoMaster();++n) {
+          for (size_t n=0;n<mpc->getNoMaster();++n) {
             int idx = meqn[mpc->getMaster(n).node*dim+mpc->getMaster(n).dof-1];
             if (idx != -1)
               A[row][idx] += scale*mpc->getMaster(n).coeff*(*K)[erow][j*dim+l];
@@ -93,7 +93,7 @@ void ASMHandler<GridType>::addElement(
     for (int k=0;k<dim;++k) {
       MPC* mpc = getMPC(index1,k);
       if (mpc) {
-        for (int n=0;n<mpc->getNoMaster();++n) {
+        for (size_t n=0;n<mpc->getNoMaster();++n) {
           int idx = meqn[mpc->getMaster(n).node*dim+mpc->getMaster(n).dof-1];
           addDOF(idx,i*dim+k,K,S,set,cell,b2,mpc->getMaster(n).coeff);
         }
@@ -124,7 +124,7 @@ void ASMHandler<GridType>::extractValues(Dune::FieldVector<double,comp>& v,
       if (it2 != fixedNodes.end() && it2->second.first & (1 << n))
         v[l++] = it2->second.second[n];
       else if (mpc) {
-        for (int m=0;m<mpc->getNoMaster();++m) {
+        for (size_t m=0;m<mpc->getNoMaster();++m) {
           int idx = meqn[mpc->getMaster(m).node*dim+mpc->getMaster(m).dof-1];
           if (idx != -1)
             v[l] += u[idx]*mpc->getMaster(m).coeff;
@@ -143,7 +143,7 @@ void ASMHandler<GridType>::expandSolution(Vector& result, const Vector& u)
   result.resize(nodes*dim);
   result = 0;
   int l=0;
-  for (size_t i=0;i<nodes;++i) {
+  for (int i=0;i<nodes;++i) {
     fixIt it = fixedNodes.find(i);
     Direction dir;
     if (it == fixedNodes.end())
@@ -163,11 +163,11 @@ void ASMHandler<GridType>::expandSolution(Vector& result, const Vector& u)
   }
   // second loop - handle MPC couplings
   l = 0;
-  for (size_t i=0;i<nodes;++i) {
+  for (int i=0;i<nodes;++i) {
     for (int j=0;j<dim;++j) {
       MPC* mpc = getMPC(i,j);
       if (mpc) {
-        for (int n=0;n<mpc->getNoMaster();++n) {
+        for (size_t n=0;n<mpc->getNoMaster();++n) {
           int idx = mpc->getMaster(n).node*dim+mpc->getMaster(n).dof-1;
           if (meqn[idx] != -1)
             result[l] += u[meqn[idx]]*mpc->getMaster(n).coeff;
@@ -188,7 +188,7 @@ void ASMHandler<GridType>::addMPC(MPC* mpc)
   fixIt it = fixedNodes.find(mpc->getSlave().node);
   int flag = 1 << (mpc->getSlave().dof-1);
   if (it == fixedNodes.end() || 
-      !(it->second.first & (1 << (mpc->getSlave().dof-1)))) {
+      !(it->second.first & flag)) {
     mpcs.insert(std::make_pair(slaveNode,mpc));
     return;
   }
@@ -257,7 +257,7 @@ void ASMHandler<GridType>::resolveMPCChain(MPC* mpc)
     coeff[master.dof-1] = master.coeff;
 
     int removeOld = 0;
-    for (size_t d = 1; d <= dim; d++)
+    for (int d = 1; d <= dim; d++)
       if (fabs(coeff[d-1]) > 1.0e-8)
       {
         MPC* mpc2 = getMPC(mpc->getMaster(i).node,d-1);
@@ -354,7 +354,7 @@ void ASMHandler<GridType>::nodeAdjacency(const LeafIterator& it,
     for (int l=0;l<dim;++l) {
       MPC* mpc = getMPC(indexj,l);
       if (mpc) {
-        for (int i=0;i<mpc->getNoMaster();++i) {
+        for (size_t i=0;i<mpc->getNoMaster();++i) {
           int idx = meqn[mpc->getMaster(i).node*dim+
             mpc->getMaster(i).dof-1];
           if (idx != -1)
@@ -386,7 +386,7 @@ void ASMHandler<GridType>::determineAdjacencyPattern()
       for (int k=0;k<dim;++k) {
         MPC* mpc = getMPC(indexi,k);
         if (mpc) {
-          for (int l=0;l<mpc->getNoMaster();++l) {
+          for (size_t l=0;l<mpc->getNoMaster();++l) {
             nodeAdjacency(it,vertexsize,
                           meqn[mpc->getMaster(l).node*dim+
                                mpc->getMaster(l).dof-1]);

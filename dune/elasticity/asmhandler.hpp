@@ -55,7 +55,7 @@ class ASMHandler {
 
     //! \brief Get the number of equations in the system
     //! \returns The number of equations in the system
-    int getEqns() const
+    size_t getEqns() const
     {
       return maxeqn;
     }

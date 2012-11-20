@@ -205,7 +205,7 @@ void writeOutput(const Params& p, Opm::time::StopWatch& watch, int cells,
   }
   f << "#" << std::endl
     <<"# Materials: " << volume.size() << std::endl;
-  for (int i=0;i<volume.size();++i)
+  for (size_t i=0;i<volume.size();++i)
     f << "#\t Material" << i+1 << ": " << volume[i]*100 << "%" << std::endl;
   f << "#" << std::endl
     << "######################################################################" << std::endl
@@ -217,7 +217,6 @@ int main(int argc, char** argv)
 {
   try {
     static const int dim = 3;
-    static const int bfunc = 4+(dim-2)*4;
 
     typedef Dune::CpGrid GridType;
 
@@ -287,7 +286,7 @@ int main(int argc, char** argv)
       upscale.solve(p.solver,p.ltol,i);
       upscale.A.expandSolution(field[i],upscale.u[i]);
 #define CLAMP(x) (fabs(x)<1.e-5?0.f:x)
-      for (int j=0;j<field[i].size();++j) {
+      for (size_t j=0;j<field[i].size();++j) {
         double val = field[i][j];
         field[i][j] = CLAMP(val);
       }

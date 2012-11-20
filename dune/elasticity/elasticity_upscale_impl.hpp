@@ -14,7 +14,6 @@
 std::vector<BoundaryGrid::Vertex> ElasticityUpscale<GridType>::extractFace(Direction dir, ctype coord)
 {
   std::vector<BoundaryGrid::Vertex> result;
-  const LeafIndexSet& set = gv.leafView().indexSet();
   const LeafVertexIterator itend = gv.leafView().template end<dim>();
 
   // make a mapper for codim dim entities in the leaf grid 
@@ -68,7 +67,7 @@ BoundaryGrid ElasticityUpscale<GridType>::extractMasterFace(Direction dir,
     else if (side == RIGHT)
      idx = set.subIndex(*cell,V2[i][0],dim);
     LeafVertexIterator it=start;
-    for (it ; it != itend; ++it) {
+    for (; it != itend; ++it) {
       if (mapper.map(*it) == idx)
         break;
     }
@@ -79,7 +78,7 @@ BoundaryGrid ElasticityUpscale<GridType>::extractMasterFace(Direction dir,
         if (side == RIGHT)
           idx = set.subIndex(*cell,V2[i][j],dim);
         LeafVertexIterator it=start;
-        for (it ; it != itend; ++it) {
+        for (; it != itend; ++it) {
           if (mapper.map(*it) == idx)
             break;
         }
@@ -145,7 +144,6 @@ void ElasticityUpscale<GridType>::findBoundaries(double* min,
 {
   max[0] = max[1] = max[2] = -1e5;
   min[0] = min[1] = min[2] = 1e5;
-  const LeafIndexSet& set = gv.leafView().indexSet();
   const LeafVertexIterator itend = gv.leafView().template end<dim>();
 
   // iterate over vertices and find slaves
@@ -179,7 +177,7 @@ void ElasticityUpscale<GridType>::periodicPlane(Direction plane, Direction dir,
                                  const std::vector<BoundaryGrid::Vertex>& slave,
                                  const BoundaryGrid& master)
 {
-  for (int i=0;i<slave.size();++i) {
+  for (size_t i=0;i<slave.size();++i) {
     BoundaryGrid::Vertex coord;
     if (master.find(coord,slave[i])) {
       addMPC(X,slave[i].i,coord);
@@ -204,7 +202,7 @@ Matrix ElasticityUpscale<GridType>::findBMatrixLLM(const SlaveGrid& slave)
         continue;
       MPC* mpc = A.getMPC(it->first,k);
       if (mpc) {
-        for (int n=0;n<mpc->getNoMaster();++n) {
+        for (size_t n=0;n<mpc->getNoMaster();++n) {
           int idx = A.getEquationForDof(mpc->getMaster(n).node,
                                         mpc->getMaster(n).dof-1);
           if (idx != -1)
@@ -227,7 +225,7 @@ Matrix ElasticityUpscale<GridType>::findBMatrixLLM(const SlaveGrid& slave)
         continue;
       MPC* mpc = A.getMPC(it->first,k);
       if (mpc) {
-        for (int n=0;n<mpc->getNoMaster();++n) {
+        for (size_t n=0;n<mpc->getNoMaster();++n) {
           int idx = A.getEquationForDof(mpc->getMaster(n).node,
                                         mpc->getMaster(n).dof-1);
           if (idx != -1)
@@ -251,7 +249,7 @@ Matrix ElasticityUpscale<GridType>::findLMatrixLLM(const SlaveGrid& slave,
   int nbeqn=0;
   std::vector<int> dofmap(master.totalNodes()*dim,-1);
   int col=0;
-  for (int i=0;i<master.totalNodes();++i) {
+  for (size_t i=0;i<master.totalNodes();++i) {
     if (master.isFixed(i)) {
         dofmap[i*dim  ] = -1;
         dofmap[i*dim+1] = -1;
@@ -541,9 +539,7 @@ void ElasticityUpscale<GridType>::assemble(int loadcase, bool matrix)
 {
   const int comp = 3+(dim-2)*3;
   static const int bfunc = 4+(dim-2)*4;
-  const int N = gv.size(dim);
 
-  const LeafIndexSet& set = gv.leafView().indexSet();
   const LeafIterator itend = gv.leafView().template end<0>();
 
   Dune::FieldMatrix<ctype,comp,comp> C;
@@ -567,8 +563,6 @@ void ElasticityUpscale<GridType>::assemble(int loadcase, bool matrix)
     materials[m++]->getConstitutiveMatrix(C);
     // determine geometry type of the current element and get the matching reference element
     Dune::GeometryType gt = it->type();
-    const Dune::template GenericReferenceElement<ctype,dim> &ref =
-      Dune::GenericReferenceElements<ctype,dim>::general(gt);
 
     Dune::FieldMatrix<ctype,dim*bfunc,dim*bfunc> Aq;
     K = 0;
@@ -616,13 +610,8 @@ void ElasticityUpscale<GridType>::averageStress(Dune::FieldVector<ctype,comp>& s
     return;
 
   static const int bfunc = 4+(dim-2)*4;
-  const int N = gv.size(dim);
 
-  const LeafIndexSet& set = gv.leafView().indexSet();
   const LeafIterator itend = gv.leafView().template end<0>();
-
-  // get a set of P1 shape functions
-  P1ShapeFunctionSet<ctype,ctype,dim> basis = P1ShapeFunctionSet<ctype,ctype,dim>::instance();
 
   Dune::FieldMatrix<ctype,comp,comp> C;
   Dune::FieldVector<ctype,comp> eps0;
@@ -635,8 +624,6 @@ void ElasticityUpscale<GridType>::averageStress(Dune::FieldVector<ctype,comp>& s
     materials[m++]->getConstitutiveMatrix(C);
     // determine geometry type of the current element and get the matching reference element
     Dune::GeometryType gt = it->type();
-    const Dune::template GenericReferenceElement<ctype,dim> &ref =
-      Dune::GenericReferenceElements<ctype,dim>::general(gt);
 
     Dune::FieldVector<ctype,bfunc*dim> v;
     A.extractValues(v,u,it);
@@ -710,7 +697,7 @@ void ElasticityUpscale<GridType>::loadMaterialsFromGrid(const std::string& file)
   // scale E modulus of materials
   if (Escale > 0) {
     Emin = *std::min_element(Emod.begin(),Emod.end());
-    for (int i=0;i<Emod.size();++i)
+    for (size_t i=0;i<Emod.size();++i)
       Emod[i] *= Escale/Emin;
   }
 
@@ -770,9 +757,9 @@ void ElasticityUpscale<GridType>::loadMaterialsFromRocklist(const std::string& f
   // scale E modulus of materials
   if (Escale > 0) {
     Emin=1e10;
-    for (int i=0;i<cache.size();++i)
+    for (size_t i=0;i<cache.size();++i)
       Emin = std::min(Emin,((Isotropic*)cache[i])->getE());
-    for (int i=0;i<cache.size();++i) {
+    for (size_t i=0;i<cache.size();++i) {
       double E = ((Isotropic*)cache[i])->getE();
       ((Isotropic*)cache[i])->setE(E*Escale/Emin);
     }
@@ -780,7 +767,7 @@ void ElasticityUpscale<GridType>::loadMaterialsFromRocklist(const std::string& f
   std::vector<double> volume;
   volume.resize(cache.size());
   if (file == "uniform") {
-    for (size_t i=0;i<gv.size(0);++i)
+    for (int i=0;i<gv.size(0);++i)
       materials.push_back(cache[0]);
     volume[0] = 1;
   } else {
@@ -951,8 +938,6 @@ void ElasticityUpscale<GridType>::periodicBCsLLM(const double* min,
 
   Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridType,
                                             Dune::MCMGVertexLayout> mapper(gv);
-  LeafVertexIterator start=gv.leafView().template begin<dim>();
-  LeafVertexIterator itend = gv.leafView().template end<dim>();
 
   BoundaryGrid::FaceCoord fmin,fmax;
   // YZ plane
@@ -969,10 +954,10 @@ void ElasticityUpscale<GridType>::periodicBCsLLM(const double* min,
   // step 5
   std::map<int,BoundaryGrid::Vertex> m;
   // find matching coefficients
-  for (int i=0;i<master.size();++i) {
+  for (size_t i=0;i<master.size();++i) {
     for (int j=0;j<2;++j) {
       m.clear();
-      for (int k=0;k<slave[i*2+j].size();++k) {
+      for (size_t k=0;k<slave[i*2+j].size();++k) {
         BoundaryGrid::Vertex c;
         if (master[i].find(c,slave[i*2+j][k])) {
           m.insert(std::make_pair(slave[i*2+j][k].i,c));
@@ -999,12 +984,12 @@ void ElasticityUpscale<GridType>::setupPreconditioner()
     if (cell / gv.logicalCartesianSize()[2] > 0 
         && cell % gv.logicalCartesianSize()[2] == 0)
       currdomain++;
-    for (int i=0;i<8;++i) {
+    for (size_t i=0;i<8;++i) {
       int idx=set.subIndex(*it,i,dim);
       for (int d=0;d<3;++d) {
         MPC* mpc = A.getMPC(idx,d);
         if (mpc) {
-          for (int n=0;n<mpc->getNoMaster();++n) {
+          for (size_t n=0;n<mpc->getNoMaster();++n) {
             int row = A.getEquationForDof(mpc->getMaster(n).node,d);
             if (row > -1)
               rows[currdomain].insert(row);
@@ -1034,11 +1019,11 @@ void ElasticityUpscale<GridType>::setupSolvers(Solver solver)
     // [ 0    0   0   L3'  L4'    0   0] [ub_2]   [0]
     int r = A.getOperator().N();
     int c = A.getOperator().M();
-    for (int i=0;i<B.size();++i) { 
+    for (size_t i=0;i<B.size();++i) {
       A.getOperator() = MatrixOps::augment(A.getOperator(),B[i],0,c,true);
       c += B[i].M();
     }
-    for (int i=0;i<L.size();++i) {
+    for (size_t i=0;i<L.size();++i) {
       A.getOperator() = MatrixOps::augment(A.getOperator(),L[i],r,c,true);
       r += L[i].N();
       if (i % 2 == 1)
@@ -1055,7 +1040,7 @@ void ElasticityUpscale<GridType>::setupSolvers(Solver solver)
     // [L1'  0  0] [l_1] = [0]
     // [L2'  0  0] [l_2]   [0]
     int c = A.getOperator().M();
-    for (int i=0;i<L.size();++i) { 
+    for (size_t i=0;i<L.size();++i) { 
       A.getOperator() = MatrixOps::augment(A.getOperator(),L[i],0,c,true);
       c += L[i].M();
     }
