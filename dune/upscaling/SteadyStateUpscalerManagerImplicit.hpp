@@ -181,39 +181,35 @@ namespace Dune
             // Print the saturations and pressure drops.
             // writeControl(std::cout, saturations, all_pdrops);
 
-            // Initialize upscaler.
-            //typedef SteadyStateUpscaler<Traits> Upscaler;
-            typedef typename Upscaler::permtensor_t permtensor_t;
-            Upscaler upscaler;
-            upscaler.init(param);
-
-            // First, compute an upscaled permeability.
-            permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
-            permtensor_t upscaled_K_copy = upscaled_K;
-            upscaled_K_copy *= (1.0/(Opm::prefix::milli*Opm::unit::darcy));
-            std::cout.precision(15);
-            std::cout << "Upscaled K in millidarcy:\n" << upscaled_K_copy << std::endl;
-            std::cout << "Upscaled porosity: " << upscaler.upscalePorosity() << std::endl;
-
             // Create output streams for upscaled relative permeabilities
             std::string kr_filename = param.getDefault<std::string>("kr_filename", "upscaled_relperm");
             std::string krwtmpname = kr_filename + "_water";
             std::string krotmpname = kr_filename + "_oil";
             std::string krw_filename = param.getDefault<std::string>("outputWater", krwtmpname);
             std::string kro_filename = param.getDefault<std::string>("outputOil", krotmpname);
-            //std::ofstream krw_out(krw_filename.c_str());
-            //std::ofstream kro_out(kro_filename.c_str());
-            std::stringstream krw_out; 
-            std::stringstream kro_out;
+            std::ofstream krw_out(krw_filename.c_str());
+            std::ofstream kro_out(kro_filename.c_str());
+            // std::stringstream krw_out; 
+            // std::stringstream kro_out;
             krw_out << "# Result from steady state upscaling" << std::endl;
             krw_out << "# Pressuredrop  Sw  Krxx  Kryy  Krzz" << std::endl;
             kro_out << "# Result from steady state upscaling" << std::endl;
             kro_out << "# Pressuredrop  Sw  Krxx  Kryy  Krzz" << std::endl;
-
-
             krw_out.precision(4);  krw_out.setf(std::ios::scientific | std::ios::showpoint);
             kro_out.precision(4);  kro_out.setf(std::ios::scientific | std::ios::showpoint);
-	    //#endif
+
+            // Initialize upscaler.
+            Upscaler upscaler;
+            upscaler.init(param);
+
+            // First, compute an upscaled permeability.
+            typedef typename Upscaler::permtensor_t permtensor_t;
+            permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
+            permtensor_t upscaled_K_copy = upscaled_K;
+            upscaled_K_copy *= (1.0/(Opm::prefix::milli*Opm::unit::darcy));
+            std::cout.precision(15);
+            std::cout << "Upscaled K in millidarcy:\n" << upscaled_K_copy << std::endl;
+            std::cout << "Upscaled porosity: " << upscaler.upscalePorosity() << std::endl;
 
             // Then, compute some upscaled relative permeabilities.
             int num_cells = upscaler.grid().size(0);
@@ -225,12 +221,12 @@ namespace Dune
                 if (start_from_cl) {
                     try {
                         upscaler.setToCapillaryLimit(saturations[i], init_sat);
-                    }catch (...){
+                    } catch (...) {
                         init_sat.resize(num_cells, saturations[i]);
                         std::cout << "Failed to initialize with capillary limit for s = " << saturations[i]
                                   << ". Init with uniform distribution." << std::endl;
                    }
-                } {
+                } else {
                      init_sat.resize(num_cells, saturations[i]);
                 }
 
@@ -259,22 +255,22 @@ namespace Dune
 
                 }
             }
-            std::cout << krw_out << std::endl;
-            std::cout << kro_out << std::endl;
-            if (param.get<std::string>("outputWater") != "") {
-                // write water results to file
-                std::ofstream krw_outfile;
-                krw_outfile.open(krw_filename.c_str(), std::ios::out | std::ios::trunc);
-                krw_outfile << krw_out.str();
-                krw_outfile.close();
-            }
-            if (param.get<std::string>("outputOil") != "") {
-                // write water results to file
-                std::ofstream kro_outfile;
-                kro_outfile.open(kro_filename.c_str());
-                kro_outfile << kro_out.str();
-                kro_outfile.close();
-            }
+            // std::cout << krw_out << std::endl;
+            // std::cout << kro_out << std::endl;
+            // if (!krw_filename.empty()) {
+            //     // write water results to file
+            //     std::ofstream krw_outfile;
+            //     krw_outfile.open(krw_filename.c_str(), std::ios::out | std::ios::trunc);
+            //     krw_outfile << krw_out.str();
+            //     krw_outfile.close();
+            // }
+            // if (!kro_filename.empty()) {
+            //     // write water results to file
+            //     std::ofstream kro_outfile;
+            //     kro_outfile.open(kro_filename.c_str());
+            //     kro_outfile << kro_out.str();
+            //     kro_outfile.close();
+            // }
          }
     };
 
