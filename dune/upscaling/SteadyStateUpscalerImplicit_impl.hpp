@@ -137,7 +137,8 @@ namespace Dune
                        const std::vector<double>& initial_saturation,
                        const double boundary_saturation,
                        const double pressure_drop,
-                       const permtensor_t& upscaled_perm,bool& success)
+                       const permtensor_t& upscaled_perm,
+                       bool& success)
     {
         static int count = 0;
         ++count;
@@ -171,28 +172,26 @@ namespace Dune
         double max_mod = this->flow_solver_.postProcessFluxes();
         std::cout << "Max mod = " << max_mod << std::endl;
 
-        // Do a run till steady state. For now, we just do some pressure and transport steps...
+        // Do a run till steady state.
         std::vector<double> saturation_old = saturation;
         bool stationary = false;
-        int it_count=0;
-        double stepsize=init_stepsize_;
-
-
+        int it_count = 0;
+        double stepsize = init_stepsize_;
         std::vector<double> init_saturation(saturation);
-        while((!stationary) & (it_count < max_it_)){// & transport_cost < max_transport_cost_)
-            //for (int iter = 0; iter < simulation_steps_; ++iter) {
+        while ((!stationary) && (it_count < max_it_)) { // && transport_cost < max_transport_cost_)
             // Run transport solver.
-            std::cout << "Running transport step " << it_count <<" with stepsize " << stepsize/Opm::unit::year << " year \n";
-            bool converged=transport_solver_.transportSolve(saturation, stepsize, gravity, this->flow_solver_.getSolution(), injection);
+            std::cout << "Running transport step " << it_count << " with stepsize "
+                      << stepsize/Opm::unit::year << " years." << std::endl;
+            bool converged = transport_solver_.transportSolve(saturation, stepsize, gravity,
+                                                              this->flow_solver_.getSolution(), injection);
             // Run pressure solver.
-            if(converged){
-                init_saturation=saturation;
-                /*
-                  this->flow_solver_.solve(this->res_prop_, saturation, this->bcond_, src,
-                  this->residual_tolerance_, this->linsolver_verbosity_, this->linsolver_type_);
-                */
-                max_mod = this->flow_solver_.postProcessFluxes();
-                std::cout << "Max mod of fluxes= " << max_mod << std::endl;
+            if (converged) {
+                init_saturation = saturation;
+                // this->flow_solver_.solve(this->res_prop_, saturation, this->bcond_, src,
+                //                          this->residual_tolerance_, this->linsolver_verbosity_, this->linsolver_type_);
+                // max_mod = this->flow_solver_.postProcessFluxes();
+                // std::cout << "Max mod of fluxes= " << max_mod << std::endl;
+                this->flow_solver_.postProcessFluxes();
                 // Print in-out flows if requested.
                 if (print_inoutflows_) {
                     std::pair<double, double> w_io, o_io;
@@ -221,27 +220,24 @@ namespace Dune
                 for (int i = 0; i < num_cells; ++i) {
                     maxdiff = std::max(maxdiff, std::fabs(saturation[i] - saturation_old[i]));
                 }
-                double ds_year=maxdiff*Opm::unit::year/stepsize;
+                double ds_year = maxdiff*Opm::unit::year/stepsize;
                 std::cout << "Maximum saturation change/year: " << ds_year << std::endl;
-
-                if( ds_year < sat_change_year_){
-                    stationary=true;
+                if (ds_year < sat_change_year_) {
+                    stationary = true;
                 }
-                if(maxdiff< dt_sat_tol_){
+                if (maxdiff< dt_sat_tol_) {
                     stepsize=std::min(max_stepsize_,2*stepsize);
                 }
-            }else{
+            } else {
                 std::cerr << "Cutting time step\n";
                 init_saturation = saturation_old;
                 stepsize=stepsize/2.0;
             }
-            it_count+=1;
+            ++it_count;
             // Copy to old.
             saturation_old = saturation;
-
-
         }
-        success=stationary;
+        success = stationary;
 
         // Compute phase mobilities.
         // First: compute maximal mobilities.
