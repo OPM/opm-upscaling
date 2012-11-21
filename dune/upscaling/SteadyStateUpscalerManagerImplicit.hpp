@@ -225,12 +225,12 @@ namespace Dune
                 if (start_from_cl) {
                     try {
                         upscaler.setToCapillaryLimit(saturations[i], init_sat);
-                    }catch (...){
+                    } catch (...) {
                         init_sat.resize(num_cells, saturations[i]);
                         std::cout << "Failed to initialize with capillary limit for s = " << saturations[i]
                                   << ". Init with uniform distribution." << std::endl;
                    }
-                } {
+                } else {
                      init_sat.resize(num_cells, saturations[i]);
                 }
 
@@ -261,14 +261,14 @@ namespace Dune
             }
             std::cout << krw_out << std::endl;
             std::cout << kro_out << std::endl;
-            if (param.get<std::string>("outputWater") != "") {
+            if (!krw_filename.empty()) {
                 // write water results to file
                 std::ofstream krw_outfile;
                 krw_outfile.open(krw_filename.c_str(), std::ios::out | std::ios::trunc);
                 krw_outfile << krw_out.str();
                 krw_outfile.close();
             }
-            if (param.get<std::string>("outputOil") != "") {
+            if (!kro_filename.empty()) {
                 // write water results to file
                 std::ofstream kro_outfile;
                 kro_outfile.open(kro_filename.c_str());
