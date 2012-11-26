@@ -43,6 +43,8 @@
 #include <dune/porsol/common/ReservoirPropertyFixedMobility.hpp>
 #include <dune/porsol/euler/MatchSaturatedVolumeFunctor.hpp>
 #include <opm/core/utility/Units.hpp>
+#include <opm/core/utility/writeECLData.hpp>
+#include <opm/core/utility/miscUtilities.hpp>
 #include <algorithm>
 
 namespace Dune
@@ -54,6 +56,7 @@ namespace Dune
     inline SteadyStateUpscalerImplicit<Traits>::SteadyStateUpscalerImplicit()
         : Super(),
           output_vtk_(false),
+          output_ecl_(false),
           print_inoutflows_(false),
           simulation_steps_(10),
           init_stepsize_(10),
@@ -74,6 +77,10 @@ namespace Dune
     {
         Super::initImpl(param);
         output_vtk_ = param.getDefault("output_vtk", output_vtk_);
+        output_ecl_ = param.getDefault("output_ecl", output_ecl_);
+        if (output_ecl_) {
+            grid_adapter_.init(Super::grid());
+        }
         print_inoutflows_ = param.getDefault("print_inoutflows", print_inoutflows_);
         simulation_steps_ = param.getDefault("simulation_steps", simulation_steps_);
         init_stepsize_ = Opm::unit::convert::from(param.getDefault("init_stepsize", init_stepsize_),
@@ -177,6 +184,9 @@ namespace Dune
         bool stationary = false;
         int it_count = 0;
         double stepsize = init_stepsize_;
+        double ecl_time = 0.0;
+        std::vector<double> ecl_sat;
+        std::vector<double> ecl_press;
         std::vector<double> init_saturation(saturation);
         while ((!stationary) && (it_count < max_it_)) { // && transport_cost < max_transport_cost_)
             // Run transport solver.
@@ -213,6 +223,22 @@ namespace Dune
                                    + '-' + boost::lexical_cast<std::string>(count)
                                    + '-' + boost::lexical_cast<std::string>(flow_direction)
                                    + '-' + boost::lexical_cast<std::string>(it_count));
+                }
+                if (output_ecl_) {
+                    const char* fd = "xyz";
+                    std::string basename = std::string("ecldump-steadystate")
+                                   + '-' + boost::lexical_cast<std::string>(boundary_saturation)
+                                   + '-' + boost::lexical_cast<std::string>(fd[flow_direction])
+                                   + '-' + boost::lexical_cast<std::string>(pressure_drop);
+                    Opm::toBothSat(saturation, ecl_sat);
+                    getCellPressure(ecl_press, this->ginterf_, this->flow_solver_.getSolution());
+                    Opm::DataMap datamap;
+                    datamap["saturation"] = &ecl_sat;
+                    datamap["pressure"] = &ecl_press;
+                    ecl_time += stepsize;
+                    boost::posix_time::ptime ecl_startdate( boost::gregorian::date(2012, 1, 1) );
+                    boost::posix_time::ptime ecl_curdate = ecl_startdate + boost::posix_time::seconds(int(ecl_time));
+                    Opm::writeECLData(*grid_adapter_.c_grid(), datamap, it_count, ecl_time, ecl_curdate, "./", basename);
                 }
                 // Comparing old to new.
                 int num_cells = saturation.size();
