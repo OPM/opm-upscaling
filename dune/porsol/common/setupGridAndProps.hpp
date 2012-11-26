@@ -41,6 +41,7 @@
 #include <dune/grid/CpGrid.hpp>
 #include <dune/grid/sgrid.hh>
 #include <dune/porsol/common/ReservoirPropertyCapillary.hpp>
+#include <boost/filesystem.hpp>
 
 namespace Dune
 {
@@ -75,11 +76,17 @@ namespace Dune
 	    MESSAGE("Warning: We do not yet read legacy reservoir properties. Using defaults.");
 	    res_prop.init(grid.size(0));
 	} else if (fileformat == "eclipse") {
-	    Opm::EclipseGridParser parser(param.get<std::string>("filename"));
+            std::string ecl_file = param.get<std::string>("filename");
+	    Opm::EclipseGridParser parser(ecl_file);
 	    double z_tolerance = param.getDefault<double>("z_tolerance", 0.0);
 	    bool periodic_extension = param.getDefault<bool>("periodic_extension", false);
 	    bool turn_normals = param.getDefault<bool>("turn_normals", false);
 	    grid.processEclipseFormat(parser, z_tolerance, periodic_extension, turn_normals);
+            // Save EGRID file in case we are writing ECL output.
+            if (param.getDefault("output_ecl", false)) {
+                boost::filesystem::path ecl_path(ecl_file);
+                parser.saveEGRID(ecl_path.stem().string() + ".FEGRID");
+            }
             double perm_threshold_md = param.getDefault("perm_threshold_md", 0.0);
 	    double perm_threshold = Opm::unit::convert::from(perm_threshold_md, Opm::prefix::milli*Opm::unit::darcy);
 	    std::string rock_list = param.getDefault<std::string>("rock_list", "no_list");
