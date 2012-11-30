@@ -1029,8 +1029,6 @@ int main(int varnum, char** vararg)
         }
     } 
     
-    cout << "Kom hit 2?" << endl;
-   
     // Find max/min fracflowratio over all rock types.
     double fracflowratioMin = numeric_limits<double>().max(); 
     double fracflowratioMax = 0; 

@@ -1028,6 +1028,9 @@ int main(int varnum, char** vararg)
     * J-function in that they represent all possible saturations,
     * ie. we do not want to extrapolate the J-functions (but we might
     * have to do that later in the computations).
+    *
+    * The user-supplied surface tension is ignored until
+    * the final output of results.
     */
 
    if (maxPermContrast == 0) {
@@ -1071,9 +1074,9 @@ int main(int varnum, char** vararg)
            
 	   if (! anisotropic_input) {
 	       Pcmincandidate = InvJfunctions[int(satnums[cell_idx])-1].getMinimumX().first
-		   / sqrt(permxs[cell_idx] * milliDarcyToSqMetre / poros[cell_idx]) * surfaceTension;
+		   / sqrt(permxs[cell_idx] * milliDarcyToSqMetre / poros[cell_idx]);
 	       Pcmaxcandidate = InvJfunctions[int(satnums[cell_idx])-1].getMaximumX().first
-		   / sqrt(permxs[cell_idx] * milliDarcyToSqMetre/poros[cell_idx]) * surfaceTension;
+		   / sqrt(permxs[cell_idx] * milliDarcyToSqMetre/poros[cell_idx]);
 	       minSw = InvJfunctions[int(satnums[cell_idx])-1].getMinimumF().second;
 	       maxSw = InvJfunctions[int(satnums[cell_idx])-1].getMaximumF().second;
 	   }
@@ -1216,7 +1219,7 @@ int main(int varnum, char** vararg)
                        PtestvalueCell = Ptestvalue;
                    }
                    if (! anisotropic_input ) {   
-                       double Jvalue = sqrt(permxs[cell_idx] * milliDarcyToSqMetre /poros[cell_idx]) * PtestvalueCell / surfaceTension;
+                       double Jvalue = sqrt(permxs[cell_idx] * milliDarcyToSqMetre /poros[cell_idx]) * PtestvalueCell;
                        //cout << "JvalueCell: " << Jvalue << endl;
                        waterSaturationCell 
                            = InvJfunctions[int(satnums[cell_idx])-1].evaluate(Jvalue);
@@ -1421,7 +1424,7 @@ int main(int varnum, char** vararg)
                    
                    if (! anisotropic_input) {
                        
-                       double Jvalue = sqrt(permxs[cell_idx] * milliDarcyToSqMetre/poros[cell_idx]) * PtestvalueCell / surfaceTension;
+                       double Jvalue = sqrt(permxs[cell_idx] * milliDarcyToSqMetre/poros[cell_idx]) * PtestvalueCell;
                        //cout << "JvalueCell: " << Jvalue << endl;
                        double waterSaturationCell 
                            = InvJfunctions[int(satnums[cell_idx])-1].evaluate(Jvalue);
@@ -1859,6 +1862,13 @@ int main(int varnum, char** vararg)
        }
        
        vector<double> Pvalues = pressurePoints; //WaterSaturation.get_xVector(); 
+
+       // Multiply all pressures with the surface tension (potentially) supplied
+       // at the command line. This multiplication has been postponed to here
+       // to avoid division by zero and to avoid special handling of negative
+       // capillary pressure in the code above.
+       std::transform(Pvalues.begin(), Pvalues.end(), Pvalues.begin(), 
+		      std::bind1st(std::multiplies<double>(), surfaceTension));
        vector<double> Satvalues = WaterSaturation; //.get_fVector(); 
        
        // If user wants interpolated output, do monotone cubic interpolation
