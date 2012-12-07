@@ -143,8 +143,8 @@ namespace Dune
 	Opm::SparseVector<double> injection(num_cells);
 	// Gravity.
 	FieldVector<double, 3> gravity(0.0);
-        if(use_gravity_){
-	  gravity[2] = -Opm::unit::gravity;
+        if (use_gravity_) {
+            gravity[2] = Opm::unit::gravity;
         }
 	if (gravity.two_norm() > 0.0) {
 	    MESSAGE("Warning: Gravity is experimental for flow solver.");
