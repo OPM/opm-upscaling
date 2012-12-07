@@ -106,6 +106,7 @@ namespace Dune
 
 	// ------- Data members -------
 	std::vector<double> last_saturation_state_;
+        bool use_gravity_;
 	bool output_vtk_;
         bool print_inoutflows_;
 	int simulation_steps_;

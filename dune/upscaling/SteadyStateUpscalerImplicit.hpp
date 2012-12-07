@@ -114,6 +114,7 @@ namespace Dune
 
         // ------- Data members -------
         std::vector<double> last_saturation_state_;
+        bool use_gravity_;
         bool output_vtk_;
         bool output_ecl_;
         bool print_inoutflows_;
