@@ -85,7 +85,8 @@ namespace Dune
             // Save EGRID file in case we are writing ECL output.
             if (param.getDefault("output_ecl", false)) {
                 boost::filesystem::path ecl_path(ecl_file);
-                parser.saveEGRID(ecl_path.stem().string() + ".FEGRID");
+                ecl_path.replace_extension(".FEGRID");
+                parser.saveEGRID(ecl_path.string());
             }
             double perm_threshold_md = param.getDefault("perm_threshold_md", 0.0);
 	    double perm_threshold = Opm::unit::convert::from(perm_threshold_md, Opm::prefix::milli*Opm::unit::darcy);
