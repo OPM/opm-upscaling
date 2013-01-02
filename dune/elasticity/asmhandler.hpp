@@ -15,6 +15,7 @@
 #include <dune/common/fmatrix.hh>
 #include <dune/istl/bvector.hh>
 #include <dune/common/fvector.hh>
+#include <dune/elasticity/logutils.hpp>
 #include <dune/elasticity/mpc.hh>
 #include <dune/elasticity/matrixops.hpp>
 
@@ -139,6 +140,13 @@ class ASMHandler {
 
     //! \brief Print the current load vector
     void printLoadVector() const;
+
+    //! \brief Access current adjacency pattern
+    //! \details Can be used to add extra entries, such as other blocks
+    AdjacencyPattern& getAdjacencyPattern()
+    {
+      return adjacencyPattern;
+    }
   protected:
     //! \brief Resolve chained MPCs
     void resolveMPCChains()

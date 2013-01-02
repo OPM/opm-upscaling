@@ -36,6 +36,11 @@ class MatrixOps {
     static void fromAdjacency(Matrix& A, const AdjacencyPattern& adj,
                               int rows, int cols);
 
+    //! \brief Create a sparse matrix from a dense matrix
+    //! \param[in] T The dense matrix
+    //! \returns The sparse matrix
+    static Matrix fromDense(const Dune::DynamicMatrix<double>& T);
+
     //! \brief Print a matrix to stdout
     //! \param[in] A The matrix to print
     static void print(const Matrix& A);
@@ -60,6 +65,16 @@ class MatrixOps {
     //! \param[in] The matrix to extract the diagonal from
     //! \returns M = diag(A)
     static Matrix extractDiagonal(const Matrix& A);
+
+    //! \brief Returns a diagonal matrix
+    //! \param[in] N The dimension of the matrix
+    static Matrix diagonal(size_t N);
+
+    //! \brief Extract a subblock of a matrix into a new matrix
+    //! \param[in] The matrix to extract from
+    //! \returns The subblock
+    static Matrix extractBlock(const Matrix& A,
+                               size_t r0, size_t N, size_t c0, size_t M);
 
     //! \brief Save a matrix as a dense asc file
     //! \param[in] A The matrix to save

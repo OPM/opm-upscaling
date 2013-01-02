@@ -27,6 +27,7 @@
 #endif
 
 #include <dune/elasticity/elasticity_upscale.hpp>
+#include <dune/elasticity/matrixops.hpp>
 
 
 //! \brief Display the available command line parameters
@@ -34,29 +35,36 @@ void syntax(char** argv)
 {
   std::cerr << "Usage: " << argv[0] << " gridfilename=filename.grdecl [method=]" << std::endl
             << "\t[xmax=] [ymax=] [zmax=] [xmin=] [ymin=] [zmin=] [linsolver_type=]" << std::endl
-            <<" \t[Emin=] [ctol=] [ltol=] [rock_list=] [vtufilename=] [output=]" << std::endl << std::endl
-            << "\t gridfilename          - the grid file. can be 'uniform'" << std::endl
-            << "\t vtufilename           - save results to vtu file" << std::endl
-            << "\t rock_list             - use material information from given rocklist" << std::endl
-            << "\t output                - output results in text report format" << std::endl
-            << "\t method                - can be MPC, LLM or Mortar" << std::endl
+            <<" \t[Emin=] [ctol=] [ltol=] [rock_list=] [vtufilename=] [output=] [linsolver_verbose=]" << std::endl << std::endl
+            << "\t gridfilename             - the grid file. can be 'uniform'" << std::endl
+            << "\t vtufilename              - save results to vtu file" << std::endl
+            << "\t rock_list                - use material information from given rocklist" << std::endl
+            << "\t output                   - output results in text report format" << std::endl
+            << "\t method                   - can be MPC or Mortar" << std::endl
             << "\t\t if not specified, Mortar couplings are used" << std::endl
             << "\t (x|y|z)max/(x|y|z)min - maximum/minimum grid coordinates." << std::endl
             << "\t\t if not specified, coordinates are found by grid traversal" << std::endl
-            << "\t cells(x|y|z)          - number of cells if gridfilename=uniform." << std::endl
-            << "\t Emin                  - minimum E modulus (to avoid numerical issues)" << std::endl
-            << "\t ctol                  - collapse tolerance in grid parsing" << std::endl
-            << "\t ltol                  - tolerance in iterative linear solvers" << std::endl
-            << "\t linsolver_type=cg     - use the conjugate gradient method" << std::endl
-            << "\t linsolver_type=slu    - use the SuperLU sparse direct solver" << std::endl;
+            << "\t cells(x|y|z)             - number of cells if gridfilename=uniform." << std::endl
+            << "\t lambda(x|y)              - order of lagrangian multipliers in first/second direction" << std::endl
+            << "\t Emin                     - minimum E modulus (to avoid numerical issues)" << std::endl
+            << "\t ctol                     - collapse tolerance in grid parsing" << std::endl
+            << "\t ltol                     - tolerance in iterative linear solvers" << std::endl
+            << "\t linsolver_type=iterative - use a suitable iterative method (cg or gmres)" << std::endl
+            << "\t linsolver_type=direct    - use the SuperLU sparse direct solver" << std::endl
+            << "\t verbose                  - set to true to get verbose output" << std::endl
+            << "\t linsolver_restart        - number of iterations before gmres is restarted" << std::endl
+            << "\t linsolver_presteps       - number of pre-smooth steps in the AMG" << std::endl
+            << "\t linsolver_poststeps      - number of post-smooth steps in the AMG" << std::endl
+            << "\t\t affects memory usage" << std::endl
+            << "\t linsolver_symmetric      - use symmetric linear solver. Defaults to true" << std::endl
+            << "\t mortar_precond           - preconditioner for mortar block. Defaults to schur-amg" << std::endl;
 }
 
 
 enum UpscaleMethod {
   UPSCALE_NONE   = 0,
   UPSCALE_MPC    = 1,
-  UPSCALE_LLM    = 2,
-  UPSCALE_MORTAR = 3
+  UPSCALE_MORTAR = 2
 };
 
 //! \brief Structure holding parameters configurable from command line
@@ -75,28 +83,28 @@ struct Params {
   double Emin;
   //! \brief The tolerance for collapsing nodes in the Z direction
   double ctol;
-  //! \brief The tolerance for the iterative linear solver
-  double ltol;
   //! \brief Minimum grid coordinates
   double min[3];
   //! \brief Maximum grid coordinates
   double max[3];
-  //! \brief The linear solver to employ
-  Opm::Elasticity::Solver solver;
+  //! \brief Polynomial order of multipliers in first / second direction
+  int lambda[2];
+  //! \brief Number of elements on interface grid in the x direction
+  int n1;
+  //! \brief Number of elements on interface grid in the y direction
+  int n2;
+  Opm::Elasticity::LinSolParams linsolver;
 
   // Debugging options
-  //! \brief Number of elements on interface grid in the x direction (LLM)
-  int n1;
-  //! \brief Number of elements on interface grid in the y direction (LLM)
-  int n2;
+
   //! \brief cell in x
   int cellsx;
   //! \brief cell in y
   int cellsy;
   //! \brief cell in z
   int cellsz;
-  //! \brief Polynomial order of multipliers in first / second direction
-  int lambda[2];
+  //! \brief verbose output
+  bool verbose;
 };
 
 //! \brief Parse the command line arguments
@@ -109,38 +117,32 @@ void parseCommandLine(int argc, char** argv, Params& p)
   p.min[0]    = param.getDefault("xmin",-1);
   p.min[1]    = param.getDefault("ymin",-1);
   p.min[2]    = param.getDefault("zmin",-1);
-  p.lambda[0] = param.getDefault("lambdax", 1);
-  p.lambda[1] = param.getDefault("lambday", 1);
+  p.lambda[0] = param.getDefault("lambdax", 2);
+  p.lambda[1] = param.getDefault("lambday", 2);
   std::string method = param.getDefault<std::string>("method","mortar");
   if (!strcasecmp(method.c_str(),"mpc"))
     p.method = UPSCALE_MPC;
-  if (!strcasecmp(method.c_str(),"llm"))
-    p.method = UPSCALE_LLM;
   if (!strcasecmp(method.c_str(),"mortar"))
     p.method = UPSCALE_MORTAR;
   if (!strcasecmp(method.c_str(),"none"))
     p.method = UPSCALE_NONE;
   p.Emin     = param.getDefault<double>("Emin",0.0);
-  p.ctol     = param.getDefault<double>("ctol",1.e-8);
-  p.ltol     = param.getDefault<double>("ltol",1.e-10);
+  p.ctol     = param.getDefault<double>("ctol",1.e-6);
   p.file     = param.get<std::string>("gridfilename");
   p.rocklist = param.getDefault<std::string>("rock_list","");
   p.vtufile  = param.getDefault<std::string>("vtufilename","");
   p.output = param.getDefault<std::string>("output","");
+  p.verbose = param.getDefault<bool>("verbose",false);
   size_t i;
   if ((i=p.vtufile.find(".vtu")) != std::string::npos)
     p.vtufile = p.vtufile.substr(0,i);
-  //std::string solver = param.getDefault<std::string>("linsolver_type","slu");
-  std::string solver = param.getDefault<std::string>("linsolver_type","cg");
-  if (solver == "cg")
-    p.solver = Opm::Elasticity::CG;
-  else
-    p.solver = Opm::Elasticity::SLU;
+
   if (p.file == "uniform") {
     p.cellsx   = param.getDefault("cellsx",3);
     p.cellsy   = param.getDefault("cellsy",3);
     p.cellsz   = param.getDefault("cellsz",3);
   }
+  p.linsolver.parse(param);
   p.n1       = -1;
   p.n2       = -1;
 }
@@ -161,8 +163,6 @@ void writeOutput(const Params& p, Opm::time::StopWatch& watch, int cells,
   gethostname(hostname,1024);
 
   std::string method = "mortar";
-  if (p.method == UPSCALE_LLM)
-    method = "llm";
   if (p.method == UPSCALE_MPC)
     method = "mpc";
   if (p.method == UPSCALE_NONE)
@@ -194,10 +194,10 @@ void writeOutput(const Params& p, Opm::time::StopWatch& watch, int cells,
   }
   f << "# Options used:" << std::endl
     << "#\t         method: " << method << std::endl
-    << "#\t linsolver_type: " << (p.solver==Opm::Elasticity::SLU?"slu":"cg")
+    << "#\t linsolver_type: " << (p.linsolver.type==Opm::Elasticity::DIRECT?"direct":"iterative")
                               << std::endl;
-  if (p.solver == Opm::Elasticity::CG)
-    f << "#\t           ltol: " << p.ltol << std::endl;
+  if (p.linsolver.type == Opm::Elasticity::ITERATIVE)
+    f << "#\t           ltol: " << p.linsolver.tol << std::endl;
   if (p.file == "uniform") {
     f << "#\t          cellsx: " << p.cellsx << std::endl
       << "#\t          cellsy: " << p.cellsy << std::endl
@@ -245,7 +245,10 @@ int main(int argc, char** argv)
       grid.readEclipseFormat(p.file,p.ctol,false);
 
     typedef GridType::ctype ctype;
-    Opm::Elasticity::ElasticityUpscale<GridType> upscale(grid, p.ctol, p.Emin, p.file, p.rocklist);
+    Opm::Elasticity::ElasticityUpscale<GridType> upscale(grid, p.ctol, 
+                                                         p.Emin, p.file,
+                                                         p.rocklist,
+                                                         p.verbose);
     if (p.max[0] < 0 || p.min[0] < 0) {
       std::cout << "determine side coordinates..." << std::endl;
       upscale.findBoundaries(p.min,p.max);
@@ -256,36 +259,54 @@ int main(int argc, char** argv)
       p.n1 = grid.logicalCartesianSize()[0];
       p.n2 = grid.logicalCartesianSize()[1];
     }
+    if (p.linsolver.zcells == -1) {
+      double lz = p.max[2]-p.min[2];
+      int nz = grid.logicalCartesianSize()[2];
+      double hz = lz/nz;
+      double lp = sqrt((double)(p.max[0]-p.min[0])*(p.max[1]-p.min[1]));
+      int np = std::max(grid.logicalCartesianSize()[0],
+                        grid.logicalCartesianSize()[1]);
+      double hp = lp/np;
+      p.linsolver.zcells = (int)(2*hp/hz+0.5);
+    }
+    std::cout << "logical dimension: " << grid.logicalCartesianSize()[0]
+              << "x"                   << grid.logicalCartesianSize()[1]
+              << "x"                   << grid.logicalCartesianSize()[2]
+              << std::endl;
 
-    if (p.method == UPSCALE_LLM) {
-      std::cout << "using LLM couplings..." << std::endl;
-      upscale.periodicBCsLLM(p.min,p.max,p.n1,p.n2);
-    } else if (p.method == UPSCALE_MPC) {
+    if (p.method == UPSCALE_MPC) {
       std::cout << "using MPC couplings in all directions..." << std::endl;
-      upscale.periodicBCs(p.min,p.max);
+      upscale.periodicBCs(p.min, p.max);
       std::cout << "preprocessing grid..." << std::endl;
       upscale.A.initForAssembly();
     } else if (p.method == UPSCALE_MORTAR) {
       std::cout << "using Mortar couplings.." << std::endl;
-      upscale.periodicBCsMortar(p.min,p.max,p.n1,p.n2,p.lambda[0], p.lambda[1]);
+      upscale.periodicBCsMortar(p.min, p.max, p.n1, p.n2,
+                                p.lambda[0], p.lambda[1]);
     } else if (p.method == UPSCALE_NONE) {
       std::cout << "no periodicity approach applied.." << std::endl;
       upscale.fixCorners(p.min, p.max);
       upscale.A.initForAssembly();
     }
     Dune::FieldMatrix<double,6,6> C;
-    Dune::VTKWriter<GridType::LeafGridView> vtkwriter(grid.leafView());
+    Dune::VTKWriter<GridType::LeafGridView>* vtkwriter=0;
+    if (!p.vtufile.empty())
+      vtkwriter = new Dune::VTKWriter<GridType::LeafGridView>(grid.leafView());
     Opm::Elasticity::Vector field[6];
-    std::cout << "assembling..." << "\n";
+    std::cout << "assembling elasticity operator..." << "\n";
     upscale.assemble(-1,true);
-    upscale.setupSolvers(p.solver);
-#pragma omp parallel for schedule(static)
+    std::cout << "setting up linear solver..." << std::endl;
+    upscale.setupSolvers(p.linsolver);
+
+//#pragma omp parallel for schedule(static)
     for (int i=0;i<6;++i) {
+      std::cout << "processing case " << i+1 << "..." << std::endl;
+      std::cout << "\tassembling load vector..." << std::endl;
       upscale.assemble(i,false);
-      std::cout << "solving case " << i+1 << "..." << "\n";
-      upscale.solve(p.solver,p.ltol,i);
+      std::cout << "\tsolving..." << std::endl;
+      upscale.solve(i);
       upscale.A.expandSolution(field[i],upscale.u[i]);
-#define CLAMP(x) (fabs(x)<1.e-5?0.f:x)
+#define CLAMP(x) (fabs(x)<1.e-4?0.0:x)
       for (size_t j=0;j<field[i].size();++j) {
         double val = field[i][j];
         field[i][j] = CLAMP(val);
@@ -298,10 +319,13 @@ int main(int argc, char** argv)
     for (int i=0;i<6;++i) {
       std::stringstream str;
       str << "sol " << i+1;
-      vtkwriter.addVertexData(field[i], str.str().c_str(), dim);
+      if (vtkwriter)
+        vtkwriter->addVertexData(field[i], str.str().c_str(), dim);
     }
-    if (!p.vtufile.empty())
-      vtkwriter.write(p.vtufile);
+    if (vtkwriter) {
+      vtkwriter->write(p.vtufile);
+      delete vtkwriter;
+    }
     // voigt notation
     for (int j=0;j<6;++j)
       std::swap(C[3][j],C[5][j]);

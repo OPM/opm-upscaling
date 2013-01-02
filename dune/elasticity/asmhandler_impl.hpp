@@ -21,14 +21,16 @@ void ASMHandler<GridType>::initForAssembly()
   A.setBuildMode(Matrix::random);
   A.endrowsizes();
 
-  MatrixOps::fromAdjacency(A,adjacencyPattern,maxeqn,maxeqn);
-  b.resize(maxeqn);
+  MatrixOps::fromAdjacency(A,adjacencyPattern,
+                           adjacencyPattern.size(),adjacencyPattern.size());
+  b.resize(adjacencyPattern.size());
   b = 0;
+  adjacencyPattern.clear();
 
   // print some information
-  std::cout << "Number of nodes: " << gv.size(dim) << std::endl;
-  std::cout << "Number of elements: " << gv.size(0) << std::endl;
-  std::cout << "Number of constraints: " << mpcs.size() << std::endl;
+  std::cout << "\tNumber of nodes: " << gv.size(dim) << std::endl;
+  std::cout << "\tNumber of elements: " << gv.size(0) << std::endl;
+  std::cout << "\tNumber of constraints: " << mpcs.size() << std::endl;
   int fixedDofs=0;
   for (fixIt it = fixedNodes.begin(); it != fixedNodes.end(); ++it) {
     if (it->second.first & X)
@@ -38,7 +40,7 @@ void ASMHandler<GridType>::initForAssembly()
     if (it->second.first & Z)
       fixedDofs++;
   }
-  std::cout << "Number of fixed dofs: " << fixedDofs << std::endl;
+  std::cout << "\tNumber of fixed dofs: " << fixedDofs << std::endl;
 }
 
   template<class GridType>
@@ -339,7 +341,7 @@ void ASMHandler<GridType>::preprocess()
       }
     }
   }
-  std::cout << "number of equations: " << maxeqn << std::endl;
+  std::cout << "\tnumber of equations: " << maxeqn << std::endl;
 }
 
   template<class GridType>
@@ -370,12 +372,15 @@ void ASMHandler<GridType>::nodeAdjacency(const LeafIterator& it,
 void ASMHandler<GridType>::determineAdjacencyPattern()
 {
   adjacencyPattern.resize(maxeqn);
+  std::cout << "\tsetting up sparsity pattern..." << std::endl;
+  LoggerHelper help(gv.size(0), 5, 50000);
 
   const LeafIndexSet& set = gv.leafView().indexSet();
   LeafIterator itend = gv.leafView().template end<0>();
 
   // iterate over cells
-  for (LeafIterator it = gv.leafView().template begin<0>(); it != itend; ++it) {
+  int cell=0;
+  for (LeafIterator it = gv.leafView().template begin<0>(); it != itend; ++it, ++cell) {
     Dune::GeometryType gt = it->type();
     const Dune::template GenericReferenceElement<double,dim>& ref =
       Dune::GenericReferenceElements<double,dim>::general(gt);
@@ -395,5 +400,6 @@ void ASMHandler<GridType>::determineAdjacencyPattern()
           nodeAdjacency(it,vertexsize,meqn[indexi*dim+k]);
       }
     }
+    help.log(cell, "\t\t... still processing ... cell ");
   }
 }

@@ -17,30 +17,101 @@
 #include <dune/geometry/quadraturerules.hh>
 #include <dune/istl/ilu.hh>
 #include <dune/istl/solvers.hh>
-#if HAVE_SUPERLU
-#include <dune/istl/superlu.hh>
-#endif
 #include <dune/istl/preconditioners.hh>
-#include <dune/istl/overlappingschwarz.hh>
+#include <dune/elasticity/seqlu.hpp>
 #include <dune/grid/CpGrid.hpp>
 #include <dune/elasticity/shapefunctions.hpp>
 
 #include <dune/elasticity/asmhandler.hpp>
 #include <dune/elasticity/boundarygrid.hh>
 #include <dune/elasticity/elasticity.hpp>
+#include <dune/elasticity/logutils.hpp>
 #include <dune/elasticity/materials.hh>
 #include <dune/elasticity/mpc.hh>
+#include <dune/elasticity/mortar_schur.hpp>
+#include <dune/elasticity/mortar_utils.hpp>
+#include <dune/elasticity/mortar_evaluator.hpp>
+#include <dune/elasticity/mortar_schur_precond.hpp>
+#include <dune/elasticity/uzawa_solver.hpp>
+
+#include <dune/istl/paamg/amg.hh>
 
 namespace Opm {
 namespace Elasticity {
 
-//! \brief An enumeration of available linear solvers
+
+//! \brief An enumeration of available linear solver classes
 enum Solver {
-  SLU,
-   CG 
+  DIRECT,
+  ITERATIVE 
 };
 
-typedef Dune::SeqOverlappingSchwarz<Matrix,Vector,Dune::SymmetricMultiplicativeSchwarzMode> OverlappingSchwarz;
+//! \brief An enumeration of the available preconditioners
+enum Preconditioner {
+  SCHURAMG,
+  SCHURDIAG
+};
+
+struct LinSolParams {
+  //! \brief The linear solver to employ
+  Opm::Elasticity::Solver type;
+
+  //! \brief Number of iterations in GMRES before restart
+  int restart;
+
+  //! \brief Max number of iterations
+  int maxit;
+
+  //! \brief The tolerance for the iterative linear solver
+  double tol;
+
+  //! \brief Use MINRES instead of GMRES (and thus symmetric preconditioning)
+  bool symmetric;
+
+  //! \brief Use a Uzawa approach
+  bool uzawa;
+
+  //! \brief The number of pre/post steps in the AMG
+  int steps[2];
+
+  //! \brief Coarsening target in the AMG
+  int coarsen_target;
+
+  //! \brief Number of cells in z to collapse in each cell
+  int zcells;
+
+  //! \brief Preconditioner for mortar block
+  Opm::Elasticity::Preconditioner mortarpre;
+
+  //! \brief Parse command line parameters
+  //! \param[in] param The parameter group to parse
+  void parse(Opm::parameter::ParameterGroup& param)
+  {
+    std::string solver = param.getDefault<std::string>("linsolver_type","iterative");
+    if (solver == "iterative")
+      type = Opm::Elasticity::ITERATIVE;
+    else
+      type = Opm::Elasticity::DIRECT;
+    restart = param.getDefault<int>("linsolver_restart", 1000);
+    tol    = param.getDefault<double>("ltol",1.e-8);
+    maxit   = param.getDefault<int>("linsolver_maxit", 10000);
+    steps[0] = param.getDefault<int>("linsolver_presteps", 2);
+    steps[1] = param.getDefault<int>("linsolver_poststeps", 2);
+    coarsen_target = param.getDefault<int>("linsolver_coarsen", 5000);
+    symmetric = param.getDefault<bool>("linsolver_symmetric", true);
+    solver = param.getDefault<std::string>("linsolver_mortarpre","schuramg");
+    if (solver == "schuramg")
+      mortarpre = Opm::Elasticity::SCHURAMG;
+    else
+      mortarpre = Opm::Elasticity::SCHURDIAG;
+    uzawa = param.getDefault<bool>("linsolver_uzawa", false);
+
+    zcells = param.getDefault<int>("linsolver_zcells", 2);
+
+    if (symmetric)
+      steps[1] = steps[0];
+  }
+};
 
 //! \brief The main driver class
   template<class GridType>
@@ -81,22 +152,24 @@ class ElasticityUpscale
     //! \param[in] tol_ The tolerance to use when deciding whether or not a coordinate falls on a plane/line/point. \sa tol
     //! \param[in] Escale_ A scale value for E-moduluses to avoid numerical issues
     //! \param[in] file The eclipse grid file
-    //! \param[in] rocklist If true, file is a rocklist
+    //! \param[in] rocklist If not blank, file is a rocklist
+    //! \param[in] verbose If true, give verbose output
     ElasticityUpscale(const GridType& gv_, ctype tol_, ctype Escale_, 
-                      const std::string& file, const std::string& rocklist)
-      : gv(gv_), tol(tol_), A(gv_), E(gv_), Escale(Escale_)
+                      const std::string& file, const std::string& rocklist,
+                      bool verbose_)
+      :  A(gv_), gv(gv_), tol(tol_), Escale(Escale_), E(gv_), verbose(verbose_)
     {
       if (rocklist.empty())
         loadMaterialsFromGrid(file);
       else
         loadMaterialsFromRocklist(file,rocklist);
-#if HAVE_SUPERLU
-      slu = 0;
-#endif
-      cgsolver = 0;
+      solver = 0;
       op = 0;
-      ilu = 0;
-      ovl = 0;
+      mpre = 0;
+      upre = 0;
+      op2 = 0;
+      meval = 0;
+      lpre = 0;
     }
 
     //! \brief The destructor
@@ -111,13 +184,13 @@ class ElasticityUpscale
                                             it != itend; ++it)
         delete *it;
 
-#if HAVE_SUPERLU
-      delete slu;
-#endif
-      delete cgsolver;
-      delete ilu;
+      delete solver;
       delete op;
-      delete ovl;
+      delete op2;
+      delete meval;
+      delete upre;
+      delete lpre;
+      delete mpre;
     }
 
     //! \brief Find boundary coordinates
@@ -136,15 +209,6 @@ class ElasticityUpscale
     //! \param[in] min The minimum coordinates of the grid
     //! \param[in] max The maximum coordinates of the grid
     void periodicBCs(const double* min, const double* max);
-
-    //! \brief Establish periodic boundaries using the LLM approach
-    //! \param[in] min The minimum coordinates of the grid
-    //! \param[in] max The maximum coordinates of the grid
-    //! \param[in] n1 The number of elements on the interface grid in the X direction
-    //! \param[in] n2 The number of elements on the interface grid in the Y direction
-    void periodicBCsLLM(const double* min,
-                        const double* max,
-                        int n1, int n2);
 
     //! \brief Establish periodic boundaries using the mortar approach
     //! \param[in] min The minimum coordinates of the grid
@@ -176,15 +240,16 @@ class ElasticityUpscale
                        const Vector& u, int loadcase);
 
     //! \brief Solve Au = b for u
-    //! \param[in] solver The linear equation solver to employ
-    //! \param[in] tol The tolerance for iterative solvers
-    void solve(Solver solver, double tol, int loadcase);
+    //! \param[in] loadcase The load case to solve
+    void solve(int loadcase);
 
-    void setupSolvers(Solver solver);
+    //! \param[in] params The linear solver parameters
+    void setupSolvers(const LinSolParams& params);
+
   private:
     //! \brief An iterator over grid vertices
     typedef typename GridType::LeafGridView::template Codim<dim>::Iterator LeafVertexIterator;
-    
+
     //! \brief A reference to our grid
     const GridType& gv;
 
@@ -271,26 +336,29 @@ class ElasticityUpscale
     //! \brief A point grid
     typedef std::map<int,BoundaryGrid::Vertex> SlaveGrid;
 
-    //! \brief Find the B matrix associated with a particular slave grid (LLM)
-    //! \param[in] slave The slave grid to extract
-    //! \returns The B matrix associated with the given slave grid
-    Matrix findBMatrixLLM(const SlaveGrid& slave);
-
-    //! \brief Find the L matrix associated with a particular slave grid (LLM)
-    //! \param[in] slave The slave grid we want to couple
-    //! \param[in] master The interface grid we want to couple to
-    //! \returns The L matrix describing the coupling between slave and master 
-    Matrix findLMatrixLLM(const SlaveGrid& slave, const BoundaryGrid& master);
-
-    //! \brief Find the L matrix associated with mortar couplings
+    //! \brief Add a block to the B matrix associated with mortar couplings
     //! \param[in] b1 The primal boundary to match
     //! \param[in] interface The interface/multiplier grid
     //! \param[in] dir The normal direction on the boundary (0/1)
     //! \param[in] n1 The multipler order in the first direction
     //! \param[in] n2 The multipler order in the second direction
-    Matrix findLMatrixMortar(const BoundaryGrid& b1,
-                             const BoundaryGrid& interface, int dir,
-                             int n1, int n2);
+    //! \param[in] colofs The column offset (multiplier number)
+    //! \returns Number of multipliers DOFs added
+    int addBBlockMortar(const BoundaryGrid& b1,
+                        const BoundaryGrid& interface, int dir,
+                        int n1, int n2, int colofs);
+
+    //! \brief Assemble part of the B block associated with mortar couplings
+    //! \param[in] b1 The primal boundary to match
+    //! \param[in] interface The interface/multiplier grid
+    //! \param[in] dir The normal direction on the boundary (0/1)
+    //! \param[in] n1 The multipler order in the first direction
+    //! \param[in] n2 The multipler order in the second direction
+    //! \param[in] colofs The column offset (first multiplier unknown)
+    //! \param[in] alpha Scaling for matrix elements
+    void assembleBBlockMortar(const BoundaryGrid& b1,
+                              const BoundaryGrid& interface, int dir,
+                              int n1, int n2, int colofs, double alpha=1.0);
 
     //! \brief This function loads and maps materials to active grid cells
     //! \param[in] file The eclipse grid to read materials from
@@ -302,9 +370,12 @@ class ElasticityUpscale
     void loadMaterialsFromRocklist(const std::string& file,
                                    const std::string& rocklist);
 
-    //! \brief Setup an overlapping schwarz preconditioner with one 
-    //!        subdomain per pillar.
-    void setupPreconditioner();
+    //! \brief Setup AMG preconditioner
+    //! \param[in] pre The number of pre-smoothing steps
+    //! \param[in] post The number of post-smoothing steps
+    //! \param[in] target The coarsening target
+    //! \param[in] zcells The wanted number of cells to collapse in z per level
+    void setupAMG(int pre, int post, int target, int zcells);
 
     //! \brief Master grids
     std::vector<BoundaryGrid> master;
@@ -312,30 +383,63 @@ class ElasticityUpscale
     //! \brief Slave point grids
     std::vector< std::vector<BoundaryGrid::Vertex> > slave;
 
-    //! \brief Vector of matrices holding boolean coupling matrices (LLM)
-    std::vector<Matrix> B;
-    
-    //! \brief Vector of matrices holding Lagrangian multipliers
-    std::vector<Matrix> L;
+    //! \brief Lagrangian multiplier block
+    AdjacencyPattern Bpatt;
+    Matrix B;
 
-#if HAVE_SUPERLU
-    //! \brief SuperLU solver
-    Dune::SuperLU<Matrix>* slu;
-#endif
-    //! \brief CG solver
-    Dune::CGSolver<Vector>* cgsolver;
-    //! \brief The linear operator
-    Dune::MatrixAdapter<Matrix,Vector,Vector>* op;
+    Matrix P; //!< Preconditioner for multiplier block
 
-    //! \brief ILU preconditioner
-    Dune::SeqILU0<Matrix,Vector,Vector>* ilu;
-    //! \brief Overlapping Schwarz preconditioner
-    OverlappingSchwarz* ovl;
+    //! \brief Linear solver
+    Dune::InverseOperator<Vector, Vector>* solver;
+
+    //! \brief The smoother used in the AMG
+    typedef Dune::SeqSSOR<Matrix, Vector, Vector> Smoother;
+
+    //! \brief The coupling metric used in the AMG
+    typedef Dune::Amg::RowSum CouplingMetric;
+
+    //! \brief The coupling criterion used in the AMG
+    typedef Dune::Amg::SymmetricCriterion<Matrix, CouplingMetric> CritBase;
+
+    //! \brief The coarsening criterion used in the AMG
+    typedef Dune::Amg::CoarsenCriterion<CritBase> Criterion;
+
+    //! \brief A linear operator
+    typedef Dune::MatrixAdapter<Matrix,Vector,Vector> Operator;
+
+    //! \brief A preconditioner for an elasticity operator
+    typedef Dune::Amg::AMG<Operator, Vector, Smoother> ElasticityAMG;
+
+    //! \brief Matrix adaptor for the elasticity block
+    Operator* op;
+
+    //! \brief Preconditioner for multiplier block
+    typedef MortarBlockEvaluator<Dune::Preconditioner<Vector, Vector> > SchurPreconditioner;
+
+    //! \brief Evaluator for multiplier block
+    typedef MortarBlockEvaluator<Dune::InverseOperator<Vector, Vector> > SchurEvaluator;
+
+    //! \brief Outer evaluator, used with uzawa
+    SchurEvaluator* op2;
+
+    //! \brief The preconditioner for the elasticity operator
+    ElasticityAMG* upre;
+
+    //! \brief The preconditioner for the multiplier block (used with uzawa)
+    SeqLU<Matrix, Vector, Vector>* lpre;
+
+    //! \brief Preconditioner for the Mortar system
+    MortarSchurPre<ElasticityAMG>* mpre;
+
+    //! \brief Evaluator for the Mortar system
+    MortarEvaluator* meval;
 
     //! \brief Elasticity helper class
     Elasticity<GridType> E;
-};
 
+    //! \brief Verbose output
+    bool verbose;
+};
 #include "elasticity_upscale_impl.hpp"
 
 }

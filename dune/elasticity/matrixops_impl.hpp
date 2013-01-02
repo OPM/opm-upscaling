@@ -12,7 +12,7 @@
 
 void MatrixOps::fromAdjacency(Matrix& A, const std::vector< std::set<int> >& adj,
                               int rows, int cols)
-{  
+{
   size_t sum=0;
   for (size_t i=0;i<adj.size();++i)
     sum += adj[i].size();
@@ -32,6 +32,30 @@ void MatrixOps::fromAdjacency(Matrix& A, const std::vector< std::set<int> >& adj
   }
   A.endindices();
   A = 0;
+}
+
+Matrix MatrixOps::fromDense(const Dune::DynamicMatrix<double>& T)
+{
+  AdjacencyPattern a;
+  a.resize(T.N());
+  for (size_t i=0; i < T.N(); ++i) {
+    for (size_t j=0; j < T.M(); ++j) {
+      if (fabs(T[i][j]) > 1.e-14)
+        a[i].insert(j);
+    }
+  }
+
+  Matrix result;
+  fromAdjacency(result, a, T.N(), T.M());
+
+  for (Matrix::ConstIterator it  = result.begin();
+                             it != result.end(); ++it) {
+    for (Matrix::ConstColIterator it2  = it->begin();
+                                  it2 != it->end();++it2)
+      result[it.index()][it2.index()] = T[it.index()][it2.index()];
+  }
+
+  return result;
 }
 
 void MatrixOps::print(const Matrix& A)
@@ -159,6 +183,18 @@ Matrix MatrixOps::extractDiagonal(const Matrix& A)
   return result;
 }
 
+Matrix MatrixOps::diagonal(size_t N)
+{
+  AdjacencyPattern adj;
+  adj.resize(N);
+  for (size_t i=0;i<N;++i)
+    adj[i].insert(i);
+  Matrix result;
+  fromAdjacency(result,adj,N,N);
+
+  return result;
+}
+
 void MatrixOps::saveAsc(const Matrix& A, const std::string& file)
 {
   std::ofstream f;
@@ -187,4 +223,41 @@ void MatrixOps::saveAsc(const Matrix& A, const std::string& file)
     f << std::endl;
   }
   f.close();
+}
+
+Matrix MatrixOps::extractBlock(const Matrix& A, size_t r0, size_t N,
+                               size_t c0, size_t M)
+{
+  // establish adjacency pattern
+  AdjacencyPattern adj;
+  adj.resize(N);
+  for (Matrix::ConstIterator it  = A.begin();
+                             it != A.end(); ++it) {
+    if (it.index() < r0 || it.index() >= N+r0)
+      continue;
+    for (Matrix::ConstColIterator it2  = it->begin();
+                                  it2 != it->end(); ++it2) {
+      if (it2.index() < c0 || it2.index() >= M+c0)
+        continue;
+      adj[it.index()-r0].insert(it2.index()-c0);
+    }
+  }
+
+  Matrix result;
+  fromAdjacency(result, adj, N, M);
+
+  // now insert elements from A
+  for (Matrix::ConstIterator it  = A.begin();
+                             it != A.end(); ++it) {
+    if (it.index() < r0 || it.index() >= N+r0)
+      continue;
+    for (Matrix::ConstColIterator it2  = it->begin();
+                                  it2 != it->end(); ++it2) {
+      if (it2.index() < c0 || it2.index() >= M+c0)
+        continue;
+      result[it.index()-r0][it2.index()-c0] = *it2;
+    }
+  }
+
+  return result;
 }
