@@ -17,6 +17,7 @@
 
 #include <iostream>
 #include <unistd.h>
+#include <cstring>
 #include <dune/common/exceptions.hh> // We use exceptions
 #include <opm/core/utility/StopWatch.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
@@ -120,11 +121,11 @@ void parseCommandLine(int argc, char** argv, Params& p)
   p.lambda[0] = param.getDefault("lambdax", 2);
   p.lambda[1] = param.getDefault("lambday", 2);
   std::string method = param.getDefault<std::string>("method","mortar");
-  if (!strcasecmp(method.c_str(),"mpc"))
+  if (method == "mpc")
     p.method = UPSCALE_MPC;
-  if (!strcasecmp(method.c_str(),"mortar"))
+  if (method == "mortar")
     p.method = UPSCALE_MORTAR;
-  if (!strcasecmp(method.c_str(),"none"))
+  if (method == "none")
     p.method = UPSCALE_NONE;
   p.Emin     = param.getDefault<double>("Emin",0.0);
   p.ctol     = param.getDefault<double>("ctol",1.e-6);
@@ -220,9 +221,9 @@ int main(int argc, char** argv)
 
     typedef Dune::CpGrid GridType;
 
-    if (argc < 2 || strcasecmp(argv[1],"-h") == 0 
-                 || strcasecmp(argv[1],"--help") == 0
-                 || strcasecmp(argv[1],"-?") == 0) {
+    if (argc < 2 || strcmp(argv[1],"-h") == 0 
+                 || strcmp(argv[1],"--help") == 0
+                 || strcmp(argv[1],"-?") == 0) {
       syntax(argv);
       exit(1);
     }
