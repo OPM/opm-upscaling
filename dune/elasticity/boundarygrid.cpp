@@ -175,7 +175,7 @@ int BoundaryGrid::Q4inv(FaceCoord& res, const Quad& q,
   // check that obtained solutions are inside element
   double tol = 1+epsOut;
   int nInside=0;
-  for (int i=0;i<xi.size();++i) {
+  for (size_t i=0;i<xi.size();++i) {
     if (xi[i] < tol && eta[i] < tol) {
       if (++nInside > 1) {
         std::cout << "multiple solutions" << std::endl;
@@ -232,7 +232,7 @@ bool BoundaryGrid::bilinearSolve(double epsilon, double order,
   double Q2 = A[0]*B[1]-B[0]*A[1];
   std::vector<double> Z;
   cubicSolve(epsilon,0,Q2,Q1,Q0,Z);
-  for (int i=0;i<Z.size();++i) {
+  for (size_t i=0;i<Z.size();++i) {
     Q0 = A[0]*Z[i]+A[2];
     if (fabs(Q0) > tol) {
       X.push_back(Z[i]);
@@ -244,10 +244,10 @@ bool BoundaryGrid::bilinearSolve(double epsilon, double order,
   Q2 = A[0]*B[2]-B[0]*A[2];
   Z.clear();
   cubicSolve(epsilon,0,Q2,Q1,Q0,Z);
-  for (int i=0;i<Z.size();++i) {
+  for (size_t i=0;i<Z.size();++i) {
     Q0 = A[0]*Z[i]+A[1];
     if (fabs(Q0) > tol) {
-      int j=0;
+      size_t j=0;
       for (j=0;j<Y.size();++j)
         if (fabs(Y[j]-Z[i]) <= epsilon*order) break;
       if (j == Y.size()) {

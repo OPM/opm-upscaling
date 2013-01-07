@@ -9,15 +9,14 @@
 //! \brief Class handling finite element assembly
 //!
 //==============================================================================
-#pragma once
-
-//! \brief A vector holding our RHS
-typedef Dune::BlockVector<Dune::FieldVector<double,1> > Vector;
+#ifndef ASMHANDLER_HPP_
+#define ASMHANDLER_HPP_
 
 #include <dune/geometry/referenceelements.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/istl/bvector.hh>
 #include <dune/common/fvector.hh>
+#include <dune/elasticity/logutils.hpp>
 #include <dune/elasticity/mpc.hh>
 #include <dune/elasticity/matrixops.hpp>
 
@@ -58,7 +57,7 @@ class ASMHandler {
 
     //! \brief Get the number of equations in the system
     //! \returns The number of equations in the system
-    int getEqns() const
+    size_t getEqns() const
     {
       return maxeqn;
     }
@@ -142,6 +141,13 @@ class ASMHandler {
 
     //! \brief Print the current load vector
     void printLoadVector() const;
+
+    //! \brief Access current adjacency pattern
+    //! \details Can be used to add extra entries, such as other blocks
+    AdjacencyPattern& getAdjacencyPattern()
+    {
+      return adjacencyPattern;
+    }
   protected:
     //! \brief Resolve chained MPCs
     void resolveMPCChains()
@@ -228,3 +234,5 @@ class ASMHandler {
 
 }
 }
+
+#endif

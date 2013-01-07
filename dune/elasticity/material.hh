@@ -9,7 +9,8 @@
 //! \brief Material interface.
 //!
 //==============================================================================
-#pragma once
+#ifndef MATERIAL_HH_
+#define MATERIAL_HH_
 
 #include <dune/common/fmatrix.hh>
 #include <dune/common/dynvector.hh>
@@ -97,3 +98,5 @@ private:
 
 }
 }
+
+#endif

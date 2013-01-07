@@ -9,7 +9,8 @@
 //! \brief Elasticity helper class
 //!
 //==============================================================================
-#pragma once
+#ifndef ELASTICITY_HPP_
+#define ELASTICITY_HPP_
 
 namespace Opm {
 namespace Elasticity {
@@ -69,3 +70,5 @@ class Elasticity {
 
 }
 }
+
+#endif
