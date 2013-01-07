@@ -9,7 +9,8 @@
 //! \brief Class describing 2D quadrilateral grids
 //!
 //==============================================================================
-#pragma once
+#ifndef BOUNDARYGRID_HH_
+#define BOUNDARYGRID_HH_
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -113,6 +114,13 @@ class BoundaryGrid {
     //! \param[in] quad The quad to add
     void add(const Quad& quad);
 
+    void addToColumn(size_t col, const Quad& quad)
+    {
+      if (col >= colGrids.size())
+        colGrids.resize(col+1);
+      colGrids[col].push_back(quad);
+    }
+
     //! \brief Obtain a reference to a quad
     //! \param[in] index The index of the requested quad
     //! \returns A reference to the requested quad
@@ -129,10 +137,20 @@ class BoundaryGrid {
       return grid[index];
     }
 
+    const Quad& getQuad(int col, int index) const
+    {
+      return colGrids[col][index];
+    }
+
     //! \brief Obtain the number of quads in the grid
     size_t size() const
     {
       return grid.size();
+    }
+
+    size_t colSize(int i) const
+    {
+      return colGrids[i].size();
     }
 
     //! \brief Return the total number of nodes on the grid when known
@@ -209,6 +227,7 @@ class BoundaryGrid {
   protected:
     //! \brief Our quadrilateral elements
     std::vector<Quad> grid;
+    std::vector<std::vector<Quad> > colGrids;
 
     //! \brief Whether or not a given node is marked as fixed
     std::vector<bool> fixNodes;
@@ -219,7 +238,7 @@ class BoundaryGrid {
     //! \brief Print to a stream
     friend std::ostream& operator <<(std::ostream& os, const BoundaryGrid& g)
     {
-      for (int i=0;i<g.size();++i)
+      for (size_t i=0;i<g.size();++i)
         os << g[i] << std::endl;
       return os;
     }
@@ -308,7 +327,7 @@ class HexGeometry<2, cdim, GridImp>
       const typename GridImp::LeafGridView::template Codim<3>::Iterator itend = gv.leafView().template end<3>();
       for (int i=0;i<4;++i) {
         typename GridImp::LeafGridView::template Codim<3>::Iterator it=start;
-        for (it ; it != itend; ++it) {
+        for (; it != itend; ++it) {
           if (mapper.map(*it) == q.v[i].i)
             break;
         }
@@ -396,7 +415,6 @@ class HexGeometry<2, cdim, GridImp>
         Dune::GenericReferenceElements< ctype, 2 >::general(type());
       LocalCoordinate x = refElement.position(0,0);
       LocalCoordinate dx;
-      int i=0;
       do {
         using namespace Dune::GenericGeometry;
         // DF^n dx^n = F^n, x^{n+1} -= dx^n
@@ -483,3 +501,5 @@ BoundaryGrid::Vertex minXmaxY(std::vector<BoundaryGrid::Vertex>& in);
 
 }
 }
+
+#endif

@@ -30,7 +30,7 @@ void Elasticity<GridType>::getBmatrix(Dune::FieldMatrix<ctype,components,funcdim
 
   if (dim == 3) {
 #define INDEX(i,j) i+6*j
-    for (size_t i=0; i < funcs; ++i) {
+    for (int i=0; i < funcs; ++i) {
       // normal strain part
       temp[INDEX(0,0)][i] = dNdX[i][0];
       temp[INDEX(1,1)][i] = dNdX[i][1];
@@ -48,7 +48,7 @@ void Elasticity<GridType>::getBmatrix(Dune::FieldMatrix<ctype,components,funcdim
   } else if (dim == 2) {
 #undef INDEX
 #define INDEX(i,j) i+3*j
-    for (size_t i=0; i < funcs; ++i) {
+    for (int i=0; i < funcs; ++i) {
       // normal strain part
       temp[INDEX(0,0)][i] = dNdX[i][0];
       temp[INDEX(1,1)][i] = dNdX[i][1];
@@ -59,7 +59,7 @@ void Elasticity<GridType>::getBmatrix(Dune::FieldMatrix<ctype,components,funcdim
     }
   }
   size_t k=0;
-  for (size_t j=0;j<funcs*dim;++j)
+  for (int j=0;j<funcs*dim;++j)
     for (size_t i=0;i<components;++i,++k)
       B[i][j] = temp[k%rows][k/rows];
 }
