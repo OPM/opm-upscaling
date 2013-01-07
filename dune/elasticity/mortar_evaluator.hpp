@@ -9,7 +9,8 @@
 //! \brief Linear operator for a Mortar block
 //!
 //==============================================================================
-#pragma once
+#ifndef MORTAR_EVALUATOR_HPP_
+#define MORTAR_EVALUATOR_HPP_
 
 #include <dune/istl/matrixmatrix.hh>
 #include <dune/elasticity/matrixops.hpp>
@@ -77,3 +78,5 @@ class MortarEvaluator : public Dune::LinearOperator<Vector, Vector> {
 
 }
 }
+
+#endif

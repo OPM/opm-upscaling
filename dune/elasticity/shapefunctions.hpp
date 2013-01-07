@@ -9,7 +9,8 @@
 //! \brief Classes for shape functions. Loosely based on code in dune-grid-howto
 //!
 //==============================================================================
-#pragma once
+#ifndef SHAPEFUNCTIONS_HPP_
+#define SHAPEFUNCTIONS_HPP_
 
 #include <dune/common/fvector.hh>
 #include "dynmatrixev.hh"
@@ -410,3 +411,5 @@ protected:
 
 }
 }
+
+#endif

@@ -1,4 +1,16 @@
-#pragma once
+#ifndef UZAWA_SOLVER_HPP_
+#define UZAWA_SOLVER_HPP_
+//==============================================================================
+//!
+//! \file uzawa_solver.hpp
+//!
+//! \date Nov 9 2012
+//!
+//! \author Arne Morten Kvarving / SINTEF
+//!
+//! \brief Uzawa scheme helper class
+//!
+//==============================================================================
 
 namespace Opm {
   namespace Elasticity {
@@ -54,3 +66,5 @@ class UzawaSolver : public Dune::InverseOperator<X,Y>
 
 }
 }
+
+#endif

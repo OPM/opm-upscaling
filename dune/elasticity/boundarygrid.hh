@@ -9,7 +9,8 @@
 //! \brief Class describing 2D quadrilateral grids
 //!
 //==============================================================================
-#pragma once
+#ifndef BOUNDARYGRID_HH_
+#define BOUNDARYGRID_HH_
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -500,3 +501,5 @@ BoundaryGrid::Vertex minXmaxY(std::vector<BoundaryGrid::Vertex>& in);
 
 }
 }
+
+#endif

@@ -9,7 +9,8 @@
 //! \brief Schur based linear operator for a Mortar block
 //!
 //==============================================================================
-#pragma once
+#ifndef MORTAR_SCHUR_HPP_
+#define MORTAR_SCHUR_HPP_
 
 #include <dune/istl/matrixmatrix.hh>
 #include <dune/elasticity/applier.hpp>
@@ -71,3 +72,5 @@ class MortarBlockEvaluator : public Dune::LinearOperator<Vector, Vector> {
 
 }
 }
+
+#endif

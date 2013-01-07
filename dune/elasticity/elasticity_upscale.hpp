@@ -9,7 +9,8 @@
 //! \brief Elasticity upscale class
 //!
 //==============================================================================
-#pragma once
+#ifndef ELASTICITY_UPSCALE_HPP_
+#define ELASTICITY_UPSCALE_HPP_
 
 #include <dune/common/fmatrix.hh>
 #include <opm/core/eclipse/EclipseGridParser.hpp>
@@ -444,3 +445,5 @@ class ElasticityUpscale
 
 }
 }
+
+#endif

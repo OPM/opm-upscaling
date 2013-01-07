@@ -9,7 +9,8 @@
 //! \brief Material properties.
 //!
 //==============================================================================
-#pragma once
+#ifndef MATERIALS_HH_
+#define MATERIALS_HH_
 
 #include "material.hh"
 
@@ -173,3 +174,5 @@ private:
 
 }
 }
+
+#endif

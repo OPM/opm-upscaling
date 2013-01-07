@@ -9,7 +9,8 @@
 //! \brief Logging helper utilities
 //!
 //==============================================================================
-#pragma once
+#ifndef LOGUTILS_HPP_
+#define LOGUTILS_HPP_
 
 class LoggerHelper {
   public:
@@ -29,3 +30,5 @@ class LoggerHelper {
     int per_chunk; //!< Will log for each per_chunk processed
     int max; //!< Total number of its
 };
+
+#endif

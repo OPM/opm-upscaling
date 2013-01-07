@@ -9,7 +9,8 @@
 //! \brief Class handling finite element assembly
 //!
 //==============================================================================
-#pragma once
+#ifndef ASMHANDLER_HPP_
+#define ASMHANDLER_HPP_
 
 #include <dune/geometry/referenceelements.hh>
 #include <dune/common/fmatrix.hh>
@@ -233,3 +234,5 @@ class ASMHandler {
 
 }
 }
+
+#endif

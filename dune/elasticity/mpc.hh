@@ -9,7 +9,8 @@
 //! \brief Representation of multi-point constraint (MPC) equations.
 //!
 //==============================================================================
-#pragma once
+#ifndef MPC_HH_
+#define MPC_HH_
 
 #include <map>
 #include <vector>
@@ -159,3 +160,5 @@ typedef std::map<int,MPC*> MPCMap;
 
 }
 }
+
+#endif

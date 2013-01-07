@@ -9,7 +9,8 @@
 //! \brief SuperLU preconditioner interface
 //!
 //==============================================================================
-#pragma once
+#ifndef SEQLU_HPP_
+#define SEQLU_HPP_
 
 #if HAVE_SUPERLU
 #include <dune/istl/superlu.hh>
@@ -75,3 +76,4 @@ class SeqLU : public Dune::Preconditioner<X,Y> {
   };
 #endif
 
+#endif

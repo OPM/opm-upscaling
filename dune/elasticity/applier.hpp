@@ -10,7 +10,8 @@
 //!        and preconditioners in DUNE
 //!
 //==============================================================================
-#pragma once
+#ifndef APPLIER_H_
+#define APPLIER_H_
 
 namespace Opm {
   namespace Elasticity {
@@ -45,3 +46,5 @@ void PreApplier::apply(Vector& v, Vector& d)
 
 }
 }
+
+#endif

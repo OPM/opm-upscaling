@@ -1,4 +1,16 @@
-#pragma once
+//==============================================================================
+//!
+//! \file mortar_utils.hpp
+//!
+//! \date Nov 9 2012
+//!
+//! \author Arne Morten Kvarving / SINTEF
+//!
+//! \brief Mortar helper class
+//!
+//==============================================================================
+#ifndef MORTAR_UTILS_HPP_
+#define MORTAR_UTILS_HPP_
 
 namespace Opm {
   namespace Elasticity {
@@ -29,3 +41,5 @@ class MortarUtils {
 
 }
 }
+
+#endif

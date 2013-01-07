@@ -9,7 +9,8 @@
 //! \brief Schur based preconditioner for saddle point systems
 //!
 //==============================================================================
-#pragma once
+#ifndef SCHUR_PRECOND_HPP_
+#define SCHUR_PRECOND_HPP_
 
 #include <dune/istl/preconditioners.hh>
 #include <dune/istl/matrixmatrix.hh>
@@ -121,3 +122,5 @@ class MortarSchurPre : public Dune::Preconditioner<Vector,Vector> {
 
 }
 }
+
+#endif

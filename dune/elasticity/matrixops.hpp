@@ -9,7 +9,8 @@
 //! \brief Helper class with some matrix operations
 //!
 //==============================================================================
-#pragma once
+#ifndef MATRIXOPS_HPP_
+#define MATRIXOPS_HPP_
 
 #include <dune/istl/bcrsmatrix.hh>
 
@@ -87,3 +88,5 @@ class MatrixOps {
 
 }
 }
+
+#endif
