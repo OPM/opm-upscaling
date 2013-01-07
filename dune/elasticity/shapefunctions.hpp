@@ -13,7 +13,7 @@
 #define SHAPEFUNCTIONS_HPP_
 
 #include <dune/common/fvector.hh>
-#include "dynmatrixev.hh"
+#include <dune/common/dynmatrixev.hh>
 
 #include <complex>
 
