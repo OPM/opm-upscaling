@@ -9,7 +9,12 @@
 //! \brief Class describing 2D quadrilateral grids
 //!
 //==============================================================================
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "boundarygrid.hh"
+
 
 namespace Opm {
 namespace Elasticity {
