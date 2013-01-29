@@ -52,12 +52,12 @@
 #include <dune/istl/solvers.hh>
 
 #include <dune/grid/CpGrid.hpp>
-#include <dune/porsol/common/ImplicitTransportDefs.hpp>
-#include <dune/porsol/common/BCRSMatrixBlockAssembler.hpp>
-#include <dune/porsol/common/ReservoirPropertyCapillary.hpp>
-#include <dune/porsol/common/setupGridAndProps.hpp>
-#include <dune/porsol/common/SimulatorUtilities.hpp>
-#include <dune/porsol/common/LinearSolverISTL.hpp>
+#include <opm/porsol/common/ImplicitTransportDefs.hpp>
+#include <opm/porsol/common/BCRSMatrixBlockAssembler.hpp>
+#include <opm/porsol/common/ReservoirPropertyCapillary.hpp>
+#include <opm/porsol/common/setupGridAndProps.hpp>
+#include <opm/porsol/common/SimulatorUtilities.hpp>
+#include <opm/porsol/common/LinearSolverISTL.hpp>
 
 #include <opm/core/GridAdapter.hpp>
 
@@ -153,7 +153,7 @@ main(int argc, char** argv)
     Opm::parameter::ParameterGroup param(argc, argv);
 
     Dune::CpGrid                        cp_grid;
-    Dune::ReservoirPropertyCapillary<3> res_prop;
+    Opm::ReservoirPropertyCapillary<3> res_prop;
 
     setupGridAndProps(param, cp_grid, res_prop);
 

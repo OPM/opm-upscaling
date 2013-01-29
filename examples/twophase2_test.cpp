@@ -26,7 +26,7 @@
 
 #include <iostream>
 #include"dune/common/mpihelper.hh" // An initializer of MPI
-#include"dune/common/exceptions.hh" // We use exceptions
+#include"opm/porsol/blackoil/co2fluid/opm/common/exceptions.hh" // We use exceptions
 
 //#include<dune/grid/sgrid.hh> // load sgrid definition
 //#include<dune/grid/common/gridinfo.hh> // definition of gridinfo
@@ -41,30 +41,30 @@
 //#include <istl/preconditioners.hh>
 
 /* IRISOpm Classes to be compiled */
-#include <dune/porsol/twophase2/OPMIRISCode/IRISDuneGridInterface.hpp>
-#include <dune/porsol/twophase2/OPMIRISCode/IRISDuneISTLInterface.hpp>
+#include <opm/porsol/twophase2/OPMIRISCode/IRISDuneGridInterface.hpp>
+#include <opm/porsol/twophase2/OPMIRISCode/IRISDuneISTLInterface.hpp>
 
-#include <dune/porsol/twophase2/OPMKvasiSophusCode/Array.h>
-#include <dune/porsol/twophase2/OPMKvasiSophusCode/MeshShape.h>
-#include <dune/porsol/twophase2/OPMKvasiSophusCode/MeshPoint.h>
-#include <dune/porsol/twophase2/OPMKvasiSophusCode/Pair.h>
-#include <dune/porsol/twophase2/OPMKvasiSophusCode/RnShape.h>
-#include <dune/porsol/twophase2/OPMKvasiSophusCode/RnPoint.h>
-#include <dune/porsol/twophase2/OPMKvasiSophusCode/MeshSFSD.h>
+#include <opm/porsol/twophase2/OPMKvasiSophusCode/Array.h>
+#include <opm/porsol/twophase2/OPMKvasiSophusCode/MeshShape.h>
+#include <opm/porsol/twophase2/OPMKvasiSophusCode/MeshPoint.h>
+#include <opm/porsol/twophase2/OPMKvasiSophusCode/Pair.h>
+#include <opm/porsol/twophase2/OPMKvasiSophusCode/RnShape.h>
+#include <opm/porsol/twophase2/OPMKvasiSophusCode/RnPoint.h>
+#include <opm/porsol/twophase2/OPMKvasiSophusCode/MeshSFSD.h>
 
-#include <dune/porsol/twophase2/OPMIRISCode/PMTwoPhaseSimulationData.h>
-#include <dune/porsol/twophase2/OPMIRISCode/VTKHeaderWriter.h>
-#include <dune/porsol/twophase2/OPMIRISCode/VTKStructuredGridWriter.h>
-#include <dune/porsol/twophase2/OPMIRISCode/SFPMPhysicalFieldProperties.h>
-#include <dune/porsol/twophase2/OPMIRISCode/SFCapPress.h>
-#include <dune/porsol/twophase2/OPMIRISCode/SFRelPerm.h>
+#include <opm/porsol/twophase2/OPMIRISCode/PMTwoPhaseSimulationData.h>
+#include <opm/porsol/twophase2/OPMIRISCode/VTKHeaderWriter.h>
+#include <opm/porsol/twophase2/OPMIRISCode/VTKStructuredGridWriter.h>
+#include <opm/porsol/twophase2/OPMIRISCode/SFPMPhysicalFieldProperties.h>
+#include <opm/porsol/twophase2/OPMIRISCode/SFCapPress.h>
+#include <opm/porsol/twophase2/OPMIRISCode/SFRelPerm.h>
 
-#include <dune/porsol/twophase2/OPMIRISCode/SFCentralUpwind.h>
-#include <dune/porsol/twophase2/OPMIRISCode/SFMpfaFps.h>
+#include <opm/porsol/twophase2/OPMIRISCode/SFCentralUpwind.h>
+#include <opm/porsol/twophase2/OPMIRISCode/SFMpfaFps.h>
 
-#include <dune/porsol/twophase2/OPMIRISCode/PMTwoPhaseSaturation.h>
-#include <dune/porsol/twophase2/OPMIRISCode/PMTwoPhaseElliptic.h>
-#include <dune/porsol/twophase2/OPMIRISCode/PMTwoPhaseSimulator.h>
+#include <opm/porsol/twophase2/OPMIRISCode/PMTwoPhaseSaturation.h>
+#include <opm/porsol/twophase2/OPMIRISCode/PMTwoPhaseElliptic.h>
+#include <opm/porsol/twophase2/OPMIRISCode/PMTwoPhaseSimulator.h>
 
 int main(int argc, char** argv)
 {
@@ -92,13 +92,13 @@ int main(int argc, char** argv)
       //NOTE: DuneGridType is defined in IrisOpmTdefs.h
       //NOTE2: This does NOT work yet...only Sgrid can be used yet!
 
-      //#ifdef SGridToBeUsed
+      //#ifdef Dune::SGridToBeUsed
       cout << endl;
       cout << simulationData.td_.NameOfGridType << endl;
       cout << simulationData.td_.NoGridCells_X << endl;
       cout << simulationData.td_.NoGridCells_Y << endl;
 //       DuneGridType* DGridPtr;
-      //if (simulationData.td_.NameOfGridType == "SGrid2D")
+      //if (simulationData.td_.NameOfGridType == "Dune::SGrid2D")
       //{
 	const int dim=2;                               
 	Dune::FieldVector<int,dim> N(2);
@@ -110,7 +110,7 @@ int main(int argc, char** argv)
 	Dune::FieldVector<DuneGridType::ctype,dim> H(1.0); 
 	H[0] = simulationData.td_.X_Extent; //@HAF: OK???
 	H[1] = simulationData.td_.Y_Extent; //@HAF: OK???
-	//Creates the SGrid:
+	//Creates the Dune::SGrid:
 	DuneGridType Dgrid(N,L,H);
 	//DGridPtr = &Dgrid;
 

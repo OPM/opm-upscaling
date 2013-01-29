@@ -29,10 +29,10 @@
 
 #include "SimulatorTester.hpp"
 #include "SimulatorTesterFlexibleBC.hpp"
-#include <dune/porsol/euler/EulerUpstreamImplicit.hpp>
-#include <dune/porsol/common/SimulatorTraits.hpp>
+#include <opm/porsol/euler/EulerUpstreamImplicit.hpp>
+#include <opm/porsol/common/SimulatorTraits.hpp>
 
-namespace Dune
+namespace Opm
 {
     template <class IsotropyPolicy>
     struct Implicit
@@ -52,7 +52,7 @@ namespace Dune
     };
 }
 
-using namespace Dune;
+using namespace Opm;
 
 typedef SimulatorTraits<Isotropic, Implicit> SimTraits;
 typedef SimulatorTesterFlexibleBC<SimTraits> Simulator;
@@ -60,7 +60,7 @@ typedef SimulatorTesterFlexibleBC<SimTraits> Simulator;
 int main(int argc, char** argv)
 {
     Opm::parameter::ParameterGroup param(argc, argv);
-    MPIHelper::instance(argc,argv);
+    Dune::MPIHelper::instance(argc,argv);
     Simulator sim;
     sim.init(param);
     sim.run();

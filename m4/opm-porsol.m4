@@ -39,7 +39,7 @@ AC_DEFUN([OPM_PORSOL_CHECKS],
 # not by opm-porsol itself
 AC_DEFUN([OPM_PORSOL_CHECK_MODULE],
 [
-  DUNE_CHECK_MODULES([opm-porsol],
-                     [porsol/mimetic/IncompFlowSolverHybrid.hpp],
-                     [int i;])
+  OPM_PORSOL_CHECK_MODULES([opm-porsol],
+                           [opm/porsol/mimetic/IncompFlowSolverHybrid.hpp],
+                           [int i;])
 ])

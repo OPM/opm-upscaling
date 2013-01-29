@@ -46,7 +46,7 @@
 #include <dune/common/mpihelper.hh>
 #include <opm/core/utility/Units.hpp>
 
-#include <dune/porsol/common/SimulatorUtilities.hpp>
+#include <opm/porsol/common/SimulatorUtilities.hpp>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 
 #include <dune/grid/yaspgrid.hh>
@@ -54,19 +54,19 @@
 #include <opm/core/eclipse/EclipseGridParser.hpp>
 #include <opm/core/eclipse/EclipseGridInspector.hpp>
 
-#include <dune/porsol/common/fortran.hpp>
-#include <dune/porsol/common/blas_lapack.hpp>
-#include <dune/porsol/common/Matrix.hpp>
-#include <dune/porsol/common/GridInterfaceEuler.hpp>
-#include <dune/porsol/common/ReservoirPropertyCapillary.hpp>
-#include <dune/porsol/common/BoundaryConditions.hpp>
+#include <opm/porsol/common/fortran.hpp>
+#include <opm/porsol/common/blas_lapack.hpp>
+#include <opm/porsol/common/Matrix.hpp>
+#include <opm/porsol/common/GridInterfaceEuler.hpp>
+#include <opm/porsol/common/ReservoirPropertyCapillary.hpp>
+#include <opm/porsol/common/BoundaryConditions.hpp>
 
-#include <dune/porsol/mimetic/IfshInterface.hpp>
+#include <opm/porsol/mimetic/IfshInterface.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
-#include <dune/porsol/common/setupGridAndProps.hpp>
+#include <opm/porsol/common/setupGridAndProps.hpp>
 
-#include <dune/porsol/mimetic/MimeticIPEvaluator.hpp>
-#include <dune/porsol/mimetic/IncompFlowSolverHybrid.hpp>
+#include <opm/porsol/mimetic/MimeticIPEvaluator.hpp>
+#include <opm/porsol/mimetic/IncompFlowSolverHybrid.hpp>
 
 
 
@@ -75,14 +75,14 @@ void test_flowsolver(const GI& g, const RI& r)
 {
     typedef typename GI::CellIterator                   CI;
     typedef typename CI::FaceIterator                   FI;
-    typedef Dune::BasicBoundaryConditions<true, false>  FBC;
-    typedef Dune::IfshInterface<GI, RI, FBC> FlowSolver;
-    //typedef Dune::IncompFlowSolverHybrid<GI, RI, FBC,
-    //                                   Dune::MimeticIPEvaluator> FlowSolver;
+    typedef Opm::BasicBoundaryConditions<true, false>  FBC;
+    typedef Opm::IfshInterface<GI, RI, FBC> FlowSolver;
+    //typedef Opm::IncompFlowSolverHybrid<GI, RI, FBC,
+    //                                   Opm::MimeticIPEvaluator> FlowSolver;
 
     FlowSolver solver;
 
-    typedef Dune::FlowBC BC;
+    typedef Opm::FlowBC BC;
     FBC flow_bc(7);
 
     flow_bc.flowCond(5) = BC(BC::Dirichlet, 100.0*Opm::unit::barsa);
@@ -122,7 +122,7 @@ void test_flowsolver(const GI& g, const RI& r)
 }
 
 
-using namespace Dune;
+using namespace Opm;
 
 int main(int argc, char** argv)
 {
@@ -135,7 +135,7 @@ int main(int argc, char** argv)
     setupGridAndProps(param, grid, res_prop);
 
     // Make the grid interface.
-    Dune::GridInterfaceEuler<Dune::CpGrid> g(grid);
+    Opm::GridInterfaceEuler<Dune::CpGrid> g(grid);
 
     // Run test.
     test_flowsolver<3>(g, res_prop);

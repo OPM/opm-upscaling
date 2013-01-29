@@ -23,27 +23,27 @@
 
 #include <opm/core/utility/have_boost_redef.hpp>
 
-#include <dune/porsol/blackoil/fluid/BlackoilPVT.hpp>
-#include <dune/porsol/blackoil/BlackoilFluid.hpp>
+#include <opm/porsol/blackoil/fluid/BlackoilPVT.hpp>
+#include <opm/porsol/blackoil/BlackoilFluid.hpp>
 
-#include <dune/porsol/blackoil/BlackoilSimulator.hpp>
+#include <opm/porsol/blackoil/BlackoilSimulator.hpp>
 #include <dune/common/mpihelper.hh>
-#include <dune/porsol/common/SimulatorUtilities.hpp>
+#include <opm/porsol/common/SimulatorUtilities.hpp>
 #include <dune/grid/CpGrid.hpp>
-#include <dune/porsol/common/Rock.hpp>
-#include <dune/porsol/mimetic/TpfaCompressible.hpp>
+#include <opm/porsol/common/Rock.hpp>
+#include <opm/porsol/mimetic/TpfaCompressible.hpp>
 #include <opm/core/utility/StopWatch.hpp>
-#include <dune/porsol/blackoil/BlackoilWells.hpp>
-#include <dune/porsol/blackoil/ComponentTransport.hpp>
+#include <opm/porsol/blackoil/BlackoilWells.hpp>
+#include <opm/porsol/blackoil/ComponentTransport.hpp>
 
 
 
 typedef Dune::CpGrid Grid;
-typedef Dune::Rock<Grid::dimension> Rock;
+typedef Opm::Rock<Grid::dimension> Rock;
 typedef Opm::BlackoilFluid Fluid;
 typedef Opm::BlackoilWells Wells;
-typedef Dune::BasicBoundaryConditions<true, false>  FBC;
-typedef Dune::TpfaCompressible<Grid, Rock, Fluid, Wells, FBC> FlowSolver;
+typedef Opm::BasicBoundaryConditions<true, false>  FBC;
+typedef Opm::TpfaCompressible<Grid, Rock, Fluid, Wells, FBC> FlowSolver;
 typedef Opm::ExplicitCompositionalTransport<Grid, Rock, Fluid, Wells> TransportSolver;
 
 

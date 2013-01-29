@@ -54,15 +54,15 @@
 #include <opm/core/eclipse/EclipseGridParser.hpp>
 #include <opm/core/eclipse/EclipseGridInspector.hpp>
 
-#include <dune/porsol/common/fortran.hpp>
-#include <dune/porsol/common/blas_lapack.hpp>
-#include <dune/porsol/common/Matrix.hpp>
-#include <dune/porsol/common/GridInterfaceEuler.hpp>
-#include <dune/porsol/common/ReservoirPropertyCapillaryAnisotropicRelperm.hpp>
-#include <dune/porsol/common/BoundaryConditions.hpp>
+#include <opm/porsol/common/fortran.hpp>
+#include <opm/porsol/common/blas_lapack.hpp>
+#include <opm/porsol/common/Matrix.hpp>
+#include <opm/porsol/common/GridInterfaceEuler.hpp>
+#include <opm/porsol/common/ReservoirPropertyCapillaryAnisotropicRelperm.hpp>
+#include <opm/porsol/common/BoundaryConditions.hpp>
 
-#include <dune/porsol/mimetic/MimeticIPAnisoRelpermEvaluator.hpp>
-#include <dune/porsol/mimetic/IncompFlowSolverHybrid.hpp>
+#include <opm/porsol/mimetic/MimeticIPAnisoRelpermEvaluator.hpp>
+#include <opm/porsol/mimetic/IncompFlowSolverHybrid.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 
 
@@ -73,7 +73,7 @@ void test_evaluator(const Interface& g)
     typedef typename CI       ::FaceIterator FI;
     typedef typename CI       ::Scalar       Scalar;
 
-    typedef Dune::SharedFortranMatrix FMat;
+    typedef Opm::SharedFortranMatrix FMat;
 
     std::cout << "Called test_evaluator()" << std::endl;
 
@@ -90,11 +90,11 @@ void test_evaluator(const Interface& g)
     }
 
     typedef int DummyClass;
-    Dune::MimeticIPAnisoRelpermEvaluator<Interface, DummyClass> ip(max_nf);
+    Opm::MimeticIPAnisoRelpermEvaluator<Interface, DummyClass> ip(max_nf);
 
     // Set dummy permeability K=diag(10,1,...,1,0.1).
     std::vector<Scalar> perm(dim * dim, Scalar(0.0));
-    Dune::SharedCMatrix K(dim, dim, &perm[0]);
+    Opm::SharedCMatrix K(dim, dim, &perm[0]);
     for (int i = 0; i < dim; ++i)
         K(i,i) = 1.0;
     K(0    ,0    ) *= 10.0;
@@ -159,13 +159,13 @@ void test_flowsolver(const GI& g, const RI& r)
 {
     typedef typename GI::CellIterator                              CI;
     typedef typename CI::FaceIterator                              FI;
-    typedef Dune::BasicBoundaryConditions<true, false>                  FBC;
-    typedef Dune::IncompFlowSolverHybrid<GI, RI, FBC,
-                                         Dune::MimeticIPAnisoRelpermEvaluator> FlowSolver;
+    typedef Opm::BasicBoundaryConditions<true, false>                  FBC;
+    typedef Opm::IncompFlowSolverHybrid<GI, RI, FBC,
+                                         Opm::MimeticIPAnisoRelpermEvaluator> FlowSolver;
 
     FlowSolver solver;
 
-    typedef Dune::FlowBC BC;
+    typedef Opm::FlowBC BC;
     FBC flow_bc(7);
     //flow_bc.flowCond(1) = BC(BC::Dirichlet, 1.0*Opm::unit::barsa);
     //flow_bc.flowCond(2) = BC(BC::Dirichlet, 0.0*Opm::unit::barsa);
@@ -214,7 +214,7 @@ void test_flowsolver(const GI& g, const RI& r)
 }
 
 
-using namespace Dune;
+using namespace Opm;
 
 int main(int argc, char** argv)
 {
@@ -230,7 +230,7 @@ int main(int argc, char** argv)
     build_grid(parser, z_tol, grid, cartDims);
 
     // Make the grid interface
-    Dune::GridInterfaceEuler<Dune::CpGrid> g(grid);
+    Opm::GridInterfaceEuler<Dune::CpGrid> g(grid);
 
     // Reservoir properties.
     typedef ReservoirPropertyCapillaryAnisotropicRelperm<3> RP;
@@ -264,14 +264,14 @@ int main(int argc, char** argv)
     TransportSolver transport_solver(g, res_prop, sat_bcond, injection_rates);
 
     // Define a flow field with constant velocity
-    FieldVector<double, 3> vel(0.0);
+    Dune::FieldVector<double, 3> vel(0.0);
     vel[0] = 2.0;
     vel[1] = 1.0;
     TestSolution<GridInterface> flow_solution(g, vel);
     // Solve a step.
     double time = 1.0;
     std::vector<double> sat(g.numberOfCells(), 0.0);
-    FieldVector<double, 3> gravity(0.0);
+    Dune::FieldVector<double, 3> gravity(0.0);
     gravity[2] = -9.81;
     transport_solver.transportSolve(sat, time, gravity, flow_solution);
 #endif

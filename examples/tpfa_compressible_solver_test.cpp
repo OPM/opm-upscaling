@@ -34,7 +34,7 @@
 #include <dune/common/mpihelper.hh>
 #include <opm/core/utility/Units.hpp>
 
-#include <dune/porsol/common/SimulatorUtilities.hpp>
+#include <opm/porsol/common/SimulatorUtilities.hpp>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 
 #include <dune/grid/yaspgrid.hh>
@@ -42,21 +42,21 @@
 #include <opm/core/eclipse/EclipseGridParser.hpp>
 #include <opm/core/eclipse/EclipseGridInspector.hpp>
 
-#include <dune/porsol/common/fortran.hpp>
-#include <dune/porsol/common/blas_lapack.hpp>
-#include <dune/porsol/common/Matrix.hpp>
-#include <dune/porsol/common/GridInterfaceEuler.hpp>
-#include <dune/porsol/common/Rock.hpp>
-#include <dune/porsol/common/BoundaryConditions.hpp>
+#include <opm/porsol/common/fortran.hpp>
+#include <opm/porsol/common/blas_lapack.hpp>
+#include <opm/porsol/common/Matrix.hpp>
+#include <opm/porsol/common/GridInterfaceEuler.hpp>
+#include <opm/porsol/common/Rock.hpp>
+#include <opm/porsol/common/BoundaryConditions.hpp>
 
-#include <dune/porsol/blackoil/fluid/BlackoilPVT.hpp>
-#include <dune/porsol/blackoil/BlackoilFluid.hpp>
+#include <opm/porsol/blackoil/fluid/BlackoilPVT.hpp>
+#include <opm/porsol/blackoil/BlackoilFluid.hpp>
 
-#include <dune/porsol/mimetic/TpfaCompressible.hpp>
+#include <opm/porsol/mimetic/TpfaCompressible.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
-#include <dune/porsol/common/setupGridAndProps.hpp>
-#include <dune/porsol/common/Wells.hpp>
-#include <dune/porsol/blackoil/fluid/FluidMatrixInteractionBlackoil.hpp>
+#include <opm/porsol/common/setupGridAndProps.hpp>
+#include <opm/porsol/common/Wells.hpp>
+#include <opm/porsol/blackoil/fluid/FluidMatrixInteractionBlackoil.hpp>
 
 
 template<int dim, class Grid, class Rock, class Fluid, class FlowSolver>
@@ -67,8 +67,8 @@ void test_flowsolver(const Grid& grid,
                      const double dt)
 {
     // Boundary conditions.
-    typedef Dune::FlowBC BC;
-    typedef Dune::BasicBoundaryConditions<true, false>  FBC;
+    typedef Opm::FlowBC BC;
+    typedef Opm::BasicBoundaryConditions<true, false>  FBC;
     FBC flow_bc(7);
     flow_bc.flowCond(1) = BC(BC::Dirichlet, 300.0*Opm::unit::barsa);
     flow_bc.flowCond(2) = BC(BC::Dirichlet, 100.0*Opm::unit::barsa);
@@ -133,7 +133,7 @@ void test_flowsolver(const Grid& grid,
 
     // Output to VTK.
     std::vector<typename Grid::Vector> cell_velocity;
-    estimateCellVelocitySimpleInterface(cell_velocity, grid, face_flux);
+    Opm::estimateCellVelocitySimpleInterface(cell_velocity, grid, face_flux);
     // Dune's vtk writer wants multi-component data to be flattened.
     std::vector<double> cell_pressure_flat(&*cell_pressure.front().begin(),
                                            &*cell_pressure.back().end());
@@ -158,10 +158,10 @@ void test_flowsolver(const Grid& grid,
 
 
 typedef Dune::CpGrid Grid;
-typedef Dune::Rock<Grid::dimension> Rock;
+typedef Opm::Rock<Grid::dimension> Rock;
 typedef Opm::BlackoilFluid Fluid;
-typedef Dune::BasicBoundaryConditions<true, false>  FBC;
-typedef Dune::TpfaCompressible<Grid, Rock, Fluid, Opm::Wells, FBC> FlowSolver;
+typedef Opm::BasicBoundaryConditions<true, false>  FBC;
+typedef Opm::TpfaCompressible<Grid, Rock, Fluid, Opm::Wells, FBC> FlowSolver;
 
 int main(int argc, char** argv)
 {
@@ -174,7 +174,7 @@ int main(int argc, char** argv)
     Fluid fluid;
     FlowSolver solver;
 
-    using namespace Dune;
+    using namespace Opm;
 
     // Initialization.
     std::string fileformat = param.getDefault<std::string>("fileformat", "cartesian");

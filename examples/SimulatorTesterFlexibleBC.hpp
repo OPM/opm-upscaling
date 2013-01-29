@@ -38,7 +38,7 @@
 
 #include "SimulatorTester.hpp"
 
-namespace Dune
+namespace Opm
 {
 
     template <class SimTraits>
@@ -136,6 +136,6 @@ namespace Dune
 
     };
 
-} // namespace Dune
+} // namespace Opm
 
 #endif // OPENRS_SIMULATORTESTERFLEXIBLEBC_HEADER

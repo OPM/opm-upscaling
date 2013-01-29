@@ -23,7 +23,7 @@
 
 #include <opm/core/utility/have_boost_redef.hpp>
 #include <opm/core/utility/StopWatch.hpp>
-#include <dune/porsol/blackoil/co2fluid/BlackoilCo2PVT.hpp>
+#include <opm/porsol/blackoil/co2fluid/BlackoilCo2PVT.hpp>
 
 int main(int argc, char** argv)
 {

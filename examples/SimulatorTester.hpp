@@ -37,10 +37,10 @@
 #define OPENRS_SIMULATORTESTER_HEADER
 
 
-#include <dune/porsol/common/SimulatorBase.hpp>
+#include <opm/porsol/common/SimulatorBase.hpp>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 
-namespace Dune
+namespace Opm
 {
 
 
@@ -60,7 +60,7 @@ namespace Dune
 	    std::vector<double> saturation(this->init_saturation_);
 	    std::vector<double> saturation_old(saturation);
 	    // Gravity.
-	    // FieldVector<double, 3> gravity(0.0);
+	    // Dune::FieldVector<double, 3> gravity(0.0);
 	    // gravity[2] = -Dune::unit::gravity;
 	    // Compute flow field.
 	    if (this->gravity_.two_norm() > 0.0) {
@@ -107,7 +107,7 @@ namespace Dune
 
 
 
-} // namespace Dune
+} // namespace Opm
 
 
 #endif // OPENRS_SIMULATORTESTER_HEADER

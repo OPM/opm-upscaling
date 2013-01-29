@@ -45,14 +45,14 @@
 
 #include "SimulatorTester.hpp"
 #include "SimulatorTesterFlexibleBC.hpp"
-#include <dune/porsol/common/SimulatorTraits.hpp>
+#include <opm/porsol/common/SimulatorTraits.hpp>
 #include <dune/common/mpihelper.hh>
 
 #ifdef USE_TBB
 #include <tbb/task_scheduler_init.h>
 #endif // USE_TBB
 
-using namespace Dune;
+using namespace Opm;
 
 typedef SimulatorTraits<Anisotropic, Explicit> SimTraits;
 typedef SimulatorTesterFlexibleBC<SimTraits> Simulator;
@@ -60,7 +60,7 @@ typedef SimulatorTesterFlexibleBC<SimTraits> Simulator;
 int main(int argc, char** argv)
 {
     Opm::parameter::ParameterGroup param(argc, argv);
-    MPIHelper::instance(argc,argv);
+    Dune::MPIHelper::instance(argc,argv);
 #ifdef USE_TBB
     int num_threads = param.getDefault("num_threads", tbb::task_scheduler_init::default_num_threads());
     tbb::task_scheduler_init init(num_threads);

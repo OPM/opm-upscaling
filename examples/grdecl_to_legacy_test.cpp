@@ -43,15 +43,15 @@
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 #include <dune/grid/CpGrid.hpp>
-#include <dune/porsol/common/ReservoirPropertyCapillary.hpp>
-#include <dune/porsol/common/setupGridAndProps.hpp>
+#include <opm/porsol/common/ReservoirPropertyCapillary.hpp>
+#include <opm/porsol/common/setupGridAndProps.hpp>
 
-using namespace Dune;
+using namespace Opm;
 
 int main(int argc, char** argv)
 {
     Opm::parameter::ParameterGroup param(argc, argv);
-    CpGrid grid;
+    Dune::CpGrid grid;
     ReservoirPropertyCapillary<3> res_prop;
     setupGridAndProps(param, grid, res_prop);
 

@@ -13,7 +13,7 @@ AM_INIT_AUTOMAKE
 #
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-AC_CONFIG_SRCDIR([dune/porsol/mimetic/IncompFlowSolverHybrid.hpp])
+AC_CONFIG_SRCDIR([opm/porsol/mimetic/IncompFlowSolverHybrid.hpp])
 AM_CONFIG_HEADER([config.h])
 
 
@@ -37,28 +37,28 @@ AC_CONFIG_FILES([
   doc/doxygen/Makefile
   doc/doxygen/Doxyfile
   m4/Makefile
-  dune/Makefile
-  dune/porsol/Makefile
-  dune/porsol/common/Makefile
-  dune/porsol/common/test/Makefile
-  dune/porsol/euler/Makefile
-  dune/porsol/euler/test/Makefile
-  dune/porsol/mimetic/Makefile
-  dune/porsol/mimetic/test/Makefile
-  dune/porsol/blackoil/Makefile
-  dune/porsol/blackoil/fluid/Makefile
-  dune/porsol/blackoil/test/Makefile
-  dune/porsol/twophase2/Makefile
-  dune/porsol/twophase2/OPMIRISCode/Makefile
-  dune/porsol/twophase2/OPMKvasiSophusCode/Makefile
+  opm/Makefile
+  opm/porsol/Makefile
+  opm/porsol/common/Makefile
+  opm/porsol/common/test/Makefile
+  opm/porsol/euler/Makefile
+  opm/porsol/euler/test/Makefile
+  opm/porsol/mimetic/Makefile
+  opm/porsol/mimetic/test/Makefile
+  opm/porsol/blackoil/Makefile
+  opm/porsol/blackoil/fluid/Makefile
+  opm/porsol/blackoil/test/Makefile
+  opm/porsol/twophase2/Makefile
+  opm/porsol/twophase2/OPMIRISCode/Makefile
+  opm/porsol/twophase2/OPMKvasiSophusCode/Makefile
   lib/Makefile
   examples/Makefile
   opm-porsol.pc
 ])
 
-#  dune/porsol/opmtransport/Makefile
-#  dune/porsol/opmtransport/src/Makefile
-#  dune/porsol/opmtransport/examples/Makefile
+#  opm/porsol/opmtransport/Makefile
+#  opm/porsol/opmtransport/src/Makefile
+#  opm/porsol/opmtransport/examples/Makefile
 
 AC_OUTPUT
 

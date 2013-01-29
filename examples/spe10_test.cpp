@@ -51,17 +51,17 @@
 
 #include <dune/grid/CpGrid.hpp>
 
-#include <dune/porsol/common/PeriodicHelpers.hpp>
-#include <dune/porsol/common/BoundaryConditions.hpp>
-#include <dune/porsol/common/GridInterfaceEuler.hpp>
-#include <dune/porsol/common/ReservoirPropertyCapillary.hpp>
-#include <dune/porsol/common/SimulatorUtilities.hpp>
-#include <dune/porsol/common/Matrix.hpp>
+#include <opm/porsol/common/PeriodicHelpers.hpp>
+#include <opm/porsol/common/BoundaryConditions.hpp>
+#include <opm/porsol/common/GridInterfaceEuler.hpp>
+#include <opm/porsol/common/ReservoirPropertyCapillary.hpp>
+#include <opm/porsol/common/SimulatorUtilities.hpp>
+#include <opm/porsol/common/Matrix.hpp>
 
-#include <dune/porsol/mimetic/MimeticIPEvaluator.hpp>
-#include <dune/porsol/mimetic/IncompFlowSolverHybrid.hpp>
+#include <opm/porsol/mimetic/MimeticIPEvaluator.hpp>
+#include <opm/porsol/mimetic/IncompFlowSolverHybrid.hpp>
 
-using namespace Dune;
+using namespace Opm;
 
 void fill_perm(std::vector<double>& k)
 {
@@ -77,21 +77,21 @@ void fill_perm(std::vector<double>& k)
 
 int main(int argc, char** argv)
 {
-    typedef Dune::GridInterfaceEuler<CpGrid>                       GI;
+    typedef Opm::GridInterfaceEuler<Dune::CpGrid>                       GI;
     typedef GI  ::CellIterator                                     CI;
     typedef CI  ::FaceIterator                                     FI;
-    typedef Dune::BasicBoundaryConditions<true, false>                  BCs;
-    typedef Dune::ReservoirPropertyCapillary<3>                    RI;
-    typedef Dune::IncompFlowSolverHybrid<GI, RI, BCs,
-        Dune::MimeticIPEvaluator> FlowSolver;
+    typedef Opm::BasicBoundaryConditions<true, false>                  BCs;
+    typedef Opm::ReservoirPropertyCapillary<3>                    RI;
+    typedef Opm::IncompFlowSolverHybrid<GI, RI, BCs,
+        Opm::MimeticIPEvaluator> FlowSolver;
 
     Opm::parameter::ParameterGroup param(argc, argv);
-    CpGrid grid;
+    Dune::CpGrid grid;
     grid.init(param);
     //grid.setUniqueBoundaryIds(true);
-    GridInterfaceEuler<CpGrid> g(grid);
+    GridInterfaceEuler<Dune::CpGrid> g(grid);
 
-    typedef Dune::FlowBC BC;
+    typedef Opm::FlowBC BC;
     BCs flow_bc(7);
 #define BCDIR 4
 #if BCDIR == 1
@@ -113,7 +113,7 @@ int main(int argc, char** argv)
     std::vector<double> permdata;
     fill_perm(permdata);
     ASSERT (int(permdata.size()) == 3 * 60 * 220 * 85);
-    Dune::SharedFortranMatrix Perm(60 * 220 * 85, 3, &permdata[0]);
+    Opm::SharedFortranMatrix Perm(60 * 220 * 85, 3, &permdata[0]);
     const int imin = param.get<int>("imin");
     const int jmin = param.get<int>("jmin");
     const int kmin = param.get<int>("kmin");
@@ -180,7 +180,7 @@ int main(int argc, char** argv)
     std::vector<double> cell_pressure;
     getCellPressure(cell_pressure, g, solver.getSolution());
 
-    Dune::VTKWriter<CpGrid::LeafGridView> vtkwriter(grid.leafView());
+    Dune::VTKWriter<Dune::CpGrid::LeafGridView> vtkwriter(grid.leafView());
     vtkwriter.addCellData(cell_velocity_flat, "velocity", 3);
     vtkwriter.addCellData(cell_pressure, "pressure");
     vtkwriter.write("spe10_test_output", Dune::VTKOptions::ascii);

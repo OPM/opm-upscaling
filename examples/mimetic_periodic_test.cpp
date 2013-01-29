@@ -46,33 +46,33 @@
 
 #include <dune/grid/CpGrid.hpp>
 
-#include <dune/porsol/common/PeriodicHelpers.hpp>
-#include <dune/porsol/common/BoundaryConditions.hpp>
-#include <dune/porsol/common/GridInterfaceEuler.hpp>
-#include <dune/porsol/common/ReservoirPropertyCapillary.hpp>
+#include <opm/porsol/common/PeriodicHelpers.hpp>
+#include <opm/porsol/common/BoundaryConditions.hpp>
+#include <opm/porsol/common/GridInterfaceEuler.hpp>
+#include <opm/porsol/common/ReservoirPropertyCapillary.hpp>
 
-#include <dune/porsol/mimetic/MimeticIPEvaluator.hpp>
-#include <dune/porsol/mimetic/IncompFlowSolverHybrid.hpp>
+#include <opm/porsol/mimetic/MimeticIPEvaluator.hpp>
+#include <opm/porsol/mimetic/IncompFlowSolverHybrid.hpp>
 
-using namespace Dune;
+using namespace Opm;
 
 int main(int argc, char** argv)
 {
-    typedef Dune::GridInterfaceEuler<CpGrid>                       GI;
+    typedef Opm::GridInterfaceEuler<Dune::CpGrid>                       GI;
     typedef GI  ::CellIterator                                     CI;
     typedef CI  ::FaceIterator                                     FI;
-    typedef Dune::BasicBoundaryConditions<true, false>                  BCs;
-    typedef Dune::ReservoirPropertyCapillary<3>                    RI;
-    typedef Dune::IncompFlowSolverHybrid<GI, RI, BCs,
-                                         Dune::MimeticIPEvaluator> FlowSolver;
+    typedef Opm::BasicBoundaryConditions<true, false>                  BCs;
+    typedef Opm::ReservoirPropertyCapillary<3>                    RI;
+    typedef Opm::IncompFlowSolverHybrid<GI, RI, BCs,
+                                         Opm::MimeticIPEvaluator> FlowSolver;
 
     Opm::parameter::ParameterGroup param(argc, argv);
-    CpGrid grid;
+    Dune::CpGrid grid;
     grid.init(param);
     grid.setUniqueBoundaryIds(true);
-    GridInterfaceEuler<CpGrid> g(grid);
+    GridInterfaceEuler<Dune::CpGrid> g(grid);
     typedef FlowBC FBC;
-    array<FBC, 6> cond = {{ FBC(FBC::Periodic,  1.0*Opm::unit::barsa),
+    Dune::array<FBC, 6> cond = {{ FBC(FBC::Periodic,  1.0*Opm::unit::barsa),
                             FBC(FBC::Periodic, -1.0*Opm::unit::barsa),
                             FBC(FBC::Periodic,  0.0),
                             FBC(FBC::Periodic,  0.0),
