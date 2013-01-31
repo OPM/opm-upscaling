@@ -132,6 +132,14 @@ Material* Material::create(int ID, const std::string& file)
       } else if (str == "en") { // young's modulus and poisson's ratio
           E = p1;
           nu = p2;
+      } else {
+        std::cerr << "Could not parse rock file " << file << ", bailing" << std::endl
+        exit(1);
+      }
+
+      if (nu < 0 || nu > 0.5) {
+        std::cerr << "Material in " << file << " is not isotropic (nu=" << nu << "), bailing" << std::endl;
+        exit(1);
       }
       
       return new Isotropic(ID,E,nu,rho);
