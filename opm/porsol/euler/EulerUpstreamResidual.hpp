@@ -60,7 +60,7 @@ namespace Opm {
     {
     public:
         template <class S, class P>
-        friend class EulerUpstreamResidualDetails::UpdateForCell;
+        friend struct EulerUpstreamResidualDetails::UpdateForCell;
 	typedef typename GridInterface::CellIterator CIt;
 	typedef typename CIt::FaceIterator FIt;
 	typedef typename FIt::Vector Vector;
