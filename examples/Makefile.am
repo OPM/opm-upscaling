@@ -41,7 +41,7 @@ upscale_cond_SOURCES = upscale_cond.cpp
 upscale_elasticity_SOURCES = upscale_elasticity.cpp
 upscale_elasticity_CXXFLAGS = ${OPENMP_CXXFLAGS}
 upscale_elasticity_LDADD = \
-$(top_srcdir)/dune/elasticity/libelasticityupscale.la \
+$(top_srcdir)/opm/elasticity/libelasticityupscale.la \
 $(LDADD)
 
 upscale_perm_SOURCES = upscale_perm.cpp

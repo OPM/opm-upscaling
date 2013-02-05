@@ -27,8 +27,8 @@
 #include <omp.h>
 #endif
 
-#include <dune/elasticity/elasticity_upscale.hpp>
-#include <dune/elasticity/matrixops.hpp>
+#include <opm/elasticity/elasticity_upscale.hpp>
+#include <opm/elasticity/matrixops.hpp>
 
 
 //! \brief Display the available command line parameters
