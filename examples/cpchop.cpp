@@ -21,9 +21,9 @@
 #include <opm/core/utility/have_boost_redef.hpp>
 
 #include <opm/core/eclipse/CornerpointChopper.hpp>
-#include <dune/upscaling/SinglePhaseUpscaler.hpp>
+#include <opm/upscaling/SinglePhaseUpscaler.hpp>
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
-#include <dune/porsol/common/setupBoundaryConditions.hpp>
+#include <opm/porsol/common/setupBoundaryConditions.hpp>
 #include <opm/core/utility/Units.hpp>
 
 #include <boost/random/mersenne_twister.hpp>
@@ -222,17 +222,17 @@ int main(int argc, char** argv)
         gen.seed(userseed);
     }
 
-    Dune::SinglePhaseUpscaler::BoundaryConditionType bctype = Dune::SinglePhaseUpscaler::Fixed;
+    Opm::SinglePhaseUpscaler::BoundaryConditionType bctype = Opm::SinglePhaseUpscaler::Fixed;
     bool isFixed, isPeriodic;
     isFixed = isPeriodic = false;
     if (upscale) {
         if (bc == "fixed") {
             isFixed = true;
-            bctype = Dune::SinglePhaseUpscaler::Fixed;
+            bctype = Opm::SinglePhaseUpscaler::Fixed;
         }
         else if (bc == "periodic") {
             isPeriodic = true;
-            bctype = Dune::SinglePhaseUpscaler::Periodic;
+            bctype = Opm::SinglePhaseUpscaler::Periodic;
         }
         else {
             std::cout << "Boundary condition type (bc=" << bc << ") not allowed." << std::endl;
@@ -295,12 +295,12 @@ int main(int argc, char** argv)
             if (upscale) {
                 Opm::EclipseGridParser subparser = ch.subparser();
                 subparser.convertToSI();
-                Dune::SinglePhaseUpscaler upscaler;
+                Opm::SinglePhaseUpscaler upscaler;
                 
                 upscaler.init(subparser, bctype, minpermSI, z_tolerance,
                               residual_tolerance, linsolver_verbosity, linsolver_type, false);
 
-                Dune::SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
+                Opm::SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
                 upscaled_K *= (1.0/(Opm::prefix::milli*Opm::unit::darcy));
 
 
@@ -320,7 +320,7 @@ int main(int argc, char** argv)
                 Opm::EclipseGridParser subparser = ch.subparser();
                 std::vector<double>  perms = subparser.getFloatingPointValue("PERMX");
                 subparser.convertToSI();
-                Dune::SinglePhaseUpscaler upscaler;                
+                Opm::SinglePhaseUpscaler upscaler;                
                 upscaler.init(subparser, bctype, minpermSI, z_tolerance,
                               residual_tolerance, linsolver_verbosity, linsolver_type, false);
                 std::vector<int>   satnums = subparser.getIntegerValue("SATNUM");

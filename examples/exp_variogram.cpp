@@ -34,8 +34,8 @@
 #include <opm/core/utility/have_boost_redef.hpp>
 
 #include <opm/core/eclipse/CornerpointChopper.hpp>
-#include <dune/upscaling/SinglePhaseUpscaler.hpp>
-#include <dune/porsol/common/setupBoundaryConditions.hpp>
+#include <opm/upscaling/SinglePhaseUpscaler.hpp>
+#include <opm/porsol/common/setupBoundaryConditions.hpp>
 #include <opm/core/utility/Units.hpp>
 
 #include <boost/random/mersenne_twister.hpp>
@@ -168,10 +168,10 @@ int main(int argc, char** argv)
 	
         Opm::EclipseGridParser subparser_1 = ch.subparser();
         subparser_1.convertToSI();
-        Dune::SinglePhaseUpscaler upscaler_1;
-        upscaler_1.init(subparser_1, Dune::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
+        Opm::SinglePhaseUpscaler upscaler_1;
+        upscaler_1.init(subparser_1, Opm::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
 			residual_tolerance, linsolver_verbosity, linsolver_type, false);
-        Dune::SinglePhaseUpscaler::permtensor_t upscaled_K_1 = upscaler_1.upscaleSinglePhase();
+        Opm::SinglePhaseUpscaler::permtensor_t upscaled_K_1 = upscaler_1.upscaleSinglePhase();
         upscaled_K_1 *= (1.0/(Opm::prefix::milli*Opm::unit::darcy));
 	double porosity_1 = upscaler_1.upscalePorosity();
 
@@ -192,10 +192,10 @@ int main(int argc, char** argv)
 	
         Opm::EclipseGridParser subparser_2 = ch.subparser();
 	subparser_2.convertToSI();
-        Dune::SinglePhaseUpscaler upscaler_2;
-        upscaler_2.init(subparser_2, Dune::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
+        Opm::SinglePhaseUpscaler upscaler_2;
+        upscaler_2.init(subparser_2, Opm::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
 			residual_tolerance, linsolver_verbosity, linsolver_type, false);
-        Dune::SinglePhaseUpscaler::permtensor_t upscaled_K_2 = upscaler_2.upscaleSinglePhase();
+        Opm::SinglePhaseUpscaler::permtensor_t upscaled_K_2 = upscaler_2.upscaleSinglePhase();
         upscaled_K_2 *= (1.0/(Opm::prefix::milli*Opm::unit::darcy));
 	double porosity_2 = upscaler_2.upscalePorosity();
 

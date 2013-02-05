@@ -22,8 +22,8 @@
 
 
 #include <opm/core/eclipse/CornerpointChopper.hpp>
-#include <dune/upscaling/SinglePhaseUpscaler.hpp>
-#include <dune/porsol/common/setupBoundaryConditions.hpp>
+#include <opm/upscaling/SinglePhaseUpscaler.hpp>
+#include <opm/porsol/common/setupBoundaryConditions.hpp>
 #include <opm/core/utility/Units.hpp>
 
 #include <boost/random/mersenne_twister.hpp>
@@ -156,11 +156,11 @@ int main(int argc, char** argv)
             if (upscale) {
                 Opm::EclipseGridParser subparser = ch.subparser();
                 subparser.convertToSI();
-                Dune::SinglePhaseUpscaler upscaler;
-                upscaler.init(subparser, Dune::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
+                Opm::SinglePhaseUpscaler upscaler;
+                upscaler.init(subparser, Opm::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
                               residual_tolerance, linsolver_verbosity, linsolver_type, false);
                 
-                Dune::SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
+                Opm::SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
                 upscaled_K *= (1.0/(Opm::prefix::milli*Opm::unit::darcy));
                 
                 
