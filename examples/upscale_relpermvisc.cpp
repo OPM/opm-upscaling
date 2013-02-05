@@ -86,9 +86,9 @@
 #endif
 
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
-#include <dune/upscaling/SinglePhaseUpscaler.hpp>
+#include <opm/upscaling/SinglePhaseUpscaler.hpp>
 
-using namespace Dune;
+using namespace Opm;
 using namespace std;
 
 /**
@@ -864,7 +864,7 @@ int main(int varnum, char** vararg)
     // Loop through all cells. Add the cells porevolume to the corresponding rock type volume 
     // Also determine bounds for fractional flow ratio 
     const std::vector<int>& ecl_idx = upscaler.grid().globalCell();
-    CpGrid::Codim<0>::LeafIterator c = upscaler.grid().leafbegin<0>();
+    Dune::CpGrid::Codim<0>::LeafIterator c = upscaler.grid().leafbegin<0>();
     for (; c != upscaler.grid().leafend<0>(); ++c) {
         unsigned int cell_idx = ecl_idx[c->index()];
         if (satnums[cell_idx] > 0) { // Satnum zero is "no rock"

@@ -36,8 +36,8 @@
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 
 #include <opm/core/eclipse/CornerpointChopper.hpp>
-#include <dune/upscaling/SinglePhaseUpscaler.hpp>
-#include <dune/porsol/common/setupBoundaryConditions.hpp>
+#include <opm/upscaling/SinglePhaseUpscaler.hpp>
+#include <opm/porsol/common/setupBoundaryConditions.hpp>
 #include <opm/core/utility/Units.hpp>
 
 

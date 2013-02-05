@@ -13,7 +13,7 @@ AM_INIT_AUTOMAKE
 #
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-AC_CONFIG_SRCDIR([dune/upscaling/SinglePhaseUpscaler.hpp])
+AC_CONFIG_SRCDIR([opm/upscaling/SinglePhaseUpscaler.hpp])
 AM_CONFIG_HEADER([config.h])
 
 
@@ -36,10 +36,10 @@ AC_CONFIG_FILES([
   doc/Makefile
   doc/doxygen/Makefile
   doc/doxygen/Doxyfile
-  dune/Makefile
-  dune/upscaling/Makefile
-  dune/elasticity/Makefile
-  dune/upscaling/test/Makefile
+  opm/Makefile
+  opm/upscaling/Makefile
+  opm/elasticity/Makefile
+  opm/upscaling/test/Makefile
   opm-upscaling.pc
   examples/Makefile
 ])

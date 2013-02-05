@@ -39,8 +39,8 @@
 #include <opm/core/eclipse/CornerpointChopper.hpp>
 #include <opm/core/eclipse/EclipseGridParser.hpp>
 #include <opm/core/eclipse/EclipseGridInspector.hpp>
-#include <dune/upscaling/SinglePhaseUpscaler.hpp>
-#include <dune/porsol/common/setupBoundaryConditions.hpp>
+#include <opm/upscaling/SinglePhaseUpscaler.hpp>
+#include <opm/porsol/common/setupBoundaryConditions.hpp>
 #include <opm/core/utility/Units.hpp>
 
 #include <ios>
@@ -161,11 +161,11 @@ int main(int argc, char** argv)
 		try {
 		    Opm::EclipseGridParser subparser = ch.subparser();
                     subparser.convertToSI(); // Because the upscaler expects SI units.
-		    Dune::SinglePhaseUpscaler upscaler;
-		    upscaler.init(subparser, Dune::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
+		    Opm::SinglePhaseUpscaler upscaler;
+		    upscaler.init(subparser, Opm::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
 				  residual_tolerance, linsolver_verbosity, linsolver_type, false);
             
-		    Dune::SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
+		    Opm::SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
 		    upscaled_K *= (1.0/(Opm::prefix::milli*Opm::unit::darcy));
 		    poro.push_back(upscaler.upscalePorosity());
 		    permx.push_back(upscaled_K(0,0));

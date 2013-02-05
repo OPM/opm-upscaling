@@ -37,14 +37,14 @@
 
 
 //#define VERBOSE
-#include <dune/upscaling/SteadyStateUpscalerImplicit.hpp>
-#include <dune/upscaling/SteadyStateUpscalerManagerImplicit.hpp>
-#include <dune/porsol/euler/EulerUpstreamImplicit.hpp>
-#include <dune/porsol/common/SimulatorTraits.hpp>
+#include <opm/upscaling/SteadyStateUpscalerImplicit.hpp>
+#include <opm/upscaling/SteadyStateUpscalerManagerImplicit.hpp>
+#include <opm/porsol/euler/EulerUpstreamImplicit.hpp>
+#include <opm/porsol/common/SimulatorTraits.hpp>
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
-#include <dune/upscaling/SinglePhaseUpscaler.hpp>
+#include <opm/upscaling/SinglePhaseUpscaler.hpp>
 #include <sys/utsname.h>
-namespace Dune{
+namespace Opm{
 	template <class IsotropyPolicy>
     struct Implicit
     {
@@ -63,7 +63,7 @@ namespace Dune{
     };
 	typedef SimulatorTraits<Isotropic, Implicit> UpscalingTraitsBasicImplicit;
 }
-using namespace Dune;
+using namespace Opm;
 
 void usage()
 {
@@ -196,7 +196,7 @@ int main(int argc, char** argv)
     int linsolver_smooth_steps = param.getDefault("linsolver_smooth_steps", 2);
     double linsolver_prolongate_factor = param.getDefault("linsolver_prolongate_factor", 1.6);
     std::string bc=param.getDefault<std::string>("bc","fixed");
-    double gravity = param.getDefault("gravity", 0);
+    //double gravity = param.getDefault("gravity", 0);
     double surfaceTension = param.getDefault("surfaceTension", 11);
     int num_sats = param.getDefault("num_sats", 10);
     int num_pdrops = param.getDefault("num_pdrops", 10);
@@ -273,8 +273,8 @@ int main(int argc, char** argv)
                   << "the number of rock types in grid(" << num_rock_types_grid << ")." << std::endl;
         usageandexit();
     }
-    Dune::SinglePhaseUpscaler spupscaler; // needed to access porosities and cell volumes
-    spupscaler.init(eclparser, Dune::SinglePhaseUpscaler::Fixed,
+    Opm::SinglePhaseUpscaler spupscaler; // needed to access porosities and cell volumes
+    spupscaler.init(eclparser, Opm::SinglePhaseUpscaler::Fixed,
                     0.0,0.0, linsolver_tolerance, linsolver_verbosity, linsolver_type, false, linsolver_maxit,
                     linsolver_prolongate_factor, linsolver_smooth_steps);
     std::vector<double>  cellPoreVolumes; 
@@ -283,7 +283,7 @@ int main(int argc, char** argv)
     double sworvolume = 0.0;
     // cell_idx is the eclipse index.
     const std::vector<int>& ecl_idx = spupscaler.grid().globalCell();
-    CpGrid::Codim<0>::LeafIterator c = spupscaler.grid().leafbegin<0>();
+    Dune::CpGrid::Codim<0>::LeafIterator c = spupscaler.grid().leafbegin<0>();
     for (; c != spupscaler.grid().leafend<0>(); ++c) {
         unsigned int cell_idx = ecl_idx[c->index()];
         if (satnums[cell_idx] > 0) { // Satnum zero is "no rock"

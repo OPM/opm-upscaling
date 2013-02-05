@@ -54,7 +54,7 @@
 #include <ctime>
 #include <sys/utsname.h>
 
-#include <dune/upscaling/SinglePhaseUpscaler.hpp>
+#include <opm/upscaling/SinglePhaseUpscaler.hpp>
 #include <dune/common/mpihelper.hh>
 
 using namespace std;
@@ -177,7 +177,7 @@ int upscale(int varnum, char** vararg) {
     cout << endl;
     
     // Storage for upscaled results:
-    using Dune::SinglePhaseUpscaler;
+    using Opm::SinglePhaseUpscaler;
     typedef SinglePhaseUpscaler::permtensor_t Matrix;
     Matrix Kfixed, Klinear, Kperiodic;
    

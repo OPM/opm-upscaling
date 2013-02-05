@@ -13,6 +13,6 @@ AC_DEFUN([OPM_UPSCALING_CHECKS])
 # not by opm-upscaling itself
 AC_DEFUN([OPM_UPSCALING_CHECK_MODULE],
 [
-  DUNE_CHECK_MODULES([opm-upscaling],
-                     [upscaling/SinglePhaseUpscaler.hpp])
+  OPM_PORSOL_CHECK_MODULES([opm-upscaling],
+                     [opm/upscaling/SinglePhaseUpscaler.hpp])
 ])
