@@ -1434,7 +1434,7 @@ namespace Opm {
 #endif
 
 #if SMOOTHER_BGS
-      typedef SeqOverlappingSchwarz<Matrix,Vector,Dune::MultiplicativeSchwarzMode> Smoother;
+      typedef Dune::SeqOverlappingSchwarz<Matrix,Vector,Dune::MultiplicativeSchwarzMode> Smoother;
 #else
 #if SMOOTHER_ILU
         typedef Dune::SeqILU0<Matrix,Vector,Vector>        Smoother;
