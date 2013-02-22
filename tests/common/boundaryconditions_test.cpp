@@ -44,7 +44,7 @@
 #define BOOST_TEST_MODULE BoundaryConditionsTest
 #include <boost/test/unit_test.hpp>
 
-#include "../BoundaryConditions.hpp"
+#include <opm/porsol/common/BoundaryConditions.hpp>
 
 using namespace Opm;
 

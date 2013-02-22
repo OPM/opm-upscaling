@@ -29,7 +29,7 @@
 #define BOOST_TEST_MODULE UniformTableLinearTests
 #include <boost/test/unit_test.hpp>
 
-#include "../UniformTableLinear.hpp"
+#include <opm/porsol/common/UniformTableLinear.hpp>
 
 
 

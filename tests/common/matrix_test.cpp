@@ -30,7 +30,7 @@
 #define BOOST_TEST_MODULE MatrixTests
 #include <boost/test/unit_test.hpp>
 
-#include "../Matrix.hpp"
+#include <opm/porsol/common/Matrix.hpp>
 
 
 

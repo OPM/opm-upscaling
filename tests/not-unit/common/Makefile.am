@@ -1,7 +1,7 @@
 # $Date$
 # $Revision$
 
-check_PROGRAMS = matrix_test boundaryconditions_test nonuniformtablelinear_test uniformtablelinear_test
+check_PROGRAMS =
 noinst_PROGRAMS = \
         gie_test \
         periodic_test \
@@ -15,14 +15,6 @@ LDADD = $(DUNE_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB)   \
 	$(SUPERLU_LIBS) $(DUNEMPILIBS)
 
 # Additional quirks for individual programs
-matrix_test_SOURCES = matrix_test.cpp
-
-boundaryconditions_test_SOURCES = boundaryconditions_test.cpp
-
-nonuniformtablelinear_test_SOURCES = nonuniformtablelinear_test.cpp
-
-uniformtablelinear_test_SOURCES = uniformtablelinear_test.cpp
-
 periodic_test_SOURCES = periodic_test.cpp
 
 gie_test_SOURCES = gie_test.cpp

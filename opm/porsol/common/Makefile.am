@@ -1,7 +1,7 @@
 # $Date$
 # $Revision$
 
-SUBDIRS = test
+SUBDIRS =
 
 commondir = $(includedir)/dune/porsol/common
 common_HEADERS = blas_lapack.hpp BoundaryConditions.hpp fortran.hpp \

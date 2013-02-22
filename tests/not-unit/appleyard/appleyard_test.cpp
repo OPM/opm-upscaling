@@ -22,7 +22,7 @@
 #include <opm/core/utility/have_boost_redef.hpp>
 
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
-#include <Appleyard.hpp>
+#include <opm/porsol/appleyard/Appleyard.hpp>
 
 using namespace Opm;
 

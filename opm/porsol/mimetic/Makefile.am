@@ -1,7 +1,7 @@
 # $Date$
 # $Revision$
 
-SUBDIRS = test
+SUBDIRS =
 
 mimeticdir = $(includedir)/dune/solvers/mimetic
 mimetic_HEADERS = IncompFlowSolverHybrid.hpp MimeticIPEvaluator.hpp

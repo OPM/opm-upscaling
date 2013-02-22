@@ -1,7 +1,7 @@
 # $Date$
 # $Revision$
 
-SUBDIRS = test
+SUBDIRS =
 
 eulerdir = $(includedir)/dune/solvers/euler
 euler_HEADERS = CflCalculator.hpp EulerUpstream.hpp \
