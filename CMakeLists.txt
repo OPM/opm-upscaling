@@ -2,17 +2,19 @@
 # vim: set filetype=cmake autoindent tabstop=2 shiftwidth=2 noexpandtab softtabstop=2 nowrap:
 
 # key information about the library
-set (project "opm-core")
+set (project "opm-upscaling")
 set (${project}_NAME "${project}")
-set (${project}_DESCRIPTION "Open Porous Media Initiative Core Library")
+set (${project}_DESCRIPTION "DUNE module containing single-phase and steady-state upscaling methods")
 set (${project}_DIR "opm")
 set (${project}_VERSION_MAJOR 1)
 set (${project}_VERSION_MINOR 0)
-set (doxy_dir "Documentation")
+set (doxy_dir "doc/doxygen")
 
 # defines that must be present in config.h for our headers
 set (${project}_CONFIG_VAR
 	HAVE_DYNAMIC_BOOST_TEST
+	HAVE_LAPACK
+	HAVE_SUPERLU
 	)
 
 # dependencies
@@ -30,7 +32,12 @@ set (${project}_DEPS
 	# solver
 	"SUPERLU"
 	# DUNE dependency
-	"dune-istl"
+	"dune-common REQUIRED;
+	dune-istl REQUIRED;
+	dune-grid REQUIRED;
+	opm-core REQUIRED;
+	dune-cornerpoint REQUIRED;
+	opm-porsol REQUIRED"
 	)
 
 # C++ project
@@ -128,7 +135,7 @@ configure_vars (
 include (UseFortranWrappers)
 define_fc_func (
 	APPEND ${CONFIG_H}
-	IF HAVE_AGMG # HAVE_BLAS HAVE_LAPACK
+	IF HAVE_LAPACK
 	)
 
 # compile main library; pull in all required includes and libraries
