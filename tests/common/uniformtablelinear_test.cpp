@@ -28,8 +28,7 @@
 
 #define BOOST_TEST_MODULE UniformTableLinearTests
 #include <boost/test/unit_test.hpp>
-
-#include <opm/porsol/common/UniformTableLinear.hpp>
+#include <opm/core/utility/UniformTableLinear.hpp>
 
 
 
@@ -42,9 +41,9 @@ BOOST_AUTO_TEST_CASE(table_operations)
     const double xmin = 1.0;
     const double xdelta = 2.5;
     const double xmax = xmin + (numvals - 1)*xdelta;
-    Dune::utils::UniformTableLinear<double> t1(xmin, xmax, yv);
-    Dune::utils::UniformTableLinear<double> t1_copy1(1.0, 11.0, yv);
-    Dune::utils::UniformTableLinear<double> t1_copy2(t1);
+    Opm::utils::UniformTableLinear<double> t1(xmin, xmax, yv);
+    Opm::utils::UniformTableLinear<double> t1_copy1(1.0, 11.0, yv);
+    Opm::utils::UniformTableLinear<double> t1_copy2(t1);
 
     // Check equality.
     BOOST_CHECK(t1 == t1_copy1);

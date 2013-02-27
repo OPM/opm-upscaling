@@ -45,13 +45,13 @@
 #define BOOST_TEST_MODULE NonuniformTableLinearTests
 #include <boost/test/unit_test.hpp>
 
-#include <opm/porsol/common/NonuniformTableLinear.hpp>
+#include <opm/core/utility/NonuniformTableLinear.hpp>
 
 
 BOOST_AUTO_TEST_CASE(utility_functions)
 {
     // Test isNondecreasing().
-    using Dune::utils::isNondecreasing;
+    using Opm::isNondecreasing;
     double xva1[] = { -1.0, 2.0, 2.2, 3.0, 5.0 };
     const int numvals1 = sizeof(xva1)/sizeof(xva1[0]);
     BOOST_CHECK(isNondecreasing(xva1, xva1 + numvals1));
@@ -71,9 +71,9 @@ BOOST_AUTO_TEST_CASE(table_operations)
     std::vector<double> xv(xva, xva + numvals);
     double yva[numvals] = { 1.0, 2.0, 3.0, 4.0, 2.0 };
     std::vector<double> yv(yva, yva + numvals);
-    Dune::utils::NonuniformTableLinear<double> t1(xv, yv);
-    Dune::utils::NonuniformTableLinear<double> t1_copy1(xv, yv);
-    Dune::utils::NonuniformTableLinear<double> t1_copy2(t1);
+    Opm::NonuniformTableLinear<double> t1(xv, yv);
+    Opm::NonuniformTableLinear<double> t1_copy1(xv, yv);
+    Opm::NonuniformTableLinear<double> t1_copy2(t1);
 
     // Check equality.
     BOOST_CHECK(t1 == t1_copy1);
