@@ -7,18 +7,18 @@ cpchop						\
 cpchop_depthtrend				\
 cpregularize					\
 exp_variogram					\
-grdecldips                   			\
+grdecldips					\
 upscale_avg					\
 upscale_cap					\
 upscale_cond					\
 upscale_elasticity				\
 upscale_perm					\
-upscale_relperm_ssor                            \
-upscale_relperm_bgs                             \
-upscale_relperm_aniso                           \
-upscale_relperm_aniso_ssor                      \
+upscale_relperm_ssor				\
+upscale_relperm_bgs				\
+upscale_relperm_aniso				\
+upscale_relperm_aniso_ssor			\
 upscale_relperm					\
-upscale_relpermvisc                             \
+upscale_relpermvisc				\
 upscale_steadystate_implicit
 
 
@@ -40,8 +40,8 @@ upscale_cond_SOURCES = upscale_cond.cpp
 
 upscale_elasticity_SOURCES = upscale_elasticity.cpp
 upscale_elasticity_CXXFLAGS = ${OPENMP_CXXFLAGS}
-upscale_elasticity_LDADD = \
-$(top_srcdir)/opm/elasticity/libelasticityupscale.la \
+upscale_elasticity_LDADD =				\
+$(top_builddir)/opm/elasticity/libelasticityupscale.la	\
 $(LDADD)
 
 upscale_perm_SOURCES = upscale_perm.cpp
@@ -66,9 +66,11 @@ upscale_steadystate_implicit_SOURCES = upscale_steadystate_implicit.cpp
 
 AM_CPPFLAGS += $(DUNEMPICPPFLAGS) $(BOOST_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 AM_LDFLAGS  += $(DUNEMPILDFLAGS) $(BOOST_LDFLAGS) $(SUPERLU_LDFLAGS)
-LDADD = $(DUNEMPILIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) \
-        $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)   \
-        $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) $(SUPERLU_LIBS)
+
+LDADD =							\
+$(DUNEMPILIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB)		\
+$(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)		\
+$(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) $(SUPERLU_LIBS)
 
 
 TESTS = $(check_PROGRAMS)
