@@ -108,17 +108,9 @@ opm_auto_dirs ()
 # put libraries in lib/
 opm_out_dirs ()
 
-# identify the compilation units in the library
+# identify the compilation units in the library; sources in opm/,
+# examples in examples/
 opm_sources (${project})
-
-# enumerate all testing programs in test/ directory
-opm_find_tests ()
-
-# tutorial programs are found in the tutorials/ directory
-opm_find_tutorials ()
-
-# example programs are found in the examples/ directory
-opm_find_examples ()
 
 # create configuration header which describes available features
 # necessary to compile this library. singular version is the names that
@@ -126,7 +118,10 @@ opm_find_examples ()
 # includes the necessary defines by the dependencies
 include (ConfigVars)
 list (APPEND ${project}_CONFIG_VARS ${${project}_CONFIG_VAR})
-set (CONFIG_H "${PROJECT_BINARY_DIR}/config.h")
+
+# write configuration variables to this file. note that it is a temporary.
+message (STATUS "Writing config file \"${PROJECT_BINARY_DIR}/config.h\"...")
+set (CONFIG_H "${PROJECT_BINARY_DIR}/config.h.tmp")
 configure_vars (
 	FILE  CXX  ${CONFIG_H}
 	WRITE ${${project}_CONFIG_VARS}
@@ -136,6 +131,13 @@ include (UseFortranWrappers)
 define_fc_func (
 	APPEND ${CONFIG_H}
 	IF HAVE_LAPACK
+	)
+
+# overwrite the config.h that is used by the code only if we have some
+# real changes. thus, we don't have to recompile if a reconfigure is run
+# due to some files being added, for instance
+execute_process (COMMAND
+	${CMAKE_COMMAND} -E copy_if_different ${CONFIG_H} ${PROJECT_BINARY_DIR}/config.h
 	)
 
 # compile main library; pull in all required includes and libraries
@@ -155,8 +157,7 @@ opm_cmake_config (${project})
 # routines to build satellites such as tests, tutorials and samples
 include (OpmSatellites)
 
-# tutorial programs are found in the tutorials/ directory
-opm_compile_satellites (${project} tutorial "" "")
+# example programs are found in the examples/ directory
 opm_compile_satellites (${project} examples "" "")
 
 # infrastructure for testing
@@ -164,7 +165,7 @@ enable_testing ()
 include (CTest)
 
 # make datafiles necessary for tests available in output directory
-opm_data (tests datafiles "${tests_DIR}" "*.xml")
+opm_data (tests datafiles "${tests_DIR}")
 opm_compile_satellites (${project} tests "" "${tests_REGEXP}")
 
 # use this target to run all tests
@@ -188,9 +189,3 @@ configure_la (${project} ${${project}_TARGET} ${project}_LIBTOOL_ARCHIVE)
 ### clean in-source builds ###
 include (OpmDistClean)
 opm_dist_clean (${project})
-
-# smart wrapper that auto-parallelizes builds
-file (COPY
-	GNUmakefile
-	DESTINATION ${PROJECT_BINARY_DIR}
-	)
