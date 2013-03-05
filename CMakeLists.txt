@@ -108,17 +108,9 @@ opm_auto_dirs ()
 # put libraries in lib/
 opm_out_dirs ()
 
-# identify the compilation units in the library
+# identify the compilation units in the library; sources in opm/,
+# examples in examples/
 opm_sources (${project})
-
-# enumerate all testing programs in test/ directory
-opm_find_tests ()
-
-# tutorial programs are found in the tutorials/ directory
-opm_find_tutorials ()
-
-# example programs are found in the examples/ directory
-opm_find_examples ()
 
 # create configuration header which describes available features
 # necessary to compile this library. singular version is the names that
@@ -155,8 +147,7 @@ opm_cmake_config (${project})
 # routines to build satellites such as tests, tutorials and samples
 include (OpmSatellites)
 
-# tutorial programs are found in the tutorials/ directory
-opm_compile_satellites (${project} tutorial "" "")
+# example programs are found in the examples/ directory
 opm_compile_satellites (${project} examples "" "")
 
 # infrastructure for testing
@@ -164,7 +155,7 @@ enable_testing ()
 include (CTest)
 
 # make datafiles necessary for tests available in output directory
-opm_data (tests datafiles "${tests_DIR}" "*.xml")
+opm_data (tests datafiles "${tests_DIR}")
 opm_compile_satellites (${project} tests "" "${tests_REGEXP}")
 
 # use this target to run all tests
