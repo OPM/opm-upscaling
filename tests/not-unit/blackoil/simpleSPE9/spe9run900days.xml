@@ -1,0 +1,51 @@
+<?xml version = '1.0' encoding = 'ISO-8859-1'?>
+
+<ParameterGroup name="root">
+  <Parameter name="fileformat" type="string" value="eclipse"/>
+  <Parameter name="nx" type="int" value="24"/>
+  <Parameter name="ny" type="int" value="1"/>
+  <Parameter name="nz" type="int" value="15"/>
+  <Parameter name="filename" type="file" value="SPE9small.DATA"/>
+
+  <Parameter name="spe9_init" type="bool" value="true"/>
+  <Parameter name="zero_depth" type="double" value="0.0"/>
+  <Parameter name="datum_depth" type="double" value="2753.87"/>
+  <Parameter name="datum_pressure" type="double" value="248.22"/>
+  <Parameter name="wo_contact_depth" type="double" value="3032.76"/>
+  <Parameter name="go_contact_depth" type="double" value="2682.24"/>
+  <Parameter name="initial_mixture_gas" type="double" value="247.43"/>
+  <Parameter name="initial_mixture_oil" type="double" value="1.0"/>
+  <Parameter name="connate_water_saturation" type="double" value="0.151090"/>
+
+  <Parameter name="gravity" type="string" value="standard"/>
+
+  <Parameter name="max_num_iter" type="int" value="100"/>
+  <Parameter name="relax_weight_pressure_iteration" type="double" value="0.9"/>
+  <Parameter name="max_relative_voldiscr" type="double" value="0.01"/>
+  <Parameter name="experimental_jacobian" type="bool" value="true"/> 
+  <Parameter name="press_rel_tol" type="double" value="5e-4"/>
+  <Parameter name="flux_rel_tol" type="double" value="1e-8"/>
+  <Parameter name="relax_time_voldiscr" type="double" value="0.0"/>
+
+  <Parameter name="single_step_only" type="bool" value="false"/>
+  <Parameter name="min_surfvol_threshold" type="double" value="1e-8"/>
+  <Parameter name="min_vtime" type="double" value="0.0"/>
+
+  <Parameter name="total_time" type="double" value="77760000.0"/>
+  <Parameter name="minimum_stepsize" type="double" value="1000.0"/>
+  <Parameter name="initial_stepsize" type="double" value="8640.0"/>
+  <Parameter name="increase_stepsize" type="bool" value="true"/>
+  <Parameter name="stepsize_increase_factor" type="double" value="1.5"/>
+  <Parameter name="maximum_stepsize" type="double" value="86400.0"/>
+  <Parameter name="do_impes" type="bool" value="false"/>
+
+  <Parameter name="output_dir" type="string" value="spe9_output"/>
+
+  <Parameter name="linsolver_save_system" type="bool" value="false"/>
+  <Parameter name="linsolver_verbosity" type="int" value="0"/>
+  <Parameter name="linsolver_type" type="int" value="1"/>
+  <Parameter name="linsolver_max_iterations" type="int" value="50"/>
+  
+
+
+</ParameterGroup>
