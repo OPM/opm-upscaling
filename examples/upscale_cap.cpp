@@ -235,7 +235,6 @@ int main(int varnum, char** vararg)
    const double maxPermContrast = atof(options["maxPermContrast"].c_str());
    const double minPerm = atof(options["minPerm"].c_str());
    const double minPoro = atof(options["minPoro"].c_str());
-   bool zerosatnumcells = false; // This is set true if there are some cells with rocktype zero.
 
    /* Sanity check/fix on input for each cell:
       - Check that SATNUM are set sensibly, that is => 0 and < 1000, error if not.
@@ -269,7 +268,6 @@ int main(int varnum, char** vararg)
        }
        // Explicitly handle "no rock" cells, set them to minimum perm and zero porosity.
        if (satnums[i] == 0) {
-           zerosatnumcells = true;
            permxs[i] = minPerm;
            poros[i] = 0; // zero poro is fine for these cells, as they are not 
                          // used in pcmin/max computation.
