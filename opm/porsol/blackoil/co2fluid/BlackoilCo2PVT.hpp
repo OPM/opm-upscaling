@@ -23,7 +23,7 @@
 #define OPM_DEPRECATED __attribute__((deprecated))
 #define OPM_DEPRECATED_MSG(msg) __attribute__((deprecated))
 
-#include <opm/core/eclipse/EclipseGridParser.hpp>
+#include <opm/core/io/eclipse/EclipseGridParser.hpp>
 
 #include <opm/porsol/blackoil/co2fluid/opm/common/exceptions.hh>
 #include <opm/porsol/blackoil/co2fluid/opm/material/fluidsystems/brine_co2_system.hh>

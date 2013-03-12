@@ -21,7 +21,7 @@
 #define OPM_BLACKOILWELLS_HEADER_INCLUDED
 
 #include <opm/porsol/blackoil/fluid/BlackoilDefs.hpp>
-#include <opm/core/eclipse/EclipseGridParser.hpp>
+#include <opm/core/io/eclipse/EclipseGridParser.hpp>
 #include <dune/grid/CpGrid.hpp>
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/utility/SparseTable.hpp>

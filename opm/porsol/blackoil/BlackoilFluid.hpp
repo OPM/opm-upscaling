@@ -23,7 +23,7 @@
 
 #include <opm/porsol/blackoil/fluid/FluidMatrixInteractionBlackoil.hpp>
 #include <opm/porsol/blackoil/fluid/FluidStateBlackoil.hpp>
-#include <opm/core/eclipse/EclipseGridParser.hpp>
+#include <opm/core/io/eclipse/EclipseGridParser.hpp>
 #include <dune/common/fvector.hh>
 #include <vector>
 

@@ -23,7 +23,7 @@
 
 #include "MiscibilityProps.hpp"
 #include "BlackoilDefs.hpp"
-#include <opm/core/eclipse/EclipseGridParser.hpp>
+#include <opm/core/io/eclipse/EclipseGridParser.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <string>
 

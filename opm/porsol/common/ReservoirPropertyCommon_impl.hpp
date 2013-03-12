@@ -40,7 +40,7 @@
 #include <fstream>
 #include <boost/static_assert.hpp>
 #include <boost/array.hpp>
-#include <opm/core/eclipse/EclipseGridInspector.hpp>
+#include <opm/core/io/eclipse/EclipseGridInspector.hpp>
 
 namespace Opm
 {

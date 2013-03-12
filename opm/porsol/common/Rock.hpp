@@ -21,7 +21,7 @@
 #ifndef OPM_ROCK_HEADER_INCLUDED
 #define OPM_ROCK_HEADER_INCLUDED
 
-#include <opm/core/eclipse/EclipseGridParser.hpp>
+#include <opm/core/io/eclipse/EclipseGridParser.hpp>
 #include <opm/porsol/common/Matrix.hpp>
 
 #include <opm/porsol/common/ReservoirPropertyCommon.hpp>

@@ -20,7 +20,7 @@
 #ifndef OPM_FLUIDMATRIXINTERACTIONBLACKOIL_HEADER_INCLUDED
 #define OPM_FLUIDMATRIXINTERACTIONBLACKOIL_HEADER_INCLUDED
 
-#include <opm/core/eclipse/EclipseGridParser.hpp>
+#include <opm/core/io/eclipse/EclipseGridParser.hpp>
 #include <opm/core/utility/UniformTableLinear.hpp>
 #include <opm/core/utility/buildUniformMonotoneTable.hpp>
 #include "BlackoilDefs.hpp"
