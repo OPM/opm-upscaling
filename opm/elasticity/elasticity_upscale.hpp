@@ -13,7 +13,7 @@
 #define ELASTICITY_UPSCALE_HPP_
 
 #include <dune/common/fmatrix.hh>
-#include <opm/core/eclipse/EclipseGridParser.hpp>
+#include <opm/core/io/eclipse/EclipseGridParser.hpp>
 #include <dune/grid/common/mcmgmapper.hh>
 #include <dune/geometry/quadraturerules.hh>
 #include <dune/istl/ilu.hh>
