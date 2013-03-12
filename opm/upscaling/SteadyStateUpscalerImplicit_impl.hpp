@@ -43,7 +43,7 @@
 #include <opm/porsol/common/ReservoirPropertyFixedMobility.hpp>
 #include <opm/porsol/euler/MatchSaturatedVolumeFunctor.hpp>
 #include <opm/core/utility/Units.hpp>
-#include <opm/core/utility/writeECLData.hpp>
+#include <opm/core/io/eclipse/writeECLData.hpp>
 #include <opm/core/utility/miscUtilities.hpp>
 #include <algorithm>
 
