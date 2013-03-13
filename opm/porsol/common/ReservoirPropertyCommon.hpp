@@ -37,7 +37,7 @@
 #define OPENRS_RESERVOIRPROPERTYCOMMON_HEADER
 
 #include <opm/core/utility/Units.hpp>
-#include <opm/core/eclipse/EclipseGridParser.hpp>
+#include <opm/core/io/eclipse/EclipseGridParser.hpp>
 #include <opm/porsol/common/Matrix.hpp>
 
 namespace Opm
