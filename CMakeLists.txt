@@ -34,6 +34,7 @@ set (${project}_DEPS
 	# DUNE dependency
 	"dune-common REQUIRED;
 	dune-istl REQUIRED;
+	dune-geometry REQUIRED;
 	dune-grid REQUIRED;
 	opm-core REQUIRED;
 	dune-cornerpoint REQUIRED;
