@@ -30,7 +30,7 @@ set (${project}_DEPS
 	"BLAS REQUIRED"
 	"LAPACK REQUIRED"
 	# solver
-	"SUPERLU"
+	"SuperLU"
 	# DUNE dependency
 	"dune-common REQUIRED;
 	dune-istl REQUIRED;
