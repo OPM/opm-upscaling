@@ -30,7 +30,7 @@ set (${project}_DEPS
 	"BLAS REQUIRED"
 	"LAPACK REQUIRED"
 	# solver
-	"SUPERLU"
+	"SuperLU"
 	# DUNE dependency
 	"dune-common REQUIRED;
 	dune-istl REQUIRED;
@@ -50,6 +50,17 @@ enable_language (CXX)
 set (${project}_MODULE_DIR "${PROJECT_SOURCE_DIR}/cmake/Modules")
 list (APPEND CMAKE_MODULE_PATH ${${project}_MODULE_DIR})
 
+# include special
+if (CMAKE_VERSION VERSION_LESS "2.8.5")
+	message (STATUS "Enabling compatibility modules for CMake 2.8.5")
+	list (APPEND CMAKE_MODULE_PATH "${${project}_MODULE_DIR}/compat-2.8.5")	
+endif (CMAKE_VERSION VERSION_LESS "2.8.5")	
+
+if (CMAKE_VERSION VERSION_LESS "2.8.7")
+	message (STATUS "Enabling compatibility modules for CMake 2.8.7")
+	list (APPEND CMAKE_MODULE_PATH "${${project}_MODULE_DIR}/compat-2.8.7")
+endif (CMAKE_VERSION VERSION_LESS "2.8.7")
+
 # print system information to better pinpoint issues from log alone
 include (UseSystemInfo)
 system_info ()
@@ -61,12 +72,6 @@ vcs_info ()
 # print toolchain information to identify compilers with potential bugs
 include (UseCompVer)
 compiler_info ()
-
-# include special
-if (CMAKE_VERSION VERSION_LESS "2.8.7")
-	message (STATUS "Enabling backward compatibility modules for CMake ${CMAKE_VERSION}")
-	list (APPEND CMAKE_MODULE_PATH "${${project}_MODULE_DIR}/compat-2.8.7")
-endif (CMAKE_VERSION VERSION_LESS "2.8.7")
 
 # default settings: build static debug library
 include (OpmDefaults)
@@ -85,6 +90,12 @@ include (UseOptimization)
 # turn on all warnings; this must be done before adding any
 # dependencies, in case they alter the list of warnings
 include (UseWarnings)
+
+# parallel computing must be explicitly enabled
+option (USE_MPI "Use Message Passing Interface for parallel computing" OFF)
+if (NOT USE_MPI)
+	set (CMAKE_DISABLE_FIND_PACKAGE_MPI TRUE)
+endif (NOT USE_MPI) 
 
 # macro to set standard variables (INCLUDE_DIRS, LIBRARIES etc.)
 include (OpmFind)
