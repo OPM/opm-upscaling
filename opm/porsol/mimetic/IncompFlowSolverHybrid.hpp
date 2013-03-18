@@ -640,8 +640,14 @@ namespace Opm {
         ///    Gauss-Seidel smoothing
         ///
         /// @param [in] linsolver_maxit maximum iterations allowed
+        ///
         /// @param [in] prolongate_factor Factor to scale the prolongated coarse 
         ///    coarse grid correction
+        ///
+        /// @param [in] smooth_steps Number of smoothing steps to be
+        ///             used for pre and post smoothing in AMG
+        ///
+        /// @param [in] same_matrix Whether the matrix is the same as in the previous solve.
         ///
         template<class FluidInterface>
         void solve(const FluidInterface&      r  ,
