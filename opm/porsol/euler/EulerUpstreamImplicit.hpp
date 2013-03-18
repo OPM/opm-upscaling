@@ -44,13 +44,12 @@ along with OpenRS.  If not, see <http://www.gnu.org/licenses/>.
 #include <opm/porsol/common/ImplicitTransportDefs.hpp>
 #include <opm/porsol/common/BCRSMatrixBlockAssembler.hpp>
 
-#include <opm/core/GridAdapter.hpp>
+#include <dune/grid/common/GridAdapter.hpp>
 
-#include <opm/core/transport/ImplicitAssembly.hpp>
-#include <opm/core/transport/ImplicitTransport.hpp>
-#include <opm/core/transport/JacobianSystem.hpp>
-#include <opm/core/transport/SimpleFluid2pWrapper.hpp>
-#include <opm/core/transport/SinglePointUpwindTwoPhase.hpp>
+#include <opm/core/transport/implicit/ImplicitAssembly.hpp>
+#include <opm/core/transport/implicit/ImplicitTransport.hpp>
+#include <opm/core/transport/implicit/JacobianSystem.hpp>
+#include <opm/core/transport/implicit/SinglePointUpwindTwoPhase.hpp>
 
 
 namespace Opm {

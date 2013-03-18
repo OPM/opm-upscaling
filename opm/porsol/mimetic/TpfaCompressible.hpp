@@ -21,7 +21,7 @@
 #define OPM_TPFACOMPRESSIBLE_HEADER_INCLUDED
 
 
-#include <opm/core/pressure/TPFACompressiblePressureSolver.hpp>
+#include <opm/porsol/mimetic/TpfaCompressibleAssembler.hpp>
 #include <opm/porsol/blackoil/BlackoilFluid.hpp>
 
 #include <opm/core/utility/ErrorMacros.hpp>
@@ -42,7 +42,7 @@ namespace Opm
     class TpfaCompressible
     {
     public:
-        typedef TPFACompressiblePressureSolver PressureSolver;
+        typedef TpfaCompressibleAssembler PressureAssembler;
 
         /// @brief
         ///    Default constructor. Does nothing.
@@ -158,24 +158,24 @@ namespace Opm
             // Build bctypes_ and bcvalues_.
             int num_faces = grid.numFaces();
             bctypes_.clear();
-            bctypes_.resize(num_faces, PressureSolver::FBC_UNSET);
+            bctypes_.resize(num_faces, PressureAssembler::FBC_UNSET);
             bcvalues_.clear();
             bcvalues_.resize(num_faces, 0.0);
             for (int face = 0; face < num_faces; ++face) {
                 int bid = pgrid_->boundaryId(face);
                 if (bid == 0) {
-                    bctypes_[face] = PressureSolver::FBC_UNSET;
+                    bctypes_[face] = PressureAssembler::FBC_UNSET;
                     continue;
                 }
                 FlowBC face_bc = bc.flowCond(bid);
                 if (face_bc.isDirichlet()) {
-                    bctypes_[face] = PressureSolver::FBC_PRESSURE;
+                    bctypes_[face] = PressureAssembler::FBC_PRESSURE;
                     bcvalues_[face] = face_bc.pressure();
                     if (face_bc.pressure() < 0.0) {
                        bcvalues_[face] = (*face_pressure)[face][FluidInterface::Liquid];
                     }
                 } else if (face_bc.isNeumann()) {
-                    bctypes_[face] = PressureSolver::FBC_FLUX;
+                    bctypes_[face] = PressureAssembler::FBC_FLUX;
                     bcvalues_[face] = face_bc.outflux(); // TODO: may have to switch sign here depending on orientation.
                     if (bcvalues_[face] != 0.0) {
                         THROW("Nonzero Neumann conditions not yet properly implemented "
@@ -374,9 +374,9 @@ namespace Opm
         // typename FluidInterface::FluidData fp_;
         Opm::AllFluidData fp_;
         std::vector<double> poro_;
-        PressureSolver psolver_;
+        PressureAssembler psolver_;
         LinearSolverISTL linsolver_;
-        std::vector<PressureSolver::FlowBCTypes> bctypes_;
+        std::vector<PressureAssembler::FlowBCTypes> bctypes_;
         std::vector<double> bcvalues_;
 
         typename FluidInterface::CompVec inflow_mixture_;
@@ -477,7 +477,7 @@ namespace Opm
 
 
         // Compute res = Ax - b.
-        void computeLinearResidual(const PressureSolver::LinearSystem& s, std::vector<double>& res)
+        void computeLinearResidual(const PressureAssembler::LinearSystem& s, std::vector<double>& res)
         {
             res.resize(s.n);
             for (int row = 0; row < s.n; ++row) {
@@ -497,7 +497,7 @@ namespace Opm
                                      const std::vector<double>& well_bhp,
                                      const std::vector<double>& src,
                                      const double dt,
-                                     PressureSolver::LinearSystem& linsys,
+                                     PressureAssembler::LinearSystem& linsys,
                                      std::vector<double>& res)
         {
             std::vector<double> zero(initial_voldiscr.size(), 0.0);
@@ -730,7 +730,7 @@ namespace Opm
 
                 if (experimental_jacobian_) {
                     // Compute residual and jacobian.
-                    PressureSolver::LinearSystem s;
+                    PressureAssembler::LinearSystem s;
                     std::vector<double> residual;
                     computeResidualJacobian(voldiscr_initial, state.cell_pressure, cell_pressure_initial,
                                             state.well_bhp_pressure, src, dt, s, residual);
@@ -779,7 +779,7 @@ namespace Opm
                                       &fp_.face_data.gravity_potential[0][0],
                                       &perf_gpot_[0],
                                       &(pfluid_->surfaceDensities()[0]));
-                    PressureSolver::LinearSystem s;
+                    PressureAssembler::LinearSystem s;
                     psolver_.linearSystem(s);
                     // Solve system.
                     LinearSolverISTL::LinearSolverResults res = linsolver_.solve(s.n, s.nnz, s.ia, s.ja, s.sa, s.b, s.x);
@@ -863,7 +863,7 @@ namespace Opm
                 }
 
                 // Compute residual and jacobian.
-                PressureSolver::LinearSystem s;
+                PressureAssembler::LinearSystem s;
                 std::vector<double> residual;
                 computeResidualJacobian(voldiscr_initial, state.cell_pressure, cell_pressure_initial,
                                         state.well_bhp_pressure, src, dt, s, residual);
