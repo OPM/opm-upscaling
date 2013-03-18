@@ -636,7 +636,8 @@ namespace Opm {
         /// @param [in] linsolver_type
         ///    Control parameter for iterative linear solver software.
         ///    Type 0 selects a ILU0/CG solver, type 1 selects AMG/CG,
-        ///    type 2 selects KAMG/CG.
+        ///    type 2 selects KAMG/CG, type 3 selects AMG/CG with fast
+        ///    Gauss-Seidel smoothing
         ///
         /// @param [in] linsolver_maxit maximum iterations allowed
         /// @param [in] prolongate_factor Factor to scale the prolongated coarse 
@@ -671,6 +672,16 @@ namespace Opm {
             case 2: // KAMG preconditioned CG
                 solveLinearSystemKAMG(residual_tolerance, linsolver_verbosity, 
 				      linsolver_maxit, prolongate_factor, same_matrix,smooth_steps);
+                break;
+            case 3: // CG preconditioned with AMG that uses less memory badwidth
+#ifdef HAS_DUNE_FAST_AMG
+                solveLinearSystemFastAMG(residual_tolerance, linsolver_verbosity, 
+                             linsolver_maxit, prolongate_factor, same_matrix,smooth_steps);
+#else
+                #warning "Fast AMG is not available; falling back to CG preconditioned with the normal one"
+                solveLinearSystemAMG(residual_tolerance, linsolver_verbosity, 
+				     linsolver_maxit, prolongate_factor, same_matrix, smooth_steps);
+#endif
                 break;
             default:
                 std::cerr << "Unknown linsolver_type: " << linsolver_type << '\n';
@@ -1514,6 +1525,73 @@ namespace Opm {
 
         }
 
+#ifdef HAS_DUNE_FAST_AMG
+
+        // ----------------------------------------------------------------
+        void solveLinearSystemFastAMG(double residual_tolerance, int verbosity_level,
+                                  int maxit, double prolong_factor, bool same_matrix, int smooth_steps)
+        // ----------------------------------------------------------------
+        {
+            typedef Dune::Amg::FastAMG<Operator,Vector> Precond;
+
+            // Adapted from upscaling.cc by Arne Rekdal, 2009
+            Scalar residTol = residual_tolerance;
+
+            if (!same_matrix) {
+                // Regularize the matrix (only for pure Neumann problems...)
+                if (do_regularization_) {
+                    S_[0][0] *= 2;
+                }
+                opS_.reset(new Operator(S_));
+		
+                // Construct preconditioner.
+                typedef Dune::Amg::AggregationCriterion<Dune::Amg::SymmetricMatrixDependency<Matrix,CouplingMetric> > CriterionBase;
+#if !SYMMETRIC
+#warn "Only symmetric matrices are supported currently. Computing anyway..."
+#endif
+
+                typedef Dune::Amg::CoarsenCriterion<CriterionBase> Criterion;
+                Criterion criterion;
+                criterion.setDebugLevel(verbosity_level);
+#if ANISOTROPIC_3D
+                criterion.setDefaultValuesAnisotropic(3, 2);
+#endif
+                criterion.setProlongationDampingFactor(prolong_factor);
+                criterion.setBeta(1e-10);
+                Dune::Amg::Parameters parms;
+                parms.setDebugLevel(verbosity_level);
+                parms.setNoPreSmoothSteps(smooth_steps);
+                parms.setNoPostSmoothSteps(smooth_steps);
+                precond_.reset(new Precond(*opS_, criterion, parms));
+            }
+            // Construct solver for system of linear equations.
+            Dune::GeneralizedPCGSolver<Vector> linsolve(*opS_, dynamic_cast<Precond&>(*precond_), residTol, (maxit>0)?maxit:S_.N(), verbosity_level);
+
+            Dune::InverseOperatorResult result;
+            soln_ = 0.0;
+
+            // Adapt initial guess such Dirichlet boundary conditions are 
+            // represented, i.e. soln_i=A_{ii}^-1 rhs_i
+            typedef typename Dune::BCRSMatrix <MatrixBlockType>::ConstRowIterator RowIter;
+            typedef typename Dune::BCRSMatrix <MatrixBlockType>::ConstColIterator ColIter;
+            for(RowIter ri=S_.begin(); ri!=S_.end(); ++ri){
+                bool isDirichlet=true;
+                for(ColIter ci=ri->begin(); ci!=ri->end(); ++ci)
+                    if(ci.index()!=ri.index() && *ci!=0.0)
+                        isDirichlet=false;
+                if(isDirichlet)
+                    soln_[ri.index()]=rhs_[ri.index()]/S_[ri.index()][ri.index()];
+            }
+            // Solve system of linear equations to recover
+            // face/contact pressure values (soln_).
+            linsolve.apply(soln_, rhs_, result);
+            if (!result.converged) {
+                THROW("Linear solver failed to converge in " << result.iterations << " iterations.\n"
+                      << "Residual reduction achieved is " << result.reduction << '\n');
+            }
+
+        }
+#endif
 
         // ----------------------------------------------------------------
         void solveLinearSystemKAMG(double residual_tolerance, int verbosity_level,
