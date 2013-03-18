@@ -9,12 +9,12 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
-#include <opm/core/GridAdapter.hpp>
+#include <dune/grid/common/GridAdapter.hpp>
 #include <opm/core/linalg/sparse_sys.h>
 #include <opm/core/pressure/tpfa/ifs_tpfa.h>
 #include <opm/core/pressure/tpfa/trans_tpfa.h>
-#include <opm/core/transport/NormSupport.hpp>
-#include <opm/core/transport/ImplicitTransport.hpp>
+#include <opm/core/transport/implicit/NormSupport.hpp>
+#include <opm/core/transport/implicit/ImplicitTransport.hpp>
 
 #if 0
 template <class Ostream, class Collection>
