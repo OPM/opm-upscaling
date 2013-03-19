@@ -684,7 +684,8 @@ namespace Opm {
                 solveLinearSystemFastAMG(residual_tolerance, linsolver_verbosity, 
                              linsolver_maxit, prolongate_factor, same_matrix,smooth_steps);
 #else
-                #warning "Fast AMG is not available; falling back to CG preconditioned with the normal one"
+                if(linsolver_verbosity)
+                    std::cerr<<"Fast AMG is not available; falling back to CG preconditioned with the normal one."<<std::endl;
                 solveLinearSystemAMG(residual_tolerance, linsolver_verbosity, 
 				     linsolver_maxit, prolongate_factor, same_matrix, smooth_steps);
 #endif
@@ -1552,9 +1553,6 @@ namespace Opm {
 		
                 // Construct preconditioner.
                 typedef Dune::Amg::AggregationCriterion<Dune::Amg::SymmetricMatrixDependency<Matrix,CouplingMetric> > CriterionBase;
-#if !SYMMETRIC
-#warn "Only symmetric matrices are supported currently. Computing anyway..."
-#endif
 
                 typedef Dune::Amg::CoarsenCriterion<CriterionBase> Criterion;
                 Criterion criterion;
