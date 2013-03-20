@@ -62,6 +62,12 @@ list (APPEND EXAMPLE_SOURCE_FILES
 	examples/upscale_steadystate_implicit.cpp
 	)
 
+# programs listed here will not only be compiled, but also marked for
+# installation
+list (APPEND PROGRAM_SOURCE_FILES
+	examples/upscale_elasticity.cpp
+	)
+
 # originally generated with the command:
 # find opm -name '*.h*' -a ! -name '*-pch.hpp' -printf '\t%p\n' | sort
 list (APPEND PUBLIC_HEADER_FILES
