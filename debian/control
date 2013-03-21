@@ -24,6 +24,16 @@ Suggests: libopm-upscaling-doc
 Description: OPM upscaling library -- development files
  This module implements single-phase and steady-state upscaling methods.
 
+Package: libopm-upscaling1-bin
+Section: libdevel
+Architecture: any
+Multi-Arch: foreign
+Depends: libopm-upscaling1 (= ${binary:Version})
+Provides: libopm-upscaling-bin
+Suggests: libopm-upscaling-doc
+Description: OPM upscaling library -- applications
+ This module implements single-phase and steady-state upscaling methods.
+
 Package: libopm-upscaling1
 Section: libs
 Pre-Depends: ${misc:Pre-Depends}, multiarch-support
