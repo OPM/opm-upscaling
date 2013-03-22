@@ -1,5 +1,6 @@
 /*
   Copyright 2010 SINTEF ICT, Applied Mathematics.
+  Copyright 2010 Statoil ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -105,9 +106,9 @@ int main(int argc, char** argv)
     double saturationThreshold = 0.00001;
 
     // For isotropic input rocks:
-    std::vector<MonotCubicInterpolator> InvJfunctions; // Holds the inverse of the loaded J-functions.
+    std::vector<Opm::MonotCubicInterpolator> InvJfunctions; // Holds the inverse of the loaded J-functions.
     // For anisotropic input rocks:
-    std::vector<MonotCubicInterpolator> SwPcfunctions; // Holds Sw(Pc) for each rocktype.
+    std::vector<Opm::MonotCubicInterpolator> SwPcfunctions; // Holds Sw(Pc) for each rocktype.
 
     // Read rock data from files specifyed in rock_list
     if (endpoints) {
@@ -143,9 +144,9 @@ int main(int argc, char** argv)
             }
             
             if (! anisorocks) { //Isotropic input rocks (Sw Krw Kro J)
-                MonotCubicInterpolator Jtmp;
+                Opm::MonotCubicInterpolator Jtmp;
                 try {
-                    Jtmp = MonotCubicInterpolator(rockname, 1, 4); 
+                    Jtmp = Opm::MonotCubicInterpolator(rockname, 1, 4); 
                 }
                 catch (const char * errormessage) {
                     std::cerr << "Error: " << errormessage << std::endl;
@@ -155,7 +156,7 @@ int main(int argc, char** argv)
                 
                 // Invert J-function, now we get saturation as a function of pressure:
                 if (Jtmp.isStrictlyMonotone()) {
-                    InvJfunctions.push_back(MonotCubicInterpolator(Jtmp.get_fVector(), Jtmp.get_xVector()));
+                    InvJfunctions.push_back(Opm::MonotCubicInterpolator(Jtmp.get_fVector(), Jtmp.get_xVector()));
                 }
                 else {
                     std::cerr << "Error: Jfunction " << i+1 << " in rock file " << rockname << " was not invertible." << std::endl;
@@ -172,9 +173,9 @@ int main(int argc, char** argv)
                 }
             }
             else { //Anisotropic input rocks (Pc Sw Krxx Kryy Krzz)
-                MonotCubicInterpolator Pctmp;
+                Opm::MonotCubicInterpolator Pctmp;
                 try {
-                    Pctmp = MonotCubicInterpolator(rockname, 2, 1);
+                    Pctmp = Opm::MonotCubicInterpolator(rockname, 2, 1);
                 }
                 catch (const char * errormessage) {
                     std::cerr << "Error: " << errormessage << std::endl;
@@ -184,7 +185,7 @@ int main(int argc, char** argv)
                 if (cappres) {
                     // Invert Pc(Sw) curve into Sw(Pc):
                     if (Pctmp.isStrictlyMonotone()) {
-                        SwPcfunctions.push_back(MonotCubicInterpolator(Pctmp.get_fVector(), Pctmp.get_xVector()));
+                        SwPcfunctions.push_back(Opm::MonotCubicInterpolator(Pctmp.get_fVector(), Pctmp.get_xVector()));
                     }
                     else {
                         std::cerr << "Error: Pc(Sw) curve " << i+1 << " in rock file " << rockname << " was not invertible." << std::endl;
@@ -384,7 +385,7 @@ int main(int argc, char** argv)
                 maxsws.push_back(Swor);
                 if (cappres) {
                     // Upscale capillary pressure function
-                    MonotCubicInterpolator WaterSaturationVsCapPressure;
+                    Opm::MonotCubicInterpolator WaterSaturationVsCapPressure;
                     double largestSaturationInterval = Swor-Swir;
                     double Ptestvalue = Pcmax;
                     while (largestSaturationInterval > (Swor-Swir)/double(nsatpoints)) {
@@ -444,7 +445,7 @@ int main(int argc, char** argv)
                     WaterSaturationVsCapPressure.chopFlatEndpoints(saturationThreshold);
                     std::vector<double> wattest = WaterSaturationVsCapPressure.get_fVector();
                     std::vector<double> cprtest = WaterSaturationVsCapPressure.get_xVector();
-                    MonotCubicInterpolator CapPressureVsWaterSaturation(WaterSaturationVsCapPressure.get_fVector(), 
+                    Opm::MonotCubicInterpolator CapPressureVsWaterSaturation(WaterSaturationVsCapPressure.get_fVector(), 
                                                                         WaterSaturationVsCapPressure.get_xVector());
                     std::vector<double> pcs;
                     for (int satp=0; satp<nsatpoints; ++satp) {
