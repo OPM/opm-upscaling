@@ -66,7 +66,20 @@ list (APPEND EXAMPLE_SOURCE_FILES
 # programs listed here will not only be compiled, but also marked for
 # installation
 list (APPEND PROGRAM_SOURCE_FILES
+	examples/cpchop.cpp
+	examples/cpchop_depthtrend.cpp
+	examples/cpregularize.cpp
+	examples/exp_variogram.cpp
+	examples/grdecldips.cpp
+	examples/upscale_avg.cpp
+	examples/upscale_cap.cpp
+	examples/upscale_cond.cpp
 	examples/upscale_elasticity.cpp
+	examples/upscale_perm.cpp
+	examples/upscale_relperm.cpp
+	examples/upscale_relpermvisc.cpp
+	examples/upscale_singlephase.cpp
+	examples/upscale_steadystate_implicit.cpp
 	)
 
 # originally generated with the command:
