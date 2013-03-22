@@ -98,6 +98,18 @@ if (NOT USE_MPI)
 	set (CMAKE_DISABLE_FIND_PACKAGE_MPI TRUE)
 endif (NOT USE_MPI) 
 
+# if DUNE_DIR is set, use this as the root directory for dune modules
+if (DUNE_DIR)
+	 set (dune_modules dune-common dune-geometry dune-grid dune-istl)
+   foreach (module ${dune_moduels})
+	   if (EXISTS ${DUNE_DIR}/${module})
+	 		 set (${module}_ROOT "${DUNE_DIR}/${module}" CACHE STRING "Path to ${module}")
+	   else (EXISTS ${DUNE_DIR}/${module})
+	     message (FATAL_ERROR "Error using DUNE_DIR: ${DUNE_DIR} does not contain directory ${module}.")
+     endif (EXISTS ${DUNE_DIR}/${module})
+   endforeach (module)
+endif (DUNE_DIR)
+
 # macro to set standard variables (INCLUDE_DIRS, LIBRARIES etc.)
 include (OpmFind)
 find_and_append_package_list_to (${project} ${${project}_DEPS})
