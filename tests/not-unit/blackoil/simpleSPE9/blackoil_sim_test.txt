@@ -1,0 +1,73 @@
+/// \page spe9 Simulating SPE9 using a black oil model
+/// This tutorial explains how to setup and run a black oil model 
+/// with Eclipse input data from (<a href="http://www.onepetro.org/mslib/app/Preview.do?paperNumber=00029110&societyCode=SPE" target="_blank" >SPE9</a>)
+
+
+/*! \page spe9
+ *  \section Setup
+ *  Default values are specified in /tests/non-unit/blackoil/  
+ *  simpleSPE9spe9run900days.xml
+ *  \dontinclude spe9run900days.xml
+ *
+ *  Read ECLIPSE data from file name "SPE9small.DATA", 
+ *  The size of the grid must be specified here as well as in the ECLIPSE file 
+ *  \skip fileformat
+ *  \until filename
+ *  Set parameters for the black oil model. If spe9_init is set to false, the basis 
+ *  initialization is used. See Opm::BlackoilInitialization
+ *  \skip spe9_init
+ *  \until connate_water_saturation
+ *  Use standard settings for gravity
+ *  \skipline gravity
+ *  Setup the compressible TPFA flow solver. See: Opm::TpfaCompressible
+ *  \skip  max_num_iter
+ *  \until relax_time_voldiscr
+ *  Setup the explicit compositional transport solver. See: Opm::ExplicitCompositionalTransport 
+ *  \skip single_step_only
+ *  \until min_vtime
+ *  Set time stepping parameters
+ *  \skip total_time
+ *  \until do_impes
+ *  Specify output directory
+ *  \skipline output_dir
+ *  Setup the linear solver
+ *  \skip linsolver_save_system
+ *  \until linsolver_max_iterations
+ */
+
+/*! \page spe9  
+ * \section commentedcode2 Run the simulator 
+ * In /tests/non-unit/blackoil/simpleSPE9 type:
+ * \code   
+ * ../../../../bin/blackoil_sim_test spe9run900days.xml 
+ * \endcode
+ * A python script can be called from the output directory to generate figures for the 
+ * documetation
+ * \code
+ * pvpython ../generate_doc_figures.py ../../../../../doc/doxygen/Figure
+ * \endcode
+ */
+  
+/*! \page spe9
+ * \section Results
+ * Gas saturation after 0, 300, 600 and 900 days (from top left)
+ * <TABLE>
+ * <TR>
+ * <TD> \image html blackoil-output-0.png </TD>
+ * <TD> \image html blackoil-output-300.png </TD>
+ * </TR>
+ * <TR>
+ * <TD> \image html blackoil-output-600.png </TD>
+ * <TD> \image html blackoil-output-900.png </TD>
+ * </TR>
+ */ </TABLE>
+
+/*! \page spe9
+ * \section python Python script to generate figures:
+ * \snippet generate_doc_figures.py tutorial5
+ */
+ 
+ 
+
+
+  

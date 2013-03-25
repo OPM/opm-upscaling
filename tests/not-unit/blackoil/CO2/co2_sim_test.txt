@@ -1,0 +1,94 @@
+/// \page co2_sim_test Simulation of CO<sub>2</sub> injection using a black oil model
+/// This tutorial shows how to represent the oil and gas component as brine and CO<sub>2</sub> respectively, thus allowing mutual solubility. 
+///
+
+/*! \page co2_sim_test
+ *  \section pvt The pvt model
+ *  The underlying pvt model is that of dumux::brine_co2 (<a href="http://www.dumux.org" target="_blank">www.dumux.org </a>) and is based on a paper by
+ *  R. Span and W. Wagner \"A new equation of state for CO<sub>2</sub> ...\" (J. Phys. Chem. Ref Data, Vol 25, No. 6, 1996). 
+ *  The implementation uses pre-generated tables where the pressure ranges from 150 to 400 bar and the temperature from 300 to 500 Kelvin. 
+ */
+
+/*! \page co2_sim_test
+ *  \section blackoil The black oil interface
+ *  The black oil interface to the pvt model is implemeted in the class Opm::BlackoilCo2PVT. Both direct interfacing and a pre-processor  
+ *  approach are supported.
+ * 
+ * For the pre-processing approach, the blackoil simulator: blackoil_sim_test can be used with an Eclipse format table generated at 
+ * an arbitrary temperature (300-500K) by calling the method
+ * \code
+ * co2_blackoil_pvt [temperature]
+ * \endcode 
+ */
+
+/*! \page co2_sim_test
+ *  \section setup Setup
+ *  \dontinclude co2Ex.xml
+ *  All example files are found in tests/non-unit/blackoil/CO2
+ *  Default values for the interface approach are spesified in co2Ex.xml.
+ *  
+ *  Read ECLIPSE data from file name "fluidD3_NPD5.DATA",based on the sector model labelled (<a href="http://www.sintef.no/Projectweb/MatMorA/Downloads/Johansen/" target="_blank">NPD5</a>),  
+ *  consisting of 100x100x11 grid cells. 
+ *  \skip fileformat
+ *  \until filename
+ *  
+ *  Setup the linear solver
+ *  \skip linsolver_max_iterations
+ *  \until linsolver_save_system
+ *  
+ *  Setup the compressible TPFA flow solver. See: Opm::TpfaCompressible
+ *  \skip flux_rel_tol
+ *  \until experimental_jacobian
+ *  
+ *  Setup the explicit compositional transport solver. See: Opm::ExplicitCompositionalTransport 
+ *  \skip min_surfvol_threshold
+ *  \until min_vtime
+ * 
+ *  The time-stepping control 
+ *  \skip total_time
+ *  \until do_impes
+ * 
+ *  Output control
+ *  \skip  output_dir
+ *  \until output_interval
+ * 
+ *  Setup the boundary conditions and the gravity
+ *  \skip "gravity"
+ *  \until lateral_dirichlet
+ * 
+ *  Basic setup
+ *  \skip CO2-injection
+ *  \until datum_pressure
+ */
+   
+   
+
+/*! \page co2_sim_test
+ * \section run Run the simulator
+ * In /tests/non-unit/blackoil/CO2 type: 
+ * \code
+ * ../../../../bin/co2_sim_test co2Ex.xml
+ * \endcode
+ */
+
+/*! \page co2_sim_test
+ *  \section sim Simulation results from the Johansen formation
+ *  <TABLE>
+ *  <TR>
+ *  <TD colspan="2"> \image html pressureFinalWhiteBG.png 
+ *  </TD>
+ *  <DIV class="caption"> Pressure distribution; vertically exaggerated by factor 10. </DIV>
+ *  </TR>
+ *  <TR>
+ *  <TD> \image html finalCo2SatOpmBO.png </TD>
+ *  <DIV class="caption">  Saturation detail - opm black oil simulator (sealed fault boundaries) </DIV> 
+ *  <TD> \image html eclSatVsOpmBO.jpg </TD>
+ *  <DIV class="caption"> Saturation detail - Eclipse black oil (sealed fault boundaries) </DIV>  
+ *  </TR>
+ *  <TR>
+ *  <TD colspan="2"> \image html johanCO2injsmall.png</TD>
+ *  <DIV class="caption">  CO<sub>2</sub> report: After about 25 years leakage through the fault is observed </DIV> 
+ *  </TR>
+ *  </TABLE>
+ */
+
