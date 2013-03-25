@@ -29,7 +29,7 @@
 #include "MiscibilityLiveGas.hpp"
 #include "MiscibilityWater.hpp"
 #include <opm/core/utility/ErrorMacros.hpp>
-#include <opm/core/utility/linInt.hpp>
+#include <opm/core/utility/linearInterpolation.hpp>
 
 using namespace Opm;
 

@@ -37,7 +37,7 @@
 #define OPENRS_ROCKJFUNC_HEADER
 
 #include <dune/common/fvector.hh>
-#include <opm/porsol/common/NonuniformTableLinear.hpp>
+#include <opm/core/utility/NonuniformTableLinear.hpp>
 #include <opm/porsol/common/Matrix.hpp>
 #include <fstream>
 #include <vector>
@@ -215,7 +215,7 @@ namespace Opm
 	    invJfunc_ = TabFunc(invJfunc, invsvals);
 	}
 
-	typedef utils::NonuniformTableLinear<double> TabFunc;
+	typedef NonuniformTableLinear<double> TabFunc;
 	TabFunc krw_;
 	TabFunc kro_;
 	TabFunc Jfunc_;

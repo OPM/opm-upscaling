@@ -32,7 +32,7 @@
 #include <algorithm>
 #include "MiscibilityLiveGas.hpp"
 #include <opm/core/utility/ErrorMacros.hpp>
-#include <opm/core/utility/linInt.hpp>
+#include <opm/core/utility/linearInterpolation.hpp>
 
 using namespace std;
 using namespace Opm;
@@ -109,7 +109,7 @@ namespace Opm
         if (surfvol[Liquid] == 0.0) {
             return 0.0;
         }
-	double R = linearInterpolationExtrap(saturated_gas_table_[0],
+	double R = linearInterpolation(saturated_gas_table_[0],
 					     saturated_gas_table_[3], press);
 	double maxR = surfvol[Liquid]/surfvol[Vapour];
 	if (R < maxR ) {  // Saturated case
@@ -135,11 +135,11 @@ namespace Opm
     // Vaporised oil-gas ratio derivative
     double MiscibilityLiveGas::dRdp(int /*region*/, double press, const surfvol_t& surfvol) const
     {
-	double R = linearInterpolationExtrap(saturated_gas_table_[0],
+	double R = linearInterpolation(saturated_gas_table_[0],
 					     saturated_gas_table_[3], press);
 	double maxR = surfvol[Liquid]/surfvol[Vapour];
 	if (R < maxR ) {  // Saturated case
-	    return linearInterpolDerivative(saturated_gas_table_[0],
+	    return linearInterpolationDerivative(saturated_gas_table_[0],
 					    saturated_gas_table_[3],
 					    press);
 	} else {
@@ -206,13 +206,13 @@ namespace Opm
 					    bool deriv) const
     {
 	int section;
-	double R = linearInterpolationExtrap(saturated_gas_table_[0],
+	double R = linearInterpolation(saturated_gas_table_[0],
 					     saturated_gas_table_[3], press,
 					     section);
 	double maxR = surfvol[Liquid]/surfvol[Vapour];
 	if (deriv) {
 	    if (R < maxR ) {  // Saturated case
-		return linearInterpolDerivative(saturated_gas_table_[0],
+		return linearInterpolationDerivative(saturated_gas_table_[0],
 						saturated_gas_table_[item],
 						press);
 	    } else {  // Undersaturated case
@@ -225,11 +225,11 @@ namespace Opm
 		    return val;
 		}
 		double val1 =
-		    linearInterpolationExtrap(undersat_gas_tables_[is][0],
+		    linearInterpolation(undersat_gas_tables_[is][0],
 					      undersat_gas_tables_[is][item],
 					      maxR);
 		double val2 = 
-		    linearInterpolationExtrap(undersat_gas_tables_[is+1][0],
+		    linearInterpolation(undersat_gas_tables_[is+1][0],
 					      undersat_gas_tables_[is+1][item],
 					      maxR);
 		double val = (val2 - val1)/
@@ -238,14 +238,14 @@ namespace Opm
 	    }
 	} else {
 	    if (R < maxR ) {  // Saturated case
-		return linearInterpolationExtrap(saturated_gas_table_[0],
+		return linearInterpolation(saturated_gas_table_[0],
 						 saturated_gas_table_[item],
 						 press);
 	    } else {  // Undersaturated case
 		int is = section;
 		// Extrapolate from first table section
 		if (is == 0 && press < saturated_gas_table_[0][0]) {
-		    return linearInterpolationExtrap(undersat_gas_tables_[0][0],
+		    return linearInterpolation(undersat_gas_tables_[0][0],
 						     undersat_gas_tables_[0][item],
 						     maxR);
 		}
@@ -253,7 +253,7 @@ namespace Opm
 		// Extrapolate from last table section
 		int ltp = saturated_gas_table_[0].size() - 1;
 		if (is+1 == ltp && press > saturated_gas_table_[0][ltp]) {
-		    return linearInterpolationExtrap(undersat_gas_tables_[ltp][0],
+		    return linearInterpolation(undersat_gas_tables_[ltp][0],
 						     undersat_gas_tables_[ltp][item],
 						     maxR);
 		}
@@ -269,11 +269,11 @@ namespace Opm
 		    return val;
 		}
 		double val1 =
-		    linearInterpolationExtrap(undersat_gas_tables_[is][0],
+		    linearInterpolation(undersat_gas_tables_[is][0],
 					      undersat_gas_tables_[is][item],
 					      maxR);
 		double val2 = 
-		    linearInterpolationExtrap(undersat_gas_tables_[is+1][0],
+		    linearInterpolation(undersat_gas_tables_[is+1][0],
 					      undersat_gas_tables_[is+1][item],
 					      maxR);
 		double val = val1 + w*(val2 - val1);

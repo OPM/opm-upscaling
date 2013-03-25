@@ -38,7 +38,7 @@
 
 
 #include <dune/common/fvector.hh>
-#include <opm/porsol/common/NonuniformTableLinear.hpp>
+#include <opm/core/utility/NonuniformTableLinear.hpp>
 #include <opm/porsol/common/Matrix.hpp>
 #include <fstream>
 #include <vector>
@@ -149,7 +149,7 @@ namespace Opm
 	    }
 	}
 
-	typedef utils::NonuniformTableLinear<double> TabFunc;
+	typedef NonuniformTableLinear<double> TabFunc;
 	TabFunc krxx_[2];
 	TabFunc kryy_[2];
 	TabFunc krzz_[2];
