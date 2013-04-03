@@ -1,4 +1,10 @@
-libopm-upscaling (2013.03-1) unstable; urgency=low
+opm-upscaling (2013.03-2) precise; urgency=low
+
+  * Updated to be compatible with launchpad+precise
+
+ -- Arne Morten Kvarving <arne.morten.kvarving@sintef.no>  Tue, 02 Apr 2013 14:07:04 +0200
+
+opm-upscaling (2013.03-1) precise; urgency=low
 
   * Initial release
 

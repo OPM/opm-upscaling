@@ -1,4 +1,4 @@
-Source: libopm-upscaling
+Source: opm-upscaling
 Priority: extra
 Maintainer: Arne Morten Kvarving <arne.morten.kvarving@sintef.no>
 Build-Depends: build-essential, debhelper (>= 9), libboost-filesystem-dev,
@@ -6,8 +6,8 @@ Build-Depends: build-essential, debhelper (>= 9), libboost-filesystem-dev,
                libsuperlu3-dev, gfortran, libsuitesparse-dev, libopm-core-dev,
                libdune-common-dev, libdune-istl-dev, cmake, libtinyxml-dev, bc,
                libert.ecl-dev, git, zlib1g-dev, libtool,
-               libdune-cornerpoint-dev, libdune-grid-dev, libopm-porsol-dev
-Build-Depends-Indep: doxygen, texlive-latex-extra, texlive-latex-recommended, ghostscript
+               libdune-cornerpoint-dev, libdune-grid-dev, libopm-porsol-dev,
+               doxygen, texlive-latex-extra, texlive-latex-recommended, ghostscript
 Standards-Version: 3.9.2
 Section: libs
 Homepage: http://opm-project.org
