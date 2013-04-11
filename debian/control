@@ -16,7 +16,7 @@ Vcs-Browser: https://github.com/OPM/opm-upscaling
 
 Package: libopm-upscaling1-dev
 Section: libdevel
-Architecture: all
+Architecture: any
 Multi-Arch: foreign
 Depends: libopm-upscaling1 (= ${binary:Version})
 Provides: libopm-upscaling-dev
@@ -28,7 +28,7 @@ Package: libopm-upscaling1-bin
 Section: libdevel
 Architecture: any
 Multi-Arch: foreign
-Depends: libopm-upscaling1 (= ${binary:Version})
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Provides: libopm-upscaling-bin
 Suggests: libopm-upscaling-doc
 Description: OPM upscaling library -- applications

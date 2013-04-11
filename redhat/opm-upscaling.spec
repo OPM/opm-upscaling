@@ -35,7 +35,6 @@ Requires:       blas-devel
 Requires:       lapack-devel
 Requires:       suitesparse-devel
 Requires:       libopm-upscaling1 = %{version}
-BuildArch:	noarch
 
 %description devel
 This package contains the development and header files for opm-upscaling
