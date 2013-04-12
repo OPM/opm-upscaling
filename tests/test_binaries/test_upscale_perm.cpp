@@ -1,5 +1,5 @@
 /*
-  Copyright 2013 Statil ASA
+  Copyright 2013 Statoil ASA
 
   This file is part of the Open Porous Media project (OPM).
 
