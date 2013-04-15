@@ -31,11 +31,11 @@
 #include <numeric>
 #include <sys/utsname.h>
 
-#include <opm/core/eclipse/EclipseGridParser.hpp>
-#include <opm/core/eclipse/EclipseGridInspector.hpp>
+#include <opm/core/io/eclipse/EclipseGridParser.hpp>
+#include <opm/core/io/eclipse/EclipseGridInspector.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 
-#include <opm/core/eclipse/CornerpointChopper.hpp>
+#include <opm/core/io/eclipse/CornerpointChopper.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 #include <opm/porsol/common/setupBoundaryConditions.hpp>
 #include <opm/core/utility/Units.hpp>

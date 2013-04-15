@@ -37,7 +37,7 @@
 
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <dune/grid/CpGrid.hpp>
-#include <opm/core/eclipse/EclipseGridParser.hpp>
+#include <opm/core/io/eclipse/EclipseGridParser.hpp>
 #include <opm/porsol/common/GridInterfaceEuler.hpp>
 #include <opm/porsol/common/BoundaryConditions.hpp>
 

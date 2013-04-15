@@ -6,25 +6,26 @@
 # directories like "/usr/src/myproject". Separate the files or directories
 # with spaces.
 
-INPUT                 += @top_srcdir@/dune/
+INPUT                 += @abs_top_srcdir@/opm/
+
 # see e.g. dune-grid for the examples of mainpage and modules
-# INPUT                 += @srcdir@/mainpage #                          @srcdir@/modules
+# INPUT                 += @abs_top_srcdir@/doc/doxygen/mainpage #                          @srcdir@/modules
 
 # The EXCLUDE tag can be used to specify files and/or directories that should
 # excluded from the INPUT source files. This way you can easily exclude a
 # subdirectory from a directory tree whose root is specified with the INPUT tag.
 
-# EXCLUDE               += @top_srcdir@/dune/upscaling/test
+# EXCLUDE               += @abs_top_srcdir@/tests/
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or
 # directories that contain example code fragments that are included (see
 # the \include command).
 
-# EXAMPLE_PATH          += @top_srcdir@/src
+# EXAMPLE_PATH          += @abs_top_srcdir@/examples/
 
 # The IMAGE_PATH tag can be used to specify one or more files or
 # directories that contain image that are included in the documentation (see
 # the \image command).
 
-# IMAGE_PATH            += @top_srcdir@/dune/upscaling/pics
+# IMAGE_PATH            += @abs_top_srcdir@/opm/upscaling/pics
 
