@@ -39,8 +39,8 @@ Matrix readResultFile(string filename) {
     char* file = (char*)filename.c_str();
     ifstream resultfile(file, ios::in);
     if (resultfile.fail()) {
-	cerr << "Error: Filename " << filename << " not found or not readable." << endl;
-	exit(1);
+        cerr << "Error: Filename " << filename << " not found or not readable." << endl;
+        exit(1);
     }
 
     // Read file and put results into matrix perm
@@ -49,15 +49,15 @@ Matrix readResultFile(string filename) {
     int col = 0;
     string line;
     while (getline(resultfile, line)) {
-	if (line[0] == '#') // Skip lines starting with #
-	    continue;
-	istringstream iss(line);
-	while (iss >> value) {
-	    perm(row, col) = value;
-	    ++col;
-	}
-	col = 0;
-	++row;
+        if (line[0] == '#') // Skip lines starting with #
+            continue;
+        istringstream iss(line);
+        while (iss >> value) {
+            perm(row, col) = value;
+            ++col;
+        }
+        col = 0;
+        ++row;
     }
 
     resultfile.close();
@@ -90,18 +90,18 @@ int main() {
 
     // Compare result with reference solution
     for (int r=0; r<3; ++r) {
-	for (int c=0; c<3; ++c) {
-	    double absRelDiff = abs(reference_solution(r,c) - new_solution(r,c))/reference_solution(r,c);
-	    if (absRelDiff > relTol) {
-		cerr << "Error: Calculated solution not equal to reference solution within an relative tolerance of "
-		     << relTol << ". "  << endl
-		     << "Calculated permeability tensor:" << endl
-		     << new_solution << endl
-		     << "Reference solution:" << endl
-		     << reference_solution << endl;
-		exit(1);
-	    }
-	}
+        for (int c=0; c<3; ++c) {
+            double absRelDiff = abs(reference_solution(r,c) - new_solution(r,c))/reference_solution(r,c);
+            if (absRelDiff > relTol) {
+                cerr << "Error: Calculated solution not equal to reference solution within an relative tolerance of "
+                     << relTol << ". "  << endl
+                     << "Calculated permeability tensor:" << endl
+                     << new_solution << endl
+                     << "Reference solution:" << endl
+                     << reference_solution << endl;
+                exit(1);
+            }
+        }
     }
 
     return 0;
