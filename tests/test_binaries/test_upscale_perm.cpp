@@ -42,7 +42,7 @@ Matrix readResultFile(string filename) {
 	cerr << "Error: Filename " << filename << " not found or not readable." << endl;
 	exit(1);
     }
-    
+
     // Read file and put results into matrix perm
     double value;
     int row = 0;
@@ -52,42 +52,42 @@ Matrix readResultFile(string filename) {
 	if (line[0] == '#') // Skip lines starting with #
 	    continue;
 	istringstream iss(line);
-	while (iss >> value) { 
+	while (iss >> value) {
 	    perm(row, col) = value;
 	    ++col;
 	}
 	col = 0;
 	++row;
     }
-    
+
     resultfile.close();
-    
+
     return perm;
 }
 
 
 int main() {
-    
+
     // Specify accepted relative tolerance
     double relTol = 1e-6;
-    
+
     // Specify relative paths to files
     string gridPath = "../tests/input_data/grids/PeriodicTilted.grdecl";
     string referenceSolutionPath = "../tests/input_data/reference_solutions/upscale_perm_fixed_PeriodicTilted.txt";
     string outputPath = "../tests/temp_results.txt";
-    
-    // Run executable upscale_perm with input data. 
+
+    // Run executable upscale_perm with input data.
     string runCommand = string("./upscale_perm -output ") + outputPath + string(" ") + gridPath;
     system(runCommand.c_str());
-    
+
     // Store solutions in Matrix object
     Matrix new_solution = readResultFile(outputPath);
     Matrix reference_solution = readResultFile(referenceSolutionPath);
-    
+
     // Remove temporary result file
     string removeCommand = string("rm ") + outputPath;
     system(removeCommand.c_str());
-    
+
     // Compare result with reference solution
     for (int r=0; r<3; ++r) {
 	for (int c=0; c<3; ++c) {
@@ -102,8 +102,8 @@ int main() {
 		exit(1);
 	    }
 	}
-    } 
-    
+    }
+
     return 0;
-    
+
 }
