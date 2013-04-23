@@ -42,6 +42,8 @@ list (APPEND TEST_SOURCE_FILES
 # originally generated with the command:
 # find tests -name '*.xml' -a ! -wholename '*/not-unit/*' -printf '\t%p\n' | sort
 list (APPEND TEST_DATA_FILES
+  tests/input_data/grids/PeriodicTilted.grdecl
+  tests/input_data/reference_solutions/upscale_perm_fixed_PeriodicTilted.txt 
 	)
 
 # originally generated with the command:
