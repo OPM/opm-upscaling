@@ -42,6 +42,8 @@ list (APPEND TEST_SOURCE_FILES
 # originally generated with the command:
 # find tests -name '*.xml' -a ! -wholename '*/not-unit/*' -printf '\t%p\n' | sort
 list (APPEND TEST_DATA_FILES
+  tests/input_data/grids/PeriodicTilted.grdecl
+  tests/input_data/reference_solutions/upscale_perm_fixed_PeriodicTilted.txt 
 	)
 
 # originally generated with the command:
@@ -62,6 +64,7 @@ list (APPEND EXAMPLE_SOURCE_FILES
 	examples/upscale_relpermvisc.cpp
 	examples/upscale_singlephase.cpp
 	examples/upscale_steadystate_implicit.cpp
+	tests/compare_upscaling_results.cpp
 	)
 
 # programs listed here will not only be compiled, but also marked for
