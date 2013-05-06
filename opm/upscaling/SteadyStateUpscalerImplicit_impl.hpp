@@ -66,7 +66,8 @@ namespace Opm
           sat_change_year_(1.0e-5),
           max_it_(100),
           max_stepsize_(1e4),
-          dt_sat_tol_(1e-2)
+          dt_sat_tol_(1e-2),
+          use_maxdiff_(true)
     {
     }
 
@@ -93,6 +94,7 @@ namespace Opm
         dt_sat_tol_ = param.getDefault("dt_sat_tol", dt_sat_tol_);
         max_it_               = param.getDefault("max_it", max_it_);
         max_stepsize_        = Opm::unit::convert::from(param.getDefault("max_stepsize", max_stepsize_),Opm::unit::year);
+        use_maxdiff_ = param.getDefault("use_maxdiff", use_maxdiff_);
         transport_solver_.init(param);
         // Set viscosities and densities if given.
         double v1_default = this->res_prop_.viscosityFirstPhase();
@@ -163,6 +165,16 @@ namespace Opm
         
         if (gravity.two_norm() > 0.0) {
             MESSAGE("Warning: Gravity is experimental for flow solver.");
+        }
+
+        // Put pore volume in vector.
+        std::vector<double> pore_vol;
+        double tot_pore_vol = 0.0;
+        typedef typename GridInterface::CellIterator CellIter;
+        for (CellIter c = this->ginterf_.cellbegin(); c != this->ginterf_.cellend(); ++c) {
+            double cell_pore_vol = c->volume()*this->res_prop_.porosity(c->index());
+            pore_vol.push_back(cell_pore_vol);
+            tot_pore_vol += cell_pore_vol;
         }
 
         // Set up initial saturation profile.
@@ -248,16 +260,30 @@ namespace Opm
                 // Comparing old to new.
                 int num_cells = saturation.size();
                 double maxdiff = 0.0;
+                double euclidean_diff = 0.0;
                 for (int i = 0; i < num_cells; ++i) {
-                    maxdiff = std::max(maxdiff, std::fabs(saturation[i] - saturation_old[i]));
+                    double sat_diff_cell = saturation[i] - saturation_old[i];
+                    maxdiff = std::max(maxdiff, std::fabs(sat_diff_cell));
+                    euclidean_diff += sat_diff_cell * sat_diff_cell * pore_vol[i];
                 }
-                double ds_year = maxdiff*Opm::unit::year/stepsize;
-                std::cout << "Maximum saturation change/year: " << ds_year << std::endl;
+                euclidean_diff = std::sqrt(euclidean_diff / tot_pore_vol);
+                double ds_year;
+                if (use_maxdiff_) {
+                    ds_year = maxdiff*Opm::unit::year/stepsize;
+                    std::cout << "Maximum saturation change/year: " << ds_year << std::endl;
+                    if (maxdiff < dt_sat_tol_) {
+                        stepsize=std::min(max_stepsize_,2*stepsize);
+                    }
+                }
+                else {
+                    ds_year = euclidean_diff*Opm::unit::year/stepsize;
+                    std::cout << "Euclidean saturation change/year: " << ds_year << std::endl;
+                    if (euclidean_diff < dt_sat_tol_) {
+                        stepsize=std::min(max_stepsize_,2*stepsize);
+                    }
+                }
                 if (ds_year < sat_change_year_) {
                     stationary = true;
-                }
-                if (maxdiff< dt_sat_tol_) {
-                    stepsize=std::min(max_stepsize_,2*stepsize);
                 }
             } else {
                 std::cerr << "Cutting time step\n";
