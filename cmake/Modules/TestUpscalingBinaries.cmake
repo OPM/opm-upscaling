@@ -36,17 +36,18 @@ file(MAKE_DIRECTORY ${RESULT_PATH})
 # TEST: upscale_perm on PeriodicTilted.grdecl with fixed BCs
 ###########################################################################
 
-add_test(run_upscale_perm_fixed_PeriodicTilted
+add_test(run_upscale_perm_BCp_PeriodicTilted
          ${PROJECT_BINARY_DIR}/bin/upscale_perm
-         -output ${RESULT_PATH}upscale_perm_fixed_PeriodicTilted.txt
+	 -bc p
+         -output ${RESULT_PATH}upscale_perm_BCp_PeriodicTilted.txt
          ${INPUT_DATA_PATH}grids/PeriodicTilted.grdecl)
 
-add_test(compare_upscale_perm_fixed_PeriodicTilted
+add_test(compare_upscale_perm_BCp_PeriodicTilted
          ${PROJECT_BINARY_DIR}/bin/compare_upscaling_results
-         ${INPUT_DATA_PATH}reference_solutions/upscale_perm_fixed_PeriodicTilted.txt
-         ${RESULT_PATH}upscale_perm_fixed_PeriodicTilted.txt
+         ${INPUT_DATA_PATH}reference_solutions/upscale_perm_BCp_PeriodicTilted.txt
+         ${RESULT_PATH}upscale_perm_BCp_PeriodicTilted.txt
          ${relTol}
          3 3)
 
-set_tests_properties(compare_upscale_perm_fixed_PeriodicTilted PROPERTIES DEPENDS
-                     run_upscale_perm_fixed_PeriodicTilted)
+set_tests_properties(compare_upscale_perm_BCp_PeriodicTilted PROPERTIES DEPENDS
+                     run_upscale_perm_BCp_PeriodicTilted)
