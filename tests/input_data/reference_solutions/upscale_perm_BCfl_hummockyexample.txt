@@ -1,0 +1,28 @@
+###############################################################################
+# Results from upscaling permeability.
+#
+# Finished: Tue May  7 09:38:54 2013
+# Hostname: tr-lcdapp02
+#
+# Eclipse file: hummockyexample.grdecl
+# Porosity : 0.263565
+#
+# Options used:
+#     Boundary conditions: Fixed (no-flow)  Linear  
+#                 minPerm: 1e-9
+#
+# If both linear and fixed boundary conditions are calculated, 
+# the nonperiodic tesselation is done only once
+# 
+#
+# Upscaled permeability for fixed boundary conditions:
+# Tesselation time: 0.25 s
+# Computation time: 28.32 s
+145.421 0 0 
+0 144.801 0 
+0 0 10.0053 
+# Upscaled permeability for linear boundary conditions:
+# Computation time: 20.19 s
+170.277 -14.6911 6.54187 
+-12.1505 167.548 7.85699 
+-1.07711 -1.23149 14.6895 

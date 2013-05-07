@@ -1,0 +1,28 @@
+###############################################################################
+# Results from upscaling permeability.
+#
+# Finished: Tue May  7 09:34:56 2013
+# Hostname: tr-lcdapp02
+#
+# Eclipse file: EightCells.grdecl
+# Porosity : 0.17625
+#
+# Options used:
+#     Boundary conditions: Fixed (no-flow)  Linear  
+#                 minPerm: 1e-9
+#
+# If both linear and fixed boundary conditions are calculated, 
+# the nonperiodic tesselation is done only once
+# 
+#
+# Upscaled permeability for fixed boundary conditions:
+# Tesselation time: 0 s
+# Computation time: 0 s
+8.96511 0 0 
+0 8.80634 0 
+0 0 6.52958 
+# Upscaled permeability for linear boundary conditions:
+# Computation time: 0 s
+10.5 -1.125 -1.625 
+-1.125 10.5 1.5 
+-1.625 1.5 10.5 
