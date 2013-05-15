@@ -578,9 +578,6 @@ void ElasticityUpscale<GridType>::loadMaterialsFromGrid(const std::string& file)
     if (parser.hasField("YOUNGMOD") && parser.hasField("POISSONMOD")) {
       Emod = parser.getFloatingPointValue("YOUNGMOD");
       Poiss = parser.getFloatingPointValue("POISSONMOD");
-    } else if (parser.hasField("PERMX") && parser.hasField("PORO")) {
-      Emod = parser.getFloatingPointValue("PERMX");
-      Poiss = parser.getFloatingPointValue("PORO");
     } else if (parser.hasField("LAMEMOD") && parser.hasField("SHEARMOD")) {
       std::vector<double> lame = parser.getFloatingPointValue("LAMEMOD");
       std::vector<double> shear = parser.getFloatingPointValue("SHEARMOD");
@@ -599,6 +596,10 @@ void ElasticityUpscale<GridType>::loadMaterialsFromGrid(const std::string& file)
         Emod[i]  = 9*bulk[i]*shear[i]/(3*bulk[i]+shear[i]);
         Poiss[i] = 0.5*(3*bulk[i]-2*shear[i])/(3*bulk[i]+shear[i]);
       }
+    } else if (parser.hasField("PERMX") && parser.hasField("PORO")) {
+      std::cerr << "WARNING: Using PERMX and PORO for elastic material properties" << std::endl;
+      Emod = parser.getFloatingPointValue("PERMX");
+      Poiss = parser.getFloatingPointValue("PORO");
     } else {
       std::cerr << "No material data found in eclipse file, aborting" << std::endl;
       exit(1);
