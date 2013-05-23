@@ -19,6 +19,7 @@ Optional Features:
                           of the options shared and static may be built.
   --enable-debug          build a non-optimized version of the library
                           [default=no]
+  --disable-runpath       do not use RUNPATH in installed library [default=yes]
   --disable-lto           do not use whole program optimization [default=yes]
   --disable-pch           do not use precompiled headers (if buggy compiler)
   --disable-silent-rules  print every compilation statement as executed
@@ -96,6 +97,8 @@ silent_rules=
 debug_loc=
 #use_lto=" -DWHOLE_PROG_OPTIM=ON"
 use_lto=
+#use_runpath=" -DUSE_RUNPATH=OFF"
+use_runpath=
 
 # default is to warn for unknown options, but this can be disabled
 option_check=yes
@@ -219,6 +222,10 @@ for OPT in "$@"; do
               pch_use=" -DPRECOMPILE_HEADERS:BOOL=OFF"
               pkgname=""
               ;;
+            runpath)
+              use_runpath=" -DUSE_RUNPATH=OFF"
+              pkgname=""
+              ;;
             silent-rules)
               silent_rules=" -DCMAKE_VERBOSE_MAKEFILE=ON"
               pkgname=""
@@ -289,6 +296,10 @@ for OPT in "$@"; do
               pch_use=" -DPRECOMPILE_HEADERS:BOOL=ON"
               shared=""
               ;;
+            runpath)
+              use_runpath=" -DUSE_RUNPATH=ON"
+              shared=""
+              ;;
             # this flag is just for compatibility with the deprecation
             # flag in DUNE, so we can build without warnings
             fieldvector-size-is-method)
@@ -337,7 +348,7 @@ for a in "${VARS[@]}"; do
 done
 
 # pass everything on to CMake
-CMDLINE="env ${ENVVARS} ${CMAKE_COMMAND} \"${srcdir}\" \"-DCMAKE_INSTALL_PREFIX=$prefix\"${buildtype}${pch_use}${silent_rules}${debug_loc}${use_openmp}${use_mpi}${use_lto} ${FEATURES}"
+CMDLINE="env ${ENVVARS} ${CMAKE_COMMAND} \"${srcdir}\" \"-DCMAKE_INSTALL_PREFIX=$prefix\"${buildtype}${pch_use}${silent_rules}${debug_loc}${use_openmp}${use_mpi}${use_lto}${use_runpath} ${FEATURES}"
 echo --- calling CMake ---
 echo ${CMDLINE}
 eval exec ${CMDLINE}
