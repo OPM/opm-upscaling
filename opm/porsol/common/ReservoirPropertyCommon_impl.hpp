@@ -674,6 +674,21 @@ namespace Opm
                 cell_to_rock_[c] = satnum[global_cell[c]] - 1;
             }
         }
+	else if (parser.hasField("ROCKTYPE")) {
+	    Opm::EclipseGridInspector insp(parser);
+            std::tr1::array<int, 3> dims = insp.gridSize();
+            int num_global_cells = dims[0]*dims[1]*dims[2];
+            const std::vector<int>& satnum = parser.getIntegerValue("ROCKTYPE");
+            if (int(satnum.size()) != num_global_cells) {
+                THROW("ROCKTYPE field must have the same size as the "
+                      "logical cartesian size of the grid: "
+                      << satnum.size() << " != " << num_global_cells);
+            }
+            for (int c = 0; c < nc; ++c) {
+                // Note: ROCKTYPE is FORTRANish, ranging from 1 to n, therefore we subtract one.
+                cell_to_rock_[c] = satnum[global_cell[c]] - 1;
+            }
+	}
     }
 
 
