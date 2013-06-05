@@ -28,7 +28,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
+#include "config.h"
 #include <algorithm>
 #include "MiscibilityLiveGas.hpp"
 #include <opm/core/utility/ErrorMacros.hpp>
