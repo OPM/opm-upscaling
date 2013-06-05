@@ -27,8 +27,8 @@
 #ifndef OPM_BENCHMARK3_CO2TABLES_HH
 #define OPM_BENCHMARK3_CO2TABLES_HH
 
-#include <opm/porsol/blackoil/co2fluid/opm/old_material/tabulatedmaterial2.hh>
-#include <opm/porsol/blackoil/co2fluid/opm/old_material/tabulatedmaterial2hires.hh>
+#include <opm/common/tabulated2dfunction.hh>
+#include <opm/common/statictabulated2dfunction.hh>
 
 #include <assert.h>
 
