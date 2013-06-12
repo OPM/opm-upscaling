@@ -46,10 +46,10 @@ file(MAKE_DIRECTORY ${RESULT_PATH})
 macro (add_test_upscale_perm gridname bcs rows)
   # Add test that runs upscale_perm and outputs the results to file
   add_test(run_upscale_perm_BC${bcs}_${gridname}
-	   ${PROJECT_BINARY_DIR}/bin/upscale_perm
-	   -bc ${bcs}
-	   -output ${RESULT_PATH}upscale_perm_BC${bcs}_${gridname}.txt
-	   ${INPUT_DATA_PATH}grids/${gridname}.grdecl)
+           ${PROJECT_BINARY_DIR}/bin/upscale_perm
+           -bc ${bcs}
+           -output ${RESULT_PATH}upscale_perm_BC${bcs}_${gridname}.txt
+           ${INPUT_DATA_PATH}grids/${gridname}.grdecl)
   # Add test that compare the results from the previous test with a reference solution
   add_test(compare_upscale_perm_BC${bcs}_${gridname}
            ${PROJECT_BINARY_DIR}/bin/compare_upscaling_results
