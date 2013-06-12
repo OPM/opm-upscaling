@@ -102,8 +102,8 @@ bool matrixAlmostEqual(Matrix refSoln, Matrix newSoln, double tol) {
     // Test element by element
     for (int row=0; row<refSoln.numRows(); ++row) {
         for (int col=0; col<refSoln.numCols(); ++col) {
-	    double absDiff = abs(refSoln(row,col) - newSoln(row,col));
-	    if (absDiff > tol) return false;
+            double absDiff = abs(refSoln(row,col) - newSoln(row,col));
+            if (absDiff > tol) return false;
         }
     }
     return true;
