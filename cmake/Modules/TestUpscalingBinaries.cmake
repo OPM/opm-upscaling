@@ -8,7 +8,7 @@
 #
 #    2) Add test that compares the output from the previous test:
 #       add_test(<testname> ${PROJECT_BINARY_DIR}/bin/compare_upscaling_results <path_to_refSoln> <path_to_newSoln>
-#                ${relTol} <number_of_result_rows> <number_of_result_cols>)
+#                ${tol} <number_of_result_rows> <number_of_result_cols>)
 #       This test should depend on the first test, so include:
 #       set_tests_properties(<test1> PROPERTIES DEPENDS <test2>)
 #
@@ -21,8 +21,8 @@
 # under 'APPEND TEST_SOURCE_FILES'.
 
 
-# Set relative tolerance to be used for testing
-set(relTol 1e-2)
+# Set absolute tolerance to be used for testing
+set(tol 1e-2)
 
 # Define some paths
 set(RESULT_PATH ${PROJECT_BINARY_DIR}/tests/results/)
@@ -55,7 +55,7 @@ macro (add_test_upscale_perm gridname bcs rows)
            ${PROJECT_BINARY_DIR}/bin/compare_upscaling_results
            ${INPUT_DATA_PATH}reference_solutions/upscale_perm_BC${bcs}_${gridname}.txt
            ${RESULT_PATH}upscale_perm_BC${bcs}_${gridname}.txt
-           ${relTol}
+           ${tol}
            ${rows} 3)
   # Set dependency of the two tests
   set_tests_properties(compare_upscale_perm_BC${bcs}_${gridname} PROPERTIES DEPENDS
