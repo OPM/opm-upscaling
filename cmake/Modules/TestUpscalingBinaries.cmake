@@ -22,7 +22,7 @@
 
 
 # Set relative tolerance to be used for testing
-set(relTol 1e-4)
+set(relTol 1e-2)
 
 # Define some paths
 set(RESULT_PATH ${PROJECT_BINARY_DIR}/tests/results/)
