@@ -78,7 +78,6 @@ Matrix readResultFile(const char* filename, int rows, int cols) {
         col = 0;
         ++row;
     }
-
     resultfile.close();
 
     return result;
@@ -94,27 +93,19 @@ Matrix readResultFile(const char* filename, int rows, int cols) {
 /// @param [in] newSoln
 ///    Solution to compare with
 ///
-/// @param [in] relTol
-///    Relative tolerance
-bool matrixAlmostEqual(Matrix refSoln, Matrix newSoln, double relTol) {
+/// @param [in] tol
+///     Absolute tolerance
+bool matrixAlmostEqual(Matrix refSoln, Matrix newSoln, double tol) {
 
     ASSERT(refSoln.numRows() == newSoln.numRows());
     ASSERT(refSoln.numCols() == newSoln.numCols());
-
     // Test element by element
     for (int row=0; row<refSoln.numRows(); ++row) {
         for (int col=0; col<refSoln.numCols(); ++col) {
-            if (abs(refSoln(row,col)) < 1e-16) { // If refSoln close to zero do simple difference test
-                double absDiff = abs(refSoln(row,col) - newSoln(row,col));
-                if (absDiff > 1e-6) return false;
-            }
-            else { // If refSoln != 0 do relative difference test
-                double absRelDiff = abs( (refSoln(row,col) - newSoln(row,col)) / refSoln(row,col) );
-                if (absRelDiff > relTol) return false;
-            }
+            double absDiff = abs(refSoln(row,col) - newSoln(row,col));
+            if (absDiff > tol) return false;
         }
     }
-
     return true;
 }
 
@@ -125,11 +116,11 @@ bool matrixAlmostEqual(Matrix refSoln, Matrix newSoln, double relTol) {
 /// Command input variables;
 ///    1) Path to reference solution file
 ///    2) Path to new solution file to compare with
-///    3) Relative tolerance
+///    3) Absolute tolerance
 ///    4) Number of rows in result files to be compared
 ///    5) Number of columns in result files to be compared
 ///
-/// The results in the input files are read and compared to eachother within a given relative tolerance.
+/// The results in the input files are read and compared to eachother within a given absolute tolerance.
 /// Lines starting with '#' are ignored. Returns 1 if test fails, 0 otherwise. If test failes, both
 /// solutions are printed to screen.
 int main(int varnum, char** vararg) {
@@ -137,14 +128,14 @@ int main(int varnum, char** vararg) {
     // Check if the correct number of variables are given
     if (varnum != 6) {
         cout << "Error: Wrong number of input variables, should be five!" << endl
-             << "Usage: ./test_upscaling_results refSolnFile newSolnFile relTol rows cols" << endl;
+             << "Usage: ./test_upscaling_results refSolnFile newSolnFile tol rows cols" << endl;
         exit(1);
     }
 
     // Process input
     const char* refSolnFile(vararg[1]);
     const char* newSolnFile(vararg[2]);
-    double relTol = atof(vararg[3]);
+    double tol = atof(vararg[3]);
     int rows = atoi(vararg[4]);
     int cols = atoi(vararg[5]);
 
@@ -153,10 +144,10 @@ int main(int varnum, char** vararg) {
     Matrix newSoln = readResultFile(newSolnFile, rows, cols);
 
     // Compare results
-    bool test = matrixAlmostEqual(refSoln, newSoln, relTol);
+    bool test = matrixAlmostEqual(refSoln, newSoln, tol);
     if (! test) {
         cout << endl << "Verification error: Calculated solution not equal to reference solution "
-             << "within a relative tolerance of " << relTol << "." << endl
+             << "within an absolute  tolerance of " << tol << "." << endl
              << "Calculated solution:" << endl
              << newSoln
              << "Reference solution:" << endl

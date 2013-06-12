@@ -43,7 +43,15 @@ list (APPEND TEST_SOURCE_FILES
 # find tests -name '*.xml' -a ! -wholename '*/not-unit/*' -printf '\t%p\n' | sort
 list (APPEND TEST_DATA_FILES
   tests/input_data/grids/PeriodicTilted.grdecl
-  tests/input_data/reference_solutions/upscale_perm_fixed_PeriodicTilted.txt 
+  tests/input_data/grids/27cellsAniso.grdecl
+  tests/input_data/grids/27cellsIso.grdecl
+  tests/input_data/grids/EightCells.grdecl
+  tests/input_data/grids/Hummocky.grdecl
+  tests/input_data/reference_solutions/upscale_perm_BCp_PeriodicTilted.txt 
+  tests/input_data/reference_solutions/upscale_perm_BCflp_27cellsAniso.txt 
+  tests/input_data/reference_solutions/upscale_perm_BCflp_27cellsIso.txt 
+  tests/input_data/reference_solutions/upscale_perm_BCfl_EightCells.txt 
+  tests/input_data/reference_solutions/upscale_perm_BCflp_Hummocky.txt 
 	)
 
 # originally generated with the command:
