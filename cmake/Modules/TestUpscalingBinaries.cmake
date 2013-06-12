@@ -17,7 +17,7 @@
 #    The second test:                 compare_<binary_name>_<options>_<model_name>
 #
 # Test models and reference solutions are available in ${PROJECT_BINARY_DIR}/tests/input_data.
-# New test data can be made available in the build three by including them in CMakeLists_files.cmake,
+# New test data can be made available in the build tree by including them in CMakeLists_files.cmake,
 # under 'APPEND TEST_SOURCE_FILES'.
 
 
@@ -39,7 +39,7 @@ file(MAKE_DIRECTORY ${RESULT_PATH})
 # Define macro that performs the two steps mentioned above for upscale_perm
 # Input: 
 #   - gridname: basename (no extension) of grid model
-#   - bcs: Boundary condition type (f, l or p or combinations)
+#   - bcs: Boundary condition type (f, l or p, or combinations of these)
 #   - rows: Number of rows in result file that is to be compared
 # This macro assumes that ${gridname}.grdecl is found in directory ${INPUT_DATA_PATH}grids/
 # and that upscale_perm_BC${bcs}_${gridname}.txt is found in ${INPUT_DATA_PATH}reference_solutions
