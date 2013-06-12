@@ -4,7 +4,7 @@
 # Finished: Thu May 16 13:21:16 2013
 # Hostname: tr-lcdapp02
 #
-# Eclipse file: /private/laods/opm/RH5/unit_testing/opm-upscaling/build/tests/input_data/grids/hummockyChopped.grdecl
+# Eclipse file: /private/laods/opm/RH5/unit_testing/opm-upscaling/build/tests/input_data/grids/Hummocky.grdecl
 # Porosity : 0.263508
 #
 # Options used:
