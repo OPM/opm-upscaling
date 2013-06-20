@@ -39,8 +39,6 @@
 #include "config.h"
 #endif
 
-#include <opm/core/utility/have_boost_redef.hpp>
-
 #include "../EulerSolverTester.hpp"
 #include <dune/common/mpihelper.hh>
 

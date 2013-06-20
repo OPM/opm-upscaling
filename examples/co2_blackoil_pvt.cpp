@@ -21,7 +21,6 @@
 
 #include "config.h"
 
-#include <opm/core/utility/have_boost_redef.hpp>
 #include <opm/core/utility/StopWatch.hpp>
 #include <opm/porsol/blackoil/co2fluid/BlackoilCo2PVT.hpp>
 

@@ -30,8 +30,6 @@
 
 #include <config.h>
 
-#include <opm/core/utility/have_boost_redef.hpp>
-
 #include <algorithm>
 #include "MiscibilityLiveOil.hpp"
 #include <opm/core/utility/ErrorMacros.hpp>
