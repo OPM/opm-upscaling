@@ -33,8 +33,6 @@
 */
 #include <config.h>
 
-#include <opm/core/utility/have_boost_redef.hpp>
-
 
 //#define VERBOSE
 #include <opm/upscaling/SteadyStateUpscalerImplicit.hpp>
