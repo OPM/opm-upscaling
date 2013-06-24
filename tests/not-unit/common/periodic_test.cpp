@@ -35,8 +35,6 @@
 
 #include <config.h>
 
-#include <opm/core/utility/have_boost_redef.hpp>
-
 #include "../PeriodicHelpers.hpp"
 #include <opm/porsol/common/BoundaryConditions.hpp>
 #include <opm/porsol/common/GridInterfaceEuler.hpp>

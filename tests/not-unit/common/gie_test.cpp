@@ -36,8 +36,6 @@
 
 #include "config.h"
 
-#include <opm/core/utility/have_boost_redef.hpp>
-
 #include <iostream>
 
 #include <boost/static_assert.hpp>

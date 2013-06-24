@@ -35,8 +35,6 @@
 
 #include "config.h"
 
-#include <opm/core/utility/have_boost_redef.hpp>
-
 #include "../RockJfunc.hpp"
 #include <opm/porsol/common/Matrix.hpp>
 #include <opm/core/utility/Units.hpp>

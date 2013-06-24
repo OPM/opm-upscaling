@@ -21,8 +21,6 @@
 
 #include "config.h"
 
-#include <opm/core/utility/have_boost_redef.hpp>
-
 #include <opm/core/io/eclipse/EclipseGridParser.hpp>
 #include <opm/porsol/blackoil/BlackoilSimulator.hpp>
 #include <dune/common/mpihelper.hh>
