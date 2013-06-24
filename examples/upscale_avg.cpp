@@ -40,8 +40,6 @@
  */
 #include <config.h>
 
-#include <opm/core/utility/have_boost_redef.hpp>
-
 #include <iostream>
 #include <fstream>
 #include <sstream>
