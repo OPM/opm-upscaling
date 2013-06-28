@@ -126,6 +126,7 @@ namespace Opm
         int    max_it_;
         double  max_stepsize_;
         double dt_sat_tol_;
+        bool use_maxdiff_;
         TransportSolver transport_solver_;
         GridAdapter grid_adapter_;
     };
