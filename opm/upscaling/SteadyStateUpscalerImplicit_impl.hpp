@@ -169,6 +169,7 @@ namespace Opm
 
         // Put pore volume in vector.
         std::vector<double> pore_vol;
+        pore_vol.reserve(num_cells);
         double tot_pore_vol = 0.0;
         typedef typename GridInterface::CellIterator CellIter;
         for (CellIter c = this->ginterf_.cellbegin(); c != this->ginterf_.cellend(); ++c) {
@@ -262,7 +263,7 @@ namespace Opm
                 double maxdiff = 0.0;
                 double euclidean_diff = 0.0;
                 for (int i = 0; i < num_cells; ++i) {
-                    double sat_diff_cell = saturation[i] - saturation_old[i];
+                    const double sat_diff_cell = saturation[i] - saturation_old[i];
                     maxdiff = std::max(maxdiff, std::fabs(sat_diff_cell));
                     euclidean_diff += sat_diff_cell * sat_diff_cell * pore_vol[i];
                 }
