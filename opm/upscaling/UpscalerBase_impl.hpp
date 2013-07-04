@@ -306,8 +306,10 @@ namespace Opm
 			if (canon_bid - 1 == 2*flow_dir) {
 			    ++num_side1;
 			    if (flow_dir == pdrop_dir && flux > 0.0) {
+#ifdef VERBOSE
 			      std::cerr << "Flow may be in wrong direction at bid: " << f->boundaryId()<<" (canonical: "<<canon_bid
 					  << ") Magnitude: " << std::fabs(flux) << std::endl;
+#endif
 				// THROW("Detected outflow at entry face: " << face);
 			    }
 			    side1_flux += flux*norm_comp;
@@ -316,8 +318,10 @@ namespace Opm
 			    ASSERT(canon_bid - 1 == 2*flow_dir + 1);
 			    ++num_side2;
 			    if (flow_dir == pdrop_dir && flux < 0.0) {
+#ifdef VERBOSE
 				std::cerr << "Flow may be in wrong direction at bid: " << f->boundaryId()
 					  << " Magnitude: " << std::fabs(flux) << std::endl;
+#endif
 				// THROW("Detected inflow at exit face: " << face);
 			    }
 			    side2_flux += flux*norm_comp;

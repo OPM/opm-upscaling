@@ -1,11 +1,27 @@
 # - Default settings for the build
 
 include (UseCompVer)
+include(TestCXXAcceptsFlag)
 
 macro (opm_defaults opm)
-  # build debug by default
+  # if we are installing a development version (default when checking out of
+  # VCS), then remember which directories were used when configuring. package
+  # distribution should disable this option.
+  option (USE_RUNPATH "Embed original dependency paths in installed library" ON)
+  if (USE_RUNPATH)
+	if (CMAKE_COMPILER_IS_GNUCXX)
+	  check_cxx_accepts_flag ("-Wl,--enable-new-dtags" HAVE_RUNPATH)
+	  if (HAVE_RUNPATH)
+		list (APPEND ${opm}_LINKER_FLAGS "-Wl,--enable-new-dtags")
+	  endif (HAVE_RUNPATH)
+	endif (CMAKE_COMPILER_IS_GNUCXX)
+	# set this to avoid CMake stripping it off again
+	set (CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+  endif (USE_RUNPATH)
+
+  # build release by default
   if (NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
-	set (CMAKE_BUILD_TYPE "Debug")
+	set (CMAKE_BUILD_TYPE "Release")
   endif (NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
 
   # default to building a static library, but let user override

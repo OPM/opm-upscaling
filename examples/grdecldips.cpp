@@ -19,8 +19,6 @@
 */
 #include <config.h>
 
-#include <opm/core/utility/have_boost_redef.hpp>
-
 #include <map>
 #include <iostream>
 #include <fstream>

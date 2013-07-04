@@ -35,7 +35,6 @@ Requires:       blas-devel
 Requires:       lapack-devel
 Requires:       suitesparse-devel
 Requires:       libopm-upscaling1 = %{version}
-BuildArch:	noarch
 
 %description devel
 This package contains the development and header files for opm-upscaling
@@ -61,7 +60,7 @@ This package contains the applications for opm-upscaling
 %setup -q
 
 %build
-cmake28 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_INSTALL_DOCDIR=share/doc/%{name}-%{version}
+cmake28 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_INSTALL_DOCDIR=share/doc/%{name}-%{version} -DUSE_RUNPATH=OFF
 make
 
 %install

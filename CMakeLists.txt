@@ -41,14 +41,8 @@ set (${project}_DEPS
 	opm-porsol REQUIRED"
 	)
 
-# C++ project
-cmake_minimum_required (VERSION 2.8)
-project (${${project}_NAME})
-enable_language (C)
-enable_language (CXX)
-
 # additional search modules
-set (${project}_MODULE_DIR "${PROJECT_SOURCE_DIR}/cmake/Modules")
+set (${project}_MODULE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
 list (APPEND CMAKE_MODULE_PATH ${${project}_MODULE_DIR})
 
 # include special
@@ -61,6 +55,16 @@ if (CMAKE_VERSION VERSION_LESS "2.8.7")
 	message (STATUS "Enabling compatibility modules for CMake 2.8.7")
 	list (APPEND CMAKE_MODULE_PATH "${${project}_MODULE_DIR}/compat-2.8.7")
 endif (CMAKE_VERSION VERSION_LESS "2.8.7")
+
+# don't write default flags into the cache, preserve that for user set values
+include (AddOptions)
+no_default_options ()
+
+# C++ project
+cmake_minimum_required (VERSION 2.8)
+project (${${project}_NAME})
+enable_language (C)
+enable_language (CXX)
 
 # print system information to better pinpoint issues from log alone
 include (UseSystemInfo)
@@ -180,6 +184,8 @@ opm_compile_satellites (${project} examples "" "")
 # infrastructure for testing
 enable_testing ()
 include (CTest)
+
+include (TestUpscalingBinaries)
 
 # make datafiles necessary for tests available in output directory
 opm_data (tests datafiles "${tests_DIR}")

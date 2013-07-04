@@ -1,0 +1,23 @@
+###############################################################################
+# Results from upscaling permeability.
+#
+# Finished: Tue May  7 08:42:58 2013
+# Hostname: tr-lcdapp02
+#
+# Eclipse file: PeriodicTilted.grdecl
+# Porosity : 0.34
+#
+# Options used:
+#     Boundary conditions: Periodic  
+#                 minPerm: 1e-9
+#
+# If both linear and fixed boundary conditions are calculated, 
+# the nonperiodic tesselation is done only once
+# 
+#
+# Upscaled permeability for periodic boundary conditions:
+# Tesselation time: 0.06 s
+# Computation time: 1.17 s
+472.996 9.34102e-05 -144.893 
+4.8044e-05 549.996 -0.00250519 
+-144.894 -2.53723e-05 254.094 
