@@ -115,7 +115,7 @@ void test_evaluator(const Interface& g)
 
 void build_grid(const Opm::EclipseGridParser& parser,
                 const double z_tol, Dune::CpGrid& grid,
-                std::tr1::array<int,3>& cartDims)
+                boost::array<int,3>& cartDims)
 {
     Opm::EclipseGridInspector insp(parser);
 
@@ -224,7 +224,7 @@ int main(int argc, char** argv)
 
     Opm::EclipseGridParser parser(param.get<std::string>("filename"));
     double z_tol = param.getDefault<double>("z_tolerance", 0.0);
-    std::tr1::array<int,3> cartDims;
+    boost::array<int,3> cartDims;
     build_grid(parser, z_tol, grid, cartDims);
 
     // Make the grid interface

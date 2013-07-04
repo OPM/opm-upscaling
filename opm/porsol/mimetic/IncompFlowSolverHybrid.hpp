@@ -47,7 +47,7 @@
 #include <utility>
 #include <vector>
 
-#include <tr1/unordered_map>
+#include <boost/unordered_map.hpp>
 
 #include <boost/bind.hpp>
 #include <boost/scoped_ptr.hpp>
@@ -901,7 +901,7 @@ namespace Opm {
 
     private:
         typedef std::pair<int,int>                 DofID;
-        typedef std::tr1::unordered_map<int,DofID> BdryIdMapType;
+        typedef boost::unordered_map<int,DofID> BdryIdMapType;
         typedef BdryIdMapType::const_iterator      BdryIdMapIterator;
 
         const GridInterface* pgrid_;
