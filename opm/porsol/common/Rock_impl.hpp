@@ -135,7 +135,7 @@ namespace Opm
                                        double perm_threshold)
     {
 	Opm::EclipseGridInspector insp(parser);
-        std::tr1::array<int, 3> dims = insp.gridSize();
+        boost::array<int, 3> dims = insp.gridSize();
         int num_global_cells = dims[0]*dims[1]*dims[2];
         ASSERT (num_global_cells > 0);
 

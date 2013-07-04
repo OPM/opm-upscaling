@@ -38,7 +38,7 @@
 
 
 
-#include <tr1/unordered_map>
+#include <boost/unordered_map.hpp>
 
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/core/utility/SparseVector.hpp>

@@ -28,7 +28,7 @@
 #include <opm/core/utility/SparseTable.hpp>
 #include <opm/porsol/common/LinearSolverISTL.hpp>
 
-#include <tr1/array>
+#include <boost/array.hpp>
 
 namespace Opm
 {

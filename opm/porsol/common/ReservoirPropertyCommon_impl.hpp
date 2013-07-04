@@ -574,7 +574,7 @@ namespace Opm
 
         if (parser.hasField("PORO")) {
 	    Opm::EclipseGridInspector insp(parser);
-            std::tr1::array<int, 3> dims = insp.gridSize();
+            boost::array<int, 3> dims = insp.gridSize();
             int num_global_cells = dims[0]*dims[1]*dims[2];
             const std::vector<double>& poro = parser.getFloatingPointValue("PORO");
             if (int(poro.size()) != num_global_cells) {
@@ -597,7 +597,7 @@ namespace Opm
                                                                             double perm_threshold)
     {
 	Opm::EclipseGridInspector insp(parser);
-        std::tr1::array<int, 3> dims = insp.gridSize();
+        boost::array<int, 3> dims = insp.gridSize();
         int num_global_cells = dims[0]*dims[1]*dims[2];
         ASSERT (num_global_cells > 0);
 
@@ -661,7 +661,7 @@ namespace Opm
 
         if (parser.hasField("SATNUM")) {
 	    Opm::EclipseGridInspector insp(parser);
-            std::tr1::array<int, 3> dims = insp.gridSize();
+            boost::array<int, 3> dims = insp.gridSize();
             int num_global_cells = dims[0]*dims[1]*dims[2];
             const std::vector<int>& satnum = parser.getIntegerValue("SATNUM");
             if (int(satnum.size()) != num_global_cells) {
@@ -676,7 +676,7 @@ namespace Opm
         }
         else if (parser.hasField("ROCKTYPE")) {
             Opm::EclipseGridInspector insp(parser);
-            std::tr1::array<int, 3> dims = insp.gridSize();
+            boost::array<int, 3> dims = insp.gridSize();
             int num_global_cells = dims[0]*dims[1]*dims[2];
             const std::vector<int>& satnum = parser.getIntegerValue("ROCKTYPE");
             if (int(satnum.size()) != num_global_cells) {

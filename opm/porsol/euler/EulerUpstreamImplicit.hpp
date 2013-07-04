@@ -36,7 +36,7 @@ along with OpenRS.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef OPENRS_EULERUPSTREAMIMPLICIT_HEADER
 #define OPENRS_EULERUPSTREAMIMPLICIT_HEADER
 
-#include <tr1/unordered_map>
+#include <boost/unordered_map.hpp>
 
 #include <opm/core/utility/SparseVector.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
