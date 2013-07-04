@@ -81,10 +81,10 @@ namespace Opm
                   double z_tolerance = 0.0,
                   double residual_tolerance = 1e-8,
                   int linsolver_verbosity = 0,
-                  int linsolver_type = 1,
+                  int linsolver_type = 3,
                   bool twodim_hack = false,
                   int linsolver_maxit = 0,
-                  double linsolver_prolongate_factor = 1.6,
+                  double linsolver_prolongate_factor = 1.0,
                   int linsolver_smooth_steps = 2);
 
 	/// Access the grid.

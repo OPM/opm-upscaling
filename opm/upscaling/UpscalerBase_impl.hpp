@@ -48,9 +48,9 @@ namespace Opm
 	  twodim_hack_(false),
 	  residual_tolerance_(1e-8),
 	  linsolver_maxit_(0),
-	  linsolver_prolongate_factor_(1.6),
+	  linsolver_prolongate_factor_(1.0),
 	  linsolver_verbosity_(0),
-          linsolver_type_(1),
+          linsolver_type_(3),
           linsolver_smooth_steps_(2)
     {
     }
