@@ -85,7 +85,7 @@ namespace Opm
                   bool twodim_hack = false,
                   int linsolver_maxit = 0,
                   double linsolver_prolongate_factor = 1.0,
-                  int linsolver_smooth_steps = 2);
+                  int linsolver_smooth_steps = 1);
 
 	/// Access the grid.
 	const GridType& grid() const;

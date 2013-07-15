@@ -51,7 +51,7 @@ namespace Opm
 	  linsolver_prolongate_factor_(1.0),
 	  linsolver_verbosity_(0),
           linsolver_type_(3),
-          linsolver_smooth_steps_(2)
+          linsolver_smooth_steps_(1)
     {
     }
 
