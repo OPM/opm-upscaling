@@ -217,7 +217,7 @@ int main(int varnum, char** vararg) {
         " x " << griddims[1]+1 << ")" << endl;
     
     // Find max and min in x-, y- and z-directions
-    boost::array<double, 6> gridlimits = eclInspector.getGridLimits();
+    std::array<double, 6> gridlimits = eclInspector.getGridLimits();
     cout << "                 x-limits: " << gridlimits[0] << " -- " << gridlimits[1] << endl;
     cout << "                 y-limits: " << gridlimits[2] << " -- " << gridlimits[3] << endl;
     cout << "                 z-limits: " << gridlimits[4] << " -- " << gridlimits[5] << endl;

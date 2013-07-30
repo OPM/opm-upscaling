@@ -39,7 +39,7 @@
 #include <opm/upscaling/UpscalerBase.hpp>
 #include <opm/porsol/euler/EulerUpstream.hpp>
 #include <opm/porsol/euler/ImplicitCapillarity.hpp>
-#include <boost/array.hpp>
+#include <array>
 
 namespace Opm
 {
