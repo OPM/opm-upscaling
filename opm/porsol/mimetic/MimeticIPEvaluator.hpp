@@ -40,7 +40,7 @@
 #include <vector>
 
 #include <boost/bind.hpp>
-#include <boost/array.hpp>
+#include <array>
 #include <boost/static_assert.hpp>
 
 #include <opm/core/utility/ErrorMacros.hpp>
@@ -115,7 +115,7 @@ namespace Opm {
         /// @param [in] max_nf
         ///    Maximum number of faces/connections of any single cell
         ///    in the model.  Used to set the size of certain internal
-        ///    working Dune::arrays.  A cell with @f$n_f@f$ faces results in
+        ///    working std::arrays.  A cell with @f$n_f@f$ faces results in
         ///    an inner product matrix of size @f$n_f \times n_f@f$.
         MimeticIPEvaluator(const int max_nf)
             : max_nf_(max_nf         ),
@@ -132,7 +132,7 @@ namespace Opm {
         /// @param [in] max_nf
         ///    Maximum number of faces/connections of any single cell
         ///    in the model.  Used to set the size of certain internal
-        ///    working Dune::arrays.  A cell with @f$n_f@f$ faces results in
+        ///    working std::arrays.  A cell with @f$n_f@f$ faces results in
         ///    an inner product matrix of size @f$n_f \times n_f@f$.
         void init(const int max_nf)
         {
@@ -301,8 +301,8 @@ namespace Opm {
         {
             const int ci = c->index();
 
-            boost::array<Scalar, FluidInterface::NumberOfPhases> mob ;
-            boost::array<Scalar, FluidInterface::NumberOfPhases> rho ;
+            std::array<Scalar, FluidInterface::NumberOfPhases> mob ;
+            std::array<Scalar, FluidInterface::NumberOfPhases> rho ;
             fl.phaseMobilities(ci, s[ci], mob);
             fl.phaseDensities (ci, rho);
 
@@ -511,8 +511,8 @@ namespace Opm {
         {
             const int ci = c->index();
 
-            boost::array<Scalar, FluidInterface::NumberOfPhases> mob;
-            boost::array<Scalar, FluidInterface::NumberOfPhases> rho;
+            std::array<Scalar, FluidInterface::NumberOfPhases> mob;
+            std::array<Scalar, FluidInterface::NumberOfPhases> rho;
             fl.phaseMobilities(ci, s[ci], mob);
             fl.phaseDensities (ci, rho);
 
@@ -527,7 +527,7 @@ namespace Opm {
         /// @brief Compute gravity flux for all faces of single cell.
         ///
         /// @tparam Vector
-        ///    Type representing a vector (or a linear Dune::array) for
+        ///    Type representing a vector (or a linear std::array) for
         ///    which (a constant time) @code operator[] @endcode is
         ///    defined.
         ///

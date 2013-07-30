@@ -240,7 +240,7 @@ namespace Opm
         typedef typename GridInterface::Vector Vec;
         std::vector<Vec> cell_velocity;
         estimateCellVelocity(cell_velocity, ginterf, flowsol);
-        Dune::array<std::vector<Vec>, 2> phase_velocities;
+        std::array<std::vector<Vec>, 2> phase_velocities;
         computePhaseVelocities(phase_velocities[0], phase_velocities[1], rp, saturation, cell_velocity);
         // Dune's vtk writer wants multi-component data to be flattened.
         std::vector<double> cell_velocity_flat(&*cell_velocity.front().begin(),
@@ -254,7 +254,7 @@ namespace Opm
         std::vector<double> cap_pressure;
         computeCapPressure(cap_pressure, rp, saturation);
         int num_cells = saturation.size();
-//         Dune::array<std::vector<double>, 2> phase_mobilities_;
+//         std::array<std::vector<double>, 2> phase_mobilities_;
 //         phase_mobilities_[0].resize(num_cells);
 //         phase_mobilities_[1].resize(num_cells);
         std::vector<double> fractional_flow_(num_cells);

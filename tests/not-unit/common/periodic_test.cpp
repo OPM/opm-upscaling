@@ -39,7 +39,7 @@
 #include <opm/porsol/common/BoundaryConditions.hpp>
 #include <opm/porsol/common/GridInterfaceEuler.hpp>
 #include <dune/grid/CpGrid.hpp>
-#include <dune/common/array.hh>
+#include <array>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 
 using namespace Opm;
@@ -52,14 +52,14 @@ int main(int argc, char** argv)
     grid.setUniqueBoundaryIds(true);
     GridInterfaceEuler<Dune::CpGrid> gi(grid);
     typedef FlowBC FBC;
-    Dune::array<FBC, 6> fcond = {{ FBC(FBC::Periodic, 1.0e5),
+    std::array<FBC, 6> fcond = {{ FBC(FBC::Periodic, 1.0e5),
                                    FBC(FBC::Periodic, -1.0e5),
                                    FBC(FBC::Periodic, 0.0),
                                    FBC(FBC::Periodic, 0.0),
                                    FBC(FBC::Neumann, 0.0),
                                    FBC(FBC::Neumann, 0.0) }};
     typedef SatBC SBC;
-    Dune::array<SBC, 6> scond = {{ SBC(SBC::Periodic, 0.0),
+    std::array<SBC, 6> scond = {{ SBC(SBC::Periodic, 0.0),
                                    SBC(SBC::Periodic, 0.0),
                                    SBC(SBC::Periodic, 0.0),
                                    SBC(SBC::Periodic, 0.0),

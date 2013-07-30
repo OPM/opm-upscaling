@@ -76,12 +76,12 @@ namespace Opm {
 
         /// @brief Data size query.
         ///
-        /// @return Number of elements in storage Dune::array.
+        /// @return Number of elements in storage std::array.
         int size() const { return data_.size(); }
 
         /// @brief Direct access to all data.
         ///
-        /// @return Pointer to first element of storage Dune::array.
+        /// @return Pointer to first element of storage std::array.
         T*       data()       { return &data_[0]; }
         const T* data() const { return &data_[0]; }
 
@@ -89,13 +89,13 @@ namespace Opm {
         /// @brief Constructor.
         ///
         /// @param [in] sz
-        ///    Number of elements in FullMatrix storage Dune::array.
+        ///    Number of elements in FullMatrix storage std::array.
         ///
         /// @param [in] data
         ///    Initial data vector.  If non-NULL, must contain @code
         ///    sz @endcode elements which will be assigned to a
-        ///    freshly allocated storage Dune::array.  If NULL, a @code sz
-        ///    @endcode element all-zero storage Dune::array will be
+        ///    freshly allocated storage std::array.  If NULL, a @code sz
+        ///    @endcode element all-zero storage std::array will be
         ///    constructed.
         OwnData(int sz, const T* data)
         {
@@ -132,12 +132,12 @@ namespace Opm {
 
         /// @brief Data size query.
         ///
-        /// @return Number of elements in storage Dune::array.
+        /// @return Number of elements in storage std::array.
         int size() const { return sz_; }
 
         /// @brief Direct access to all data.
         ///
-        /// @return Pointer to first element of storage Dune::array.
+        /// @return Pointer to first element of storage std::array.
         T*       data()       { return data_; }
         const T* data() const { return data_; }
 
@@ -145,7 +145,7 @@ namespace Opm {
         /// @brief Constructor.
         ///
         /// @param [in] sz
-        ///    Number of elements in FullMatrix storage Dune::array.
+        ///    Number of elements in FullMatrix storage std::array.
         ///
         /// @param [in] data
         ///    Initial data vector.  If non-NULL, must point to a @code
@@ -183,19 +183,19 @@ namespace Opm {
 
         /// @brief Data size query.
         ///
-        /// @return Number of elements in storage Dune::array.
+        /// @return Number of elements in storage std::array.
         int size() const { return sz_; }
 
         /// @brief Direct access to all data.
         ///
-        /// @return Pointer to first element of storage Dune::array.
+        /// @return Pointer to first element of storage std::array.
         const T* data() const { return data_; }
 
     protected:
         /// @brief Constructor.
         ///
         /// @param [in] sz
-        ///    Number of elements in FullMatrix storage Dune::array.
+        ///    Number of elements in FullMatrix storage std::array.
         ///
         /// @param [in] data
         ///    Initial data vector.  Must be non-NULL and point to a
@@ -268,15 +268,15 @@ namespace Opm {
     public:
         /// @brief
         ///    Retrieve the (BLAS/LAPACK) leading dimension of the
-        ///    matrix storage Dune::array.
+        ///    matrix storage std::array.
         ///
         /// @return
         ///    Leading dimension (i.e., the number of columns for a
-        ///    C-ordered matrix) of the matrix storage Dune::array.
+        ///    C-ordered matrix) of the matrix storage std::array.
         int leadingDimension() const { return numCols(); }
 
         /// @brief
-        ///    Retrieve the linear index (into storage Dune::array) of the
+        ///    Retrieve the linear index (into storage std::array) of the
         ///    element at specific row/column position of the current
         ///    matrix.
         ///
@@ -323,15 +323,15 @@ namespace Opm {
     public:
         /// @brief
         ///    Retrieve the (BLAS/LAPACK) leading dimension of the
-        ///    matrix storage Dune::array.
+        ///    matrix storage std::array.
         ///
         /// @return
         ///    Leading dimension (i.e., the number of rows for a
-        ///    Fortran ordered matrix) of the matrix storage Dune::array.
+        ///    Fortran ordered matrix) of the matrix storage std::array.
         int leadingDimension() const { return numRows(); }
 
         /// @brief
-        ///    Retrieve the linear index (into storage Dune::array) of the
+        ///    Retrieve the linear index (into storage std::array) of the
         ///    element at specific row/column position of the current
         ///    matrix.
         ///
@@ -380,7 +380,7 @@ namespace Opm {
 
     /// @brief
     ///    Dynamically sized m-by-n matrix with general element
-    ///    storage (in a linear Dune::array) and element ordering.
+    ///    storage (in a linear std::array) and element ordering.
     ///
     /// @tparam T
     ///    Element type.

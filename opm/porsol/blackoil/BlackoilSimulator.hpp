@@ -126,10 +126,10 @@ init(const Opm::parameter::ParameterGroup& param)
         fluid_.init(parser);
         wells_.init(parser, grid_, rock_);
     } else if (fileformat == "cartesian") {
-        Dune::array<int, 3> dims = {{ param.getDefault<int>("nx", 1),
+        std::array<int, 3> dims = {{ param.getDefault<int>("nx", 1),
                                       param.getDefault<int>("ny", 1),
                                       param.getDefault<int>("nz", 1) }};
-        Dune::array<double, 3> cellsz = {{ param.getDefault<double>("dx", 1.0),
+        std::array<double, 3> cellsz = {{ param.getDefault<double>("dx", 1.0),
                                            param.getDefault<double>("dy", 1.0),
                                            param.getDefault<double>("dz", 1.0) }};
         grid_.createCartesian(dims, cellsz);

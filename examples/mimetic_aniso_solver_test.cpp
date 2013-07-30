@@ -41,7 +41,7 @@
 
 #include <boost/static_assert.hpp>
 
-#include <dune/common/array.hh>
+#include <array>
 #include <dune/common/mpihelper.hh>
 #include <opm/core/utility/Units.hpp>
 
@@ -113,7 +113,7 @@ void test_evaluator(const Interface& g)
 
 void build_grid(const Opm::EclipseGridParser& parser,
                 const double z_tol, Dune::CpGrid& grid,
-                boost::array<int,3>& cartDims)
+                std::array<int,3>& cartDims)
 {
     Opm::EclipseGridInspector insp(parser);
 
@@ -222,7 +222,7 @@ int main(int argc, char** argv)
 
     Opm::EclipseGridParser parser(param.get<std::string>("filename"));
     double z_tol = param.getDefault<double>("z_tolerance", 0.0);
-    boost::array<int,3> cartDims;
+    std::array<int,3> cartDims;
     build_grid(parser, z_tol, grid, cartDims);
 
     // Make the grid interface

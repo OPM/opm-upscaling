@@ -38,7 +38,7 @@
 
 #include <opm/porsol/common/RockJfunc.hpp>
 #include <opm/porsol/common/ReservoirPropertyCommon.hpp>
-#include <dune/common/array.hh>
+#include <array>
 
 namespace Opm
 {
@@ -135,7 +135,7 @@ namespace Opm
         double relPermFirstPhaseDeriv(int cell_index, double saturation) const;
         double relPermSecondPhaseDeriv(int cell_index, double saturation) const;
         void cflFracFlows(int rock, double s, double& ff_first, double& ff_gravity) const;
-        Dune::array<double, 3> computeSingleRockCflFactors(int rock, double min_perm, double max_poro) const;
+        std::array<double, 3> computeSingleRockCflFactors(int rock, double min_perm, double max_poro) const;
     };
 
 

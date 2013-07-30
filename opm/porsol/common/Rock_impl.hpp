@@ -23,7 +23,7 @@
 
 #include <fstream>
 #include <boost/static_assert.hpp>
-#include <boost/array.hpp>
+#include <array>
 #include <opm/core/io/eclipse/EclipseGridInspector.hpp>
 
 namespace Opm
@@ -135,7 +135,7 @@ namespace Opm
                                        double perm_threshold)
     {
 	Opm::EclipseGridInspector insp(parser);
-        boost::array<int, 3> dims = insp.gridSize();
+        std::array<int, 3> dims = insp.gridSize();
         int num_global_cells = dims[0]*dims[1]*dims[2];
         ASSERT (num_global_cells > 0);
 
@@ -148,7 +148,7 @@ namespace Opm
         tensor.push_back(&zero);
 
         BOOST_STATIC_ASSERT(dim == 3);
-        boost::array<int,9> kmap;
+        std::array<int,9> kmap;
         permeability_kind_ = fillTensor(parser, tensor, kmap);
 
         // Assign permeability values only if such values are

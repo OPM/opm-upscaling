@@ -108,10 +108,10 @@ namespace Opm
             res_prop.init(parser, grid.globalCell(), perm_threshold, rl_ptr,
                           use_j, sigma, theta);
         } else if (fileformat == "cartesian") {
-            Dune::array<int, 3> dims = {{ param.getDefault<int>("nx", 1),
+            std::array<int, 3> dims = {{ param.getDefault<int>("nx", 1),
                                     param.getDefault<int>("ny", 1),
                                     param.getDefault<int>("nz", 1) }};
-            Dune::array<double, 3> cellsz = {{ param.getDefault<double>("dx", 1.0),
+            std::array<double, 3> cellsz = {{ param.getDefault<double>("dx", 1.0),
                                          param.getDefault<double>("dy", 1.0),
                                          param.getDefault<double>("dz", 1.0) }};
             grid.createCartesian(dims, cellsz);
@@ -166,10 +166,10 @@ namespace Opm
         // Parts copied from Dune::CpGrid::init().
         std::string fileformat = param.getDefault<std::string>("fileformat", "cartesian");
         if (fileformat == "cartesian") {
-            Dune::array<int, 3> dims = {{ param.getDefault<int>("nx", 1),
+            std::array<int, 3> dims = {{ param.getDefault<int>("nx", 1),
                                     param.getDefault<int>("ny", 1),
                                     param.getDefault<int>("nz", 1) }};
-            Dune::array<double, 3> cellsz = {{ param.getDefault<double>("dx", 1.0),
+            std::array<double, 3> cellsz = {{ param.getDefault<double>("dx", 1.0),
                                          param.getDefault<double>("dy", 1.0),
                                          param.getDefault<double>("dz", 1.0) }};
             grid.~SGrid<3,3>();

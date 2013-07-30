@@ -37,7 +37,7 @@
 
 #include "BlackoilDefs.hpp"
 #include <vector>
-#include <boost/array.hpp>
+#include <array>
 
 namespace Opm
 {
