@@ -85,8 +85,9 @@ namespace Opm
             // Save EGRID file in case we are writing ECL output.
             if (param.getDefault("output_ecl", false)) {
                 boost::filesystem::path ecl_path(ecl_file);
+                const std::vector<int>& globalCell = grid.globalCell();
                 ecl_path.replace_extension(".EGRID");
-                parser.saveEGRID(ecl_path.string());
+                parser.saveEGRID(ecl_path.string() , (int) globalCell.size() , &globalCell[0]);
             }
             double perm_threshold_md = param.getDefault("perm_threshold_md", 0.0);
             double perm_threshold = Opm::unit::convert::from(perm_threshold_md, Opm::prefix::milli*Opm::unit::darcy);
