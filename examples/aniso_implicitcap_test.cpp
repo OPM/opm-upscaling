@@ -37,9 +37,7 @@
 #define VERBOSE
 //#define USE_TBB
 
-#if HAVE_CONFIG_H
 #include "config.h"
-#endif // HAVE_CONFIG_H
 
 #include "SimulatorTester.hpp"
 #include "SimulatorTesterFlexibleBC.hpp"

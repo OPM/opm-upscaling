@@ -17,7 +17,7 @@
   along with OpenRS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
+#include "config.h"
 
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/porsol/appleyard/Appleyard.hpp>

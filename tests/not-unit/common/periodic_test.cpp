@@ -33,7 +33,7 @@
   along with OpenRS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
+#include "config.h"
 
 #include "../PeriodicHelpers.hpp"
 #include <opm/porsol/common/BoundaryConditions.hpp>

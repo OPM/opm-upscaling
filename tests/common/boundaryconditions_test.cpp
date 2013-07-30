@@ -32,7 +32,7 @@
   You should have received a copy of the GNU General Public License
   along with OpenRS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <config.h>
+#include "config.h"
 
 #if defined(HAVE_DYNAMIC_BOOST_TEST)
 #define BOOST_TEST_DYN_LINK
