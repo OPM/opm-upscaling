@@ -111,7 +111,7 @@ int main(int argc, char** argv)
     // Original x/y resolution in terms of coordinate values (not indices)
     Opm::EclipseGridParser gridparser(gridfilename); // TODO: REFACTOR!!!! it is stupid to parse this again
     Opm::EclipseGridInspector gridinspector(gridparser);
-    boost::array<double, 6> gridlimits=gridinspector.getGridLimits();
+    std::array<double, 6> gridlimits=gridinspector.getGridLimits();
     double finegridxresolution = (gridlimits[1]-gridlimits[0])/dims[0];
     double finegridyresolution = (gridlimits[3]-gridlimits[2])/dims[1];
 
