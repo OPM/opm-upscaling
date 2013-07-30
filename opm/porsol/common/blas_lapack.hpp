@@ -166,7 +166,7 @@ namespace Opm {
         ///    Pointer to first data element of matrix @f$ A @f$.
         ///
         /// @param [in] ldA
-        ///    Leading dimension of storage Dune::array containing the matrix
+        ///    Leading dimension of storage std::array containing the matrix
         ///    @f$ A @f$.
         ///
         /// @param [in] x
@@ -246,14 +246,14 @@ namespace Opm {
         ///    Pointer to first data element of matrix @f$ A @f$.
         ///
         /// @param [in] ldA
-        ///    Leading dimension of storage Dune::array containing the matrix
+        ///    Leading dimension of storage std::array containing the matrix
         ///    @f$ A @f$.
         ///
         /// @param [in] B
         ///    Pointer to first data element of matrix @f$ B @f$.
         ///
         /// @param [in] ldB
-        ///    Leading dimension of storage Dune::array containing the matrix
+        ///    Leading dimension of storage std::array containing the matrix
         ///    @f$ B @f$.
         ///
         /// @param [in] a2
@@ -263,7 +263,7 @@ namespace Opm {
         ///    Pointer to first data element of matrix @f$ C @f$.
         ///
         /// @param [in] ldC
-        ///    Leading dimension of storage Dune::array containing the matrix
+        ///    Leading dimension of storage std::array containing the matrix
         ///    @f$ C @f$.
         template<typename T>
         void GEMM(const char* transA, const char* transB,

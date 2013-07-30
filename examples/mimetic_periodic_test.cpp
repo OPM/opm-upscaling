@@ -37,7 +37,7 @@
 
 #include <iostream>
 
-#include <boost/array.hpp>
+#include <array>
 
 #include <opm/core/utility/Units.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
@@ -70,7 +70,7 @@ int main(int argc, char** argv)
     grid.setUniqueBoundaryIds(true);
     GridInterfaceEuler<Dune::CpGrid> g(grid);
     typedef FlowBC FBC;
-    Dune::array<FBC, 6> cond = {{ FBC(FBC::Periodic,  1.0*Opm::unit::barsa),
+    std::array<FBC, 6> cond = {{ FBC(FBC::Periodic,  1.0*Opm::unit::barsa),
                             FBC(FBC::Periodic, -1.0*Opm::unit::barsa),
                             FBC(FBC::Periodic,  0.0),
                             FBC(FBC::Periodic,  0.0),

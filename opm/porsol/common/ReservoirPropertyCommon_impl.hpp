@@ -39,7 +39,7 @@
 
 #include <fstream>
 #include <boost/static_assert.hpp>
-#include <boost/array.hpp>
+#include <array>
 #include <opm/core/io/eclipse/EclipseGridInspector.hpp>
 
 namespace Opm
@@ -134,7 +134,7 @@ namespace Opm
         /// @param [in] i
         /// @param [in] j
         /// @param [in] k
-        void setScalarPermIfNeeded(boost::array<int,9>& kmap,
+        void setScalarPermIfNeeded(std::array<int,9>& kmap,
                                    int i, int j, int k)
         {
             if (kmap[j] == 0) { kmap[j] = kmap[i]; }
@@ -150,7 +150,7 @@ namespace Opm
         ///    K = [ kyx  kyy  kyz ]
         ///        [ kzx  kzy  kzz ]
         ///   @endcode
-        ///   We store these values in a linear Dune::array using natural
+        ///   We store these values in a linear std::array using natural
         ///   ordering with the column index cycling the most rapidly.
         ///   In particular we use the representation
         ///   @code
@@ -176,7 +176,7 @@ namespace Opm
         /// @param [out] kmap
         PermeabilityKind fillTensor(const Opm::EclipseGridParser&                 parser,
                                     std::vector<const std::vector<double>*>& tensor,
-                                    boost::array<int,9>&                     kmap)
+                                    std::array<int,9>&                     kmap)
         {
             PermeabilityKind kind = classifyPermeability(parser);
             if (kind == Invalid) {
@@ -574,7 +574,7 @@ namespace Opm
 
         if (parser.hasField("PORO")) {
 	    Opm::EclipseGridInspector insp(parser);
-            boost::array<int, 3> dims = insp.gridSize();
+            std::array<int, 3> dims = insp.gridSize();
             int num_global_cells = dims[0]*dims[1]*dims[2];
             const std::vector<double>& poro = parser.getFloatingPointValue("PORO");
             if (int(poro.size()) != num_global_cells) {
@@ -597,7 +597,7 @@ namespace Opm
                                                                             double perm_threshold)
     {
 	Opm::EclipseGridInspector insp(parser);
-        boost::array<int, 3> dims = insp.gridSize();
+        std::array<int, 3> dims = insp.gridSize();
         int num_global_cells = dims[0]*dims[1]*dims[2];
         ASSERT (num_global_cells > 0);
 
@@ -610,7 +610,7 @@ namespace Opm
         tensor.push_back(&zero);
 
         BOOST_STATIC_ASSERT(dim == 3);
-        boost::array<int,9> kmap;
+        std::array<int,9> kmap;
         permeability_kind_ = fillTensor(parser, tensor, kmap);
         for (int i = 1; i < int(tensor.size()); ++i) {
             if (int(tensor[i]->size()) != num_global_cells) {
@@ -661,7 +661,7 @@ namespace Opm
 
         if (parser.hasField("SATNUM")) {
 	    Opm::EclipseGridInspector insp(parser);
-            boost::array<int, 3> dims = insp.gridSize();
+            std::array<int, 3> dims = insp.gridSize();
             int num_global_cells = dims[0]*dims[1]*dims[2];
             const std::vector<int>& satnum = parser.getIntegerValue("SATNUM");
             if (int(satnum.size()) != num_global_cells) {
@@ -676,7 +676,7 @@ namespace Opm
         }
         else if (parser.hasField("ROCKTYPE")) {
             Opm::EclipseGridInspector insp(parser);
-            boost::array<int, 3> dims = insp.gridSize();
+            std::array<int, 3> dims = insp.gridSize();
             int num_global_cells = dims[0]*dims[1]*dims[2];
             const std::vector<int>& satnum = parser.getIntegerValue("ROCKTYPE");
             if (int(satnum.size()) != num_global_cells) {

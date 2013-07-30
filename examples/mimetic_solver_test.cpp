@@ -41,7 +41,7 @@
 
 #include <boost/static_assert.hpp>
 
-#include <dune/common/array.hh>
+#include <array>
 #include <dune/common/mpihelper.hh>
 #include <opm/core/utility/Units.hpp>
 

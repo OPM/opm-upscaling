@@ -135,7 +135,7 @@ namespace Opm
 
 	    // Make transport equation boundary conditions.
 	    if (param.getDefault("periodic_x_bdy", false)) {
-		Dune::array<SatBC, 6> scond = {{ SatBC(SatBC::Periodic, 0.0),
+		std::array<SatBC, 6> scond = {{ SatBC(SatBC::Periodic, 0.0),
                                                  SatBC(SatBC::Periodic, 0.0),
                                                  SatBC(SatBC::Dirichlet, 0.0),
                                                  SatBC(SatBC::Dirichlet, 0.0),

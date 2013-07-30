@@ -22,7 +22,7 @@
 
 
 #include <dune/common/fvector.hh>
-#include <dune/common/array.hh>
+#include <array>
 #include <opm/core/utility/ErrorMacros.hpp>
 
 #include <algorithm>
@@ -109,9 +109,9 @@ namespace Opm
     /// @brief Common implementation for the various createPeriodic functions.
     template <class GridView>
     void findPeriodicPartners(std::vector<BoundaryFaceInfo>& bfinfo,
-                              Dune::array<double, 6>& side_areas,
+                              std::array<double, 6>& side_areas,
                               const GridView& g,
-                              const Dune::array<bool, 2*GridView::dimension>& is_periodic,
+                              const std::array<bool, 2*GridView::dimension>& is_periodic,
                               double spatial_tolerance = 1e-6)
     {
 	// Pick out all boundary faces, simultaneously find the
@@ -206,9 +206,9 @@ namespace Opm
     /// @brief Common implementation for the various createPeriodic functions.
     template <class GridInterface>
     void findPeriodicPartners(std::vector<BoundaryFaceInfo>& bfinfo,
-                              Dune::array<double, 6>& side_areas,
+                              std::array<double, 6>& side_areas,
                               const GridInterface& g,
-                              const Dune::array<bool, 2*GridInterface::Dimension>& is_periodic,
+                              const std::array<bool, 2*GridInterface::Dimension>& is_periodic,
                               double spatial_tolerance = 1e-6)
     {
 	// Pick out all boundary faces, simultaneously find the

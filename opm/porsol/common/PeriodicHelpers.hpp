@@ -38,7 +38,7 @@
 
 #include "BoundaryPeriodicity.hpp"
 #include "BoundaryConditions.hpp"
-#include <dune/common/array.hh>
+#include <array>
 #include <dune/common/fvector.hh>
 #include <algorithm>
 #include <boost/static_assert.hpp>
@@ -53,8 +53,8 @@ namespace Opm
     template <class BCs>
     void storeFlowCond(BCs& bcs,
 		       const std::vector<BoundaryFaceInfo>& bfinfo,
-		       const Dune::array<FlowBC, 6>& fconditions,
-		       const Dune::array<double, 6>& side_areas)
+		       const std::array<FlowBC, 6>& fconditions,
+		       const std::array<double, 6>& side_areas)
     {
 	int num_bdy = bfinfo.size();
 	for (int i = 0; i < num_bdy; ++i) {
@@ -73,7 +73,7 @@ namespace Opm
     template <class BCs>
     void storeSatCond(BCs& bcs,
 		      const std::vector<BoundaryFaceInfo>& bfinfo,
-		      const Dune::array<SatBC, 6>& sconditions)
+		      const std::array<SatBC, 6>& sconditions)
     {
 	int num_bdy = bfinfo.size();
 	for (int i = 0; i < num_bdy; ++i) {
@@ -83,9 +83,9 @@ namespace Opm
 
 
     template <class BC>
-    Dune::array<bool, 6> extractPeriodic(const Dune::array<BC, 6>& bcs)
+    std::array<bool, 6> extractPeriodic(const std::array<BC, 6>& bcs)
     {
-	Dune::array<bool, 6> retval = {{ bcs[0].isPeriodic(),
+	std::array<bool, 6> retval = {{ bcs[0].isPeriodic(),
 					  bcs[1].isPeriodic(),
 					  bcs[2].isPeriodic(),
 					  bcs[3].isPeriodic(),
@@ -104,8 +104,8 @@ namespace Opm
     template <class BCs, class GridInterface>
     void createPeriodic(BCs& fbcs,
 			const GridInterface& g,
-			const Dune::array<FlowBC, 2*GridInterface::Dimension>& fconditions,
-			const Dune::array<SatBC, 2*GridInterface::Dimension>& sconditions,
+			const std::array<FlowBC, 2*GridInterface::Dimension>& fconditions,
+			const std::array<SatBC, 2*GridInterface::Dimension>& sconditions,
 			double spatial_tolerance = 1e-6)
     {
 	BOOST_STATIC_ASSERT(BCs::HasFlowConds);
@@ -122,7 +122,7 @@ namespace Opm
 	    }
 	}
 	std::vector<BoundaryFaceInfo> bfinfo;
-	Dune::array<double, 6> side_areas;
+	std::array<double, 6> side_areas;
 	createPeriodicImpl(fbcs, bfinfo, side_areas, g, extractPeriodic(fconditions), spatial_tolerance);
 	storeFlowCond(fbcs, bfinfo, fconditions, side_areas);
 	storeSatCond(fbcs, bfinfo, sconditions);
@@ -134,7 +134,7 @@ namespace Opm
     template <class BCs, class GridInterface>
     void createPeriodic(BCs& fbcs,
 			const GridInterface& g,
-			const Dune::array<FlowBC, 2*GridInterface::Dimension>& fconditions,
+			const std::array<FlowBC, 2*GridInterface::Dimension>& fconditions,
 			double spatial_tolerance = 1e-6)
     {
 	BOOST_STATIC_ASSERT(BCs::HasFlowConds);
@@ -147,7 +147,7 @@ namespace Opm
 	    }
 	}
 	std::vector<BoundaryFaceInfo> bfinfo;
-	Dune::array<double, 6> side_areas;
+	std::array<double, 6> side_areas;
 	createPeriodicImpl(fbcs, bfinfo, side_areas, g, extractPeriodic(fconditions), spatial_tolerance);
 	storeFlowCond(fbcs, bfinfo, fconditions, side_areas);
     }
@@ -158,7 +158,7 @@ namespace Opm
     template <class BCs, class GridInterface>
     void createPeriodic(BCs& fbcs,
 			const GridInterface& g,
-			const Dune::array<SatBC, 2*GridInterface::Dimension>& sconditions,
+			const std::array<SatBC, 2*GridInterface::Dimension>& sconditions,
 			double spatial_tolerance = 1e-6)
     {
 	BOOST_STATIC_ASSERT(!BCs::HasFlowConds);
@@ -171,7 +171,7 @@ namespace Opm
 	    }
 	}
 	std::vector<BoundaryFaceInfo> bfinfo;
-	Dune::array<double, 6> side_areas;
+	std::array<double, 6> side_areas;
 	createPeriodicImpl(fbcs, bfinfo, side_areas, g, extractPeriodic(sconditions), spatial_tolerance);
 	storeSatCond(fbcs, bfinfo, sconditions);
     }
@@ -182,9 +182,9 @@ namespace Opm
     template <class BCs, class GridInterface>
     void createPeriodicImpl(BCs& fbcs,
 			    std::vector<BoundaryFaceInfo>& bfinfo,
-			    Dune::array<double, 6>& side_areas,
+			    std::array<double, 6>& side_areas,
 			    const GridInterface& g,
-			    const Dune::array<bool, 2*GridInterface::Dimension>& is_periodic,
+			    const std::array<bool, 2*GridInterface::Dimension>& is_periodic,
 			    double spatial_tolerance = 1e-6)
     {
         findPeriodicPartners(bfinfo, side_areas, g.grid().leafView(), is_periodic, spatial_tolerance);

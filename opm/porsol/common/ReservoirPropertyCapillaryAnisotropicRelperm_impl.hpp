@@ -119,7 +119,7 @@ namespace Opm
 
 
     template <int dim>
-    Dune::array<double, 3> ReservoirPropertyCapillaryAnisotropicRelperm<dim>::computeSingleRockCflFactors(int rock) const
+    std::array<double, 3> ReservoirPropertyCapillaryAnisotropicRelperm<dim>::computeSingleRockCflFactors(int rock) const
     {
         const int N = 257;
         double delta = 1.0/double(N - 1);
@@ -143,7 +143,7 @@ namespace Opm
 		last_ffg = ffg;
 	    }
         }
-        Dune::array<double, 3> retval = {{ 1.0/max_der1, 1.0/max_derg, min_ffg }};
+        std::array<double, 3> retval = {{ 1.0/max_der1, 1.0/max_derg, min_ffg }};
         return retval;
     }
 
@@ -154,7 +154,7 @@ namespace Opm
     void ReservoirPropertyCapillaryAnisotropicRelperm<dim>::computeCflFactors()
     {
         if (Super::rock_.empty()) {
-            Dune::array<double, 3> fac = computeSingleRockCflFactors(-1);
+            std::array<double, 3> fac = computeSingleRockCflFactors(-1);
             Super::cfl_factor_ = fac[0];
             Super::cfl_factor_gravity_ = fac[1];
             Super::cfl_factor_capillary_ = fac[2];
@@ -163,7 +163,7 @@ namespace Opm
             Super::cfl_factor_gravity_ = 1e100;
             Super::cfl_factor_capillary_ = 1e100;
             for (int r = 0; r < int(Super::rock_.size()); ++r) {
-                Dune::array<double, 3> fac = computeSingleRockCflFactors(r);
+                std::array<double, 3> fac = computeSingleRockCflFactors(r);
                 Super::cfl_factor_ = std::min(Super::cfl_factor_, fac[0]);
                 Super::cfl_factor_gravity_ = std::min(Super::cfl_factor_gravity_, fac[1]);
                 Super::cfl_factor_capillary_ = std::max(Super::cfl_factor_capillary_, fac[2]);

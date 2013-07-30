@@ -168,7 +168,7 @@ namespace Opm
 
 	    // global_cell is a map from compressed cells to Cartesian grid cells 
 	    const std::vector<int>& global_cell = grid.globalCell();
-	    const boost::array<int, 3>& cpgdim = grid.logicalCartesianSize();
+	    const std::array<int, 3>& cpgdim = grid.logicalCartesianSize();
 	    std::map<int,int> cartesian_to_compressed;
 	    for (int i=0; i<int(global_cell.size()); ++i) {
 		cartesian_to_compressed.insert(std::make_pair(global_cell[i], i));

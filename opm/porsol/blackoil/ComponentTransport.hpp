@@ -20,7 +20,7 @@
 #ifndef OPM_COMPONENTTRANSPORT_HEADER_INCLUDED
 #define OPM_COMPONENTTRANSPORT_HEADER_INCLUDED
 
-#include <boost/array.hpp>
+#include <array>
 #include <vector>
 #include <opm/porsol/blackoil/fluid/BlackoilDefs.hpp>
 #include <opm/porsol/blackoil/BlackoilFluid.hpp>

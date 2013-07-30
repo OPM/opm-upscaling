@@ -42,7 +42,7 @@
 #include <limits>
 #include <vector>
 
-#include <dune/common/array.hh>
+#include <array>
 
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/utility/Average.hpp>
@@ -203,9 +203,9 @@ namespace Opm
         TwophaseFluid myfluid(myrp_);
         int num_b=direclet_cells_.size();
         for(int i=0; i <num_b; ++i){
-            Dune::array<double,2> sat = {{direclet_sat_[2*i] ,direclet_sat_[2*i+1] }};
-            Dune::array<double,2> mob;
-            Dune::array<double,2*2> dmob;
+            std::array<double,2> sat = {{direclet_sat_[2*i] ,direclet_sat_[2*i+1] }};
+            std::array<double,2> mob;
+            std::array<double,2*2> dmob;
             myfluid.mobility(direclet_cells_[i], sat, mob, dmob);
             double fl = mob[0]/(mob[0]+mob[1]);
             direclet_sat_[2*i] = fl;

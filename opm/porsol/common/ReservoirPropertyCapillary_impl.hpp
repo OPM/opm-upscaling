@@ -212,7 +212,7 @@ namespace Opm
 
 
     template <int dim>
-    Dune::array<double, 3> ReservoirPropertyCapillary<dim>::computeSingleRockCflFactors(int rock, double min_perm, double max_poro) const
+    std::array<double, 3> ReservoirPropertyCapillary<dim>::computeSingleRockCflFactors(int rock, double min_perm, double max_poro) const
     {
         // Make min_perm matrix.
         OwnCMatrix min_perm_matrix(dim, dim, (double*)0);
@@ -243,7 +243,7 @@ namespace Opm
             last_ff1 = ff1;
             last_ffg = ffg;
         }
-        Dune::array<double, 3> retval = {{ 1.0/max_der1, 1.0/max_derg, max_ffg*max_derpc }};
+        std::array<double, 3> retval = {{ 1.0/max_der1, 1.0/max_derg, max_ffg*max_derpc }};
         return retval;
     }
 
@@ -254,7 +254,7 @@ namespace Opm
     void ReservoirPropertyCapillary<dim>::computeCflFactors()
     {
         if (Super::rock_.empty()) {
-            Dune::array<double, 3> fac = computeSingleRockCflFactors(-1, 0.0, 0.0);
+            std::array<double, 3> fac = computeSingleRockCflFactors(-1, 0.0, 0.0);
             Super::cfl_factor_ = fac[0];
             Super::cfl_factor_gravity_ = fac[1];
             Super::cfl_factor_capillary_ = fac[2];
@@ -272,7 +272,7 @@ namespace Opm
             Super::cfl_factor_gravity_ = 1e100;
             Super::cfl_factor_capillary_ = 0.0;
             for (int r = 0; r < int(Super::rock_.size()); ++r) {
-                Dune::array<double, 3> fac = computeSingleRockCflFactors(r, min_perm[r], max_poro[r]);
+                std::array<double, 3> fac = computeSingleRockCflFactors(r, min_perm[r], max_poro[r]);
                 Super::cfl_factor_ = std::min(Super::cfl_factor_, fac[0]);
                 Super::cfl_factor_gravity_ = std::min(Super::cfl_factor_gravity_, fac[1]);
                 Super::cfl_factor_capillary_ = std::max(Super::cfl_factor_capillary_, fac[2]);

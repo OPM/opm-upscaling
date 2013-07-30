@@ -38,7 +38,7 @@
 
 #include <opm/porsol/common/RockAnisotropicRelperm.hpp>
 #include <opm/porsol/common/ReservoirPropertyCommon.hpp>
-#include <dune/common/array.hh>
+#include <array>
 
 namespace Opm
 {
@@ -91,7 +91,7 @@ namespace Opm
     private:
 	// If allowing assignment, remember to set mob.data() properly.
 	TensorMobility& operator=(const TensorMobility&);
-	boost::array<double, dim*dim> tensor_storage_;
+	std::array<double, dim*dim> tensor_storage_;
     public:
 	FullMatrix<double, SharedData, COrdering> mob;
 
@@ -136,7 +136,7 @@ namespace Opm
 				 double saturation,
 				 MatrixType& phase_mob) const;
         void cflFracFlows(int rock, int direction, double s, double& ff_first, double& ff_gravity) const;
-        Dune::array<double, 3> computeSingleRockCflFactors(int rock) const;
+        std::array<double, 3> computeSingleRockCflFactors(int rock) const;
     };
 
 
