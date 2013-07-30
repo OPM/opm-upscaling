@@ -233,11 +233,11 @@ int main(int argc, char** argv)
 
     GridType grid;
     if (p.file == "uniform") {
-      Dune::array<int,3> cells;
+      std::array<int,3> cells;
       cells[0] = p.cellsx;
       cells[1] = p.cellsy;
       cells[2] = p.cellsz;
-      Dune::array<double,3> cellsize;
+      std::array<double,3> cellsize;
       cellsize[0] = cellsize[1] = cellsize[2] = 1.f; 
       grid.createCartesian(cells,cellsize);
     } else

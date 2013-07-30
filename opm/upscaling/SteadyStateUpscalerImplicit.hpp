@@ -40,7 +40,7 @@
 #include <opm/porsol/euler/EulerUpstream.hpp>
 #include <opm/porsol/euler/ImplicitCapillarity.hpp>
 #include <dune/grid/common/GridAdapter.hpp>
-#include <boost/array.hpp>
+#include <array>
 
 namespace Opm
 {
