@@ -6,6 +6,7 @@
 Module: opm-upscaling
 Description: DUNE module containing single-phase and steady-state upscaling methods
 Version: 0.1
+Label: 2013.03
 Maintainer: atgeirr@sintef.no
 #depending on 
 Depends: dune-common dune-grid dune-istl dune-cornerpoint opm-porsol
