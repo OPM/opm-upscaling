@@ -4,6 +4,7 @@
 
 #Name of the module
 Module: opm-upscaling
+Description: DUNE module containing single-phase and steady-state upscaling methods
 Version: 0.1
 Maintainer: atgeirr@sintef.no
 #depending on 
