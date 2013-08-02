@@ -22,6 +22,9 @@
 #	                      files can of course include other files than these;
 #	                      you should only add to this list if the *user* of
 #	                      the library needs it.
+#
+# ATTIC_FILES           Unmaintained files. This for the projects developers
+#                       only. Don't expect these files to build.
 
 # originally generated with the command:
 # find opm -name '*.c*' -printf '\t%p\n' | sort
@@ -73,6 +76,15 @@ list (APPEND EXAMPLE_SOURCE_FILES
 	examples/upscale_singlephase.cpp
 	examples/upscale_steadystate_implicit.cpp
 	tests/compare_upscaling_results.cpp
+	)
+
+# originally generated with the command:
+# find attic -name '*.c*' -printf '\t%p\n' | sort
+list (APPEND ATTIC_FILES
+	attic/aniso_implicit_steadystate_test.cpp
+	attic/aniso_steadystate_test.cpp
+	attic/implicit_steadystate_test.cpp
+	attic/steadystate_test_explicit.cpp
 	)
 
 # programs listed here will not only be compiled, but also marked for
