@@ -59,6 +59,7 @@ void syntax(char** argv)
             << "\t linsolver_type=iterative - use a suitable iterative method (cg or gmres)" << std::endl
             << "\t linsolver_type=direct    - use the SuperLU sparse direct solver" << std::endl
             << "\t verbose                  - set to true to get verbose output" << std::endl
+            << "\t fastamg                  - use the fast AMG" << std::endl
             << "\t linsolver_restart        - number of iterations before gmres is restarted" << std::endl
             << "\t linsolver_presteps       - number of pre-smooth steps in the AMG" << std::endl
             << "\t linsolver_poststeps      - number of post-smooth steps in the AMG" << std::endl
@@ -138,8 +139,8 @@ void parseCommandLine(int argc, char** argv, Params& p)
   p.file     = param.get<std::string>("gridfilename");
   p.rocklist = param.getDefault<std::string>("rock_list","");
   p.vtufile  = param.getDefault<std::string>("vtufilename","");
-  p.output = param.getDefault<std::string>("output","");
-  p.verbose = param.getDefault<bool>("verbose",false);
+  p.output   = param.getDefault<std::string>("output","");
+  p.verbose  = param.getDefault<bool>("verbose",false);
   size_t i;
   if ((i=p.vtufile.find(".vtu")) != std::string::npos)
     p.vtufile = p.vtufile.substr(0,i);
@@ -219,29 +220,12 @@ void writeOutput(const Params& p, Opm::time::StopWatch& watch, int cells,
     << C << std::endl;
 }
 
-//! \brief Main driver
-int main(int argc, char** argv)
-try
+//! \brief Main solution loop. Allows templating over the AMG type
+  template<class GridType, class AMG>
+int run(Params& p)
 {
   try {
-    Dune::MPIHelper& mpi=Dune::MPIHelper::instance(argc, argv);
-    const int size = mpi.size();
-    if (size != 1) {
-      std::cerr << "This program does not support MPI parallelization" << std::endl;
-      return 2;
-    }
     static const int dim = 3;
-
-    typedef Dune::CpGrid GridType;
-
-    if (argc < 2 || strcmp(argv[1],"-h") == 0 
-                 || strcmp(argv[1],"--help") == 0
-                 || strcmp(argv[1],"-?") == 0) {
-      syntax(argv);
-      exit(1);
-    }
-    Params p;
-    parseCommandLine(argc,argv,p);
 
     Opm::time::StopWatch watch;
     watch.start();
@@ -258,11 +242,11 @@ try
     } else
       grid.readEclipseFormat(p.file,p.ctol,false);
 
-    typedef GridType::ctype ctype;
-    Opm::Elasticity::ElasticityUpscale<GridType> upscale(grid, p.ctol, 
-                                                         p.Emin, p.file,
-                                                         p.rocklist,
-                                                         p.verbose);
+    typedef typename GridType::ctype ctype;
+    Opm::Elasticity::ElasticityUpscale<GridType, AMG> upscale(grid, p.ctol, 
+                                                              p.Emin, p.file,
+                                                              p.rocklist,
+                                                              p.verbose);
     if (p.max[0] < 0 || p.min[0] < 0) {
       std::cout << "determine side coordinates..." << std::endl;
       upscale.findBoundaries(p.min,p.max);
@@ -303,9 +287,9 @@ try
       upscale.A.initForAssembly();
     }
     Dune::FieldMatrix<double,6,6> C;
-    Dune::VTKWriter<GridType::LeafGridView>* vtkwriter=0;
+    Dune::VTKWriter<typename GridType::LeafGridView>* vtkwriter=0;
     if (!p.vtufile.empty())
-      vtkwriter = new Dune::VTKWriter<GridType::LeafGridView>(grid.leafView());
+      vtkwriter = new Dune::VTKWriter<typename GridType::LeafGridView>(grid.leafView());
     Opm::Elasticity::Vector field[6];
     std::cout << "assembling elasticity operator..." << "\n";
     upscale.assemble(-1,true);
@@ -354,6 +338,42 @@ try
     return 0;
   }
   catch (Dune::Exception &e) {
+    throw e;
+  }
+  catch (...) {
+    throw;
+  }
+  return 1;
+}
+
+//! \brief Main driver
+int main(int argc, char** argv)
+try
+{
+  try {
+    if (argc < 2 || strcmp(argv[1],"-h") == 0 
+                 || strcmp(argv[1],"--help") == 0
+                 || strcmp(argv[1],"-?") == 0) {
+      syntax(argv);
+      exit(1);
+    }
+
+    Dune::MPIHelper& mpi=Dune::MPIHelper::instance(argc, argv);
+    const int size = mpi.size();
+    if (size != 1) {
+      std::cerr << "This program does not support MPI parallelization" << std::endl;
+      return 2;
+    }
+
+    Params p;
+    parseCommandLine(argc,argv,p);
+
+    if (p.linsolver.fastamg)
+      return run<Dune::CpGrid, Opm::Elasticity::FastAMG>(p);
+    else
+      return run<Dune::CpGrid, Opm::Elasticity::AMG>(p);
+  }
+  catch (Dune::Exception &e) {
     std::cerr << "Dune reported error: " << e << std::endl;
   }
   catch (...) {
@@ -362,7 +382,6 @@ try
   return 1;
 }
 catch (const std::exception &e) {
-    std::cerr << "Program threw an exception: " << e.what() << "\n";
-    throw;
+  std::cerr << "Program threw an exception: " << e.what() << "\n";
+  throw;
 }
-

@@ -36,6 +36,7 @@
 #include <opm/elasticity/uzawa_solver.hpp>
 
 #include <dune/istl/paamg/amg.hh>
+#include <dune/istl/paamg/fastamg.hh>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -84,6 +85,9 @@ struct LinSolParams {
   //! \brief Number of cells in z to collapse in each cell
   int zcells;
 
+  //! \brief Use the fast AMG
+  bool fastamg;
+
   //! \brief Preconditioner for mortar block
   Opm::Elasticity::Preconditioner mortarpre;
 
@@ -103,6 +107,7 @@ struct LinSolParams {
     steps[1] = param.getDefault<int>("linsolver_poststeps", 2);
     coarsen_target = param.getDefault<int>("linsolver_coarsen", 5000);
     symmetric = param.getDefault<bool>("linsolver_symmetric", true);
+    fastamg  = param.getDefault<bool>("fastamg",false);
     solver = param.getDefault<std::string>("linsolver_mortarpre","schuramg");
     if (solver == "schuramg")
       mortarpre = Opm::Elasticity::SCHURAMG;
@@ -117,8 +122,38 @@ struct LinSolParams {
   }
 };
 
+//! \brief The smoother used in the AMG
+typedef Dune::SeqSSOR<Matrix, Vector, Vector> Smoother;
+
+//! \brief The coupling metric used in the AMG
+typedef Dune::Amg::RowSum CouplingMetric;
+
+//! \brief The coupling criterion used in the AMG
+typedef Dune::Amg::SymmetricCriterion<Matrix, CouplingMetric> CritBase;
+
+//! \brief The coarsening criterion used in the AMG
+typedef Dune::Amg::CoarsenCriterion<CritBase> Criterion;
+
+//! \brief A linear operator
+typedef Dune::MatrixAdapter<Matrix,Vector,Vector> Operator;
+
+//! \brief An AMG for an elasticity operator
+typedef Dune::Amg::AMG<Operator, Vector, Smoother> AMG;
+
+//! \brief A FastAMG for an elasticity operator
+typedef Dune::Amg::FastAMG<Operator, Vector> FastAMG;
+
+//! \brief Setup AMG preconditioner
+//! \param[in] pre The number of pre-smoothing steps
+//! \param[in] post The number of post-smoothing steps
+//! \param[in] target The coarsening target
+//! \param[in] zcells The wanted number of cells to collapse in z per level
+//! \param[in] op The linear operator
+  template<class EAMG>
+EAMG* setupAMG(int pre, int post, int target, int zcells, Operator* op);
+
 //! \brief The main driver class
-  template<class GridType>
+  template<class GridType, class EAMG>
 class ElasticityUpscale
 {
   public:
@@ -374,13 +409,6 @@ class ElasticityUpscale
     void loadMaterialsFromRocklist(const std::string& file,
                                    const std::string& rocklist);
 
-    //! \brief Setup AMG preconditioner
-    //! \param[in] pre The number of pre-smoothing steps
-    //! \param[in] post The number of post-smoothing steps
-    //! \param[in] target The coarsening target
-    //! \param[in] zcells The wanted number of cells to collapse in z per level
-    void setupAMG(int pre, int post, int target, int zcells);
-
     //! \brief Master grids
     std::vector<BoundaryGrid> master;
 
@@ -396,24 +424,6 @@ class ElasticityUpscale
     //! \brief Linear solver
     Dune::InverseOperator<Vector, Vector>* solver;
 
-    //! \brief The smoother used in the AMG
-    typedef Dune::SeqSSOR<Matrix, Vector, Vector> Smoother;
-
-    //! \brief The coupling metric used in the AMG
-    typedef Dune::Amg::RowSum CouplingMetric;
-
-    //! \brief The coupling criterion used in the AMG
-    typedef Dune::Amg::SymmetricCriterion<Matrix, CouplingMetric> CritBase;
-
-    //! \brief The coarsening criterion used in the AMG
-    typedef Dune::Amg::CoarsenCriterion<CritBase> Criterion;
-
-    //! \brief A linear operator
-    typedef Dune::MatrixAdapter<Matrix,Vector,Vector> Operator;
-
-    //! \brief A preconditioner for an elasticity operator
-    typedef Dune::Amg::AMG<Operator, Vector, Smoother> ElasticityAMG;
-
     //! \brief Matrix adaptor for the elasticity block
     Operator* op;
 
@@ -427,13 +437,13 @@ class ElasticityUpscale
     SchurEvaluator* op2;
 
     //! \brief The preconditioner for the elasticity operator
-    ElasticityAMG* upre;
+    EAMG* upre;
 
     //! \brief The preconditioner for the multiplier block (used with uzawa)
     SeqLU<Matrix, Vector, Vector>* lpre;
 
     //! \brief Preconditioner for the Mortar system
-    MortarSchurPre<ElasticityAMG>* mpre;
+    MortarSchurPre<EAMG>* mpre;
 
     //! \brief Evaluator for the Mortar system
     MortarEvaluator* meval;
