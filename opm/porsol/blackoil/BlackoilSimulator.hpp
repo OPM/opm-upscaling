@@ -497,7 +497,7 @@ output(const Grid& grid,
     vtkwriter.addCellData(mass_frac_flat, "massFrac", Fluid::numComponents);
     vtkwriter.addCellData(totflvol_dens, "total fl. vol.");
     vtkwriter.write(filebase + '-' + boost::lexical_cast<std::string>(step),
-                    Dune::VTKOptions::ascii);
+                    Dune::VTK::ascii);
 
     // Dump data for Matlab.
     std::vector<double> zv[Fluid::numComponents];

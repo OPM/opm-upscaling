@@ -276,7 +276,7 @@ namespace Opm
         vtkwriter.addCellData(cell_velocity_flat, "velocity", Vec::dimension);
         vtkwriter.addCellData(water_velocity_flat, "phase velocity [water]", Vec::dimension);
         vtkwriter.addCellData(oil_velocity_flat, "phase velocity [oil]", Vec::dimension);
-        vtkwriter.write(filename, Dune::VTKOptions::ascii);
+        vtkwriter.write(filename, Dune::VTK::ascii);
     }
 
 

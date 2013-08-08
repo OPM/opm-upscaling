@@ -283,7 +283,7 @@ void test_flowsolver(const GI& g, const RI& r, double tol, int kind)
     vtkwriter.addCellData(cell_velocity_flat, "velocity", GI::GridType::dimension);
     vtkwriter.addCellData(cell_pressure, "pressure");
     vtkwriter.write("testsolution-" + boost::lexical_cast<std::string>(0),
-                    Dune::VTKOptions::ascii);
+                    Dune::VTK::ascii);
 }
 
 
