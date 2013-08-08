@@ -133,7 +133,7 @@ void test_flowsolver(const GI& g, const RI& r)
     vtkwriter.addCellData(cell_velocity_flat, "velocity", dim);
     vtkwriter.addCellData(cell_pressure, "pressure");
     vtkwriter.write("testsolution-" + boost::lexical_cast<std::string>(0),
-                    Dune::VTKOptions::ascii);
+                    Dune::VTK::ascii);
 #else    
     solver.printSystem("system");
     typedef typename FlowSolver::SolutionType FlowSolution;
