@@ -13,7 +13,7 @@
 #define SHAPEFUNCTIONS_HPP_
 
 #include <dune/common/fvector.hh>
-#include "dynmatrixev.hh"
+#include <dune/common/dynmatrixev.hh>
 
 #include <complex>
 
@@ -368,7 +368,7 @@ protected:
       A[n-1][n-2] = (n-1.0)/(2.0*n-1.0);
 
       Dune::DynamicVector<std::complex<double> > eigenValues(n);
-      Opm::DynamicMatrixHelp::eigenValuesNonSym(A, eigenValues);
+      Dune::DynamicMatrixHelp::eigenValuesNonSym(A, eigenValues);
 
       std::vector<double> result(n);
       for (int i=0; i < n; ++i)
