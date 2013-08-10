@@ -48,6 +48,9 @@ macro (sources_hook)
 endmacro (sources_hook)
 
 macro (fortran_hook)
+	#  interface requires a variable to inspect, a value won't suffice
+	set (UNCONDITIONALLY TRUE)
+	set (${project}_FORTRAN_IF UNCONDITIONALLY)
 endmacro (fortran_hook)
 
 macro (tests_hook)
