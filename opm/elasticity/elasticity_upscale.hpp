@@ -19,7 +19,6 @@
 #include <dune/istl/ilu.hh>
 #include <dune/istl/solvers.hh>
 #include <dune/istl/preconditioners.hh>
-#include <opm/elasticity/seqlu.hpp>
 #include <dune/grid/CpGrid.hpp>
 #include <opm/elasticity/shapefunctions.hpp>
 
@@ -35,6 +34,7 @@
 #include <opm/elasticity/mortar_schur_precond.hpp>
 #include <opm/elasticity/uzawa_solver.hpp>
 
+#include <dune/istl/superlu.hh>
 #include <dune/istl/paamg/amg.hh>
 #include <dune/istl/paamg/fastamg.hh>
 #include <dune/istl/overlappingschwarz.hh>
@@ -211,6 +211,7 @@ class ElasticityUpscale
       op2 = 0;
       meval = 0;
       lpre = 0;
+      lprep = 0;
     }
 
     //! \brief The destructor
@@ -231,7 +232,7 @@ class ElasticityUpscale
       delete meval;
       delete upre;
       delete lpre;
-      delete mpre;
+      delete lprep;
     }
 
     //! \brief Find boundary coordinates
@@ -441,8 +442,12 @@ class ElasticityUpscale
     //! \brief The preconditioner for the elasticity operator
     EAMG* upre;
 
+    //! \brief An LU solve as a preconditioner
+    typedef Dune::InverseOperator2Preconditioner<Dune::SuperLU<Matrix>,
+                                        Dune::SolverCategory::sequential> SeqLU;
     //! \brief The preconditioner for the multiplier block (used with uzawa)
-    SeqLU<Matrix, Vector, Vector>* lpre;
+    SeqLU* lpre;
+    Dune::SuperLU<Matrix>* lprep;
 
     //! \brief Preconditioner for the Mortar system
     MortarSchurPre<EAMG>* mpre;

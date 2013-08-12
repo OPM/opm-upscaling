@@ -128,7 +128,6 @@ list (APPEND PUBLIC_HEADER_FILES
 	opm/elasticity/mortar_schur_precond.hpp
 	opm/elasticity/mortar_utils.hpp
 	opm/elasticity/mpc.hh
-	opm/elasticity/seqlu.hpp
 	opm/elasticity/shapefunctions.hpp
 	opm/elasticity/uzawa_solver.hpp
 	opm/upscaling/ParserAdditions.hpp

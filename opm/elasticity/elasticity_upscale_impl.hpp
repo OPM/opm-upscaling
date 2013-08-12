@@ -954,7 +954,8 @@ void ElasticityUpscale<GridType, EAMG>::setupSolvers(const LinSolParams& params)
                 new Dune::CGSolver<Vector>(*op, *upre, params.tol,
                                            params.maxit, verbose?2:0);
         op2 = new SchurEvaluator(*innersolver, B);
-        lpre = new SeqLU<Matrix, Vector, Vector>(P);
+        lprep = new Dune::SuperLU<Matrix>(P);
+        lpre = new SeqLU(*lprep);
         Dune::CGSolver<Vector>* outersolver = 
                 new Dune::CGSolver<Vector>(*op2, *lpre, params.tol*10,
                                            params.maxit, verbose?2:0);

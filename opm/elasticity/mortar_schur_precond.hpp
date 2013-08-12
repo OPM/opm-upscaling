@@ -12,6 +12,7 @@
 #ifndef SCHUR_PRECOND_HPP_
 #define SCHUR_PRECOND_HPP_
 
+#include <dune/istl/superlu.hh>
 #include <dune/istl/preconditioners.hh>
 #include <dune/istl/matrixmatrix.hh>
 #include <opm/elasticity/matrixops.hpp>
