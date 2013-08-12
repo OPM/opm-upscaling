@@ -58,6 +58,14 @@ enum Preconditioner {
   SCHURDIAG
 };
 
+//! \brief Smoother used in the AMG
+enum Smoother {
+  SMOOTH_SSOR    = 0,
+  SMOOTH_SCHWARZ = 1,
+  SMOOTH_JACOBI  = 2,
+  SMOOTH_ILU     = 4
+};
+
 struct LinSolParams {
   //! \brief The linear solver to employ
   Opm::Elasticity::Solver type;
@@ -89,6 +97,9 @@ struct LinSolParams {
   //! \brief Use the fast AMG
   bool fastamg;
 
+  //! \brief Smoother type used in the AMG
+  Smoother smoother;
+
   //! \brief Preconditioner for mortar block
   Opm::Elasticity::Preconditioner mortarpre;
 
@@ -118,14 +129,33 @@ struct LinSolParams {
 
     zcells = param.getDefault<int>("linsolver_zcells", 2);
 
+    solver = param.getDefault<std::string>("linsolver_smoother","ssor");
+    if (solver == "schwarz")
+      smoother = SMOOTH_SCHWARZ;
+    else if (solver == "ilu")
+      smoother = SMOOTH_ILU;
+    else if (solver == "jacobi")
+      smoother = SMOOTH_JACOBI;
+    else {
+      if (solver != "ssor")
+        std::cerr << "WARNING: Invalid smoother specified, falling back to SSOR" << std::endl;
+      smoother = SMOOTH_SSOR;
+    }
+
     if (symmetric)
       steps[1] = steps[0];
   }
 };
 
-//! \brief The smoother used in the AMG
-//typedef Dune::SeqSSOR<Matrix, Vector, Vector> Smoother;
-typedef Dune::SeqOverlappingSchwarz<Matrix,Vector,Dune::MultiplicativeSchwarzMode> Smoother;
+//! \brief SSOR AMG smoother
+typedef Dune::SeqSSOR<Matrix, Vector, Vector> SSORSmoother;
+//! \brief GJ AMG smoother
+typedef Dune::SeqJac<Matrix, Vector, Vector> JACSmoother;
+//! \brief ILU0 AMG smoother
+typedef Dune::SeqILU0<Matrix, Vector, Vector> ILUSmoother;
+//! \brief Schwarz + ILU0 AMG smoother
+typedef Dune::SeqOverlappingSchwarz<Matrix,Vector,
+                              Dune::MultiplicativeSchwarzMode> SchwarzSmoother;
 
 //! \brief The coupling metric used in the AMG
 typedef Dune::Amg::RowSum CouplingMetric;
@@ -138,9 +168,6 @@ typedef Dune::Amg::CoarsenCriterion<CritBase> Criterion;
 
 //! \brief A linear operator
 typedef Dune::MatrixAdapter<Matrix,Vector,Vector> Operator;
-
-//! \brief An AMG for an elasticity operator
-typedef Dune::Amg::AMG<Operator, Vector, Smoother> AMG;
 
 //! \brief A FastAMG for an elasticity operator
 typedef Dune::Amg::FastAMG<Operator, Vector> FastAMG;

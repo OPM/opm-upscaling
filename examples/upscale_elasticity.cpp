@@ -63,6 +63,7 @@ void syntax(char** argv)
             << "\t linsolver_restart        - number of iterations before gmres is restarted" << std::endl
             << "\t linsolver_presteps       - number of pre-smooth steps in the AMG" << std::endl
             << "\t linsolver_poststeps      - number of post-smooth steps in the AMG" << std::endl
+            << "\t linsolver_smoother       - smoother used in the AMG" << std::endl
             << "\t\t affects memory usage" << std::endl
             << "\t linsolver_symmetric      - use symmetric linear solver. Defaults to true" << std::endl
             << "\t mortar_precond           - preconditioner for mortar block. Defaults to schur-amg" << std::endl;
@@ -348,6 +349,15 @@ int run(Params& p)
   return 1;
 }
 
+  template<class Smoother>
+int runAMG(Params& p)
+{
+  return run<Dune::CpGrid,
+             Dune::Amg::AMG<Opm::Elasticity::Operator,
+                            Opm::Elasticity::Vector,
+                            Smoother> >(p);
+}
+
 //! \brief Main driver
 int main(int argc, char** argv)
 try
@@ -372,8 +382,18 @@ try
 
     if (p.linsolver.fastamg)
       return run<Dune::CpGrid, Opm::Elasticity::FastAMG>(p);
-    else
-      return run<Dune::CpGrid, Opm::Elasticity::AMG>(p);
+    else {
+      if (p.linsolver.smoother == Opm::Elasticity::SMOOTH_SCHWARZ)
+        return runAMG<Opm::Elasticity::SchwarzSmoother>(p);
+      else if (p.linsolver.smoother == Opm::Elasticity::SMOOTH_JACOBI)
+        return runAMG<Opm::Elasticity::JACSmoother>(p);
+      else if (p.linsolver.smoother == Opm::Elasticity::SMOOTH_ILU)
+        return runAMG<Opm::Elasticity::ILUSmoother>(p);
+      else
+        return runAMG<Opm::Elasticity::SSORSmoother>(p);
+    }
+  } catch (const std::exception &e) {
+    throw e;
   }
   catch (Dune::Exception &e) {
     std::cerr << "Dune reported error: " << e << std::endl;

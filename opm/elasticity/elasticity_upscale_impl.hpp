@@ -845,11 +845,12 @@ void ElasticityUpscale<GridType, EAMG>::periodicBCsMortar(const double* min,
   slave.clear();
 }
 
-  template<>
-AMG* setupAMG<AMG>(int pre, int post, int target, int zcells, Operator* op)
+  template<class EAMG>
+EAMG* setupAMG(int pre, int post, int target, int zcells,
+               Operator* op)
 {
   Criterion crit;
-  AMG::SmootherArgs args;
+  typename EAMG::SmootherArgs args;
   args.relaxationFactor = 1.0;
   crit.setCoarsenTarget(target);
   crit.setGamma(1);
@@ -858,7 +859,7 @@ AMG* setupAMG<AMG>(int pre, int post, int target, int zcells, Operator* op)
   crit.setDefaultValuesIsotropic(3, zcells);
 
   std::cout << "\t collapsing 2x2x" << zcells << " cells per level" << std::endl;
-  return new AMG(*op, crit, args);
+  return new EAMG(*op, crit, args);
 }
 
   template<>
