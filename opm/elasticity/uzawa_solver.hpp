@@ -21,17 +21,12 @@ namespace Opm {
 class UzawaSolver : public Dune::InverseOperator<X,Y>
 {
   public:
-    UzawaSolver(Dune::InverseOperator<X,Y>* innersolver_,
-                Dune::InverseOperator<X,Y>* outersolver_,
+    typedef std::shared_ptr<Dune::InverseOperator<X,Y> > OperatorPtr;
+    UzawaSolver(OperatorPtr& innersolver_,
+                OperatorPtr& outersolver_,
                 const Matrix& B_) :
       innersolver(innersolver_), outersolver(outersolver_), B(B_)
     {
-    }
-
-    virtual ~UzawaSolver()
-    {
-      delete innersolver;
-      delete outersolver;
     }
 
     void apply(X& x, Y& b, double reduction, 
@@ -61,8 +56,8 @@ class UzawaSolver : public Dune::InverseOperator<X,Y>
       MortarUtils::injectBlock(x, lambda2, B.M(), B.N());
     }
   protected:
-    Dune::InverseOperator<X,Y>* innersolver;
-    Dune::InverseOperator<X,Y>* outersolver;
+    OperatorPtr innersolver;
+    OperatorPtr outersolver;
     const Matrix& B;
 };
 
