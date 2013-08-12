@@ -16,8 +16,13 @@
 
 namespace Opm {
 namespace Elasticity {
-  template<class GridType, class EAMG>
-std::vector<BoundaryGrid::Vertex> ElasticityUpscale<GridType, EAMG>::extractFace(Direction dir, ctype coord)
+
+#undef IMPL_FUNC
+#define IMPL_FUNC(A,B) template<class GridType, class EAMG> \
+                         A ElasticityUpscale<GridType, EAMG>::B
+
+IMPL_FUNC(std::vector<BoundaryGrid::Vertex>, 
+          extractFace(Direction dir, ctype coord))
 {
   std::vector<BoundaryGrid::Vertex> result;
   const LeafVertexIterator itend = gv.leafView().template end<dim>();
@@ -39,11 +44,11 @@ std::vector<BoundaryGrid::Vertex> ElasticityUpscale<GridType, EAMG>::extractFace
   return result;
 }
 
-  template<class GridType, class EAMG>
-BoundaryGrid ElasticityUpscale<GridType, EAMG>::extractMasterFace(Direction dir,
-                                                                 ctype coord,
-                                                                 SIDE side,
-                                                                 bool dc)
+
+IMPL_FUNC(BoundaryGrid, extractMasterFace(Direction dir,
+                                          ctype coord,
+                                          SIDE side,
+                                          bool dc))
 {
   static const int V1[3][4] = {{0,2,4,6},
                                {0,1,4,5},
@@ -118,9 +123,7 @@ BoundaryGrid ElasticityUpscale<GridType, EAMG>::extractMasterFace(Direction dir,
   return result;
 }
 
-  template<class GridType, class EAMG>
-void ElasticityUpscale<GridType, EAMG>::determineSideFaces(const double* min, 
-                                                          const double* max)
+IMPL_FUNC(void, determineSideFaces(const double* min, const double* max))
 {
   master.push_back(extractMasterFace(X,min[0]));
   master.push_back(extractMasterFace(Y,min[1]));
@@ -131,9 +134,7 @@ void ElasticityUpscale<GridType, EAMG>::determineSideFaces(const double* min,
   slave.push_back(extractFace(Z,max[2]));
 }
 
-  template<class GridType, class EAMG>
-void ElasticityUpscale<GridType, EAMG>::findBoundaries(double* min, 
-                                                      double* max)
+IMPL_FUNC(void, findBoundaries(double* min, double* max))
 {
   max[0] = max[1] = max[2] = -1e5;
   min[0] = min[1] = min[2] = 1e5;
@@ -149,10 +150,8 @@ void ElasticityUpscale<GridType, EAMG>::findBoundaries(double* min,
   }
 }
 
-
-  template<class GridType, class EAMG>
-void ElasticityUpscale<GridType, EAMG>::addMPC(Direction dir, int slave,
-                                              const BoundaryGrid::Vertex& m)
+IMPL_FUNC(void, addMPC(Direction dir, int slave,
+                       const BoundaryGrid::Vertex& m))
 {
   MPC* mpc = new MPC(slave,log2(dir)+1);
   if (m.i > -1) { // we matched a node exactly
@@ -165,11 +164,10 @@ void ElasticityUpscale<GridType, EAMG>::addMPC(Direction dir, int slave,
   A.addMPC(mpc);
 }
 
-  template<class GridType, class EAMG>
-void ElasticityUpscale<GridType, EAMG>::periodicPlane(Direction plane,
-                                                     Direction dir, 
-                                 const std::vector<BoundaryGrid::Vertex>& slave,
-                                                     const BoundaryGrid& master)
+IMPL_FUNC(void, periodicPlane(Direction plane,
+                              Direction dir, 
+                              const std::vector<BoundaryGrid::Vertex>& slave,
+                              const BoundaryGrid& master))
 {
   for (size_t i=0;i<slave.size();++i) {
     BoundaryGrid::Vertex coord;
@@ -225,11 +223,10 @@ static std::vector< std::vector<int> > renumber(const BoundaryGrid& b,
   return nodes;
 }
 
-  template<class GridType, class EAMG>
-int ElasticityUpscale<GridType, EAMG>::addBBlockMortar(const BoundaryGrid& b1,
-                                                      const BoundaryGrid& interface,
-                                                      int dir, int n1, int n2,
-                                                      int colofs)
+IMPL_FUNC(int, addBBlockMortar(const BoundaryGrid& b1,
+                               const BoundaryGrid& interface,
+                               int dir, int n1, int n2,
+                               int colofs))
 {
   // renumber the linear grid to the real multiplier grid
   int totalEqns;
@@ -273,12 +270,11 @@ int ElasticityUpscale<GridType, EAMG>::addBBlockMortar(const BoundaryGrid& b1,
   return 3*totalEqns;
 }
 
-  template<class GridType, class EAMG>
-void ElasticityUpscale<GridType, EAMG>::assembleBBlockMortar(const BoundaryGrid& b1,
-                                                            const BoundaryGrid& interface,
-                                                            int dir, int n1,
-                                                            int n2, int colofs,
-                                                            double alpha)
+IMPL_FUNC(void, assembleBBlockMortar(const BoundaryGrid& b1,
+                                     const BoundaryGrid& interface,
+                                     int dir, int n1,
+                                     int n2, int colofs,
+                                     double alpha))
 {
   // get a set of P1 shape functions for the displacements
   P1ShapeFunctionSet<ctype,ctype,2> ubasis = 
@@ -359,10 +355,9 @@ void ElasticityUpscale<GridType, EAMG>::assembleBBlockMortar(const BoundaryGrid&
   }
 }
 
-  template<class GridType, class EAMG>
-void ElasticityUpscale<GridType, EAMG>::fixPoint(Direction dir,
-                                                GlobalCoordinate coord,
-                                                const NodeValue& value)
+IMPL_FUNC(void, fixPoint(Direction dir,
+                         GlobalCoordinate coord,
+                         const NodeValue& value))
 {
   typedef typename GridType::LeafGridView::template Codim<dim>::Iterator VertexLeafIterator;
   const VertexLeafIterator itend = gv.leafView().template end<dim>();
@@ -380,10 +375,9 @@ void ElasticityUpscale<GridType, EAMG>::fixPoint(Direction dir,
   }
 }
 
-  template<class GridType, class EAMG>
-bool ElasticityUpscale<GridType, EAMG>::isOnPlane(Direction plane,
-                                                 GlobalCoordinate coord,
-                                                 ctype value)
+IMPL_FUNC(bool, isOnPlane(Direction plane,
+                          GlobalCoordinate coord,
+                          ctype value))
 {
   if (plane < X || plane > Z)
     return false;
@@ -392,10 +386,9 @@ bool ElasticityUpscale<GridType, EAMG>::isOnPlane(Direction plane,
   return delta < tol;
 }
 
-  template<class GridType, class EAMG>
-void ElasticityUpscale<GridType, EAMG>::fixLine(Direction dir,
-                                               ctype x, ctype y,
-                                               const NodeValue& value)
+IMPL_FUNC(void, fixLine(Direction dir,
+                        ctype x, ctype y,
+                        const NodeValue& value))
 {
   typedef typename GridType::LeafGridView::template Codim<dim>::Iterator VertexLeafIterator;
   const VertexLeafIterator itend = gv.leafView().template end<dim>();
@@ -413,10 +406,9 @@ void ElasticityUpscale<GridType, EAMG>::fixLine(Direction dir,
   }
 }
 
-  template<class GridType, class EAMG>
-bool ElasticityUpscale<GridType, EAMG>::isOnLine(Direction dir,
-                                                GlobalCoordinate coord,
-                                                ctype x, ctype y)
+IMPL_FUNC(bool, isOnLine(Direction dir,
+                         GlobalCoordinate coord,
+                         ctype x, ctype y))
 {
   if (dir < X || dir > Z)
     return false;
@@ -432,16 +424,14 @@ bool ElasticityUpscale<GridType, EAMG>::isOnLine(Direction dir,
   return true;
 }
 
-  template<class GridType, class EAMG>
-bool ElasticityUpscale<GridType, EAMG>::isOnPoint(GlobalCoordinate coord,
-                                                 GlobalCoordinate point)
+IMPL_FUNC(bool, isOnPoint(GlobalCoordinate coord,
+                          GlobalCoordinate point))
 {
   GlobalCoordinate delta = point-coord;
   return delta.one_norm() < tol;
 }
 
-  template<class GridType, class EAMG>
-void ElasticityUpscale<GridType, EAMG>::assemble(int loadcase, bool matrix)
+IMPL_FUNC(void, assemble(int loadcase, bool matrix))
 {
   const int comp = 3+(dim-2)*3;
   static const int bfunc = 4+(dim-2)*4;
@@ -516,10 +506,9 @@ void ElasticityUpscale<GridType, EAMG>::assemble(int loadcase, bool matrix)
   }
 }
 
-  template<class GridType, class EAMG>
-    template<int comp>
-void ElasticityUpscale<GridType, EAMG>::averageStress(Dune::FieldVector<ctype,comp>& sigma,
-                                                     const Vector& u, int loadcase)
+IMPL_FUNC(template<int comp> void,
+          averageStress(Dune::FieldVector<ctype,comp>& sigma,
+                        const Vector& u, int loadcase))
 {
   if (loadcase < 0 || loadcase > 5)
     return;
@@ -569,8 +558,7 @@ void ElasticityUpscale<GridType, EAMG>::averageStress(Dune::FieldVector<ctype,co
     sigma /= Escale/Emin;
 }
 
-  template<class GridType, class EAMG>
-void ElasticityUpscale<GridType, EAMG>::loadMaterialsFromGrid(const std::string& file)
+IMPL_FUNC(void, loadMaterialsFromGrid(const std::string& file))
 {
   typedef std::map<std::pair<double,double>,
                    std::shared_ptr<Material> > MaterialMap;
@@ -660,9 +648,8 @@ void ElasticityUpscale<GridType, EAMG>::loadMaterialsFromGrid(const std::string&
   }
 }
 
-  template<class GridType, class EAMG>
-void ElasticityUpscale<GridType, EAMG>::loadMaterialsFromRocklist(const std::string& file,
-                                                                 const std::string& rocklist)
+IMPL_FUNC(void, loadMaterialsFromRocklist(const std::string& file,
+                                          const std::string& rocklist))
 {
   std::vector< std::shared_ptr<Material> > cache;
   // parse the rocklist
@@ -723,9 +710,7 @@ void ElasticityUpscale<GridType, EAMG>::loadMaterialsFromRocklist(const std::str
   }
 }
 
-  template<class GridType, class EAMG>
-void ElasticityUpscale<GridType, EAMG>::fixCorners(const double* min,
-                                                  const double* max)
+IMPL_FUNC(void, fixCorners(const double* min, const double* max))
 {
   ctype c[8][3] = {{min[0],min[1],min[2]},
                    {max[0],min[1],min[2]},
@@ -742,9 +727,7 @@ void ElasticityUpscale<GridType, EAMG>::fixCorners(const double* min,
   }
 }
 
-  template<class GridType, class EAMG>
-void ElasticityUpscale<GridType, EAMG>::periodicBCs(const double* min, 
-                                                   const double* max)
+IMPL_FUNC(void, periodicBCs(const double* min, const double* max))
 {
   // this method
   // 1. fixes the primal corner dofs
@@ -770,11 +753,10 @@ void ElasticityUpscale<GridType, EAMG>::periodicBCs(const double* min,
   periodicPlane(Z,XYZ,slave[2],master[2]);
 }
 
-  template<class GridType, class EAMG>
-void ElasticityUpscale<GridType, EAMG>::periodicBCsMortar(const double* min, 
-                                                         const double* max,
-                                                         int n1, int n2,
-                                                         int p1, int p2)
+IMPL_FUNC(void, periodicBCsMortar(const double* min, 
+                                  const double* max,
+                                  int n1, int n2,
+                                  int p1, int p2))
 {
   // this method
   // 1. fixes the primal corner dofs
@@ -892,8 +874,7 @@ static void applyMortarBlock(int i, const Matrix& B, M& T,
     T[j][i] = v2[j];
 }
 
-  template<class GridType, class EAMG>
-void ElasticityUpscale<GridType, EAMG>::setupSolvers(const LinSolParams& params)
+IMPL_FUNC(void, setupSolvers(const LinSolParams& params))
 {
   int siz = A.getOperator().N(); // system size
   if (params.type == ITERATIVE) {
@@ -1004,8 +985,7 @@ void ElasticityUpscale<GridType, EAMG>::setupSolvers(const LinSolParams& params)
     b[i].resize(siz);
 }
 
-  template<class GridType, class EAMG>
-void ElasticityUpscale<GridType, EAMG>::solve(int loadcase)
+IMPL_FUNC(void, solve(int loadcase))
 {
   try {
     Dune::InverseOperatorResult r;
