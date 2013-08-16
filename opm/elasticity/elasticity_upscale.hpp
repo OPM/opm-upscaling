@@ -52,10 +52,16 @@ enum Solver {
   ITERATIVE 
 };
 
-//! \brief An enumeration of the available preconditioners
 enum Preconditioner {
-  SCHURAMG,
-  SCHURDIAG
+  AMG,
+  FASTAMG,
+  SCHWARZ
+};
+
+//! \brief An enumeration of the available preconditioners for multiplier block
+enum MultiplierPreconditioner {
+  SCHUR,
+  SIMPLE,
 };
 
 //! \brief Smoother used in the AMG
@@ -94,14 +100,17 @@ struct LinSolParams {
   //! \brief Number of cells in z to collapse in each cell
   int zcells;
 
-  //! \brief Use the fast AMG
-  bool fastamg;
+  //! \brief Give a report at end of solution phase
+  bool report;
 
   //! \brief Smoother type used in the AMG
   Smoother smoother;
 
+  //! \brief Preconditioner for elasticity block
+  Opm::Elasticity::Preconditioner pre;
+
   //! \brief Preconditioner for mortar block
-  Opm::Elasticity::Preconditioner mortarpre;
+  Opm::Elasticity::MultiplierPreconditioner mortarpre;
 
   //! \brief Parse command line parameters
   //! \param[in] param The parameter group to parse
@@ -119,14 +128,23 @@ struct LinSolParams {
     steps[1] = param.getDefault<int>("linsolver_poststeps", 2);
     coarsen_target = param.getDefault<int>("linsolver_coarsen", 5000);
     symmetric = param.getDefault<bool>("linsolver_symmetric", true);
-    fastamg  = param.getDefault<bool>("fastamg",false);
-    solver = param.getDefault<std::string>("linsolver_mortarpre","schuramg");
-    if (solver == "schuramg")
-      mortarpre = Opm::Elasticity::SCHURAMG;
-    else
-      mortarpre = Opm::Elasticity::SCHURDIAG;
-    uzawa = param.getDefault<bool>("linsolver_uzawa", false);
+    report = param.getDefault<bool>("linsolver_report", false);
+    solver = param.getDefault<std::string>("linsolver_pre","amg");
 
+    if (solver == "schwarz")
+      pre = Opm::Elasticity::SCHWARZ;
+    else if (solver == "fastamg")
+      pre = Opm::Elasticity::FASTAMG;
+    else
+      pre = Opm::Elasticity::AMG;
+
+    solver = param.getDefault<std::string>("linsolver_mortarpre","schur");
+    if (solver == "schur")
+      mortarpre = Opm::Elasticity::SCHUR;
+    else
+      mortarpre = Opm::Elasticity::SIMPLE;
+
+    uzawa = param.getDefault<bool>("linsolver_uzawa", false);
     zcells = param.getDefault<int>("linsolver_zcells", 2);
 
     solver = param.getDefault<std::string>("linsolver_smoother","ssor");
@@ -155,10 +173,10 @@ typedef Dune::SeqJac<Matrix, Vector, Vector> JACSmoother;
 typedef Dune::SeqILU0<Matrix, Vector, Vector> ILUSmoother;
 //! \brief Schwarz + ILU0 AMG smoother
 typedef Dune::SeqOverlappingSchwarz<Matrix,Vector,
-                              Dune::MultiplicativeSchwarzMode> SchwarzSmoother;
+                              Dune::AdditiveSchwarzMode> SchwarzSmoother;
 
 //! \brief The coupling metric used in the AMG
-typedef Dune::Amg::RowSum CouplingMetric;
+typedef Dune::Amg::FirstDiagonal CouplingMetric;
 
 //! \brief The coupling criterion used in the AMG
 typedef Dune::Amg::SymmetricCriterion<Matrix, CouplingMetric> CritBase;
@@ -172,15 +190,23 @@ typedef Dune::MatrixAdapter<Matrix,Vector,Vector> Operator;
 //! \brief A FastAMG for an elasticity operator
 typedef Dune::Amg::FastAMG<Operator, Vector> FastAMG;
 
-//! \brief Setup AMG preconditioner
+//! \brief Overlapping Schwarz preconditioner
+typedef Dune::SeqOverlappingSchwarz<Matrix, Vector,
+                                    Dune::AdditiveSchwarzMode,
+                     Dune::SuperLU<Matrix> > Schwarz;
+
+//! \brief Setup preconditioner
 //! \param[in] pre The number of pre-smoothing steps
 //! \param[in] post The number of post-smoothing steps
 //! \param[in] target The coarsening target
 //! \param[in] zcells The wanted number of cells to collapse in z per level
 //! \param[in] op The linear operator
+//! \param[in] gv The cornerpoint grid
+//! \param[out] thread Whether or not to clone for threads
   template<class EAMG>
-EAMG* setupAMG(int pre, int post, int target, int zcells,
-               std::shared_ptr<Operator>& op);
+EAMG* setupPC(int pre, int post, int target, int zcells,
+              std::shared_ptr<Operator>& op, const Dune::CpGrid& gv,
+              ASMHandler<Dune::CpGrid>& A, bool& copy);
 
 //! \brief The main driver class
   template<class GridType, class EAMG>

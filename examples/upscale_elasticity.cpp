@@ -21,6 +21,7 @@
 #include <opm/core/utility/StopWatch.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
+#include <dune/istl/matrixmarket.hh>
 
 #if HAVE_OPENMP
 #include <omp.h>
@@ -42,11 +43,12 @@ void syntax(char** argv)
 {
   std::cerr << "Usage: " << argv[0] << " gridfilename=filename.grdecl [method=]" << std::endl
             << "\t[xmax=] [ymax=] [zmax=] [xmin=] [ymin=] [zmin=] [linsolver_type=]" << std::endl
-            <<" \t[Emin=] [ctol=] [ltol=] [rock_list=] [vtufilename=] [output=] [linsolver_verbose=]" << std::endl << std::endl
+            <<" \t[Emin=] [ctol=] [ltol=] [rock_list=] [vtufilename=] [output=] [verbose=]" << std::endl << std::endl
             << "\t gridfilename             - the grid file. can be 'uniform'" << std::endl
             << "\t vtufilename              - save results to vtu file" << std::endl
             << "\t rock_list                - use material information from given rocklist" << std::endl
             << "\t output                   - output results in text report format" << std::endl
+            << "\t resultfilename           - result template filename" << std::endl
             << "\t method                   - can be MPC or Mortar" << std::endl
             << "\t\t if not specified, Mortar couplings are used" << std::endl
             << "\t (x|y|z)max/(x|y|z)min - maximum/minimum grid coordinates." << std::endl
@@ -59,11 +61,12 @@ void syntax(char** argv)
             << "\t linsolver_type=iterative - use a suitable iterative method (cg or gmres)" << std::endl
             << "\t linsolver_type=direct    - use the SuperLU sparse direct solver" << std::endl
             << "\t verbose                  - set to true to get verbose output" << std::endl
-            << "\t fastamg                  - use the fast AMG" << std::endl
+            << "\t linsolver_pre            - preconditioner for elasticity block. amg, fastamg or schwarz" << std::endl
             << "\t linsolver_restart        - number of iterations before gmres is restarted" << std::endl
             << "\t linsolver_presteps       - number of pre-smooth steps in the AMG" << std::endl
             << "\t linsolver_poststeps      - number of post-smooth steps in the AMG" << std::endl
             << "\t linsolver_smoother       - smoother used in the AMG" << std::endl
+            << "\t linsolver_report         - print report at end of solution phase" << std::endl
             << "\t\t affects memory usage" << std::endl
             << "\t linsolver_symmetric      - use symmetric linear solver. Defaults to true" << std::endl
             << "\t mortar_precond           - preconditioner for mortar block. Defaults to schur-amg" << std::endl;
@@ -86,6 +89,7 @@ struct Params {
   std::string vtufile;
   //! \brief Text output file
   std::string output;
+  //! \brief Result filenames
   //! \brief Method
   UpscaleMethod method;
   //! \brief A scaling parameter for the E-modulus to avoid numerical issues
@@ -102,6 +106,8 @@ struct Params {
   int n1;
   //! \brief Number of elements on interface grid in the y direction
   int n2;
+
+  //! \brief Linear solver parameters
   Opm::Elasticity::LinSolParams linsolver;
 
   // Debugging options
@@ -114,6 +120,10 @@ struct Params {
   int cellsz;
   //! \brief verbose output
   bool verbose;
+  //! \brief Run a inspection only, currently 'mesh, results, load'
+  std::string inspect;
+  //! \brief Result template filename (input/output)
+  std::string resultfilename;
 };
 
 //! \brief Parse the command line arguments
@@ -140,8 +150,10 @@ void parseCommandLine(int argc, char** argv, Params& p)
   p.file     = param.get<std::string>("gridfilename");
   p.rocklist = param.getDefault<std::string>("rock_list","");
   p.vtufile  = param.getDefault<std::string>("vtufilename","");
+  p.resultfilename  = param.getDefault<std::string>("resultfilename","");
   p.output   = param.getDefault<std::string>("output","");
   p.verbose  = param.getDefault<bool>("verbose",false);
+  p.inspect  = param.getDefault<std::string>("inspect","");
   size_t i;
   if ((i=p.vtufile.find(".vtu")) != std::string::npos)
     p.vtufile = p.vtufile.substr(0,i);
@@ -275,6 +287,9 @@ int run(Params& p)
               << "x"                   << grid.logicalCartesianSize()[2]
               << std::endl;
 
+    if (p.inspect == "mesh")
+      return 0;
+
     if (p.method == UPSCALE_MPC) {
       std::cout << "using MPC couplings in all directions..." << std::endl;
       upscale.periodicBCs(p.min, p.max);
@@ -289,6 +304,7 @@ int run(Params& p)
       upscale.fixCorners(p.min, p.max);
       upscale.A.initForAssembly();
     }
+
     Dune::FieldMatrix<double,6,6> C;
     Dune::VTKWriter<typename GridType::LeafGridView>* vtkwriter=0;
     if (!p.vtufile.empty())
@@ -299,13 +315,30 @@ int run(Params& p)
     std::cout << "setting up linear solver..." << std::endl;
     upscale.setupSolvers(p.linsolver);
 
-//#pragma omp parallel for schedule(static)
+    if (p.inspect == "load")
+      Dune::storeMatrixMarket(upscale.A.getOperator(), "A.mtx");
     for (int i=0;i<6;++i) {
       std::cout << "processing case " << i+1 << "..." << std::endl;
-      std::cout << "\tassembling load vector..." << std::endl;
-      upscale.assemble(i,false);
-      std::cout << "\tsolving..." << std::endl;
-      upscale.solve(i);
+      if (p.inspect == "results") {
+        char temp[1024];
+        sprintf(temp, p.resultfilename.c_str(), "x", i+1);
+        Dune::loadMatrixMarket(upscale.u[i], temp);
+      } else {
+        std::cout << "\tassembling load vector..." << std::endl;
+        upscale.assemble(i,false);
+        if (p.inspect == "load") {
+          char temp[1024];
+          sprintf(temp, p.resultfilename.c_str(), "b", i+1);
+          Dune::storeMatrixMarket(upscale.b[i], temp);
+        }
+        std::cout << "\tsolving..." << std::endl;
+        upscale.solve(i);
+        if (p.inspect == "load") {
+          char temp[1024];
+          sprintf(temp, p.resultfilename.c_str(), "x", i+1);
+          Dune::storeMatrixMarket(upscale.u[i], temp);
+        }
+      }
       upscale.A.expandSolution(field[i],upscale.u[i]);
 #define CLAMP(x) (fabs(x)<1.e-4?0.0:x)
       for (size_t j=0;j<field[i].size();++j) {
@@ -380,8 +413,10 @@ try
     Params p;
     parseCommandLine(argc,argv,p);
 
-    if (p.linsolver.fastamg)
+    if (p.linsolver.pre == Opm::Elasticity::FASTAMG)
       return run<Dune::CpGrid, Opm::Elasticity::FastAMG>(p);
+    else if (p.linsolver.pre == Opm::Elasticity::SCHWARZ)
+      return run<Dune::CpGrid, Opm::Elasticity::Schwarz>(p);
     else {
       if (p.linsolver.smoother == Opm::Elasticity::SMOOTH_SCHWARZ)
         return runAMG<Opm::Elasticity::SchwarzSmoother>(p);

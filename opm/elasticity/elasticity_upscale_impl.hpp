@@ -240,7 +240,7 @@ IMPL_FUNC(int, addBBlockMortar(const BoundaryGrid& b1,
     for (size_t q=0;q<b1.colSize(p);++q) {
       for (size_t i=0;i<4;++i) {
         for (size_t d=0;d<3;++d) {
-          MPC* mpc = A.getMPC(b1.getQuad(p,q).v[i].i,d);
+          const MPC* mpc = A.getMPC(b1.getQuad(p,q).v[i].i,d);
           if (mpc) {
             for (size_t n=0;n<mpc->getNoMaster();++n) {
               int dof = A.getEquationForDof(mpc->getMaster(n).node,d);
@@ -326,7 +326,7 @@ IMPL_FUNC(void, assembleBBlockMortar(const BoundaryGrid& b1,
       // and assemble element contributions
       for (int d=0;d<3;++d) {
         for (int i=0;i<4;++i) {
-          MPC* mpc = A.getMPC(qu.v[i].i,d);
+          const MPC* mpc = A.getMPC(qu.v[i].i,d);
           if (mpc) {
             for (size_t n=0;n<mpc->getNoMaster();++n) {
               int indexi = A.getEquationForDof(mpc->getMaster(n).node,d);
@@ -829,8 +829,9 @@ IMPL_FUNC(void, periodicBCsMortar(const double* min,
 }
 
   template<class EAMG>
-EAMG* setupAMG(int pre, int post, int target, int zcells,
-               std::shared_ptr<Operator>& op)
+EAMG* setupPC(int pre, int post, int target, int zcells,
+              std::shared_ptr<Operator>& op, const Dune::CpGrid& gv,
+              ASMHandler<Dune::CpGrid>& A, bool& copy)
 {
   Criterion crit;
   typename EAMG::SmootherArgs args;
@@ -842,12 +843,15 @@ EAMG* setupAMG(int pre, int post, int target, int zcells,
   crit.setDefaultValuesIsotropic(3, zcells);
 
   std::cout << "\t collapsing 2x2x" << zcells << " cells per level" << std::endl;
+  copy = true;
   return new EAMG(*op, crit, args);
 }
 
   template<>
-FastAMG* setupAMG<FastAMG>(int pre, int post, int target, int zcells,
-                           std::shared_ptr<Operator>& op)
+FastAMG* setupPC<FastAMG>(int pre, int post, int target, int zcells,
+                          std::shared_ptr<Operator>& op,
+                          const Dune::CpGrid& gv,
+                          ASMHandler<Dune::CpGrid>& A, bool& copy)
 {
   Criterion crit;
   crit.setCoarsenTarget(target);
@@ -855,8 +859,69 @@ FastAMG* setupAMG<FastAMG>(int pre, int post, int target, int zcells,
   crit.setDefaultValuesIsotropic(3, zcells);
 
   std::cout << "\t collapsing 2x2x" << zcells << " cells per level" << std::endl;
+  copy = true;
   return new FastAMG(*op, crit);
 }
+
+  template<>
+Schwarz* setupPC<Schwarz>(int pre, int post, int target, int zcells,
+                          std::shared_ptr<Operator>& op,
+                          const Dune::CpGrid& gv,
+                          ASMHandler<Dune::CpGrid>& A, bool& copy)
+{
+  const int cps = 1;
+  Schwarz::subdomain_vector rows;
+  int nel1 = gv.logicalCartesianSize()[0];
+  int nel2 = gv.logicalCartesianSize()[1];
+  int nel3 = gv.logicalCartesianSize()[2];
+  rows.resize(nel1/cps*nel2/cps);
+
+  // invert compressed cell array
+  std::vector<int> globalActive(nel1*nel2*nel3, -1);
+  for (size_t i=0;i<gv.globalCell().size();++i)
+    globalActive[gv.globalCell()[i]] = i;
+
+  auto set = gv.leafView().indexSet();
+  for (int i=0;i<nel2;++i) {
+    for (int j=0;j<nel1;++j) {
+      for (int k=0;k<nel3;++k) {
+        if (globalActive[k*nel1*nel2+i*nel1+j] > -1) {
+          auto it = gv.leafView().begin<0>();
+          for (int l=0;l<globalActive[k*nel1*nel2+i*nel1+j];++l)
+            ++it;
+          // loop over nodes
+          for (int n=0;n<8;++n) {
+            int idx = set.subIndex(*it, n, 3);
+            for (int m=0;m<3;++m) {
+              const MPC* mpc = A.getMPC(idx, m);
+              if (mpc) {
+                for (size_t q=0;q<mpc->getNoMaster();++q) {
+                  int idx2 = A.getEquationForDof(mpc->getMaster(q).node, m);
+                  if (idx2 > -1)
+                    rows[(i/cps)*(nel1/cps)+j/cps].insert(idx2);
+                }
+              } else {
+                if (A.getEquationForDof(idx, m) > -1)
+                  rows[i/cps*nel1/cps+j/cps].insert(A.getEquationForDof(idx, m));
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  std::ofstream of;
+  of.open("subs.txt");
+  for (auto it = rows.begin(); it != rows.end(); ++it) {
+    for (auto it2 = it->begin(); it2 != it->end(); ++it2)
+      of << *it2 << " ";
+    of << std::endl;
+  }
+
+  copy = false;
+  return new Schwarz(op->getmat(), rows, 1.0, false);
+}
+
 
  template<class M, class A>
 static void applyMortarBlock(int i, const Matrix& B, M& T,
@@ -879,37 +944,27 @@ IMPL_FUNC(void, setupSolvers(const LinSolParams& params))
   int siz = A.getOperator().N(); // system size
   if (params.type == ITERATIVE) {
     op.reset(new Operator(A.getOperator()));
-    upre.reset(setupAMG<EAMG>(params.steps[0], params.steps[1],
-                                               params.coarsen_target,
-                                               params.zcells, op));
+    bool copy;
+    upre.reset(setupPC<EAMG>(params.steps[0], params.steps[1],
+                             params.coarsen_target, params.zcells, op,
+                             gv, A, copy));
 
     // Mortar in use
     if (B.N()) {
       siz += B.M();
 
       // schur system: B'*diag(A)^-1*B
-      if (params.mortarpre == SCHURAMG) {
-        Vector v, v2, v3;
-        v.resize(B.N());
-        v2.resize(B.N());
-        v = 0;
-        v2 = 0;
+      if (params.mortarpre == SCHUR) {
         Dune::DynamicMatrix<double> T(B.M(), B.M());
-        upre->pre(v, v);
         std::cout << "\tBuilding preconditioner for multipliers..." << std::endl;
-        MortarBlockEvaluator<Dune::Preconditioner<Vector,Vector> > pre(*upre, B);
         LoggerHelper help(B.M(), 10, 100);
-        for (size_t i=0; i < B.M(); ++i) {
-          v[i] = 1;
-          pre.apply(v, v2);
-          for (size_t j=0; j < B.M(); ++j)
-            T[j][i] = v2[j];
 
-          v[i] = 0;
+        for (size_t i=0; i < B.M(); ++i) {
+          applyMortarBlock(i, B, T, *upre);
           help.log(i, "\t\t... still processing ... multiplier ");
         }
         P = MatrixOps::fromDense(T);
-      } else if (params.mortarpre == SCHURDIAG) {
+      } else if (params.mortarpre == SIMPLE) {
         Matrix D = MatrixOps::diagonal(A.getEqns());
 
         // scale by row sums
@@ -937,14 +992,14 @@ IMPL_FUNC(void, setupSolvers(const LinSolParams& params))
 
         innersolver.reset(new Dune::CGSolver<Vector>(*op, *upre, params.tol,
                                                      params.maxit,
-                                                     verbose?2:0));
+                                                     verbose?2:(params.report?1:0)));
         op2.reset(new SchurEvaluator(*innersolver, B));
         lprep.reset(new Dune::SuperLU<Matrix>(P));
         lpre.reset(new SeqLU(*lprep));
         std::shared_ptr<Dune::InverseOperator<Vector,Vector> > outersolver;
         outersolver.reset(new Dune::CGSolver<Vector>(*op2, *lpre, params.tol*10,
                                                      params.maxit,
-                                                     verbose?2:0));
+                                                     verbose?2:(params.report?1:0)));
         solver.reset(new UzawaSolver<Vector, Vector>(innersolver, outersolver, B));
       } else {
         tmpre.reset(new MortarSchurPre<EAMG>(P, B, *upre, params.symmetric));
@@ -953,7 +1008,7 @@ IMPL_FUNC(void, setupSolvers(const LinSolParams& params))
           solver.reset(new Dune::MINRESSolver<Vector>(*meval, *tmpre, 
                                                       params.tol, 
                                                       params.maxit,
-                                                      verbose?2:0));
+                                                      verbose?2:(params.report?1:0)));
         } else {
           solver.reset(new Dune::RestartedGMResSolver<Vector>(*meval, *tmpre, 
                                                               params.tol,
@@ -966,14 +1021,14 @@ IMPL_FUNC(void, setupSolvers(const LinSolParams& params))
         solver.reset(new Dune::CGSolver<Vector>(*op, *upre,
                                                 params.tol,
                                                 params.maxit,
-                                                verbose?2:0));
+                                                verbose?2:(params.report?1:0)));
     }
   } else {
     if (B.N()) 
       A.getOperator() = MatrixOps::augment(A.getOperator(), B,
                                            0, A.getOperator().M(), true);
 #if HAVE_SUPERLU
-    solver.reset(new Dune::SuperLU<Matrix>(A.getOperator(), verbose));
+    solver.reset(new Dune::SuperLU<Matrix>(A.getOperator(), verbose?2:(params.report?1:0)));
 #else
     std::cerr << "SuperLU solver not enabled" << std::endl;
     exit(1);
