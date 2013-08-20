@@ -1,9 +1,7 @@
 #ifndef DUNE_FMATRIXEIGENVALUES_EXT_CC 
 #define DUNE_FMATRIXEIGENVALUES_EXT_CC 
 
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
 
 #include <iostream>
 #include <cmath>

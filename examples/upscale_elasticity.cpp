@@ -9,9 +9,8 @@
 //! \brief Elasticity upscaling on cornerpoint grids
 //!
 //==============================================================================
-#ifdef HAVE_CONFIG_H
-# include "config.h"     
-#endif
+
+#include "config.h"
 
 #include <iostream>
 #include <unistd.h>
