@@ -48,6 +48,8 @@
 #if HAVE_ALUGRID
 #include <dune/common/shared_ptr.hh>
 #include <dune/grid/io/file/gmshreader.hh>
+// dune-grid 2.2.0 tests for this define instead of HAVE_ALUGRID
+#define ENABLE_ALUGRID 1
 #include <dune/grid/alugrid.hh>
 #endif
 
