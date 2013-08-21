@@ -63,7 +63,7 @@ macro (fortran_hook)
 endmacro (fortran_hook)
 
 macro (tests_hook)
-	include (TestUpscalingBinaries)
+	include (${CMAKE_CURRENT_SOURCE_DIR}/TestUpscalingBinaries.cmake)
 endmacro (tests_hook)
 
 # all setup common to the OPM library modules is done here
