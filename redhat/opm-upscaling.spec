@@ -59,8 +59,9 @@ This package contains the applications for opm-upscaling
 %prep
 %setup -q
 
+# consider using -DUSE_VERSIONED_DIR=ON if backporting
 %build
-cmake28 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_INSTALL_DOCDIR=share/doc/%{name}-%{version} -DUSE_RUNPATH=OFF
+cmake28 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_INSTALL_DOCDIR=share/doc/%{name}-%{version} -DWHOLE_PROG_OPTIM=ON -DUSE_RUNPATH=OFF
 make
 
 %install
