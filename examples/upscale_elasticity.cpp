@@ -37,6 +37,7 @@
 #include <opm/elasticity/elasticity_upscale.hpp>
 #include <opm/elasticity/matrixops.hpp>
 
+using namespace Opm::Elasticity;
 
 //! \brief Display the available command line parameters
 void syntax(char** argv)
@@ -108,7 +109,7 @@ struct Params {
   int n2;
 
   //! \brief Linear solver parameters
-  Opm::Elasticity::LinSolParams linsolver;
+  LinSolParams linsolver;
 
   // Debugging options
 
@@ -215,9 +216,9 @@ void writeOutput(const Params& p, Opm::time::StopWatch& watch, int cells,
   }
   f << "# Options used:" << std::endl
     << "#\t         method: " << method << std::endl
-    << "#\t linsolver_type: " << (p.linsolver.type==Opm::Elasticity::DIRECT?"direct":"iterative")
+    << "#\t linsolver_type: " << (p.linsolver.type==DIRECT?"direct":"iterative")
                               << std::endl;
-  if (p.linsolver.type == Opm::Elasticity::ITERATIVE)
+  if (p.linsolver.type == ITERATIVE)
     f << "#\t           ltol: " << p.linsolver.tol << std::endl;
   if (p.file == "uniform") {
     f << "#\t          cellsx: " << p.cellsx << std::endl
@@ -258,10 +259,8 @@ int run(Params& p)
       grid.readEclipseFormat(p.file,p.ctol,false);
 
     typedef typename GridType::ctype ctype;
-    Opm::Elasticity::ElasticityUpscale<GridType, AMG> upscale(grid, p.ctol, 
-                                                              p.Emin, p.file,
-                                                              p.rocklist,
-                                                              p.verbose);
+    ElasticityUpscale<GridType, AMG> upscale(grid, p.ctol, p.Emin, p.file,
+                                             p.rocklist, p.verbose);
     if (p.max[0] < 0 || p.min[0] < 0) {
       std::cout << "determine side coordinates..." << std::endl;
       upscale.findBoundaries(p.min,p.max);
@@ -382,13 +381,17 @@ int run(Params& p)
   return 1;
 }
 
-  template<class Smoother>
+  template<template<class Smoother> class AMG>
 int runAMG(Params& p)
 {
-  return run<Dune::CpGrid,
-             Dune::Amg::AMG<Opm::Elasticity::Operator,
-                            Opm::Elasticity::Vector,
-                            Smoother> >(p);
+  if (p.linsolver.smoother == SMOOTH_SCHWARZ)
+    return run< Dune::CpGrid, AMG<SchwarzSmoother> >(p);
+  else if (p.linsolver.smoother == SMOOTH_JACOBI)
+    return run< Dune::CpGrid, AMG<JACSmoother> >(p);
+  else if (p.linsolver.smoother == SMOOTH_ILU)
+    return run< Dune::CpGrid, AMG<ILUSmoother> >(p);
+  else
+    return run<Dune::CpGrid, AMG<SSORSmoother> >(p);
 }
 
 //! \brief Main driver
@@ -413,20 +416,14 @@ try
     Params p;
     parseCommandLine(argc,argv,p);
 
-    if (p.linsolver.pre == Opm::Elasticity::FASTAMG)
-      return run<Dune::CpGrid, Opm::Elasticity::FastAMG>(p);
-    else if (p.linsolver.pre == Opm::Elasticity::SCHWARZ)
-      return run<Dune::CpGrid, Opm::Elasticity::Schwarz>(p);
-    else {
-      if (p.linsolver.smoother == Opm::Elasticity::SMOOTH_SCHWARZ)
-        return runAMG<Opm::Elasticity::SchwarzSmoother>(p);
-      else if (p.linsolver.smoother == Opm::Elasticity::SMOOTH_JACOBI)
-        return runAMG<Opm::Elasticity::JACSmoother>(p);
-      else if (p.linsolver.smoother == Opm::Elasticity::SMOOTH_ILU)
-        return runAMG<Opm::Elasticity::ILUSmoother>(p);
-      else
-        return runAMG<Opm::Elasticity::SSORSmoother>(p);
-    }
+    if (p.linsolver.pre == FASTAMG)
+      return run<Dune::CpGrid, FastAMG>(p);
+    else if (p.linsolver.pre == SCHWARZ)
+      return run<Dune::CpGrid, Schwarz>(p);
+    else if (p.linsolver.pre == TWOLEVEL)
+      return runAMG<AMG2Level>(p);
+    else
+      return runAMG<AMG1>(p);
   } catch (const std::exception &e) {
     throw e;
   }

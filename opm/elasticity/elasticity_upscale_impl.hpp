@@ -18,8 +18,8 @@ namespace Opm {
 namespace Elasticity {
 
 #undef IMPL_FUNC
-#define IMPL_FUNC(A,B) template<class GridType, class EAMG> \
-                         A ElasticityUpscale<GridType, EAMG>::B
+#define IMPL_FUNC(A,B) template<class GridType, class PC> \
+                         A ElasticityUpscale<GridType, PC>::B
 
 IMPL_FUNC(std::vector<BoundaryGrid::Vertex>, 
           extractFace(Direction dir, ctype coord))
@@ -828,101 +828,6 @@ IMPL_FUNC(void, periodicBCsMortar(const double* min,
   slave.clear();
 }
 
-  template<class EAMG>
-EAMG* setupPC(int pre, int post, int target, int zcells,
-              std::shared_ptr<Operator>& op, const Dune::CpGrid& gv,
-              ASMHandler<Dune::CpGrid>& A, bool& copy)
-{
-  Criterion crit;
-  typename EAMG::SmootherArgs args;
-  args.relaxationFactor = 1.0;
-  crit.setCoarsenTarget(target);
-  crit.setGamma(1);
-  crit.setNoPreSmoothSteps(pre);
-  crit.setNoPostSmoothSteps(post);
-  crit.setDefaultValuesIsotropic(3, zcells);
-
-  std::cout << "\t collapsing 2x2x" << zcells << " cells per level" << std::endl;
-  copy = true;
-  return new EAMG(*op, crit, args);
-}
-
-  template<>
-FastAMG* setupPC<FastAMG>(int pre, int post, int target, int zcells,
-                          std::shared_ptr<Operator>& op,
-                          const Dune::CpGrid& gv,
-                          ASMHandler<Dune::CpGrid>& A, bool& copy)
-{
-  Criterion crit;
-  crit.setCoarsenTarget(target);
-  crit.setGamma(1);
-  crit.setDefaultValuesIsotropic(3, zcells);
-
-  std::cout << "\t collapsing 2x2x" << zcells << " cells per level" << std::endl;
-  copy = true;
-  return new FastAMG(*op, crit);
-}
-
-  template<>
-Schwarz* setupPC<Schwarz>(int pre, int post, int target, int zcells,
-                          std::shared_ptr<Operator>& op,
-                          const Dune::CpGrid& gv,
-                          ASMHandler<Dune::CpGrid>& A, bool& copy)
-{
-  const int cps = 1;
-  Schwarz::subdomain_vector rows;
-  int nel1 = gv.logicalCartesianSize()[0];
-  int nel2 = gv.logicalCartesianSize()[1];
-  int nel3 = gv.logicalCartesianSize()[2];
-  rows.resize(nel1/cps*nel2/cps);
-
-  // invert compressed cell array
-  std::vector<int> globalActive(nel1*nel2*nel3, -1);
-  for (size_t i=0;i<gv.globalCell().size();++i)
-    globalActive[gv.globalCell()[i]] = i;
-
-  auto set = gv.leafView().indexSet();
-  for (int i=0;i<nel2;++i) {
-    for (int j=0;j<nel1;++j) {
-      for (int k=0;k<nel3;++k) {
-        if (globalActive[k*nel1*nel2+i*nel1+j] > -1) {
-          auto it = gv.leafView().begin<0>();
-          for (int l=0;l<globalActive[k*nel1*nel2+i*nel1+j];++l)
-            ++it;
-          // loop over nodes
-          for (int n=0;n<8;++n) {
-            int idx = set.subIndex(*it, n, 3);
-            for (int m=0;m<3;++m) {
-              const MPC* mpc = A.getMPC(idx, m);
-              if (mpc) {
-                for (size_t q=0;q<mpc->getNoMaster();++q) {
-                  int idx2 = A.getEquationForDof(mpc->getMaster(q).node, m);
-                  if (idx2 > -1)
-                    rows[(i/cps)*(nel1/cps)+j/cps].insert(idx2);
-                }
-              } else {
-                if (A.getEquationForDof(idx, m) > -1)
-                  rows[i/cps*nel1/cps+j/cps].insert(A.getEquationForDof(idx, m));
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  std::ofstream of;
-  of.open("subs.txt");
-  for (auto it = rows.begin(); it != rows.end(); ++it) {
-    for (auto it2 = it->begin(); it2 != it->end(); ++it2)
-      of << *it2 << " ";
-    of << std::endl;
-  }
-
-  copy = false;
-  return new Schwarz(op->getmat(), rows, 1.0, false);
-}
-
-
  template<class M, class A>
 static void applyMortarBlock(int i, const Matrix& B, M& T,
                              A& upre)
@@ -939,15 +844,17 @@ static void applyMortarBlock(int i, const Matrix& B, M& T,
     T[j][i] = v2[j];
 }
 
+#include <omp.h>
+
 IMPL_FUNC(void, setupSolvers(const LinSolParams& params))
 {
   int siz = A.getOperator().N(); // system size
   if (params.type == ITERATIVE) {
     op.reset(new Operator(A.getOperator()));
     bool copy;
-    upre.reset(setupPC<EAMG>(params.steps[0], params.steps[1],
-                             params.coarsen_target, params.zcells, op,
-                             gv, A, copy));
+    upre = PC::setup(params.steps[0], params.steps[1],
+                     params.coarsen_target, params.zcells,
+                     op, gv, A, copy);
 
     // Mortar in use
     if (B.N()) {
@@ -1002,7 +909,7 @@ IMPL_FUNC(void, setupSolvers(const LinSolParams& params))
                                                      verbose?2:(params.report?1:0)));
         solver.reset(new UzawaSolver<Vector, Vector>(innersolver, outersolver, B));
       } else {
-        tmpre.reset(new MortarSchurPre<EAMG>(P, B, *upre, params.symmetric));
+        tmpre.reset(new MortarSchurPre<typename PC::type>(P, B, *upre, params.symmetric));
         meval.reset(new MortarEvaluator(A.getOperator(), B));
         if (params.symmetric) {
           solver.reset(new Dune::MINRESSolver<Vector>(*meval, *tmpre, 

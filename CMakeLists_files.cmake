@@ -30,6 +30,7 @@
 # find opm -name '*.c*' -printf '\t%p\n' | sort
 list (APPEND MAIN_SOURCE_FILES
 	opm/elasticity/boundarygrid.cpp
+	opm/elasticity/elasticity_preconditioners.cpp
 	opm/elasticity/material.cpp
 	opm/elasticity/materials.cpp
 	opm/elasticity/matrixops.cpp
@@ -117,6 +118,7 @@ list (APPEND PUBLIC_HEADER_FILES
 	opm/elasticity/boundarygrid.hh
 	opm/elasticity/elasticity.hpp
 	opm/elasticity/elasticity_impl.hpp
+	opm/elasticity/elasticity_preconditioners.hpp
 	opm/elasticity/elasticity_upscale.hpp
 	opm/elasticity/elasticity_upscale_impl.hpp
 	opm/elasticity/logutils.hpp

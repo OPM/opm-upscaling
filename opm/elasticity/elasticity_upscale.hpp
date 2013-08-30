@@ -25,19 +25,16 @@
 #include <opm/elasticity/asmhandler.hpp>
 #include <opm/elasticity/boundarygrid.hh>
 #include <opm/elasticity/elasticity.hpp>
+#include <opm/elasticity/elasticity_preconditioners.hpp>
 #include <opm/elasticity/logutils.hpp>
 #include <opm/elasticity/materials.hh>
+#include <opm/elasticity/matrixops.hpp>
 #include <opm/elasticity/mpc.hh>
 #include <opm/elasticity/mortar_schur.hpp>
 #include <opm/elasticity/mortar_utils.hpp>
 #include <opm/elasticity/mortar_evaluator.hpp>
 #include <opm/elasticity/mortar_schur_precond.hpp>
 #include <opm/elasticity/uzawa_solver.hpp>
-
-#include <dune/istl/superlu.hh>
-#include <dune/istl/paamg/amg.hh>
-#include <dune/istl/paamg/fastamg.hh>
-#include <dune/istl/overlappingschwarz.hh>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -55,7 +52,8 @@ enum Solver {
 enum Preconditioner {
   AMG,
   FASTAMG,
-  SCHWARZ
+  SCHWARZ,
+  TWOLEVEL
 };
 
 //! \brief An enumeration of the available preconditioners for multiplier block
@@ -135,6 +133,8 @@ struct LinSolParams {
       pre = Opm::Elasticity::SCHWARZ;
     else if (solver == "fastamg")
       pre = Opm::Elasticity::FASTAMG;
+    else if (solver == "twolevel")
+      pre = Opm::Elasticity::TWOLEVEL;
     else
       pre = Opm::Elasticity::AMG;
 
@@ -165,51 +165,8 @@ struct LinSolParams {
   }
 };
 
-//! \brief SSOR AMG smoother
-typedef Dune::SeqSSOR<Matrix, Vector, Vector> SSORSmoother;
-//! \brief GJ AMG smoother
-typedef Dune::SeqJac<Matrix, Vector, Vector> JACSmoother;
-//! \brief ILU0 AMG smoother
-typedef Dune::SeqILU0<Matrix, Vector, Vector> ILUSmoother;
-//! \brief Schwarz + ILU0 AMG smoother
-typedef Dune::SeqOverlappingSchwarz<Matrix,Vector,
-                              Dune::AdditiveSchwarzMode> SchwarzSmoother;
-
-//! \brief The coupling metric used in the AMG
-typedef Dune::Amg::FirstDiagonal CouplingMetric;
-
-//! \brief The coupling criterion used in the AMG
-typedef Dune::Amg::SymmetricCriterion<Matrix, CouplingMetric> CritBase;
-
-//! \brief The coarsening criterion used in the AMG
-typedef Dune::Amg::CoarsenCriterion<CritBase> Criterion;
-
-//! \brief A linear operator
-typedef Dune::MatrixAdapter<Matrix,Vector,Vector> Operator;
-
-//! \brief A FastAMG for an elasticity operator
-typedef Dune::Amg::FastAMG<Operator, Vector> FastAMG;
-
-//! \brief Overlapping Schwarz preconditioner
-typedef Dune::SeqOverlappingSchwarz<Matrix, Vector,
-                                    Dune::AdditiveSchwarzMode,
-                     Dune::SuperLU<Matrix> > Schwarz;
-
-//! \brief Setup preconditioner
-//! \param[in] pre The number of pre-smoothing steps
-//! \param[in] post The number of post-smoothing steps
-//! \param[in] target The coarsening target
-//! \param[in] zcells The wanted number of cells to collapse in z per level
-//! \param[in] op The linear operator
-//! \param[in] gv The cornerpoint grid
-//! \param[out] thread Whether or not to clone for threads
-  template<class EAMG>
-EAMG* setupPC(int pre, int post, int target, int zcells,
-              std::shared_ptr<Operator>& op, const Dune::CpGrid& gv,
-              ASMHandler<Dune::CpGrid>& A, bool& copy);
-
 //! \brief The main driver class
-  template<class GridType, class EAMG>
+  template<class GridType, class PC>
 class ElasticityUpscale
 {
   public:
@@ -230,6 +187,12 @@ class ElasticityUpscale
 
     //! \brief An iterator over grid cells
     typedef typename GridType::LeafGridView::template Codim<0>::Iterator LeafIterator;
+
+    //! \brief Our preconditioner type
+    typedef typename PC::type PCType;
+
+    //! \brief A pointer to our preconditioner
+    typedef std::shared_ptr<typename PC::type> PCPtr;
 
     //! \brief The linear operator
     ASMHandler<GridType> A;
@@ -466,7 +429,7 @@ class ElasticityUpscale
     std::shared_ptr<SchurEvaluator> op2;
 
     //! \brief The preconditioner for the elasticity operator
-    std::shared_ptr<EAMG> upre;
+    PCPtr upre;
 
     //! \brief An LU solve as a preconditioner
     typedef Dune::InverseOperator2Preconditioner<Dune::SuperLU<Matrix>,
@@ -476,7 +439,7 @@ class ElasticityUpscale
     std::shared_ptr< Dune::SuperLU<Matrix> > lprep;
 
     //! \brief Preconditioner for the Mortar system
-    typedef std::shared_ptr< MortarSchurPre<EAMG> > MortarAmgPtr;
+    typedef std::shared_ptr< MortarSchurPre<PCType> > MortarAmgPtr;
     MortarAmgPtr tmpre;
 
     //! \brief Evaluator for the Mortar system
