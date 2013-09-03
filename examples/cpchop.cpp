@@ -118,7 +118,7 @@ try
         // Code copied from ReservoirPropertyCommon.hpp for file reading
         std::ifstream rl(rock_list.c_str());
         if (!rl) {
-            THROW("Could not open file " << rock_list);
+            OPM_THROW(std::runtime_error, "Could not open file " << rock_list);
         }
         int num_rocks = -1;
         rl >> num_rocks;
@@ -139,7 +139,7 @@ try
 
             std::ifstream rock_stream(rockfilename.c_str());
             if (!rock_stream) {
-                THROW("Could not open file " << rockfilename);
+                OPM_THROW(std::runtime_error, "Could not open file " << rockfilename);
             }
             
             if (! anisorocks) { //Isotropic input rocks (Sw Krw Kro J)
@@ -167,7 +167,7 @@ try
                 rocksatendpoints_[i][0] = Jtmp.getMinimumX().first;
                 rocksatendpoints_[i][1] = Jtmp.getMaximumX().first;
                 if (rocksatendpoints_[i][0] < 0 || rocksatendpoints_[i][0] > 1) {
-                    THROW("Minimum rock saturation (" << rocksatendpoints_[i][0] << ") not sane for rock " 
+                    OPM_THROW(std::runtime_error, "Minimum rock saturation (" << rocksatendpoints_[i][0] << ") not sane for rock " 
                           << rockfilename << "." << std::endl << "Did you forget to specify anisotropicrocks=true ?");  
                 }
             }

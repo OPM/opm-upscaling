@@ -180,7 +180,7 @@ namespace Opm
     {
         if ((type == Periodic && bctype_ != Periodic)
             || (type != Periodic && bctype_ == Periodic)) {
-            THROW("Cannot switch to or from Periodic boundary condition, "
+            OPM_THROW(std::runtime_error, "Cannot switch to or from Periodic boundary condition, "
                   "periodic must be set in init() params.");
         } else {
             bctype_ = type;
@@ -263,7 +263,7 @@ namespace Opm
 		}
 		break;
 	    default:
-		THROW("Unknown boundary type: " << bctype_);
+		OPM_THROW(std::runtime_error, "Unknown boundary type: " << bctype_);
 	    }
 	    double delta = computeDelta(pdd);
 	    for (int i = 0; i < Dimension; ++i) {
@@ -310,7 +310,7 @@ namespace Opm
 			      std::cerr << "Flow may be in wrong direction at bid: " << f->boundaryId()<<" (canonical: "<<canon_bid
 					  << ") Magnitude: " << std::fabs(flux) << std::endl;
 #endif
-				// THROW("Detected outflow at entry face: " << face);
+				// OPM_THROW(std::runtime_error, "Detected outflow at entry face: " << face);
 			    }
 			    side1_flux += flux*norm_comp;
 			    side1_area += area;
@@ -322,7 +322,7 @@ namespace Opm
 				std::cerr << "Flow may be in wrong direction at bid: " << f->boundaryId()
 					  << " Magnitude: " << std::fabs(flux) << std::endl;
 #endif
-				// THROW("Detected inflow at exit face: " << face);
+				// OPM_THROW(std::runtime_error, "Detected inflow at exit face: " << face);
 			    }
 			    side2_flux += flux*norm_comp;
 			    side2_area += area;

@@ -351,7 +351,7 @@ namespace Opm
                                 int partner_bid = this->bcond_.getPeriodicPartner(f->boundaryId());
                                 std::map<int, double>::const_iterator it = frac_flow_by_bid.find(partner_bid);
                                 if (it == frac_flow_by_bid.end()) {
-                                    THROW("Could not find periodic partner fractional flow. Face bid = " << f->boundaryId()
+                                    OPM_THROW(std::runtime_error, "Could not find periodic partner fractional flow. Face bid = " << f->boundaryId()
                                           << " and partner bid = " << partner_bid);
                                 }
                                 frac_flow = it->second;
