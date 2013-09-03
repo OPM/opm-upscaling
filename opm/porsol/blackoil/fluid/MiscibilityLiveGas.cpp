@@ -50,7 +50,7 @@ namespace Opm
 	// GAS, PVTG
 	const int region_number = 0;
 	if (pvtg.size() != 1) {
-	    THROW("More than one PVD-region");
+	    OPM_THROW(std::runtime_error, "More than one PVD-region");
 	}
 	saturated_gas_table_.resize(4);
 	const int sz = pvtg[region_number].size();

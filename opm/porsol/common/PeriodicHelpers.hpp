@@ -250,7 +250,7 @@ namespace Opm
 	}
         int num_bdy = bface_iters.size();
 	if (max_bid != num_bdy) {
-	    THROW("createLinear() assumes that every boundary face has a unique boundary id. That seems to be violated.");
+	    OPM_THROW(std::runtime_error, "createLinear() assumes that every boundary face has a unique boundary id. That seems to be violated.");
 	}
         fbcs.resize(max_bid + 1);
 
@@ -276,7 +276,7 @@ namespace Opm
 		std::cerr << "Centroid: " << fcent << "\n";
 		std::cerr << "Bounding box min: " << low << "\n";
 		std::cerr << "Bounding box max: " << hi << "\n";
-		THROW("Boundary face centroid not on bounding box. Maybe the grid is not an axis-aligned shoe-box?");
+		OPM_THROW(std::runtime_error, "Boundary face centroid not on bounding box. Maybe the grid is not an axis-aligned shoe-box?");
 	    }
             double relevant_coord = fcent[pddir];
             double pressure = pdrop*(1.0 - (relevant_coord - cmin)/cdelta);

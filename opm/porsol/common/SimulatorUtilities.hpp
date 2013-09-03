@@ -285,7 +285,7 @@ namespace Opm
     {
         std::ofstream os(filename.c_str());
         if (!os) {
-            THROW("Could not open file " << filename);
+            OPM_THROW(std::runtime_error, "Could not open file " << filename);
         }
         os << field.size() << '\n';
         std::copy(field.begin(), field.end(), std::ostream_iterator<double>(os, "\n"));

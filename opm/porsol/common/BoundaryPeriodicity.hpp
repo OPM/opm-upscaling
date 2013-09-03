@@ -139,7 +139,7 @@ namespace Opm
 	}
 	int num_bdy = bface_iters.size();
 	if (max_bid != num_bdy) {
-	    THROW("createPeriodic() assumes that every boundary face has a unique boundary id. That seems to be violated.");
+	    OPM_THROW(std::runtime_error, "createPeriodic() assumes that every boundary face has a unique boundary id. That seems to be violated.");
 	}
 
 	// Store boundary face info in a suitable structure. Also find side total volumes.
@@ -169,7 +169,7 @@ namespace Opm
 		std::cerr << "Centroid: " << bf.centroid << "\n";
 		std::cerr << "Bounding box min: " << low << "\n";
 		std::cerr << "Bounding box max: " << hi << "\n";
-		THROW("Boundary face centroid not on bounding box. Maybe the grid is not an axis-aligned shoe-box?");
+		OPM_THROW(std::runtime_error, "Boundary face centroid not on bounding box. Maybe the grid is not an axis-aligned shoe-box?");
 	    }
 	    side_areas[bf.canon_pos] += bf.area;
 	    bf.centroid[bf.canon_pos/2] = 0.0;
@@ -196,7 +196,7 @@ namespace Opm
 		ok = match(bfinfo, i, 0, num_bdy);
 		if (!ok) {
 		    MESSAGE("Warning: No partner found for boundary id " << bfinfo[i].bid);
-		    // THROW("No partner found.");
+		    // OPM_THROW(std::runtime_error, "No partner found.");
 		}
 	    }
 	}
@@ -235,7 +235,7 @@ namespace Opm
 	}
 	int num_bdy = bface_iters.size();
 	if (max_bid != num_bdy) {
-	    THROW("createPeriodic() assumes that every boundary face has a unique boundary id. That seems to be violated.");
+	    OPM_THROW(std::runtime_error, "createPeriodic() assumes that every boundary face has a unique boundary id. That seems to be violated.");
 	}
 
 	// Store boundary face info in a suitable structure. Also find side total volumes.
@@ -265,7 +265,7 @@ namespace Opm
 		std::cerr << "Centroid: " << bf.centroid << "\n";
 		std::cerr << "Bounding box min: " << low << "\n";
 		std::cerr << "Bounding box max: " << hi << "\n";
-		THROW("Boundary face centroid not on bounding box. Maybe the grid is not an axis-aligned shoe-box?");
+		OPM_THROW(std::runtime_error, "Boundary face centroid not on bounding box. Maybe the grid is not an axis-aligned shoe-box?");
 	    }
 	    side_areas[bf.canon_pos] += bf.area;
 	    bf.centroid[bf.canon_pos/2] = 0.0;
@@ -292,7 +292,7 @@ namespace Opm
 		ok = match(bfinfo, i, 0, num_bdy);
 		if (!ok) {
 		    MESSAGE("Warning: No partner found for boundary id " << bfinfo[i].bid);
-		    // THROW("No partner found.");
+		    // OPM_THROW(std::runtime_error, "No partner found.");
 		}
 	    }
 	}

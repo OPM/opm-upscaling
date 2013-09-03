@@ -142,7 +142,7 @@ init(const Opm::parameter::ParameterGroup& param)
         fluid_.init(parser);
         wells_.init(parser, grid_, rock_);
     } else {
-        THROW("Unknown file format string: " << fileformat);
+        OPM_THROW(std::runtime_error, "Unknown file format string: " << fileformat);
     }
     flow_solver_.init(param);
     transport_solver_.init(param);
@@ -349,7 +349,7 @@ simulate()
 
         // Check if the flow solver succeeded.
         if (result == FlowSolver::VolumeDiscrepancyTooLarge) {
-            THROW("Flow solver refused to run due to too large volume discrepancy.");
+            OPM_THROW(std::runtime_error, "Flow solver refused to run due to too large volume discrepancy.");
         } else if (result == FlowSolver::FailedToConverge) {
             std::cout << "********* Nonlinear convergence failure: Shortening (pressure) stepsize, redoing step number " << step <<" **********" << std::endl;
             stepsize *= 0.5;

@@ -180,7 +180,7 @@ namespace Opm
         {
             PermeabilityKind kind = classifyPermeability(parser);
             if (kind == Invalid) {
-                THROW("Invalid set of permeability fields given.");
+                OPM_THROW(std::runtime_error, "Invalid set of permeability fields given.");
             }
             assert (tensor.size() == 1);
             for (int i = 0; i < 9; ++i) { kmap[i] = 0; }
@@ -515,7 +515,7 @@ namespace Opm
             std::string filename = grid_prefix + "-poro.dat";
             std::ofstream file(filename.c_str());
             if (!file) {
-                THROW("Could not open file " << filename);
+                OPM_THROW(std::runtime_error, "Could not open file " << filename);
             }
             file << num_cells << '\n';
             std::copy(porosity_.begin(), porosity_.end(), std::ostream_iterator<double>(file, "\n"));
@@ -525,7 +525,7 @@ namespace Opm
             std::string filename = grid_prefix + "-perm.dat";
             std::ofstream file(filename.c_str());
             if (!file) {
-                THROW("Could not open file " << filename);
+                OPM_THROW(std::runtime_error, "Could not open file " << filename);
             }
             file << num_cells << '\n';
             switch (permeability_kind_) {
@@ -548,7 +548,7 @@ namespace Opm
                 }
                 break;
             default:
-                THROW("Cannot write invalid permeability.");
+                OPM_THROW(std::runtime_error, "Cannot write invalid permeability.");
             }
         }
     }
@@ -578,7 +578,7 @@ namespace Opm
             int num_global_cells = dims[0]*dims[1]*dims[2];
             const std::vector<double>& poro = parser.getFloatingPointValue("PORO");
             if (int(poro.size()) != num_global_cells) {
-                THROW("PORO field must have the same size as the "
+                OPM_THROW(std::runtime_error, "PORO field must have the same size as the "
                       "logical cartesian size of the grid: "
                       << poro.size() << " != " << num_global_cells);
             }
@@ -614,7 +614,7 @@ namespace Opm
         permeability_kind_ = fillTensor(parser, tensor, kmap);
         for (int i = 1; i < int(tensor.size()); ++i) {
             if (int(tensor[i]->size()) != num_global_cells) {
-                THROW("All permeability fields must have the same size as the "
+                OPM_THROW(std::runtime_error, "All permeability fields must have the same size as the "
                       "logical cartesian size of the grid: "
                       << (tensor[i]->size()) << " != " << num_global_cells);
             }
@@ -665,7 +665,7 @@ namespace Opm
             int num_global_cells = dims[0]*dims[1]*dims[2];
             const std::vector<int>& satnum = parser.getIntegerValue("SATNUM");
             if (int(satnum.size()) != num_global_cells) {
-                THROW("SATNUM field must have the same size as the "
+                OPM_THROW(std::runtime_error, "SATNUM field must have the same size as the "
                       "logical cartesian size of the grid: "
                       << satnum.size() << " != " << num_global_cells);
             }
@@ -680,7 +680,7 @@ namespace Opm
             int num_global_cells = dims[0]*dims[1]*dims[2];
             const std::vector<int>& satnum = parser.getIntegerValue("ROCKTYPE");
             if (int(satnum.size()) != num_global_cells) {
-                THROW("ROCKTYPE field must have the same size as the "
+                OPM_THROW(std::runtime_error, "ROCKTYPE field must have the same size as the "
                       "logical cartesian size of the grid: "
                       << satnum.size() << " != " << num_global_cells);
             }
@@ -699,7 +699,7 @@ namespace Opm
     {
         std::ifstream rl(rock_list_file.c_str());
         if (!rl) {
-            THROW("Could not open file " << rock_list_file);
+            OPM_THROW(std::runtime_error, "Could not open file " << rock_list_file);
         }
         int num_rocks = -1;
         rl >> num_rocks;

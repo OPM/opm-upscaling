@@ -162,19 +162,19 @@ namespace Opm
                 std::string filename = param.get<std::string>("init_saturation_filename");
                 std::ifstream satfile(filename.c_str());
                 if (!satfile) {
-                    THROW("Could not open initial saturation file: " << filename);
+                    OPM_THROW(std::runtime_error, "Could not open initial saturation file: " << filename);
                 }
                 int num_sats;
                 satfile >> num_sats;
                 if (num_sats != ginterf_.numberOfCells()) {
-                    THROW("Number of saturation values claimed different from number of grid cells: "
+                    OPM_THROW(std::runtime_error, "Number of saturation values claimed different from number of grid cells: "
                           << num_sats << " vs. " << ginterf_.numberOfCells());
                 }
                 std::istream_iterator<double> beg(satfile);
                 std::istream_iterator<double> end;
                 init_saturation_.assign(beg, end);
                 if (int(init_saturation_.size()) != num_sats) {
-                    THROW("Number of saturation values claimed different from actual file content: "
+                    OPM_THROW(std::runtime_error, "Number of saturation values claimed different from actual file content: "
                           << num_sats << " vs. " << init_saturation_.size());
                 }
             } else {

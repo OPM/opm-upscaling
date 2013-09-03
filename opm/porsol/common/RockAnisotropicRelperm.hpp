@@ -55,13 +55,13 @@ namespace Opm
         void setUseJfunctionScaling(const bool use_j)
         {
             if (use_j) {
-                THROW("RockAnisotropicRelperm cannot use J-scaling.");
+                OPM_THROW(std::runtime_error, "RockAnisotropicRelperm cannot use J-scaling.");
             }
         }
 
         void setSigmaAndTheta(const double, const double)
         {
-            THROW("RockAnisotropicRelperm cannot accept sigma and theta arguments.");
+            OPM_THROW(std::runtime_error, "RockAnisotropicRelperm cannot accept sigma and theta arguments.");
         }
 
 
@@ -96,7 +96,7 @@ namespace Opm
 		std::string rockfilename = directory + rockname[i];
 		std::ifstream rock_stream(rockfilename.c_str());
 		if (!rock_stream) {
-		    THROW("Could not open file " << rockfilename);
+		    OPM_THROW(std::runtime_error, "Could not open file " << rockfilename);
 		}
 		readAnisoFormat(rock_stream, i);
 	    }
@@ -114,7 +114,7 @@ namespace Opm
 	    std::istream_iterator<Data> end;
 	    std::vector<Data> data(start, end);
 	    if (!is.eof()) {
-		THROW("Reading stopped but we're not at eof: something went wrong reading data.");
+		OPM_THROW(std::runtime_error, "Reading stopped but we're not at eof: something went wrong reading data.");
 	    }
             // Making sure that the tables start/end at zero relperm.
             bool all_ok = true;
