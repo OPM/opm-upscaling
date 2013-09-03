@@ -30,6 +30,7 @@ using namespace Opm::prefix;
 using namespace Opm::unit;
 
 int main(int argc, char** argv)
+try
 {
     Opm::parameter::ParameterGroup param(argc, argv);
     // MPIHelper::instance(argc,argv);
@@ -39,4 +40,8 @@ int main(int argc, char** argv)
     upscaled_K *= (1.0/(milli*darcy));
     std::cout.precision(15);
     std::cout << "Upscaled K in millidarcy:\n" << upscaled_K << std::endl;
+}
+catch (const std::exception &e) {
+    std::cerr << "Program threw an exception: " << e.what() << "\n";
+    throw;
 }

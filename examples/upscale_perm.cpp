@@ -386,6 +386,11 @@ int upscale(int varnum, char** vararg) {
    @param vararg Input arguments
    @return int
 */
-int main(int varnum, char** vararg) {
+int main(int varnum, char** vararg) try {
     return upscale(varnum, vararg);
 }
+catch (const std::exception &e) {
+    std::cerr << "Program threw an exception: " << e.what() << "\n";
+    throw;
+}
+

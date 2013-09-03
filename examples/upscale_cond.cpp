@@ -169,6 +169,7 @@ void setVoigtValue(SinglePhaseUpscaler::permtensor_t& K, int voigt_idx, double v
 }
 
 int main(int varnum, char** vararg)
+try
 { 
    // Variables used for timing/profiling:
    clock_t start, finish;
@@ -1199,4 +1200,9 @@ int main(int varnum, char** vararg)
 #endif
 
     return 0;
-};
+}
+catch (const std::exception &e) {
+    std::cerr << "Program threw an exception: " << e.what() << "\n";
+    throw;
+}
+
