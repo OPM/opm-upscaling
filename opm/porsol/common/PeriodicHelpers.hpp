@@ -41,7 +41,6 @@
 #include <array>
 #include <dune/common/fvector.hh>
 #include <algorithm>
-#include <boost/static_assert.hpp>
 
 namespace Opm
 {
@@ -108,8 +107,8 @@ namespace Opm
 			const std::array<SatBC, 2*GridInterface::Dimension>& sconditions,
 			double spatial_tolerance = 1e-6)
     {
-	BOOST_STATIC_ASSERT(BCs::HasFlowConds);
-	BOOST_STATIC_ASSERT(BCs::HasSatConds);
+	static_assert(BCs::HasFlowConds, "");
+	static_assert(BCs::HasSatConds, "");
 	// Check the conditions given.
 	for (int i = 0; i < GridInterface::Dimension; ++i) {
 	    if (fconditions[2*i].isPeriodic()) {
@@ -137,8 +136,8 @@ namespace Opm
 			const std::array<FlowBC, 2*GridInterface::Dimension>& fconditions,
 			double spatial_tolerance = 1e-6)
     {
-	BOOST_STATIC_ASSERT(BCs::HasFlowConds);
-	BOOST_STATIC_ASSERT(!BCs::HasSatConds);
+	static_assert(BCs::HasFlowConds, "");
+	static_assert(!BCs::HasSatConds, "");
 	// Check the conditions given.
 	for (int i = 0; i < GridInterface::Dimension; ++i) {
 	    if (fconditions[2*i].isPeriodic()) {
@@ -161,8 +160,8 @@ namespace Opm
 			const std::array<SatBC, 2*GridInterface::Dimension>& sconditions,
 			double spatial_tolerance = 1e-6)
     {
-	BOOST_STATIC_ASSERT(!BCs::HasFlowConds);
-	BOOST_STATIC_ASSERT(BCs::HasSatConds);
+	static_assert(!BCs::HasFlowConds, "");
+	static_assert(BCs::HasSatConds, "");
 	// Check the conditions given.
 	for (int i = 0; i < GridInterface::Dimension; ++i) {
 	    if (sconditions[2*i].isPeriodic()) {

@@ -41,7 +41,6 @@
 
 #include <boost/bind.hpp>
 #include <array>
-#include <boost/static_assert.hpp>
 
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/utility/SparseTable.hpp>
@@ -210,7 +209,7 @@ namespace Opm {
 
             const int ci = c->index();
 
-            BOOST_STATIC_ASSERT (FV::dimension == int(dim));
+            static_assert (FV::dimension == int(dim), "");
             assert (int(t1_.size()) >= nf * dim);
             assert (int(t2_.size()) >= nf * dim);
             assert (int(fa_.size()) >= nf * nf);
@@ -392,7 +391,7 @@ namespace Opm {
 
             const int nf = Binv.numRows();
 
-            BOOST_STATIC_ASSERT(FV::dimension == int(dim));
+            static_assert(FV::dimension == int(dim), "");
             assert(Binv.numRows()  <= max_nf_);
             assert(Binv.numRows()  == Binv.numCols());
             assert(int(t1_.size()) >= nf * dim);

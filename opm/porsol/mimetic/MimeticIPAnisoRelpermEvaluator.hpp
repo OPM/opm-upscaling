@@ -224,7 +224,7 @@ namespace Opm {
 
             const int ci = c->index();
 
-            BOOST_STATIC_ASSERT (FV::dimension == int(dim));
+            static_assert (FV::dimension == int(dim), "");
             assert (int(t1_.size()) >= nf * dim);
             assert (int(t2_.size()) >= nf * dim);
             assert (int(fa_.size()) >= nf * nf);

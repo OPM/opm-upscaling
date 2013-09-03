@@ -133,7 +133,7 @@ namespace samcode
 	    /// @return
 	    Index neighbourIndex() const
 	    {
-		BOOST_STATIC_ASSERT(BoundaryMarkerIndex == -1); // Because that's what neighbourCell() returns.
+		static_assert(BoundaryMarkerIndex == -1); // Because that's what neighbourCell(, "") returns.
 		int face = grid.template neighbours<grid::HalfFaceType, grid::FaceType>(hface(), 0);
 		return grid_helper::neighbourCell(grid_, cell_, face);
 	    }

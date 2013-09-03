@@ -39,7 +39,6 @@
 #include <iostream>
 #include <iomanip>
 
-#include <boost/static_assert.hpp>
 
 #include <array>
 #include <dune/common/mpihelper.hh>

@@ -80,7 +80,7 @@ namespace Opm
 										MatrixType& phase_mob) const
     {
 	assert ((0 <= phase_index) && (phase_index < Super::NumberOfPhases));
-	BOOST_STATIC_ASSERT(Super::NumberOfPhases == 2);
+	static_assert(Super::NumberOfPhases == 2, "");
 
 	double visc = phase_index == 0 ? Super::viscosity1_ : Super::viscosity2_;
 	if (rock_index != -1) {

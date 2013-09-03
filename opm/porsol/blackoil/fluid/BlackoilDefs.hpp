@@ -23,7 +23,6 @@
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
-#include <boost/static_assert.hpp>
 
 namespace Opm
 {
@@ -40,7 +39,7 @@ namespace Opm
         typedef double Scalar;
         typedef Dune::FieldVector<Scalar, numComponents> CompVec;
         typedef Dune::FieldVector<Scalar, numPhases> PhaseVec;
-        BOOST_STATIC_ASSERT(int(numComponents) == int(numPhases));
+        static_assert(int(numComponents) == int(numPhases), "");
         typedef Dune::FieldMatrix<Scalar, numComponents, numPhases> PhaseToCompMatrix;
         typedef Dune::FieldMatrix<Scalar, numPhases, numPhases> PhaseJacobian;
     };

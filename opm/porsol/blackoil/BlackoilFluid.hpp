@@ -428,8 +428,8 @@ namespace Opm
             assert(num_cells == grid.numCells());
             const int np = numPhases;
             const int nc = numComponents;
-            BOOST_STATIC_ASSERT(np == nc);
-            BOOST_STATIC_ASSERT(np == 3);
+            static_assert(np == nc, "");
+            static_assert(np == 3, "");
 
             // p, z -> B, dB, R, dR, mu, A, dA, u, sum(u), s, c, cT, ex, kr, dkr, lambda, dlambda.
             cell_data.phase_pressure = cell_pressure;

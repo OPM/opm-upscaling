@@ -22,7 +22,6 @@
 
 
 #include <fstream>
-#include <boost/static_assert.hpp>
 #include <array>
 #include <opm/core/io/eclipse/EclipseGridInspector.hpp>
 
@@ -47,7 +46,7 @@ namespace Opm
                          const double perm_threshold)
     {
         // This code is mostly copied from ReservoirPropertyCommon::init(...).
-        BOOST_STATIC_ASSERT(dim == 3);
+        static_assert(dim == 3, "");
 
         permfield_valid_.assign(global_cell.size(), false);
 
@@ -147,7 +146,7 @@ namespace Opm
         const std::vector<double> zero(num_global_cells, 0.0);
         tensor.push_back(&zero);
 
-        BOOST_STATIC_ASSERT(dim == 3);
+        static_assert(dim == 3, "");
         std::array<int,9> kmap;
         permeability_kind_ = fillTensor(parser, tensor, kmap);
 
