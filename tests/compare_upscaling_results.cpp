@@ -97,8 +97,8 @@ Matrix readResultFile(const char* filename, int rows, int cols) {
 ///     Absolute tolerance
 bool matrixAlmostEqual(Matrix refSoln, Matrix newSoln, double tol) {
 
-    ASSERT(refSoln.numRows() == newSoln.numRows());
-    ASSERT(refSoln.numCols() == newSoln.numCols());
+    assert(refSoln.numRows() == newSoln.numRows());
+    assert(refSoln.numCols() == newSoln.numCols());
     // Test element by element
     for (int row=0; row<refSoln.numRows(); ++row) {
         for (int col=0; col<refSoln.numCols(); ++col) {

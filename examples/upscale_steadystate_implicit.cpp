@@ -79,7 +79,7 @@ void usageandexit() {
 // Assumes that permtensor_t use C ordering.
 double getVoigtValue(const SinglePhaseUpscaler::permtensor_t& K, int voigt_idx)
 {
-    ASSERT(K.numRows() == 3 && K.numCols() == 3);
+    assert(K.numRows() == 3 && K.numCols() == 3);
     switch (voigt_idx) {
     case 0: return K.data()[0];
     case 1: return K.data()[4];
@@ -107,7 +107,7 @@ std::vector<std::vector<double> > getExtremeSats(std::string rock_list, std::vec
     }
     int num_rocks = -1;
     rl >> num_rocks;
-    ASSERT(num_rocks >= 1);
+    assert(num_rocks >= 1);
     std::vector<std::vector<double> > rocksatendp;
     rocksatendp.resize(num_rocks);
     for (int i = 0; i < num_rocks; ++i) {

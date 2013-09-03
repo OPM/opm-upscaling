@@ -447,7 +447,7 @@ namespace Opm
                             // This is an inflow face.
                             double frac_flow = 0.0;
                             if (sc.isPeriodic()) {
-                                ASSERT(sc.saturationDifference() == 0.0);
+                                assert(sc.saturationDifference() == 0.0);
                                 int partner_bid = this->bcond_.getPeriodicPartner(f->boundaryId());
                                 std::map<int, double>::const_iterator it = frac_flow_by_bid.find(partner_bid);
                                 if (it == frac_flow_by_bid.end()) {
@@ -456,7 +456,7 @@ namespace Opm
                                 }
                                 frac_flow = it->second;
                             } else {
-                                ASSERT(sc.isDirichlet());
+                                assert(sc.isDirichlet());
                                 frac_flow = this->res_prop_.fractionalFlow(c->index(), sc.saturation());
                             }
                             cell_inflows_w[c->index()] += flux*frac_flow;

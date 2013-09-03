@@ -121,7 +121,7 @@ int main(int argc, char** argv)
         }
         int num_rocks = -1;
         rl >> num_rocks;
-        ASSERT(num_rocks >= 1);
+        assert(num_rocks >= 1);
         rocksatendpoints_.resize(num_rocks);
         jfuncendpoints_.resize(num_rocks);
         // Loop through rock files defined in rock_list and store the data we need

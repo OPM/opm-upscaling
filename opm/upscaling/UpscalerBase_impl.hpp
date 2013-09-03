@@ -315,7 +315,7 @@ namespace Opm
 			    side1_flux += flux*norm_comp;
 			    side1_area += area;
 			} else {
-			    ASSERT(canon_bid - 1 == 2*flow_dir + 1);
+			    assert(canon_bid - 1 == 2*flow_dir + 1);
 			    ++num_side2;
 			    if (flow_dir == pdrop_dir && flux < 0.0) {
 #ifdef VERBOSE
