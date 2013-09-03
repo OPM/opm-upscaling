@@ -455,17 +455,17 @@ namespace Opm
         }
         int numberOfFaces() const
         {
-            ASSERT(num_faces_ != 0);
+            assert(num_faces_ != 0);
             return num_faces_;
         }
         int maxFacesPerCell() const
         {
-            ASSERT(max_faces_per_cell_ != 0);
+            assert(max_faces_per_cell_ != 0);
             return max_faces_per_cell_;
         }
         const DuneGrid& grid() const
         {
-            ASSERT(pgrid_);
+            assert(pgrid_);
             return *pgrid_;
         }
 
@@ -473,18 +473,18 @@ namespace Opm
         // perhaps they should be private?
         const Mapper& mapper() const
         {
-            ASSERT (pmapper_);
+            assert (pmapper_);
             return *pmapper_;
         }
         Index faceIndex(int cell_index, int local_face_index) const
         {
-            ASSERT(num_faces_ != 0);
+            assert(num_faces_ != 0);
             return face_indices_[cell_index][local_face_index];
         }
         typedef Opm::SparseTable<int>::row_type Indices;
 	Indices faceIndices(int cell_index) const
         {
-            ASSERT(num_faces_ != 0);
+            assert(num_faces_ != 0);
             return face_indices_[cell_index];
         }
     private:
@@ -523,14 +523,14 @@ namespace Opm
             int tot_ncf = 0, tot_ncf2 = 0, max_ncf = 0;
             for (CI c = cellbegin(); c != cellend(); ++c, ++cellno) {
                 const int c0 = c->index();
-                ASSERT((0 <= c0) && (c0 < nc) && (cell[c0] == -1));
+                assert((0 <= c0) && (c0 < nc) && (cell[c0] == -1));
                 cell[c0] = cellno;
                 num_cf.push_back(0);
                 int& ncf = num_cf.back();
                 for (FI f = c->facebegin(); f != c-> faceend(); ++f) {
                     if (!f->boundary()) {
                         const int c1 = f->neighbourCellIndex();
-                        ASSERT((0 <= c1) && (c1 < nc) && (c1 != c0));
+                        assert((0 <= c1) && (c1 < nc) && (c1 != c0));
 
                         if (cell[c1] == -1) {
                             // Previously undiscovered internal face.
@@ -545,7 +545,7 @@ namespace Opm
                 tot_ncf  += ncf;
                 tot_ncf2 += ncf * ncf;
             }
-            ASSERT(cellno == nc);
+            assert(cellno == nc);
 
             // Build cumulative face sizes enabling direct insertion of
             // face indices into cfdata later.
@@ -563,7 +563,7 @@ namespace Opm
             typedef std::vector<int>::iterator VII;
             for (CI c = cellbegin(); c != cellend(); ++c) {
                 const int c0 = c->index();
-                ASSERT ((0 <=      c0 ) && (     c0  < nc) &&
+                assert ((0 <=      c0 ) && (     c0  < nc) &&
                         (0 <= cell[c0]) && (cell[c0] < nc));
                 const int ncf = num_cf[cell[c0]];
                 l2g.resize(ncf, 0);
@@ -582,7 +582,7 @@ namespace Opm
                         // seeks in moderately sized data in case of
                         // faulted cells).
                         const int c1 = f->neighbourCellIndex();
-                        ASSERT ((0 <=      c1 ) && (     c1  < nc) &&
+                        assert ((0 <=      c1 ) && (     c1  < nc) &&
                                 (0 <= cell[c1]) && (cell[c1] < nc));
 
                         int t = c0, seek = c1;
@@ -590,11 +590,11 @@ namespace Opm
                             std::swap(t, seek);
                         int s = fpos[cell[t]], e = fpos[cell[t] + 1];
                         VII p = std::find(faces.begin() + s, faces.begin() + e, seek);
-                        ASSERT(p != faces.begin() + e);
+                        assert(p != faces.begin() + e);
                         l2g[f->localIndex()] = p - faces.begin();
                     }
                 }
-                ASSERT(int(l2g.size()) == num_faces[c0]);
+                assert(int(l2g.size()) == num_faces[c0]);
                 std::copy(l2g.begin(), l2g.end(), cfdata.begin() + cumul_num_faces[c0]);
             }
             num_faces_ = total_num_faces;

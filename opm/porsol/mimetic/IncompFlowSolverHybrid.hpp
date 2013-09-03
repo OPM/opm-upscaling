@@ -529,9 +529,10 @@ namespace Opm {
         void initSystemStructure(const GridInterface& g,
                                  const BCInterface&   bc)
         {
-            ASSERT2 (cleared_state_,
-                     "You must call clear() prior to initSystemStructure()");
-            ASSERT  (topologyIsSane(g));
+            // You must call clear() prior to initSystemStructure()
+            assert (cleared_state_);
+
+            assert  (topologyIsSane(g));
 
             enumerateDof(g, bc);
             allocateConnections(bc);
@@ -559,9 +560,8 @@ namespace Opm {
         void computeInnerProducts(const RockInterface& r,
                                   const Point& grav)
         {
-            ASSERT2 (matrix_structure_valid_,
-                     "You must call connectionsCompleted() prior "
-                     "to computeInnerProducts()");
+            // You must call connectionsCompleted() prior to computeInnerProducts()
+            assert (matrix_structure_valid_);
 
             typedef typename GridInterface::CellIterator CI;
             const Opm::SparseTable<int>& cf = flowSolution_.cellFaces_;
@@ -707,13 +707,13 @@ namespace Opm {
             {
             }
             void put(double flux, int f_ix) {
-                ASSERT(visited_[f_ix] == 0 || visited_[f_ix] == 1);
+                assert(visited_[f_ix] == 0 || visited_[f_ix] == 1);
                 double sign = visited_[f_ix] ? -1.0 : 1.0;
                 fluxes_[f_ix] += sign*flux;
                 ++visited_[f_ix];
             }
             void get(double& flux, int f_ix) {
-                ASSERT(visited_[f_ix] == 0 || visited_[f_ix] == 1);
+                assert(visited_[f_ix] == 0 || visited_[f_ix] == 1);
                 double sign = visited_[f_ix] ? -1.0 : 1.0;
                 double new_flux = 0.5*sign*fluxes_[f_ix];
                 double diff = std::fabs(flux - new_flux);
@@ -791,7 +791,7 @@ namespace Opm {
                             face_fluxes.get(flux, f_ix);
                             double dummy = flux;
                             face_fluxes.get(dummy, partner_f_ix);
-                            ASSERT(dummy == flux);
+                            assert(dummy == flux);
                         }
                     } else {
                         face_fluxes.get(flux, f_ix);
@@ -969,7 +969,7 @@ namespace Opm {
             int tot_ncf = 0, tot_ncf2 = 0;
             for (CI c = g.cellbegin(); c != g.cellend(); ++c, ++cellno) {
                 const int c0 = c->index();
-                ASSERT((0 <= c0) && (c0 < nc) && (cell[c0] == -1));
+                assert((0 <= c0) && (c0 < nc) && (cell[c0] == -1));
 
                 cell[c0] = cellno;
 
@@ -978,7 +978,7 @@ namespace Opm {
                 for (FI f = c->facebegin(); f != c-> faceend(); ++f) {
                     if (!f->boundary()) {
                         const int c1 = f->neighbourCellIndex();
-                        ASSERT((0 <= c1) && (c1 < nc) && (c1 != c0));
+                        assert((0 <= c1) && (c1 < nc) && (c1 != c0));
 
                         if (cell[c1] == -1) {
                             // Previously undiscovered internal face.
@@ -993,7 +993,7 @@ namespace Opm {
                 tot_ncf  += ncf;
                 tot_ncf2 += ncf * ncf;
             }
-            ASSERT (cellno == nc);
+            assert (cellno == nc);
 
             total_num_faces_ = num_internal_faces_ = int(faces.size());
 
@@ -1014,7 +1014,7 @@ namespace Opm {
             for (CI c = g.cellbegin(); c != g.cellend(); ++c) {
                 const int c0 = c->index();
 
-                ASSERT ((0 <=      c0 ) && (     c0  < nc) &&
+                assert ((0 <=      c0 ) && (     c0  < nc) &&
                         (0 <= cell[c0]) && (cell[c0] < nc));
 
                 const int ncf = num_cf[cell[c0]];
@@ -1037,7 +1037,7 @@ namespace Opm {
                         // faulted cells).
 
                         const int c1 = f->neighbourCellIndex();
-                        ASSERT ((0 <=      c1 ) && (     c1  < nc) &&
+                        assert ((0 <=      c1 ) && (     c1  < nc) &&
                                 (0 <= cell[c1]) && (cell[c1] < nc));
 
                         int t = c0, seek = c1;
@@ -1047,7 +1047,7 @@ namespace Opm {
                         int s = fpos[cell[t]], e = fpos[cell[t] + 1];
 
                         VII p = std::find(faces.begin() + s, faces.begin() + e, seek);
-                        ASSERT(p != faces.begin() + e);
+                        assert(p != faces.begin() + e);
 
                         l2g[f->localIndex()] = s + (p - (faces.begin() + s));
                     }
@@ -1093,7 +1093,7 @@ namespace Opm {
 
                             BdryIdMapIterator j =
                                 bdry_id_map_.find(bc.getPeriodicPartner(f->boundaryId()));
-                            ASSERT (j != bdry_id_map_.end());
+                            assert (j != bdry_id_map_.end());
                             const int dof2 = cf[j->second.first][j->second.second];
 
                             ppartner_dof_[dof1] = dof2;
@@ -1110,10 +1110,10 @@ namespace Opm {
         void allocateConnections(const BCInterface& bc)
         // ----------------------------------------------------------------
         {
-            ASSERT2 (!cleared_state_,
-                     "You must call enumerateDof() prior "
-                     "to allocateConnections()");
-            ASSERT  (!matrix_structure_valid_);
+            // You must call enumerateDof() prior to allocateConnections()
+            assert(!cleared_state_);
+
+            assert  (!matrix_structure_valid_);
 
             // Clear any residual data, prepare for assembling structure.
             S_.setSize(total_num_faces_, total_num_faces_);
@@ -1187,7 +1187,7 @@ namespace Opm {
                             // dof-id of other
                             BdryIdMapIterator j =
                                 bdry_id_map_.find(bc.getPeriodicPartner(f->boundaryId()));
-                            ASSERT (j != bdry_id_map_.end());
+                            assert (j != bdry_id_map_.end());
                             const int c2   = j->second.first;
                             const int dof2 = cf[c2][j->second.second];
 
@@ -1287,7 +1287,7 @@ namespace Opm {
                             // dof-id of other
                             BdryIdMapIterator j =
                                 bdry_id_map_.find(bc.getPeriodicPartner(f->boundaryId()));
-                            ASSERT (j != bdry_id_map_.end());
+                            assert (j != bdry_id_map_.end());
                             const int c2   = j->second.first;
                             const int dof2 = cf[c2][j->second.second];
 
@@ -1352,7 +1352,7 @@ namespace Opm {
             // Assemble dynamic contributions for each cell
             for (CI c = pgrid_->cellbegin(); c != pgrid_->cellend(); ++c) {
                 const int ci = c->index();
-                const int c0 = cell[ci];            ASSERT (c0 < cf.size());
+                const int c0 = cell[ci];            assert (c0 < cf.size());
                 const int nf = cf[c0].size();
 
                 setExternalContrib(c, c0, bc, src[ci], rhs,
@@ -1753,13 +1753,13 @@ namespace Opm {
                     } else if (bcond.isPeriodic()) {
                         BdryIdMapIterator j =
                             bdry_id_map_.find(bc.getPeriodicPartner(f->boundaryId()));
-                        ASSERT (j != bdry_id_map_.end());
+                        assert (j != bdry_id_map_.end());
 
                         facetype[k] = Periodic;
                         condval[k]  = bcond.pressureDifference();
                         ppartner[k] = cf[j->second.first][j->second.second];
                     } else {
-                        ASSERT (bcond.isNeumann());
+                        assert (bcond.isNeumann());
                         facetype[k] = Neumann;
                         rhs[k]      = bcond.outflux();
                     }
@@ -1841,8 +1841,8 @@ namespace Opm {
                     //      a*(x0-x1) = a*  pd, and  (1)
                     //      a*(x1-x0) = a*(-pd)      (2)
                     //
-                    ASSERT ((0 <= ppartner[r]) && (ppartner[r] < int(rhs_.size())));
-                    ASSERT (ii != ppartner[r]);
+                    assert ((0 <= ppartner[r]) && (ppartner[r] < int(rhs_.size())));
+                    assert (ii != ppartner[r]);
 
                     {
                         const double a = S(r,r), b = a * condval[r];
@@ -1874,8 +1874,8 @@ namespace Opm {
                             continue;
                         }
                         if (facetype[c] == Periodic) {
-                            ASSERT ((0 <= ppartner[c]) && (ppartner[c] < int(rhs_.size())));
-                            ASSERT (jj != ppartner[c]);
+                            assert ((0 <= ppartner[c]) && (ppartner[c] < int(rhs_.size())));
+                            assert (jj != ppartner[c]);
                             if (ppartner[c] < jj) {
                                 rhs_[ii] -= S(r,c) * condval[c];
                                 jj = ppartner[c];

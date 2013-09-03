@@ -144,8 +144,8 @@ namespace Opm
 	    if (phase == 0) {
 		cap_press_ = TabFunc(svals, pcow);
 	    } else {
-		ASSERT(phase == 1);
-		ASSERT(cap_press_ == TabFunc(svals, pcow));
+		assert(phase == 1);
+		assert(cap_press_ == TabFunc(svals, pcow));
 	    }
 	}
 

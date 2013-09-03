@@ -163,7 +163,7 @@ namespace Opm
         template <class BoundaryFace>
         FlowBC flowCond(const BoundaryFace& bf) const
         {
-            ASSERT(bf.boundary());
+            assert(bf.boundary());
             return FlowBC(FlowBC::Dirichlet, bfunc_(bf.centroid()));
         }
 

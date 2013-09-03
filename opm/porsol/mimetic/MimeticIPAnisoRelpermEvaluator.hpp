@@ -5,7 +5,7 @@
 // Created: Mon Oct 19 10:22:22 2009
 //
 // Author(s): Atgeirr F Rasmussen <atgeirr@sintef.no>
-//            Bård Skaflestad     <bard.skaflestad@sintef.no>
+//            Bï¿½rd Skaflestad     <bard.skaflestad@sintef.no>
 //
 // $Date$
 //
@@ -225,9 +225,9 @@ namespace Opm {
             const int ci = c->index();
 
             BOOST_STATIC_ASSERT (FV::dimension == int(dim));
-            ASSERT (int(t1_.size()) >= nf * dim);
-            ASSERT (int(t2_.size()) >= nf * dim);
-            ASSERT (int(fa_.size()) >= nf * nf);
+            assert (int(t1_.size()) >= nf * dim);
+            assert (int(t2_.size()) >= nf * dim);
+            assert (int(fa_.size()) >= nf * nf);
 
             SharedFortranMatrix T2  (nf, dim, &t2_      [0]);
             SharedFortranMatrix fa  (nf, nf , &fa_      [0]);
@@ -252,11 +252,11 @@ namespace Opm {
                     T2(i,j) = fc[j];
                 }
             }
-            ASSERT (i == nf);
+            assert (i == nf);
 
             // T2 <- orth(T2)
             if (orthogonalizeColumns(T2) != 0) {
-                ASSERT (false);
+                assert (false);
             }
 
             // second_term <- second_term - T2*T2' == I - Q*Q'

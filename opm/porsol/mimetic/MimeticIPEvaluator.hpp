@@ -4,7 +4,7 @@
 //
 // Created: Thu Jun 25 13:09:23 2009
 //
-// Author(s): Bård Skaflestad     <bard.skaflestad@sintef.no>
+// Author(s): Bï¿½rd Skaflestad     <bard.skaflestad@sintef.no>
 //            Atgeirr F Rasmussen <atgeirr@sintef.no>
 //
 // $Date$
@@ -211,9 +211,9 @@ namespace Opm {
             const int ci = c->index();
 
             BOOST_STATIC_ASSERT (FV::dimension == int(dim));
-            ASSERT (int(t1_.size()) >= nf * dim);
-            ASSERT (int(t2_.size()) >= nf * dim);
-            ASSERT (int(fa_.size()) >= nf * nf);
+            assert (int(t1_.size()) >= nf * dim);
+            assert (int(t2_.size()) >= nf * dim);
+            assert (int(fa_.size()) >= nf * nf);
 
             SharedFortranMatrix T1  (nf, dim, &t1_      [0]);
             SharedFortranMatrix T2  (nf, dim, &t2_      [0]);
@@ -244,11 +244,11 @@ namespace Opm {
                     T2(i,j) = fc[j];
                 }
             }
-            ASSERT (i == nf);
+            assert (i == nf);
 
             // T2 <- orth(T2)
             if (orthogonalizeColumns(T2) != 0) {
-                ASSERT (false);
+                assert (false);
             }
 
             // Binv <- Binv - T2*T2' == I - Q*Q'
@@ -393,11 +393,11 @@ namespace Opm {
             const int nf = Binv.numRows();
 
             BOOST_STATIC_ASSERT(FV::dimension == int(dim));
-            ASSERT(Binv.numRows()  <= max_nf_);
-            ASSERT(Binv.numRows()  == Binv.numCols());
-            ASSERT(int(t1_.size()) >= nf * dim);
-            ASSERT(int(t2_.size()) >= nf * dim);
-            ASSERT(int(fa_.size()) >= nf * nf);
+            assert(Binv.numRows()  <= max_nf_);
+            assert(Binv.numRows()  == Binv.numCols());
+            assert(int(t1_.size()) >= nf * dim);
+            assert(int(t2_.size()) >= nf * dim);
+            assert(int(fa_.size()) >= nf * nf);
 
             SharedFortranMatrix T1(nf, dim, &t1_[0]);
             SharedFortranMatrix T2(nf, dim, &t2_[0]);
@@ -421,11 +421,11 @@ namespace Opm {
                     T2(i,j) = fc[j];
                 }
             }
-            ASSERT(i == nf);
+            assert(i == nf);
 
             // T2 <- orth(T2)
             if (orthogonalizeColumns(T2) != 0) {
-                ASSERT (false);
+                assert (false);
             }
 
             // Binv <- Binv - T2*T2' == I - Q*Q'
@@ -483,7 +483,7 @@ namespace Opm {
             typedef typename CellIter::FaceIterator FI;
             typedef typename CellIter::Vector Point;
 
-            ASSERT (gterm.size() <= max_nf_);
+            assert (gterm.size() <= max_nf_);
 
             const Point cc = c->centroid();
             int i = 0;

@@ -175,7 +175,7 @@ namespace Opm
 	    bf.centroid[bf.canon_pos/2] = 0.0;
 	    bfinfo.push_back(bf);
 	}
-	ASSERT(bfinfo.size() == bface_iters.size());
+	assert(bfinfo.size() == bface_iters.size());
 
 	// Sort the infos so that partners end up close.
 	std::sort(bfinfo.begin(), bfinfo.end());
@@ -271,7 +271,7 @@ namespace Opm
 	    bf.centroid[bf.canon_pos/2] = 0.0;
 	    bfinfo.push_back(bf);
 	}
-	ASSERT(bfinfo.size() == bface_iters.size());
+	assert(bfinfo.size() == bface_iters.size());
 
 	// Sort the infos so that partners end up close.
 	std::sort(bfinfo.begin(), bfinfo.end());

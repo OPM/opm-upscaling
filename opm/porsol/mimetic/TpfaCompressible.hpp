@@ -448,7 +448,7 @@ namespace Opm
                     ++perfcount;
                 }
             }
-            ASSERT(perfcount == perf_wells_.size());
+            assert(perfcount == perf_wells_.size());
         }
 
 
@@ -559,7 +559,7 @@ namespace Opm
                 int cell = perf_cells_[perf];
                 typename GridInterface::Vector pos = pgrid_->cellCentroid(cell);
                 // With wells, we assume that gravity is in the z-direction.
-                ASSERT(gravity_[0] == 0.0 && gravity_[1] == 0.0);
+                assert(gravity_[0] == 0.0 && gravity_[1] == 0.0);
                 double depth_delta = pos[2] - pwells_->referenceDepth(well);
                 double gh = gravity_[2]*depth_delta;
                 // At is already transposed since in Fortran order.

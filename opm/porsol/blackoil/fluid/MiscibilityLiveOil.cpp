@@ -181,7 +181,7 @@ namespace Opm
                                           int phase,
                                           std::vector<double>& output) const
     {
-        ASSERT(pressures.size() == surfvol.size());
+        assert(pressures.size() == surfvol.size());
         int num = pressures.size();
         output.resize(num);
 #pragma omp parallel for
@@ -201,7 +201,7 @@ namespace Opm
                                int phase,
                                std::vector<double>& output) const
     {
-        ASSERT(pressures.size() == surfvol.size());
+        assert(pressures.size() == surfvol.size());
         int num = pressures.size();
         output.resize(num);
 #pragma omp parallel for
@@ -231,7 +231,7 @@ namespace Opm
                                   std::vector<double>& output_R,
                                   std::vector<double>& output_dRdp) const
     {
-        ASSERT(pressures.size() == surfvol.size());
+        assert(pressures.size() == surfvol.size());
         int num = pressures.size();
         output_R.resize(num);
         output_dRdp.resize(num);
@@ -251,7 +251,7 @@ namespace Opm
                                int phase,
                                std::vector<double>& output) const
     {
-        ASSERT(pressures.size() == surfvol.size());
+        assert(pressures.size() == surfvol.size());
         int num = pressures.size();
         output.resize(num);
 #pragma omp parallel for
@@ -273,7 +273,7 @@ namespace Opm
                                   std::vector<double>& output_B,
                                   std::vector<double>& output_dBdp) const
     {
-        ASSERT(pressures.size() == surfvol.size());
+        assert(pressures.size() == surfvol.size());
         B(pressures, surfvol, phase, output_B);
         int num = pressures.size();
         output_dBdp.resize(num);
@@ -355,8 +355,8 @@ namespace Opm
 		int is = tableIndex(saturated_oil_table_[3], maxR);
 		double w = (maxR - saturated_oil_table_[3][is]) /
 		    (saturated_oil_table_[3][is+1] - saturated_oil_table_[3][is]);
-                ASSERT(undersat_oil_tables_[is][0].size() >= 2);
-                ASSERT(undersat_oil_tables_[is+1][0].size() >= 2);
+                assert(undersat_oil_tables_[is][0].size() >= 2);
+                assert(undersat_oil_tables_[is+1][0].size() >= 2);
 		double val1 =
 		    linearInterpolationDerivative(undersat_oil_tables_[is][0],
 					     undersat_oil_tables_[is][item],
@@ -378,8 +378,8 @@ namespace Opm
                 int is = tableIndex(saturated_oil_table_[3], maxR);
 		double w = (maxR - saturated_oil_table_[3][is]) /
 		    (saturated_oil_table_[3][is+1] - saturated_oil_table_[3][is]);
-                ASSERT(undersat_oil_tables_[is][0].size() >= 2);
-                ASSERT(undersat_oil_tables_[is+1][0].size() >= 2);
+                assert(undersat_oil_tables_[is][0].size() >= 2);
+                assert(undersat_oil_tables_[is+1][0].size() >= 2);
 		double val1 =
 		    linearInterpolation(undersat_oil_tables_[is][0],
 					      undersat_oil_tables_[is][item],

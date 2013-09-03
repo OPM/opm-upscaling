@@ -153,7 +153,7 @@ init(const Opm::parameter::ParameterGroup& param)
         report_times_.assign(beg, end);
         // File contains deltas, we want accumulated times.
         std::partial_sum(report_times_.begin(), report_times_.end(), report_times_.begin());
-        ASSERT(!report_times_.empty());
+        assert(!report_times_.empty());
         total_time_ = report_times_.back();
         initial_stepsize_ = report_times_.front();
     } else {
@@ -357,7 +357,7 @@ simulate()
             wells_.update(grid_.numCells(), start_state.well_perf_pressure_, start_state.well_perf_flux_);
             continue;
         }
-        ASSERT(result == FlowSolver::SolveOk);
+        assert(result == FlowSolver::SolveOk);
 
         // Update wells with new perforation pressures and fluxes.
         wells_.update(grid_.numCells(), state_.well_perf_pressure_, state_.well_perf_flux_);

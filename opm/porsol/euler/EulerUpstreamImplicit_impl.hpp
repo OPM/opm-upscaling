@@ -156,7 +156,7 @@ namespace Opm
         direclet_sat_.resize(0);
         direclet_hfaces_.resize(0);
 
-        ASSERT(periodic_cells_.size()==0);
+        assert(periodic_cells_.size()==0);
         for (CIt c = g.cellbegin(); c != g.cellend(); ++c) {
             int cell0 = c->index();
             for (FIt f = c->facebegin(); f != c->faceend(); ++f) {
@@ -167,9 +167,9 @@ namespace Opm
                     bf_ind+=1;
                     if (b.satCond(*f).isPeriodic()) {
                         nbface = bid_to_face[b.getPeriodicPartner(f->boundaryId())];
-                        ASSERT(nbface != f);
+                        assert(nbface != f);
                         int cell1 = nbface->cellIndex();
-                        ASSERT(cell0 != cell1);
+                        assert(cell0 != cell1);
 
                         int f_ind=f->index();
 
@@ -177,10 +177,10 @@ namespace Opm
                         // mapping face indices
                         f_ind=egf_cf[f_ind];
                         fn_ind=egf_cf[fn_ind];
-                        ASSERT((c_grid.face_cells[2*f_ind]==-1) || (c_grid.face_cells[2*f_ind+1]==-1));
-                        ASSERT((c_grid.face_cells[2*fn_ind]==-1) || (c_grid.face_cells[2*fn_ind+1]==-1));
-                        ASSERT((c_grid.face_cells[2*f_ind]==cell0) || (c_grid.face_cells[2*f_ind+1]==cell0));
-                        ASSERT((c_grid.face_cells[2*fn_ind]==cell1) || (c_grid.face_cells[2*fn_ind+1]==cell1));
+                        assert((c_grid.face_cells[2*f_ind]==-1) || (c_grid.face_cells[2*f_ind+1]==-1));
+                        assert((c_grid.face_cells[2*fn_ind]==-1) || (c_grid.face_cells[2*fn_ind+1]==-1));
+                        assert((c_grid.face_cells[2*f_ind]==cell0) || (c_grid.face_cells[2*f_ind+1]==cell0));
+                        assert((c_grid.face_cells[2*fn_ind]==cell1) || (c_grid.face_cells[2*fn_ind+1]==cell1));
                         periodic_cells_.push_back(cell0);
                         periodic_cells_.push_back(cell1);
                         periodic_faces_.push_back(f_ind);

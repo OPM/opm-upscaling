@@ -84,7 +84,7 @@ namespace Opm
     typename Rock<dim>::PermTensor
     Rock<dim>::permeability(int cell_index) const
     {
-        ASSERT (permfield_valid_[cell_index]);
+        assert (permfield_valid_[cell_index]);
 
         const PermTensor K(dim, dim, &permeability_[dim*dim*cell_index]);
         return K;
@@ -137,7 +137,7 @@ namespace Opm
 	Opm::EclipseGridInspector insp(parser);
         std::array<int, 3> dims = insp.gridSize();
         int num_global_cells = dims[0]*dims[1]*dims[2];
-        ASSERT (num_global_cells > 0);
+        assert (num_global_cells > 0);
 
         permeability_.assign(dim * dim * global_cell.size(), 0.0);
 

@@ -113,12 +113,12 @@ namespace Opm
 	// Check the conditions given.
 	for (int i = 0; i < GridInterface::Dimension; ++i) {
 	    if (fconditions[2*i].isPeriodic()) {
-		ASSERT(fconditions[2*i + 1].isPeriodic());
-		ASSERT(fconditions[2*i].pressureDifference() == -fconditions[2*i + 1].pressureDifference());
-		ASSERT(sconditions[2*i].isPeriodic());
-		ASSERT(sconditions[2*i + 1].isPeriodic());
-		ASSERT(sconditions[2*i].saturationDifference() == 0.0);
-		ASSERT(sconditions[2*i + 1].saturationDifference() == 0.0);
+		assert(fconditions[2*i + 1].isPeriodic());
+		assert(fconditions[2*i].pressureDifference() == -fconditions[2*i + 1].pressureDifference());
+		assert(sconditions[2*i].isPeriodic());
+		assert(sconditions[2*i + 1].isPeriodic());
+		assert(sconditions[2*i].saturationDifference() == 0.0);
+		assert(sconditions[2*i + 1].saturationDifference() == 0.0);
 	    }
 	}
 	std::vector<BoundaryFaceInfo> bfinfo;
@@ -142,8 +142,8 @@ namespace Opm
 	// Check the conditions given.
 	for (int i = 0; i < GridInterface::Dimension; ++i) {
 	    if (fconditions[2*i].isPeriodic()) {
-		ASSERT(fconditions[2*i + 1].isPeriodic());
-		ASSERT(fconditions[2*i].pressureDifference() == -fconditions[2*i + 1].pressureDifference());
+		assert(fconditions[2*i + 1].isPeriodic());
+		assert(fconditions[2*i].pressureDifference() == -fconditions[2*i + 1].pressureDifference());
 	    }
 	}
 	std::vector<BoundaryFaceInfo> bfinfo;
@@ -166,8 +166,8 @@ namespace Opm
 	// Check the conditions given.
 	for (int i = 0; i < GridInterface::Dimension; ++i) {
 	    if (sconditions[2*i].isPeriodic()) {
-		ASSERT(sconditions[2*i + 1].isPeriodic());
-		ASSERT(sconditions[2*i].saturationDifference() == -sconditions[2*i + 1].saturationDifference());
+		assert(sconditions[2*i + 1].isPeriodic());
+		assert(sconditions[2*i].saturationDifference() == -sconditions[2*i + 1].saturationDifference());
 	    }
 	}
 	std::vector<BoundaryFaceInfo> bfinfo;

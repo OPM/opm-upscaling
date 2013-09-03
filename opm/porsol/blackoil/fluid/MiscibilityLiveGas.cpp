@@ -95,7 +95,7 @@ namespace Opm
                                           int phase,
                                           std::vector<double>& output) const
     {
-        ASSERT(pressures.size() == surfvol.size());
+        assert(pressures.size() == surfvol.size());
         int num = pressures.size();
         output.resize(num);
         for (int i = 0; i < num; ++i) {
@@ -124,7 +124,7 @@ namespace Opm
                                int phase,
                                std::vector<double>& output) const
     {
-        ASSERT(pressures.size() == surfvol.size());
+        assert(pressures.size() == surfvol.size());
         int num = pressures.size();
         output.resize(num);
         for (int i = 0; i < num; ++i) {
@@ -153,7 +153,7 @@ namespace Opm
                                   std::vector<double>& output_R,
                                   std::vector<double>& output_dRdp) const
     {
-        ASSERT(pressures.size() == surfvol.size());
+        assert(pressures.size() == surfvol.size());
         R(pressures, surfvol, phase, output_R);
         int num = pressures.size();
         output_dRdp.resize(num);
@@ -173,7 +173,7 @@ namespace Opm
                                int phase,
                                std::vector<double>& output) const
     {
-        ASSERT(pressures.size() == surfvol.size());
+        assert(pressures.size() == surfvol.size());
         int num = pressures.size();
         output.resize(num);
         for (int i = 0; i < num; ++i) {
@@ -193,7 +193,7 @@ namespace Opm
                                   std::vector<double>& output_B,
                                   std::vector<double>& output_dBdp) const
     {
-        ASSERT(pressures.size() == surfvol.size());
+        assert(pressures.size() == surfvol.size());
         B(pressures, surfvol, phase, output_B);
         int num = pressures.size();
         output_dBdp.resize(num);

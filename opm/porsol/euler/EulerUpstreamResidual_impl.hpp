@@ -112,9 +112,9 @@ namespace Opm
                     if (f->boundary()) {
                         if (s.pboundary_->satCond(*f).isPeriodic()) {
                             nbface = s.bid_to_face_[s.pboundary_->getPeriodicPartner(f->boundaryId())];
-                            ASSERT(nbface != f);
+                            assert(nbface != f);
                             cell[1] = nbface->cellIndex();
-                            ASSERT(cell[0] != cell[1]);
+                            assert(cell[0] != cell[1]);
                             // Periodic faces will be visited twice, but only once
                             // should they contribute. We make sure that we skip the
                             // periodic faces half the time.
@@ -124,13 +124,13 @@ namespace Opm
                             }
                             cell_sat[1] = saturation[cell[1]];
                         } else {
-                            ASSERT(s.pboundary_->satCond(*f).isDirichlet());
+                            assert(s.pboundary_->satCond(*f).isDirichlet());
                             cell[1] = cell[0];
                             cell_sat[1] = s.pboundary_->satCond(*f).saturation();
                         }
                     } else {
                         cell[1] = f->neighbourCellIndex();
-                        ASSERT(cell[0] != cell[1]);
+                        assert(cell[0] != cell[1]);
                         if (cell[0] > cell[1]) {
                             // We skip this face.
                             continue;
@@ -281,7 +281,7 @@ namespace Opm
                         residual[cell[0]] -= dS;
                         residual[cell[1]] += dS;
                     } else {
-                        ASSERT(cell[0] == cell[1]);
+                        assert(cell[0] == cell[1]);
                         residual[cell[0]] -= dS;
                     }
                 }
@@ -303,7 +303,7 @@ namespace Opm
             IndirectRange(const std::vector<Iter>& iters)
                 : iters_(iters), beg_(0), end_(iters_.size() - 1)
             {
-                ASSERT(iters_.size() >= 2);
+                assert(iters_.size() >= 2);
             }
 #ifdef USE_TBB
             IndirectRange(IndirectRange& r, tbb::split)

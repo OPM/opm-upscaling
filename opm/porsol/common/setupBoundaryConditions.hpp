@@ -109,13 +109,13 @@ namespace Opm
             THROW("Illegal boundary condition type (0-2 are legal): " << bct); // Later on, we may allow 3 and 4.
         }
 	BoundaryConditionType bctype = static_cast<BoundaryConditionType>(bct);
-        ASSERT(pddir >=0 && pddir <= 2);
+        assert(pddir >=0 && pddir <= 2);
 
 	// Flow conditions.
 	switch (bctype) {
 	case Fixed:
 	    {
-		// ASSERT(!g.uniqueBoundaryIds());
+		// assert(!g.uniqueBoundaryIds());
 		bcs.clear();
 		bcs.resize(7);
 		bcs.flowCond(2*pddir + 1) = FlowBC(FlowBC::Dirichlet, pdrop);
@@ -128,13 +128,13 @@ namespace Opm
 	    }
 	case Linear:
 	    {
-		// ASSERT(g.uniqueBoundaryIds());
+		// assert(g.uniqueBoundaryIds());
 		createLinear(bcs, g, pdrop, pddir, bdy_sat, twodim_hack);
 		break;
 	    }
 	case Periodic:
 	    {
-		// ASSERT(g.uniqueBoundaryIds());
+		// assert(g.uniqueBoundaryIds());
 		FlowBC fb(FlowBC::Periodic, 0.0);
 		std::array<FlowBC, 6> fcond = {{ fb, fb, fb, fb, fb, fb }};
 		fcond[2*pddir] = FlowBC(FlowBC::Periodic, pdrop);

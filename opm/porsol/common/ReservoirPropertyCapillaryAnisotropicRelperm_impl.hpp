@@ -5,7 +5,7 @@
 // Created: Mon Oct 26 10:12:15 2009
 //
 // Author(s): Atgeirr F Rasmussen <atgeirr@sintef.no>
-//            Bård Skaflestad     <bard.skaflestad@sintef.no>
+//            Bï¿½rd Skaflestad     <bard.skaflestad@sintef.no>
 //
 // $Date$
 //
@@ -79,12 +79,12 @@ namespace Opm
 										double saturation,
 										MatrixType& phase_mob) const
     {
-	ASSERT ((0 <= phase_index) && (phase_index < Super::NumberOfPhases));
+	assert ((0 <= phase_index) && (phase_index < Super::NumberOfPhases));
 	BOOST_STATIC_ASSERT(Super::NumberOfPhases == 2);
 
 	double visc = phase_index == 0 ? Super::viscosity1_ : Super::viscosity2_;
 	if (rock_index != -1) {
-	    ASSERT (rock_index < int(Super::rock_.size()));
+	    assert (rock_index < int(Super::rock_.size()));
 	    Super::rock_[rock_index].kr(phase_index, saturation, phase_mob);
 	    //using namespace boost::lambda;
 	    std::transform(phase_mob.data(), phase_mob.data() + dim*dim,

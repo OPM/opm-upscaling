@@ -458,7 +458,7 @@ namespace Opm
                                       const std::vector<double>& well_perf_fluxes)
     {
         // Input is per perforation, data members store for all cells.
-        ASSERT(perf_data_.dataSize() == int(well_perf_pressures.size()));
+        assert(perf_data_.dataSize() == int(well_perf_pressures.size()));
         well_cell_pressure_.resize(num_cells, -1e100);
         well_cell_flux_.resize(num_cells, 0.0);
         int pcount = 0;
@@ -470,7 +470,7 @@ namespace Opm
                 ++pcount;
             }
         }
-        ASSERT(pcount == perf_data_.dataSize());
+        assert(pcount == perf_data_.dataSize());
     }
 
     inline double BlackoilWells::wellToReservoirFlux(int cell) const

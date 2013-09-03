@@ -156,7 +156,7 @@ namespace Opm
                                 const std::vector<double>& saturation,
                                 const std::vector<Dune::FieldVector<double, 3> >& cell_velocity)
     {
-        ASSERT(saturation.size() == cell_velocity.size());
+        assert(saturation.size() == cell_velocity.size());
         int num_cells = saturation.size();
         phase_velocity_water = cell_velocity;
         phase_velocity_oil = cell_velocity;

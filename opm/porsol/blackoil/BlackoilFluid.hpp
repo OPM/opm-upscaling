@@ -425,7 +425,7 @@ namespace Opm
                         const double dt)
         {
             int num_cells = cell_z.size();
-            ASSERT(num_cells == grid.numCells());
+            assert(num_cells == grid.numCells());
             const int np = numPhases;
             const int nc = numComponents;
             BOOST_STATIC_ASSERT(np == nc);
@@ -472,7 +472,7 @@ namespace Opm
                                      const CompVec& bdy_z)
         {
             int num_faces = face_pressure.size();
-            ASSERT(num_faces == grid.numFaces());
+            assert(num_faces == grid.numFaces());
             bool nonzero_gravity = gravity.two_norm() > 0.0;
             face_data.state_matrix.resize(num_faces);
             face_data.mobility.resize(num_faces);
