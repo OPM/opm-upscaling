@@ -299,7 +299,7 @@ namespace Opm
                 if(repeats >max_repeats_){
                     finished=true;
                 }else{
-                    MESSAGE("Warning: Transport failed, retrying with more steps.");
+                    OPM_MESSAGE("Warning: Transport failed, retrying with more steps.");
                     nr_transport_steps *= 2;
                     dt_transport = time/nr_transport_steps;
                     if (ctrl_.verbosity){

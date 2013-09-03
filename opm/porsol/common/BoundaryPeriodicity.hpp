@@ -195,7 +195,7 @@ namespace Opm
 		// We have not found a partner.
 		ok = match(bfinfo, i, 0, num_bdy);
 		if (!ok) {
-		    MESSAGE("Warning: No partner found for boundary id " << bfinfo[i].bid);
+		    OPM_MESSAGE("Warning: No partner found for boundary id " << bfinfo[i].bid);
 		    // OPM_THROW(std::runtime_error, "No partner found.");
 		}
 	    }
@@ -291,7 +291,7 @@ namespace Opm
 		// We have not found a partner.
 		ok = match(bfinfo, i, 0, num_bdy);
 		if (!ok) {
-		    MESSAGE("Warning: No partner found for boundary id " << bfinfo[i].bid);
+		    OPM_MESSAGE("Warning: No partner found for boundary id " << bfinfo[i].bid);
 		    // OPM_THROW(std::runtime_error, "No partner found.");
 		}
 	    }

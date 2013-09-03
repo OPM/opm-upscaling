@@ -204,7 +204,7 @@ namespace Opm
 		if (repeats > max_repeats) {
 		    throw;
 		}
-		MESSAGE("Warning: Transport failed, retrying with more steps.");
+		OPM_MESSAGE("Warning: Transport failed, retrying with more steps.");
 		nr_transport_steps *= 2;
 		dt_transport = time/nr_transport_steps;
 		saturation = saturation_initial;

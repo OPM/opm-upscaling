@@ -64,7 +64,7 @@ namespace Opm
 	    // gravity[2] = -Dune::unit::gravity;
 	    // Compute flow field.
 	    if (this->gravity_.two_norm() > 0.0) {
-		MESSAGE("Warning: Gravity not handled by flow solver.");
+		OPM_MESSAGE("Warning: Gravity not handled by flow solver.");
 	    }
 
 	    // Solve some steps.

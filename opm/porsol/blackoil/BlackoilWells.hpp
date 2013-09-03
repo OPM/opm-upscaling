@@ -129,7 +129,7 @@ namespace Opm
 	keywords.push_back("COMPDAT");
 // 	keywords.push_back("WELTARG");
 	if (!parser.hasFields(keywords)) {
-	    MESSAGE("Missing well keywords in deck, initializing no wells.");
+	    OPM_MESSAGE("Missing well keywords in deck, initializing no wells.");
             return;
 	}
 	if (!(parser.hasField("WCONINJE") || parser.hasField("WCONPROD")) ) {
@@ -197,7 +197,7 @@ namespace Opm
                             double radius = 0.5*compdats.compdat[kw].diameter_;
                             if (radius <= 0.0) {
                                 radius = 0.5*unit::feet;
-                                MESSAGE("Warning: Well bore internal radius set to " << radius);
+                                OPM_MESSAGE("Warning: Well bore internal radius set to " << radius);
                             }
                             Dune::FieldVector<double, 3> cubical = getCubeDim(grid, cell);
                             const Rock<3>::PermTensor permeability = rock.permeability(cell);  

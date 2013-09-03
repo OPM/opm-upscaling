@@ -136,7 +136,7 @@ init(const Opm::parameter::ParameterGroup& param)
         double default_poro = param.getDefault("default_poro", 1.0);
         double default_perm_md = param.getDefault("default_perm_md", 100.0);
         double default_perm = unit::convert::from(default_perm_md, prefix::milli*unit::darcy);
-        MESSAGE("Warning: For generated cartesian grids, we use uniform rock properties.");
+        OPM_MESSAGE("Warning: For generated cartesian grids, we use uniform rock properties.");
         rock_.init(grid_.size(0), default_poro, default_perm);
 	Opm::EclipseGridParser parser(param.get<std::string>("filename")); // Need a parser for the fluids anyway.
         fluid_.init(parser);
