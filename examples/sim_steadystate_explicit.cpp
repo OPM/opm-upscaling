@@ -39,6 +39,7 @@ typedef SimulatorTraits<Isotropic, Explicit> SimTraits;
 typedef SimulatorTesterFlexibleBC<SimTraits> Simulator;
 
 int main(int argc, char** argv)
+try
 {
     Opm::parameter::ParameterGroup param(argc, argv);
     Dune::MPIHelper::instance(argc,argv);
@@ -50,4 +51,7 @@ int main(int argc, char** argv)
     sim.init(param);
     sim.run();
 }
-
+catch (const std::exception &e) {
+    std::cerr << "Program threw an exception: " << e.what() << "\n";
+    throw;
+}

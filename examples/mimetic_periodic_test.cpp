@@ -55,6 +55,7 @@
 using namespace Opm;
 
 int main(int argc, char** argv)
+try
 {
     typedef Opm::GridInterfaceEuler<Dune::CpGrid>                       GI;
     typedef GI  ::CellIterator                                     CI;
@@ -115,5 +116,9 @@ int main(int argc, char** argv)
 #endif
     
     return 0;
+}
+catch (const std::exception &e) {
+    std::cerr << "Program threw an exception: " << e.what() << "\n";
+    throw;
 }
 

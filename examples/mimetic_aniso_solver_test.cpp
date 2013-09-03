@@ -213,6 +213,7 @@ void test_flowsolver(const GI& g, const RI& r)
 using namespace Opm;
 
 int main(int argc, char** argv)
+try
 {
     Opm::parameter::ParameterGroup param(argc, argv);
     Dune::MPIHelper::instance(argc,argv);
@@ -272,10 +273,15 @@ int main(int argc, char** argv)
     transport_solver.transportSolve(sat, time, gravity, flow_solution);
 #endif
 }
+catch (const std::exception &e) {
+    std::cerr << "Program threw an exception: " << e.what() << "\n";
+    throw;
+}
+
 
 
 #if 0
-int main (int argc , char **argv) {
+int main (int argc , char **argv) try {
     try {
 #if HAVE_MPI
 	// initialize MPI
@@ -304,4 +310,9 @@ int main (int argc , char **argv) {
 
     return 0;
 }
+catch (const std::exception &e) {
+    std::cerr << "Program threw an exception: " << e.what() << "\n";
+    throw;
+}
+
 #endif

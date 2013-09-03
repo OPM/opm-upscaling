@@ -25,6 +25,7 @@
 #include <opm/porsol/blackoil/co2fluid/BlackoilCo2PVT.hpp>
 
 int main(int argc, char** argv)
+try
 {
     double temperature = 300.;
     if (argc == 2) temperature = std::atof(argv[1]);
@@ -38,5 +39,9 @@ int main(int argc, char** argv)
     boPvt.generateBlackOilTables(temperature);
   clock.stop();
   std::cout << "\n\nInitialisation and table generation - clock time (secs): " << clock.secsSinceStart() << std::endl;
+}
+catch (const std::exception &e) {
+    std::cerr << "Program threw an exception: " << e.what() << "\n";
+    throw;
 }
 

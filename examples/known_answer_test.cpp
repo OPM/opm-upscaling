@@ -291,6 +291,7 @@ void test_flowsolver(const GI& g, const RI& r, double tol, int kind)
 
 
 int main(int argc, char** argv)
+try
 {
     Opm::parameter::ParameterGroup param(argc, argv);
     Dune::MPIHelper::instance(argc,argv);
@@ -330,3 +331,8 @@ int main(int argc, char** argv)
                     param.getDefault("tolerance", 1e-8),
                     param.getDefault("linear_solver_type", 1));
 }
+catch (const std::exception &e) {
+    std::cerr << "Program threw an exception: " << e.what() << "\n";
+    throw;
+}
+

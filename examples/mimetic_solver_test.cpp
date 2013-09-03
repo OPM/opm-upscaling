@@ -162,6 +162,7 @@ void test_flowsolver(const GI& g, const RI& r)
 using namespace Opm;
 
 int main(int argc, char** argv)
+try
 {
     Opm::parameter::ParameterGroup param(argc, argv);
     Dune::MPIHelper::instance(argc,argv);
@@ -185,4 +186,8 @@ int main(int argc, char** argv)
 #endif
 
     test_flowsolver<3>(g, res_prop);
+}
+catch (const std::exception &e) {
+    std::cerr << "Program threw an exception: " << e.what() << "\n";
+    throw;
 }
