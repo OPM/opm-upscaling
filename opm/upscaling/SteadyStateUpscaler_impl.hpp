@@ -147,7 +147,7 @@ namespace Opm
             gravity[2] = Opm::unit::gravity;
         }
 	if (gravity.two_norm() > 0.0) {
-	    MESSAGE("Warning: Gravity is experimental for flow solver.");
+	    OPM_MESSAGE("Warning: Gravity is experimental for flow solver.");
 	}
 
         // Set up initial saturation profile.

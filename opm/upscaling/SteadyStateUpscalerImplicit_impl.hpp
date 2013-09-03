@@ -164,7 +164,7 @@ namespace Opm
         }
         
         if (gravity.two_norm() > 0.0) {
-            MESSAGE("Warning: Gravity is experimental for flow solver.");
+            OPM_MESSAGE("Warning: Gravity is experimental for flow solver.");
         }
 
         // Put pore volume in vector.
