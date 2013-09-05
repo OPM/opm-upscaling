@@ -39,6 +39,7 @@
 
 #include <opm/upscaling/SteadyStateUpscalerManager.hpp>
 #include <opm/upscaling/UpscalingTraits.hpp>
+#include <iostream>
 
 using namespace Opm;
 

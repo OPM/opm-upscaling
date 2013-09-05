@@ -41,6 +41,7 @@
 //#include <opm/upscaling/UpscalingTraits.hpp>
 #include <opm/porsol/euler/EulerUpstreamImplicit.hpp>
 #include <opm/porsol/common/SimulatorTraits.hpp>
+#include <iostream>
 namespace Opm{
 	template <class IsotropyPolicy>
     struct Implicit

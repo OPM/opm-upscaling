@@ -10,6 +10,8 @@
 //!
 //==============================================================================
 
+#include <iostream>
+
   template<class GridType>
 std::vector<BoundaryGrid::Vertex> ElasticityUpscale<GridType>::extractFace(Direction dir, ctype coord)
 {

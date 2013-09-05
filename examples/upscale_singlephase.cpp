@@ -24,6 +24,7 @@
 
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 #include <opm/core/utility/Units.hpp>
+#include <iostream>
 
 using namespace Opm;
 using namespace Opm::prefix;

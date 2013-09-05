@@ -42,6 +42,7 @@
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 #include <sys/utsname.h>
+#include <iostream>
 namespace Opm{
 	template <class IsotropyPolicy>
     struct Implicit

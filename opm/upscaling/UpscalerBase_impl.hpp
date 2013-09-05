@@ -39,6 +39,8 @@
 #include <opm/porsol/common/setupBoundaryConditions.hpp>
 #include <opm/porsol/common/ReservoirPropertyTracerFluid.hpp>
 
+#include <iostream>
+
 namespace Opm
 {
 

@@ -43,6 +43,7 @@
 #include <opm/porsol/common/ReservoirPropertyFixedMobility.hpp>
 #include <opm/core/utility/Units.hpp>
 #include <algorithm>
+#include <iostream>
 
 namespace Opm
 {

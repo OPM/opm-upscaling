@@ -46,6 +46,7 @@
 #include <opm/core/io/eclipse/writeECLData.hpp>
 #include <opm/core/utility/miscUtilities.hpp>
 #include <algorithm>
+#include <iostream>
 
 namespace Opm
 {
