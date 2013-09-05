@@ -147,7 +147,7 @@ namespace Opm
                 std::string filename = param.get<std::string>("sat_pdrop_filename");
                 std::ifstream file(filename.c_str());
                 if (!file) {
-                    THROW("Could not open file " << filename);
+                    OPM_THROW(std::runtime_error, "Could not open file " << filename);
                 }
                 readControl(file, saturations, all_pdrops);
             } else {

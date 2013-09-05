@@ -156,7 +156,7 @@ void usageandexit() {
 // Assumes that permtensor_t use C ordering.
 double getVoigtValue(const SinglePhaseUpscaler::permtensor_t& K, int voigt_idx)
 {
-    ASSERT(K.numRows() == 3 && K.numCols() == 3);
+    assert(K.numRows() == 3 && K.numCols() == 3);
     switch (voigt_idx) {
     case 0: return K.data()[0];
     case 1: return K.data()[4];
@@ -177,7 +177,7 @@ double getVoigtValue(const SinglePhaseUpscaler::permtensor_t& K, int voigt_idx)
 // Assumes that permtensor_t use C ordering.
 void setVoigtValue(SinglePhaseUpscaler::permtensor_t& K, int voigt_idx, double val)
 {
-    ASSERT(K.numRows() == 3 && K.numCols() == 3);
+    assert(K.numRows() == 3 && K.numCols() == 3);
     switch (voigt_idx) {
     case 0: K.data()[0] = val; break;
     case 1: K.data()[4] = val; break;
@@ -195,6 +195,7 @@ void setVoigtValue(SinglePhaseUpscaler::permtensor_t& K, int voigt_idx, double v
 }
 
 int main(int varnum, char** vararg)
+try
 {
    // Variables used for timing/profiling:
    clock_t start, finish;
@@ -2049,3 +2050,8 @@ int main(int varnum, char** vararg)
 
    return 0;
 }
+catch (const std::exception &e) {
+    std::cerr << "Program threw an exception: " << e.what() << "\n";
+    throw;
+}
+

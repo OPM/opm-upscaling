@@ -110,6 +110,7 @@ void usageandexit() {
 }
 
 int main(int varnum, char** vararg)
+try
 { 
 
    /******************************************************************************
@@ -724,4 +725,9 @@ int main(int varnum, char** vararg)
 
 
    return 0;
-};
+}
+catch (const std::exception &e) {
+    std::cerr << "Program threw an exception: " << e.what() << "\n";
+    throw;
+}
+

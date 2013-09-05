@@ -3,6 +3,8 @@
 
 #include <dune/common/dynmatrix.hh>
 
+#include <iostream>
+
 namespace Opm {
 
 namespace DynamicMatrixHelp {

@@ -71,7 +71,7 @@ void usageandexit() {
 /**
    @brief Computes simple statistics.
 */
-int main(int varnum, char** vararg) {        
+int main(int varnum, char** vararg) try {        
 
     const double emptycellvolumecutoff = 1e-10;
 
@@ -483,4 +483,9 @@ int main(int varnum, char** vararg) {
     
     return 0;
     
-};
+}
+catch (const std::exception &e) {
+    std::cerr << "Program threw an exception: " << e.what() << "\n";
+    throw;
+}
+

@@ -39,10 +39,12 @@
 
 #include <opm/upscaling/SteadyStateUpscalerManager.hpp>
 #include <opm/upscaling/UpscalingTraits.hpp>
+#include <iostream>
 
 using namespace Opm;
 
 int main(int argc, char** argv)
+try
 {
      //Initialize.
      Opm::parameter::ParameterGroup param(argc, argv);
@@ -50,3 +52,8 @@ int main(int argc, char** argv)
      SteadyStateUpscalerManager<UpscalingTraitsBasic> mgr;
      mgr.upscale(param);
 }
+catch (const std::exception &e) {
+    std::cerr << "Program threw an exception: " << e.what() << "\n";
+    throw;
+}
+

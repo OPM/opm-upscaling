@@ -46,6 +46,7 @@
 #include <opm/core/io/eclipse/writeECLData.hpp>
 #include <opm/core/utility/miscUtilities.hpp>
 #include <algorithm>
+#include <iostream>
 
 namespace Opm
 {
@@ -164,7 +165,7 @@ namespace Opm
         }
         
         if (gravity.two_norm() > 0.0) {
-            MESSAGE("Warning: Gravity is experimental for flow solver.");
+            OPM_MESSAGE("Warning: Gravity is experimental for flow solver.");
         }
 
         // Put pore volume in vector.
@@ -447,16 +448,16 @@ namespace Opm
                             // This is an inflow face.
                             double frac_flow = 0.0;
                             if (sc.isPeriodic()) {
-                                ASSERT(sc.saturationDifference() == 0.0);
+                                assert(sc.saturationDifference() == 0.0);
                                 int partner_bid = this->bcond_.getPeriodicPartner(f->boundaryId());
                                 std::map<int, double>::const_iterator it = frac_flow_by_bid.find(partner_bid);
                                 if (it == frac_flow_by_bid.end()) {
-                                    THROW("Could not find periodic partner fractional flow. Face bid = " << f->boundaryId()
+                                    OPM_THROW(std::runtime_error, "Could not find periodic partner fractional flow. Face bid = " << f->boundaryId()
                                           << " and partner bid = " << partner_bid);
                                 }
                                 frac_flow = it->second;
                             } else {
-                                ASSERT(sc.isDirichlet());
+                                assert(sc.isDirichlet());
                                 frac_flow = this->res_prop_.fractionalFlow(c->index(), sc.saturation());
                             }
                             cell_inflows_w[c->index()] += flux*frac_flow;

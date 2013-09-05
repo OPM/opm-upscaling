@@ -10,6 +10,8 @@
 //!
 //==============================================================================
 
+#include <iostream>
+
   template<class GridType>
 void ASMHandler<GridType>::initForAssembly()
 {

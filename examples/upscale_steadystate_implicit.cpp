@@ -42,6 +42,7 @@
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 #include <sys/utsname.h>
+#include <iostream>
 namespace Opm{
 	template <class IsotropyPolicy>
     struct Implicit
@@ -79,7 +80,7 @@ void usageandexit() {
 // Assumes that permtensor_t use C ordering.
 double getVoigtValue(const SinglePhaseUpscaler::permtensor_t& K, int voigt_idx)
 {
-    ASSERT(K.numRows() == 3 && K.numCols() == 3);
+    assert(K.numRows() == 3 && K.numCols() == 3);
     switch (voigt_idx) {
     case 0: return K.data()[0];
     case 1: return K.data()[4];
@@ -103,11 +104,11 @@ std::vector<std::vector<double> > getExtremeSats(std::string rock_list, std::vec
     }
     std::ifstream rl(rock_list.c_str());
     if (!rl) {
-        THROW("Could not open file " << rock_list);
+        OPM_THROW(std::runtime_error, "Could not open file " << rock_list);
     }
     int num_rocks = -1;
     rl >> num_rocks;
-    ASSERT(num_rocks >= 1);
+    assert(num_rocks >= 1);
     std::vector<std::vector<double> > rocksatendp;
     rocksatendp.resize(num_rocks);
     for (int i = 0; i < num_rocks; ++i) {
@@ -124,7 +125,7 @@ std::vector<std::vector<double> > getExtremeSats(std::string rock_list, std::vec
         rockfilelist.push_back(rockfilename);
         std::ifstream rock_stream(rockfilename.c_str());
         if (!rock_stream) {
-            THROW("Could not open file " << rockfilename);
+            OPM_THROW(std::runtime_error, "Could not open file " << rockfilename);
         }
         
         if (! anisorocks) { //Isotropic input rocks (Sw Krw Kro J)
@@ -140,7 +141,7 @@ std::vector<std::vector<double> > getExtremeSats(std::string rock_list, std::vec
             rocksatendp[i][0] = Jtmp.getMinimumX().first;
             rocksatendp[i][1] = Jtmp.getMaximumX().first;
             if (rocksatendp[i][0] < 0 || rocksatendp[i][0] > 1) {
-                THROW("Minimum rock saturation (" << rocksatendp[i][0] << ") not sane for rock " 
+                OPM_THROW(std::runtime_error, "Minimum rock saturation (" << rocksatendp[i][0] << ") not sane for rock " 
                       << rockfilename << "." << std::endl << "Did you forget to specify anisotropicrocks=true ?");  
             }
         }
@@ -170,6 +171,7 @@ std::string toString(T const& value) {
 
 
 int main(int argc, char** argv)
+try
 {
     if (argc == 1) {
         usageandexit();
@@ -424,6 +426,10 @@ int main(int argc, char** argv)
     //SteadyStateUpscalerManagerImplicit<upscaler_t> mgr;
     //mgr.upscale(param);
     
+}
+catch (const std::exception &e) {
+    std::cerr << "Program threw an exception: " << e.what() << "\n";
+    throw;
 }
 
 // TODO

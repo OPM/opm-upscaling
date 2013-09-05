@@ -51,6 +51,7 @@
 
 
 int main(int argc, char** argv)
+try
 {
    if (argc == 1) {
         std::cout << "Usage: cpchop_depthtrend gridfilename=filename.grdecl [zresolution=1] [zlen=1] [ilen=5] [jlen=5] " << std::endl;
@@ -223,3 +224,8 @@ int main(int argc, char** argv)
         std::cout << outputtmp.str();
     }
 }
+catch (const std::exception &e) {
+    std::cerr << "Program threw an exception: " << e.what() << "\n";
+    throw;
+}
+
