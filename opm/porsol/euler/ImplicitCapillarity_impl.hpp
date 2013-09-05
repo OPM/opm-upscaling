@@ -36,12 +36,6 @@
 #ifndef OPENRS_IMPLICITCAPILLARITY_IMPL_HEADER
 #define OPENRS_IMPLICITCAPILLARITY_IMPL_HEADER
 
-
-
-#include <cassert>
-#include <cmath>
-#include <algorithm>
-
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/utility/Average.hpp>
 #include <opm/core/utility/Units.hpp>
@@ -49,6 +43,11 @@
 #include <dune/grid/common/Volumes.hpp>
 #include <opm/porsol/common/ReservoirPropertyFixedMobility.hpp>
 #include <opm/porsol/euler/MatchSaturatedVolumeFunctor.hpp>
+
+#include <cassert>
+#include <cmath>
+#include <algorithm>
+#include <iostream>
 
 namespace Opm
 {

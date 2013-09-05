@@ -38,9 +38,10 @@
 
 #include "BoundaryPeriodicity.hpp"
 #include "BoundaryConditions.hpp"
-#include <array>
 #include <dune/common/fvector.hh>
+#include <array>
 #include <algorithm>
+#include <iostream>
 
 namespace Opm
 {

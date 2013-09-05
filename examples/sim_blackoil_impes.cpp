@@ -34,7 +34,7 @@
 #include <opm/porsol/blackoil/BlackoilWells.hpp>
 #include <opm/porsol/blackoil/ComponentTransport.hpp>
 
-
+#include <iostream>
 
 typedef Dune::CpGrid Grid;
 typedef Opm::Rock<Grid::dimension> Rock;

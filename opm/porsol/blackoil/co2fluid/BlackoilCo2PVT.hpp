@@ -34,7 +34,9 @@
 
 #include <opm/porsol/blackoil/fluid/MiscibilityProps.hpp>
 #include <opm/porsol/blackoil/fluid/BlackoilDefs.hpp>
+
 #include <string>
+#include <iostream>
 
 
 namespace Opm

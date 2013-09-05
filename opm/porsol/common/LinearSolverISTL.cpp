@@ -31,6 +31,7 @@
 #include <dune/istl/paamg/amg.hh>
 
 #include <stdexcept>
+#include <iostream>
 
 
 namespace Opm

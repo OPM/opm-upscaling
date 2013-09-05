@@ -30,6 +30,7 @@
 
 #include <opm/porsol/common/Matrix.hpp>
 
+#include <iostream>
 
 
 BOOST_AUTO_TEST_CASE(copy_assignment_tests)

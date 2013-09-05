@@ -39,6 +39,8 @@ namespace Opm
 #include <opm/porsol/mimetic/TpfaCompressible.hpp>
 #include <opm/porsol/blackoil/ComponentTransport.hpp>
 
+#include <iostream>
+
 typedef Dune::CpGrid Grid;
 typedef Opm::Rock<Grid::dimension> Rock;
 typedef Opm::BlackoilFluid Fluid;

@@ -20,11 +20,13 @@
 #ifndef OPM_COMPONENTTRANSPORT_HEADER_INCLUDED
 #define OPM_COMPONENTTRANSPORT_HEADER_INCLUDED
 
-#include <array>
-#include <vector>
 #include <opm/porsol/blackoil/fluid/BlackoilDefs.hpp>
 #include <opm/porsol/blackoil/BlackoilFluid.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
+
+#include <array>
+#include <vector>
+#include <iostream>
 
 #include <stdlib.h>
 #include <float.h>

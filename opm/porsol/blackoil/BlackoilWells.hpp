@@ -28,6 +28,7 @@
 #include <opm/porsol/common/Rock.hpp>
 #include <dune/common/fvector.hh>
 #include <vector>
+#include <iostream>
 
 
 namespace Opm

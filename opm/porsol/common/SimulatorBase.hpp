@@ -37,9 +37,6 @@
 #define OPENRS_SIMULATORBASE_HEADER
 
 
-#include <fstream>
-#include <iterator>
-
 #include <boost/lexical_cast.hpp>
 
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
@@ -64,6 +61,10 @@
 
 #include <opm/porsol/mimetic/MimeticIPEvaluator.hpp>
 #include <opm/porsol/mimetic/IncompFlowSolverHybrid.hpp>
+
+#include <fstream>
+#include <iterator>
+#include <iostream>
 
 
 namespace Opm

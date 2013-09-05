@@ -52,6 +52,8 @@
 #include <tbb/parallel_for.h>
 #endif
 
+#include <iostream>
+
 
 namespace Opm
 {

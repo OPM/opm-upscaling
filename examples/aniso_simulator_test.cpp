@@ -48,6 +48,8 @@
 #include <tbb/task_scheduler_init.h>
 #endif // USE_TBB
 
+#include <iostream>
+
 using namespace Opm;
 
 typedef SimulatorTraits<Anisotropic, Explicit> SimTraits;

@@ -29,6 +29,7 @@
 #include <opm/porsol/common/LinearSolverISTL.hpp>
 
 #include <array>
+#include <iostream>
 
 namespace Opm
 {

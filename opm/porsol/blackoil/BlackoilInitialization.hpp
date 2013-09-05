@@ -22,6 +22,8 @@
 
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 
+#include <iostream>
+
 namespace Opm
 {
 

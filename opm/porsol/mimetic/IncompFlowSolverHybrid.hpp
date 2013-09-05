@@ -38,15 +38,6 @@
 #ifndef OPENRS_INCOMPFLOWSOLVERHYBRID_HEADER
 #define OPENRS_INCOMPFLOWSOLVERHYBRID_HEADER
 
-#include <algorithm>
-#include <functional>
-#include <map>
-#include <numeric>
-#include <ostream>
-#include <stdexcept>
-#include <utility>
-#include <vector>
-
 #include <boost/unordered_map.hpp>
 
 #include <boost/bind.hpp>
@@ -74,6 +65,16 @@
 
 #include <opm/porsol/common/BoundaryConditions.hpp>
 #include <opm/porsol/common/Matrix.hpp>
+
+#include <algorithm>
+#include <functional>
+#include <map>
+#include <numeric>
+#include <ostream>
+#include <stdexcept>
+#include <utility>
+#include <vector>
+#include <iostream>
 
 namespace Opm {
     namespace {

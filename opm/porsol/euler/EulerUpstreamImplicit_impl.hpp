@@ -37,13 +37,6 @@
 #ifndef OPENRS_EULERUPSTREAMIMPLICIT_IMPL_HEADER
 #define OPENRS_EULERUPSTREAMIMPLICIT_IMPL_HEADER
 
-#include <cmath>
-#include <algorithm>
-#include <limits>
-#include <vector>
-
-#include <array>
-
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/utility/Average.hpp>
 #include <opm/core/utility/Units.hpp>
@@ -51,6 +44,13 @@
 #include <opm/core/utility/StopWatch.hpp>
 #include <opm/porsol/common/ImplicitTransportDefs.hpp>
 #include <opm/core/pressure/tpfa/trans_tpfa.h>
+
+#include <cmath>
+#include <algorithm>
+#include <limits>
+#include <vector>
+#include <array>
+#include <iostream>
 
 namespace Opm
 {

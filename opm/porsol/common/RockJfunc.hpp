@@ -39,10 +39,12 @@
 #include <dune/common/fvector.hh>
 #include <opm/core/utility/NonuniformTableLinear.hpp>
 #include <opm/porsol/common/Matrix.hpp>
+
 #include <fstream>
 #include <vector>
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 
 namespace Opm
 {

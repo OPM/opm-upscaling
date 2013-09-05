@@ -40,6 +40,8 @@
 #include <opm/porsol/common/SimulatorBase.hpp>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 
+#include <iostream>
+
 namespace Opm
 {
 
