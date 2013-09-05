@@ -58,8 +58,11 @@ enum Preconditioner {
 
 //! \brief An enumeration of the available preconditioners for multiplier block
 enum MultiplierPreconditioner {
-  SCHUR,
-  SIMPLE,
+  SIMPLE,        //!< diagonal approximation of A
+  SCHUR,         //!< schur + primary preconditioner
+  SCHURAMG,      //!< schur + amg
+  SCHURSCHWARZ,  //!< schur + schwarz+lu
+  SCHURTWOLEVEL  //!< schur + twolevel
 };
 
 //! \brief Smoother used in the AMG
@@ -72,7 +75,7 @@ enum Smoother {
 
 struct LinSolParams {
   //! \brief The linear solver to employ
-  Opm::Elasticity::Solver type;
+  Solver type;
 
   //! \brief Number of iterations in GMRES before restart
   int restart;
@@ -105,10 +108,10 @@ struct LinSolParams {
   Smoother smoother;
 
   //! \brief Preconditioner for elasticity block
-  Opm::Elasticity::Preconditioner pre;
+  Preconditioner pre;
 
   //! \brief Preconditioner for mortar block
-  Opm::Elasticity::MultiplierPreconditioner mortarpre;
+  MultiplierPreconditioner mortarpre;
 
   //! \brief Parse command line parameters
   //! \param[in] param The parameter group to parse
@@ -116,9 +119,9 @@ struct LinSolParams {
   {
     std::string solver = param.getDefault<std::string>("linsolver_type","iterative");
     if (solver == "iterative")
-      type = Opm::Elasticity::ITERATIVE;
+      type = ITERATIVE;
     else
-      type = Opm::Elasticity::DIRECT;
+      type = DIRECT;
     restart = param.getDefault<int>("linsolver_restart", 1000);
     tol    = param.getDefault<double>("ltol",1.e-8);
     maxit   = param.getDefault<int>("linsolver_maxit", 10000);
@@ -130,19 +133,25 @@ struct LinSolParams {
     solver = param.getDefault<std::string>("linsolver_pre","amg");
 
     if (solver == "schwarz")
-      pre = Opm::Elasticity::SCHWARZ;
+      pre = SCHWARZ;
     else if (solver == "fastamg")
-      pre = Opm::Elasticity::FASTAMG;
+      pre = FASTAMG;
     else if (solver == "twolevel")
-      pre = Opm::Elasticity::TWOLEVEL;
+      pre = TWOLEVEL;
     else
-      pre = Opm::Elasticity::AMG;
+      pre = AMG;
 
     solver = param.getDefault<std::string>("linsolver_mortarpre","schur");
-    if (solver == "schur")
-      mortarpre = Opm::Elasticity::SCHUR;
+    if (solver == "simple")
+      mortarpre = SIMPLE;
+    else if (solver == "amg")
+      mortarpre = SCHURAMG;
+    else if (solver == "schwarz")
+      mortarpre = SCHURSCHWARZ;
+    else if (solver == "twolevel")
+      mortarpre = SCHURTWOLEVEL;
     else
-      mortarpre = Opm::Elasticity::SIMPLE;
+      mortarpre = SCHUR;
 
     uzawa = param.getDefault<bool>("linsolver_uzawa", false);
     zcells = param.getDefault<int>("linsolver_zcells", 2);

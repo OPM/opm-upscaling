@@ -844,8 +844,6 @@ static void applyMortarBlock(int i, const Matrix& B, M& T,
     T[j][i] = v2[j];
 }
 
-#include <omp.h>
-
 IMPL_FUNC(void, setupSolvers(const LinSolParams& params))
 {
   int siz = A.getOperator().N(); // system size
@@ -860,14 +858,43 @@ IMPL_FUNC(void, setupSolvers(const LinSolParams& params))
     if (B.N()) {
       siz += B.M();
 
-      // schur system: B'*diag(A)^-1*B
-      if (params.mortarpre == SCHUR) {
+      // schur system: B'*P^-1*B
+      if (params.mortarpre >= SCHUR) {
         Dune::DynamicMatrix<double> T(B.M(), B.M());
         std::cout << "\tBuilding preconditioner for multipliers..." << std::endl;
         LoggerHelper help(B.M(), 10, 100);
 
+        std::shared_ptr< Dune::Preconditioner<Vector,Vector> > pc;
+
+        if (params.mortarpre == SCHUR             ||
+            (params.mortarpre == SCHURAMG      && 
+             params.pre == AMG)                   ||
+            (params.mortarpre == SCHURSCHWARZ  && 
+             params.pre == SCHWARZ)               ||
+            (params.mortarpre == SCHURTWOLEVEL && 
+             params.pre == TWOLEVEL)) {
+          pc = upre;
+        } else if (params.mortarpre == SCHURAMG) {
+          pc = AMG1<SSORSmoother>::setup(params.steps[0],
+                                         params.steps[1],
+                                         params.coarsen_target,
+                                         params.zcells,
+                                         op, gv, A, copy);
+        } else if (params.mortarpre == SCHURSCHWARZ) {
+          pc = Schwarz::setup(params.steps[0],
+                              params.steps[1],
+                              params.coarsen_target,
+                              params.zcells,
+                              op, gv, A, copy);
+        } else if (params.mortarpre == SCHURTWOLEVEL) {
+          pc = AMG2Level<SSORSmoother>::setup(params.steps[0],
+                                              params.steps[1],
+                                              params.coarsen_target,
+                                              params.zcells,
+                                              op, gv, A, copy);
+        }
         for (size_t i=0; i < B.M(); ++i) {
-          applyMortarBlock(i, B, T, *upre);
+          applyMortarBlock(i, B, T, *pc);
           help.log(i, "\t\t... still processing ... multiplier ");
         }
         P = MatrixOps::fromDense(T);
