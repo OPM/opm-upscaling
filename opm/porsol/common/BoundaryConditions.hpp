@@ -144,21 +144,27 @@ namespace Opm
 	/// @return the pressure condition value
         double pressure() const
         {
-            assert (isDirichlet());
+#ifndef NDEBUG
+            OPM_ERROR_IF(!isDirichlet(), "Pressure boundary conditions are only valid for Dirichlet boundaries");
+#endif
             return value_;
         }
 	/// @brief Query a Neumann condition.
 	/// @return the outwards flux condition value.
         double outflux() const
         {
-            assert (isNeumann());
+#ifndef NDEBUG
+            OPM_ERROR_IF(!isNeumann(), "Outflux boundary conditions are only valid for Neumann boundaries");
+#endif
             return value_;
         }
 	/// @brief Query a Periodic condition.
 	/// @return the pressure difference condition value.
         double pressureDifference() const
         {
-            assert (isPeriodic());
+#ifndef NDEBUG
+            OPM_ERROR_IF(!isPeriodic(), "Pressure difference boundary conditions are only valid for periodic boundaries");
+#endif
             return value_;
         }
     };
