@@ -22,6 +22,8 @@
 
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 
+#include <iostream>
+
 namespace Opm
 {
 
@@ -69,7 +71,7 @@ namespace Opm
                 simstate.cell_z_.resize(grid.numCells());
                 std::fill(simstate.cell_z_.begin(), simstate.cell_z_.begin() + simstate.cell_z_.size()/2, init_oil);
                 std::fill(simstate.cell_z_.begin() + simstate.cell_z_.size()/2, simstate.cell_z_.end(), init_water);
-                MESSAGE("******* Assuming zero capillary pressures *******");
+                OPM_MESSAGE("******* Assuming zero capillary pressures *******");
                 PhaseVec init_p(100.0*Opm::unit::barsa);
                 simstate.cell_pressure_.resize(grid.numCells(), init_p);
                 //         if (gravity.two_norm() != 0.0) {
@@ -98,7 +100,7 @@ namespace Opm
                 std::fill(simstate.cell_z_.begin() + 2*(simstate.cell_z_.size()/3),
                           simstate.cell_z_.end(),
                           init_gas);
-                MESSAGE("******* Assuming zero capillary pressures *******");
+                OPM_MESSAGE("******* Assuming zero capillary pressures *******");
                 PhaseVec init_p(100.0*Opm::unit::barsa);
                 simstate.cell_pressure_.resize(grid.numCells(), init_p);
 
@@ -164,7 +166,7 @@ namespace Opm
                 init_z[Fluid::Oil] = initial_mixture_oil;
 
                 simstate.cell_z_.resize(grid.numCells(), init_z);
-                MESSAGE("******* Assuming zero capillary pressures *******");
+                OPM_MESSAGE("******* Assuming zero capillary pressures *******");
                 PhaseVec init_p(param.getDefault("initial_pressure", 100.0*Opm::unit::barsa));
                 simstate.cell_pressure_.resize(grid.numCells(), init_p);
                 if (gravity.two_norm() != 0.0) {

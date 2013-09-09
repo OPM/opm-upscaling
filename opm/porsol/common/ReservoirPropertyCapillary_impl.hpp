@@ -64,7 +64,7 @@ namespace Opm
 	if (phase_index == 0) {
 	    phase_mob = mobilityFirstPhase(cell_index, saturation);
 	} else {
-	    ASSERT(phase_index == 1);
+	    assert(phase_index == 1);
 	    phase_mob = mobilitySecondPhase(cell_index, saturation);
 	}
     }
@@ -92,7 +92,7 @@ namespace Opm
     template<class Vector>
     void ReservoirPropertyCapillary<dim>::phaseMobilities(int cell_index, double saturation, Vector& mobility) const
     {
-        //ASSERT (mobility.size() >= Super::NumberOfPhases);
+        //assert (mobility.size() >= Super::NumberOfPhases);
         mobility[0] = mobilityFirstPhase(cell_index, saturation);
         mobility[1] = mobilitySecondPhase(cell_index, saturation);
     }
@@ -119,7 +119,7 @@ namespace Opm
     {
         if (Super::rock_.size() > 0) {
             const int region = Super::cell_to_rock_[cell_index];
-            ASSERT (region < int(Super::rock_.size()));
+            assert (region < int(Super::rock_.size()));
 	    double res;
 	    Super::rock_[region].krw(saturation, res);
             return res;
@@ -137,7 +137,7 @@ namespace Opm
     {
         if (Super::rock_.size() > 0) {
             const int region = Super::cell_to_rock_[cell_index];
-            ASSERT (region < int(Super::rock_.size()));
+            assert (region < int(Super::rock_.size()));
             double res;
             Super::rock_[region].dkrw(saturation, res);
             return res;
@@ -156,7 +156,7 @@ namespace Opm
     {
         if (Super::rock_.size() > 0) {
             const int region = Super::cell_to_rock_[cell_index];
-            ASSERT (region < int(Super::rock_.size()));
+            assert (region < int(Super::rock_.size()));
 	    double res;
 	    Super::rock_[region].kro(saturation, res);
             return res;
@@ -174,7 +174,7 @@ namespace Opm
     {
         if (Super::rock_.size() > 0) {
             const int region = Super::cell_to_rock_[cell_index];
-            ASSERT (region < int(Super::rock_.size()));
+            assert (region < int(Super::rock_.size()));
             double res;
             Super::rock_[region].dkro(saturation, res);
             return res;

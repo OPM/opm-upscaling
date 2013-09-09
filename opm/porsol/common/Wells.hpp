@@ -133,7 +133,7 @@ namespace Opm
 
     inline double Wells::perforationPressure(int cell) const
     {
-        THROW("Not implemented");
+        OPM_THROW(std::runtime_error, "Not implemented");
         return 0.0;
     }
 
@@ -144,7 +144,7 @@ namespace Opm
 
     inline Dune::FieldVector<double, 3> Wells::injectionMixture(int cell) const
     {
-        THROW("Not implemented");
+        OPM_THROW(std::runtime_error, "Not implemented");
         return Dune::FieldVector<double, 3>(0.0);
     }
 

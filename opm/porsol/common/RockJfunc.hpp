@@ -39,10 +39,12 @@
 #include <dune/common/fvector.hh>
 #include <opm/core/utility/NonuniformTableLinear.hpp>
 #include <opm/porsol/common/Matrix.hpp>
+
 #include <fstream>
 #include <vector>
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 
 namespace Opm
 {
@@ -151,7 +153,7 @@ namespace Opm
             std::string rockfilename = directory + rockname;
             std::ifstream rock_stream(rockfilename.c_str());
             if (!rock_stream) {
-                THROW("Could not open file " << rockfilename);
+                OPM_THROW(std::runtime_error, "Could not open file " << rockfilename);
             }
 	    readStatoilFormat(rock_stream);
 	}
@@ -179,14 +181,14 @@ namespace Opm
                 }
             }
             if (!is) {
-                THROW("Something went wrong while skipping optional comment header of rock file.");
+                OPM_THROW(std::runtime_error, "Something went wrong while skipping optional comment header of rock file.");
             }
 	    typedef Dune::FieldVector<double, 4> Data;
 	    std::istream_iterator<Data> start(is);
 	    std::istream_iterator<Data> end;
 	    std::vector<Data> data(start, end);
 	    if (!is.eof()) {
-		THROW("Reading stopped but we're not at eof: something went wrong reading data of rock file.");
+		OPM_THROW(std::runtime_error, "Reading stopped but we're not at eof: something went wrong reading data of rock file.");
 	    }
 	    std::vector<double> svals, krw, kro, Jfunc;
 	    for (int i = 0; i < int(data.size()); ++i) {

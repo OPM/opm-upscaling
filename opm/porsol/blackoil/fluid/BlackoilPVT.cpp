@@ -49,7 +49,7 @@ namespace Opm
 	    densities_[Vapour] = d[ECL_gas];
 	    densities_[Liquid] = d[ECL_oil];
 	} else {
-	    THROW("Input is missing DENSITY\n");
+	    OPM_THROW(std::runtime_error, "Input is missing DENSITY\n");
 	}
 
         // Water PVT
@@ -67,7 +67,7 @@ namespace Opm
         } else if (parser.hasField("PVCDO")) {
             oil_props_.reset(new MiscibilityWater(parser.getPVCDO().pvcdo_));
         } else {
-            THROW("Input is missing PVDO and PVTO\n");
+            OPM_THROW(std::runtime_error, "Input is missing PVDO and PVTO\n");
         }
 
 	// Gas PVT
@@ -76,7 +76,7 @@ namespace Opm
         } else if (parser.hasField("PVTG")) {
             gas_props_.reset(new MiscibilityLiveGas(parser.getPVTG().pvtg_));
         } else {
-	    THROW("Input is missing PVDG and PVTG\n");
+	    OPM_THROW(std::runtime_error, "Input is missing PVDG and PVTG\n");
         }
     }
 
@@ -120,7 +120,7 @@ namespace Opm
         case Vapour:
             return *gas_props_;
         default:
-            THROW("Unknown phase accessed: " << phase);
+            OPM_THROW(std::runtime_error, "Unknown phase accessed: " << phase);
         }
     }
 

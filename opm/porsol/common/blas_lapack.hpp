@@ -198,7 +198,7 @@ namespace Opm {
                                                 const double* x, const int incX,
                           const double& a2    ,       double* y, const int incY)
         {
-            ASSERT((transA[0] == 'N') || (transA[0] == 'T'));
+            assert((transA[0] == 'N') || (transA[0] == 'T'));
 
             DGEMV(F77_CHARACTER(transA[0]),
                   &m, &n, &a1, A, &ldA, x, &incX, &a2, y, &incY);
@@ -280,8 +280,8 @@ namespace Opm {
                                                 const double* B     , const int ldB,
                           const double& a2    ,       double* C     , const int ldC)
         {
-            ASSERT((transA[0] == 'N') || (transA[0] == 'T'));
-            ASSERT((transB[0] == 'N') || (transB[0] == 'T'));
+            assert((transA[0] == 'N') || (transA[0] == 'T'));
+            assert((transB[0] == 'N') || (transB[0] == 'T'));
 
             DGEMM(F77_CHARACTER(transA[0]), F77_CHARACTER(transB[0]),
                   &m, &n, &k, &a1, A, &ldA, B, &ldB, &a2, C, &ldC);
@@ -305,8 +305,8 @@ namespace Opm {
                           const double& a1  , const double* A    , const int ldA,
                           const double& a2  ,       double* C    , const int ldC)
         {
-            ASSERT((uplo[0]  == 'U') || (uplo[0]  == 'L'));
-            ASSERT((trans[0] == 'N') || (trans[0] == 'T'));
+            assert((uplo[0]  == 'U') || (uplo[0]  == 'L'));
+            assert((trans[0] == 'N') || (trans[0] == 'T'));
 
             DSYRK(F77_CHARACTER(uplo[0]), F77_CHARACTER(trans[0]),
                   &n, &k, &a1, A, &ldA, &a2, C, &ldC);
@@ -333,10 +333,10 @@ namespace Opm {
                           const double* A     , const int   ldA ,
                                 double* B     , const int   ldB)
         {
-            ASSERT((side[0]   == 'L') || (side[0]   == 'R'));
-            ASSERT((uplo[0]   == 'U') || (uplo[0]   == 'L'));
-            ASSERT((transA[0] == 'N') || (transA[0] == 'T'));
-            ASSERT((diag[0]   == 'N') || (diag[0]   == 'U'));
+            assert((side[0]   == 'L') || (side[0]   == 'R'));
+            assert((uplo[0]   == 'U') || (uplo[0]   == 'L'));
+            assert((transA[0] == 'N') || (transA[0] == 'T'));
+            assert((diag[0]   == 'N') || (diag[0]   == 'U'));
 
             DTRMM(F77_CHARACTER(side[0])  , F77_CHARACTER(uplo[0]),
                   F77_CHARACTER(transA[0]), F77_CHARACTER(diag[0]),

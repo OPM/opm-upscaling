@@ -156,7 +156,7 @@ namespace Opm
                                 const std::vector<double>& saturation,
                                 const std::vector<Dune::FieldVector<double, 3> >& cell_velocity)
     {
-        ASSERT(saturation.size() == cell_velocity.size());
+        assert(saturation.size() == cell_velocity.size());
         int num_cells = saturation.size();
         phase_velocity_water = cell_velocity;
         phase_velocity_oil = cell_velocity;
@@ -285,7 +285,7 @@ namespace Opm
     {
         std::ofstream os(filename.c_str());
         if (!os) {
-            THROW("Could not open file " << filename);
+            OPM_THROW(std::runtime_error, "Could not open file " << filename);
         }
         os << field.size() << '\n';
         std::copy(field.begin(), field.end(), std::ostream_iterator<double>(os, "\n"));

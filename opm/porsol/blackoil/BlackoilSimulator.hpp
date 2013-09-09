@@ -136,13 +136,13 @@ init(const Opm::parameter::ParameterGroup& param)
         double default_poro = param.getDefault("default_poro", 1.0);
         double default_perm_md = param.getDefault("default_perm_md", 100.0);
         double default_perm = unit::convert::from(default_perm_md, prefix::milli*unit::darcy);
-        MESSAGE("Warning: For generated cartesian grids, we use uniform rock properties.");
+        OPM_MESSAGE("Warning: For generated cartesian grids, we use uniform rock properties.");
         rock_.init(grid_.size(0), default_poro, default_perm);
 	Opm::EclipseGridParser parser(param.get<std::string>("filename")); // Need a parser for the fluids anyway.
         fluid_.init(parser);
         wells_.init(parser, grid_, rock_);
     } else {
-        THROW("Unknown file format string: " << fileformat);
+        OPM_THROW(std::runtime_error, "Unknown file format string: " << fileformat);
     }
     flow_solver_.init(param);
     transport_solver_.init(param);
@@ -153,7 +153,7 @@ init(const Opm::parameter::ParameterGroup& param)
         report_times_.assign(beg, end);
         // File contains deltas, we want accumulated times.
         std::partial_sum(report_times_.begin(), report_times_.end(), report_times_.begin());
-        ASSERT(!report_times_.empty());
+        assert(!report_times_.empty());
         total_time_ = report_times_.back();
         initial_stepsize_ = report_times_.front();
     } else {
@@ -349,7 +349,7 @@ simulate()
 
         // Check if the flow solver succeeded.
         if (result == FlowSolver::VolumeDiscrepancyTooLarge) {
-            THROW("Flow solver refused to run due to too large volume discrepancy.");
+            OPM_THROW(std::runtime_error, "Flow solver refused to run due to too large volume discrepancy.");
         } else if (result == FlowSolver::FailedToConverge) {
             std::cout << "********* Nonlinear convergence failure: Shortening (pressure) stepsize, redoing step number " << step <<" **********" << std::endl;
             stepsize *= 0.5;
@@ -357,7 +357,7 @@ simulate()
             wells_.update(grid_.numCells(), start_state.well_perf_pressure_, start_state.well_perf_flux_);
             continue;
         }
-        ASSERT(result == FlowSolver::SolveOk);
+        assert(result == FlowSolver::SolveOk);
 
         // Update wells with new perforation pressures and fluxes.
         wells_.update(grid_.numCells(), state_.well_perf_pressure_, state_.well_perf_flux_);

@@ -80,9 +80,9 @@ namespace Opm
 	    leftval = param.getDefault<double>("left_pressure", leftval);
 	    rightval = param.getDefault<double>("right_pressure", rightval);
 	} else if (flow_bc_type == "periodic") {
-	    THROW("Periodic conditions not here yet.");
+	    OPM_THROW(std::runtime_error, "Periodic conditions not here yet.");
 	} else {
-	    THROW("Unknown flow boundary condition type " << flow_bc_type);
+	    OPM_THROW(std::runtime_error, "Unknown flow boundary condition type " << flow_bc_type);
 	}
 	bcs.resize(7);
 	bcs.flowCond(1) = FlowBC(bct, leftval);
@@ -106,16 +106,16 @@ namespace Opm
 	// Caution: This enum is copied from Upscaler.hpp.
 	enum BoundaryConditionType { Fixed = 0, Linear = 1, Periodic = 2, PeriodicSingleDirection = 3, Noflow = 4 };
         if (bct < 0 || bct > 2) {
-            THROW("Illegal boundary condition type (0-2 are legal): " << bct); // Later on, we may allow 3 and 4.
+            OPM_THROW(std::runtime_error, "Illegal boundary condition type (0-2 are legal): " << bct); // Later on, we may allow 3 and 4.
         }
 	BoundaryConditionType bctype = static_cast<BoundaryConditionType>(bct);
-        ASSERT(pddir >=0 && pddir <= 2);
+        assert(pddir >=0 && pddir <= 2);
 
 	// Flow conditions.
 	switch (bctype) {
 	case Fixed:
 	    {
-		// ASSERT(!g.uniqueBoundaryIds());
+		// assert(!g.uniqueBoundaryIds());
 		bcs.clear();
 		bcs.resize(7);
 		bcs.flowCond(2*pddir + 1) = FlowBC(FlowBC::Dirichlet, pdrop);
@@ -128,13 +128,13 @@ namespace Opm
 	    }
 	case Linear:
 	    {
-		// ASSERT(g.uniqueBoundaryIds());
+		// assert(g.uniqueBoundaryIds());
 		createLinear(bcs, g, pdrop, pddir, bdy_sat, twodim_hack);
 		break;
 	    }
 	case Periodic:
 	    {
-		// ASSERT(g.uniqueBoundaryIds());
+		// assert(g.uniqueBoundaryIds());
 		FlowBC fb(FlowBC::Periodic, 0.0);
 		std::array<FlowBC, 6> fcond = {{ fb, fb, fb, fb, fb, fb }};
 		fcond[2*pddir] = FlowBC(FlowBC::Periodic, pdrop);
@@ -155,7 +155,7 @@ namespace Opm
 		break;
 	    }
 	default:
-	    THROW("Error in switch statement, should never be here.");
+	    OPM_THROW(std::runtime_error, "Error in switch statement, should never be here.");
 	}
 
 	// Default transport boundary conditions are used.

@@ -38,6 +38,8 @@
 
 #include "SimulatorTester.hpp"
 
+#include <iostream>
+
 namespace Opm
 {
 

@@ -28,6 +28,7 @@
 #include <opm/porsol/common/Rock.hpp>
 #include <dune/common/fvector.hh>
 #include <vector>
+#include <iostream>
 
 
 namespace Opm
@@ -129,11 +130,11 @@ namespace Opm
 	keywords.push_back("COMPDAT");
 // 	keywords.push_back("WELTARG");
 	if (!parser.hasFields(keywords)) {
-	    MESSAGE("Missing well keywords in deck, initializing no wells.");
+	    OPM_MESSAGE("Missing well keywords in deck, initializing no wells.");
             return;
 	}
 	if (!(parser.hasField("WCONINJE") || parser.hasField("WCONPROD")) ) {
-	    THROW("Needed field is missing in file");
+	    OPM_THROW(std::runtime_error, "Needed field is missing in file");
 	}
         using namespace Opm;
 
@@ -185,7 +186,7 @@ namespace Opm
                         std::map<int, int>::const_iterator cgit = 
                             cartesian_to_compressed.find(cart_grid_indx);
                         if (cgit == cartesian_to_compressed.end()) {
-                            THROW("Cell with i,j,k indices " << ix << ' ' << jy << ' '
+                            OPM_THROW(std::runtime_error, "Cell with i,j,k indices " << ix << ' ' << jy << ' '
                                   << kz << " not found!");
                         }
                         int cell = cgit->second;
@@ -197,7 +198,7 @@ namespace Opm
                             double radius = 0.5*compdats.compdat[kw].diameter_;
                             if (radius <= 0.0) {
                                 radius = 0.5*unit::feet;
-                                MESSAGE("Warning: Well bore internal radius set to " << radius);
+                                OPM_MESSAGE("Warning: Well bore internal radius set to " << radius);
                             }
                             Dune::FieldVector<double, 3> cubical = getCubeDim(grid, cell);
                             const Rock<3>::PermTensor permeability = rock.permeability(cell);  
@@ -211,7 +212,7 @@ namespace Opm
                 }
             }
 	    if (!found) {
-		THROW("Undefined well name: " << compdats.compdat[kw].well_
+		OPM_THROW(std::runtime_error, "Undefined well name: " << compdats.compdat[kw].well_
 		      << " in COMPDAT");
 	    }
 	}
@@ -266,7 +267,7 @@ namespace Opm
                             well_data_[wix].target = wconinjes.wconinje[kw].THP_limit_;
                             break;
                         default:
-                            THROW("Unknown well control mode; WCONIJE  = "
+                            OPM_THROW(std::runtime_error, "Unknown well control mode; WCONIJE  = "
                                   << wconinjes.wconinje[kw].control_mode_
                                   << " in input file");
                         }
@@ -280,9 +281,9 @@ namespace Opm
                         }
                         if (itp == -1 || (injector_component != -1 && itp != injector_component)) {
                             if (itp == -1) {
-                                THROW("Error in injector specification, found no known fluid type.");
+                                OPM_THROW(std::runtime_error, "Error in injector specification, found no known fluid type.");
                             } else {
-                                THROW("Error in injector specification, we can only handle a single injection fluid.");
+                                OPM_THROW(std::runtime_error, "Error in injector specification, we can only handle a single injection fluid.");
                             }
                         } else {
                             injector_component = itp;
@@ -290,7 +291,7 @@ namespace Opm
                     }
                 }
                 if (!well_found) {
-                    THROW("Undefined well name: " << wconinjes.wconinje[kw].well_
+                    OPM_THROW(std::runtime_error, "Undefined well name: " << wconinjes.wconinje[kw].well_
                           << " in WCONINJE");
                 }
             }
@@ -354,14 +355,14 @@ namespace Opm
                             well_data_[wix].target = wconprods.wconprod[kw].THP_limit_;
                             break;
                         default:
-                            THROW("Unknown well control mode; WCONPROD  = "
+                            OPM_THROW(std::runtime_error, "Unknown well control mode; WCONPROD  = "
                                   << wconprods.wconprod[kw].control_mode_
                                   << " in input file");
                         }
                     }
                 }
                 if (!well_found) {
-                    THROW("Undefined well name: " << wconprods.wconprod[kw].well_
+                    OPM_THROW(std::runtime_error, "Undefined well name: " << wconprods.wconprod[kw].well_
                           << " in WCONPROD");
                 }
             }
@@ -386,7 +387,7 @@ namespace Opm
                     }
                 }
                 if (!well_found) {
-                    THROW("Undefined well name: " << weltargs.weltarg[kw].well_
+                    OPM_THROW(std::runtime_error, "Undefined well name: " << weltargs.weltarg[kw].well_
                           << " in WELTARG");
                 }
             }
@@ -458,7 +459,7 @@ namespace Opm
                                       const std::vector<double>& well_perf_fluxes)
     {
         // Input is per perforation, data members store for all cells.
-        ASSERT(perf_data_.dataSize() == int(well_perf_pressures.size()));
+        assert(perf_data_.dataSize() == int(well_perf_pressures.size()));
         well_cell_pressure_.resize(num_cells, -1e100);
         well_cell_flux_.resize(num_cells, 0.0);
         int pcount = 0;
@@ -470,7 +471,7 @@ namespace Opm
                 ++pcount;
             }
         }
-        ASSERT(pcount == perf_data_.dataSize());
+        assert(pcount == perf_data_.dataSize());
     }
 
     inline double BlackoilWells::wellToReservoirFlux(int cell) const
@@ -557,7 +558,7 @@ namespace Opm
             if (m >= 0) {
                 return m;
             } else {
-                THROW("Unknown well control mode = " << control << " in input file");
+                OPM_THROW(std::runtime_error, "Unknown well control mode = " << control << " in input file");
             }
         }
 
@@ -578,7 +579,7 @@ namespace Opm
             if (m >= 0) {
                 return m;
             } else {
-                THROW("Unknown well control mode = " << control << " in input file");
+                OPM_THROW(std::runtime_error, "Unknown well control mode = " << control << " in input file");
             }
         }
 

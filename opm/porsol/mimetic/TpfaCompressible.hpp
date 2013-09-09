@@ -29,6 +29,7 @@
 #include <opm/porsol/common/LinearSolverISTL.hpp>
 
 #include <array>
+#include <iostream>
 
 namespace Opm
 {
@@ -74,7 +75,7 @@ namespace Opm
                 break;
             }
             default:
-                THROW("Unhandled number of components: " << nc);
+                OPM_THROW(std::runtime_error, "Unhandled number of components: " << nc);
             }
             inflow_mixture_ = mix;
             linsolver_.init(param);
@@ -178,11 +179,11 @@ namespace Opm
                     bctypes_[face] = PressureAssembler::FBC_FLUX;
                     bcvalues_[face] = face_bc.outflux(); // TODO: may have to switch sign here depending on orientation.
                     if (bcvalues_[face] != 0.0) {
-                        THROW("Nonzero Neumann conditions not yet properly implemented "
+                        OPM_THROW(std::runtime_error, "Nonzero Neumann conditions not yet properly implemented "
                               "(signs must be fixed, also face pressures are not correctly computed for this case)");
                     }
                 } else {
-                    THROW("Unhandled boundary condition type.");
+                    OPM_THROW(std::runtime_error, "Unhandled boundary condition type.");
                 }
             }
 
@@ -448,7 +449,7 @@ namespace Opm
                     ++perfcount;
                 }
             }
-            ASSERT(perfcount == perf_wells_.size());
+            assert(perfcount == perf_wells_.size());
         }
 
 
@@ -559,7 +560,7 @@ namespace Opm
                 int cell = perf_cells_[perf];
                 typename GridInterface::Vector pos = pgrid_->cellCentroid(cell);
                 // With wells, we assume that gravity is in the z-direction.
-                ASSERT(gravity_[0] == 0.0 && gravity_[1] == 0.0);
+                assert(gravity_[0] == 0.0 && gravity_[1] == 0.0);
                 double depth_delta = pos[2] - pwells_->referenceDepth(well);
                 double gh = gravity_[2]*depth_delta;
                 // At is already transposed since in Fortran order.
@@ -751,7 +752,7 @@ namespace Opm
                     LinearSolverISTL::LinearSolverResults result
                         = linsolver_.solve(s.n, s.nnz, s.ia, s.ja, s.sa, &residual[0], s.x);
                     if (!result.converged) {
-                        THROW("Linear solver failed to converge in " << result.iterations << " iterations.\n"
+                        OPM_THROW(std::runtime_error, "Linear solver failed to converge in " << result.iterations << " iterations.\n"
                               << "Residual reduction achieved is " << result.reduction << '\n');
                     }
                     // Set x so that the call to computePressuresAndFluxes() will work.
@@ -784,7 +785,7 @@ namespace Opm
                     // Solve system.
                     LinearSolverISTL::LinearSolverResults res = linsolver_.solve(s.n, s.nnz, s.ia, s.ja, s.sa, s.b, s.x);
                     if (!res.converged) {
-                        THROW("Linear solver failed to converge in " << res.iterations << " iterations.\n"
+                        OPM_THROW(std::runtime_error, "Linear solver failed to converge in " << res.iterations << " iterations.\n"
                               << "Residual reduction achieved is " << res.reduction << '\n');
                     }
                 }
@@ -887,7 +888,7 @@ namespace Opm
                 LinearSolverISTL::LinearSolverResults result
                     = linsolver_.solve(s.n, s.nnz, s.ia, s.ja, s.sa, &residual[0], s.x);
                 if (!result.converged) {
-                    THROW("Linear solver failed to converge in " << result.iterations << " iterations.\n"
+                    OPM_THROW(std::runtime_error, "Linear solver failed to converge in " << result.iterations << " iterations.\n"
                           << "Residual reduction achieved is " << result.reduction << '\n');
                 }
 

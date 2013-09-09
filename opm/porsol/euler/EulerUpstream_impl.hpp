@@ -39,17 +39,18 @@
 
 
 
-#include <cassert>
-#include <cmath>
-#include <algorithm>
-#include <limits>
-
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/utility/Average.hpp>
 #include <opm/core/utility/Units.hpp>
 #include <dune/grid/common/Volumes.hpp>
 #include <opm/porsol/euler/CflCalculator.hpp>
 #include <opm/core/utility/StopWatch.hpp>
+
+#include <cassert>
+#include <cmath>
+#include <algorithm>
+#include <limits>
+#include <iostream>
 
 namespace Opm
 {
@@ -204,7 +205,7 @@ namespace Opm
 		if (repeats > max_repeats) {
 		    throw;
 		}
-		MESSAGE("Warning: Transport failed, retrying with more steps.");
+		OPM_MESSAGE("Warning: Transport failed, retrying with more steps.");
 		nr_transport_steps *= 2;
 		dt_transport = time/nr_transport_steps;
 		saturation = saturation_initial;
@@ -341,7 +342,7 @@ namespace Opm
 		if (clamp_sat_) {
 		    s[cell] = std::max(std::min(s[cell], 1.0), 0.0);
 		} else if (s[cell] > 1.001 || s[cell] < -0.001) {
-		    THROW("Saturation out of range in EulerUpstream: Cell " << cell << "   sat " << s[cell]);
+		    OPM_THROW(std::runtime_error, "Saturation out of range in EulerUpstream: Cell " << cell << "   sat " << s[cell]);
 		}
 	    }
 	}

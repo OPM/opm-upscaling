@@ -20,11 +20,13 @@
 #ifndef OPM_COMPONENTTRANSPORT_HEADER_INCLUDED
 #define OPM_COMPONENTTRANSPORT_HEADER_INCLUDED
 
-#include <array>
-#include <vector>
 #include <opm/porsol/blackoil/fluid/BlackoilDefs.hpp>
 #include <opm/porsol/blackoil/BlackoilFluid.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
+
+#include <array>
+#include <vector>
+#include <iostream>
 
 #include <stdlib.h>
 #include <float.h>
@@ -416,7 +418,7 @@ private: // Methods
                     if (std::fabs(ff_diff[phase]) > 1e-10) {
                         if (face_flux[face] != 0.0) {
                             double ff_deriv = ff_diff[phase]/(upwind_sat[phase] - fluid_data_.cell_data.saturation[downwind_cell][phase]);
-                            // ASSERT(ff_deriv >= 0.0);
+                            // assert(ff_deriv >= 0.0);
                             face_max_ff_deriv = std::max(face_max_ff_deriv, std::fabs(ff_deriv));
                         }
                     }
@@ -462,7 +464,7 @@ private: // Methods
         for (int perf = 0; perf < num_perf; ++perf) {
             int cell = perf_cells_[perf];
             double flow = perf_flow_[perf];
-            ASSERT(flow != 0.0);
+            assert(flow != 0.0);
             const TransportFluidData& fl = perf_props_[perf];
             // For injection, phase volumes depend on fractional
             // flow of injection perforation, for production we

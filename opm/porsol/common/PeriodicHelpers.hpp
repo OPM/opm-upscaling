@@ -38,10 +38,10 @@
 
 #include "BoundaryPeriodicity.hpp"
 #include "BoundaryConditions.hpp"
-#include <array>
 #include <dune/common/fvector.hh>
+#include <array>
 #include <algorithm>
-#include <boost/static_assert.hpp>
+#include <iostream>
 
 namespace Opm
 {
@@ -108,17 +108,17 @@ namespace Opm
 			const std::array<SatBC, 2*GridInterface::Dimension>& sconditions,
 			double spatial_tolerance = 1e-6)
     {
-	BOOST_STATIC_ASSERT(BCs::HasFlowConds);
-	BOOST_STATIC_ASSERT(BCs::HasSatConds);
+	static_assert(BCs::HasFlowConds, "");
+	static_assert(BCs::HasSatConds, "");
 	// Check the conditions given.
 	for (int i = 0; i < GridInterface::Dimension; ++i) {
 	    if (fconditions[2*i].isPeriodic()) {
-		ASSERT(fconditions[2*i + 1].isPeriodic());
-		ASSERT(fconditions[2*i].pressureDifference() == -fconditions[2*i + 1].pressureDifference());
-		ASSERT(sconditions[2*i].isPeriodic());
-		ASSERT(sconditions[2*i + 1].isPeriodic());
-		ASSERT(sconditions[2*i].saturationDifference() == 0.0);
-		ASSERT(sconditions[2*i + 1].saturationDifference() == 0.0);
+		assert(fconditions[2*i + 1].isPeriodic());
+		assert(fconditions[2*i].pressureDifference() == -fconditions[2*i + 1].pressureDifference());
+		assert(sconditions[2*i].isPeriodic());
+		assert(sconditions[2*i + 1].isPeriodic());
+		assert(sconditions[2*i].saturationDifference() == 0.0);
+		assert(sconditions[2*i + 1].saturationDifference() == 0.0);
 	    }
 	}
 	std::vector<BoundaryFaceInfo> bfinfo;
@@ -137,13 +137,13 @@ namespace Opm
 			const std::array<FlowBC, 2*GridInterface::Dimension>& fconditions,
 			double spatial_tolerance = 1e-6)
     {
-	BOOST_STATIC_ASSERT(BCs::HasFlowConds);
-	BOOST_STATIC_ASSERT(!BCs::HasSatConds);
+	static_assert(BCs::HasFlowConds, "");
+	static_assert(!BCs::HasSatConds, "");
 	// Check the conditions given.
 	for (int i = 0; i < GridInterface::Dimension; ++i) {
 	    if (fconditions[2*i].isPeriodic()) {
-		ASSERT(fconditions[2*i + 1].isPeriodic());
-		ASSERT(fconditions[2*i].pressureDifference() == -fconditions[2*i + 1].pressureDifference());
+		assert(fconditions[2*i + 1].isPeriodic());
+		assert(fconditions[2*i].pressureDifference() == -fconditions[2*i + 1].pressureDifference());
 	    }
 	}
 	std::vector<BoundaryFaceInfo> bfinfo;
@@ -161,13 +161,13 @@ namespace Opm
 			const std::array<SatBC, 2*GridInterface::Dimension>& sconditions,
 			double spatial_tolerance = 1e-6)
     {
-	BOOST_STATIC_ASSERT(!BCs::HasFlowConds);
-	BOOST_STATIC_ASSERT(BCs::HasSatConds);
+	static_assert(!BCs::HasFlowConds, "");
+	static_assert(BCs::HasSatConds, "");
 	// Check the conditions given.
 	for (int i = 0; i < GridInterface::Dimension; ++i) {
 	    if (sconditions[2*i].isPeriodic()) {
-		ASSERT(sconditions[2*i + 1].isPeriodic());
-		ASSERT(sconditions[2*i].saturationDifference() == -sconditions[2*i + 1].saturationDifference());
+		assert(sconditions[2*i + 1].isPeriodic());
+		assert(sconditions[2*i].saturationDifference() == -sconditions[2*i + 1].saturationDifference());
 	    }
 	}
 	std::vector<BoundaryFaceInfo> bfinfo;
@@ -250,7 +250,7 @@ namespace Opm
 	}
         int num_bdy = bface_iters.size();
 	if (max_bid != num_bdy) {
-	    THROW("createLinear() assumes that every boundary face has a unique boundary id. That seems to be violated.");
+	    OPM_THROW(std::runtime_error, "createLinear() assumes that every boundary face has a unique boundary id. That seems to be violated.");
 	}
         fbcs.resize(max_bid + 1);
 
@@ -276,7 +276,7 @@ namespace Opm
 		std::cerr << "Centroid: " << fcent << "\n";
 		std::cerr << "Bounding box min: " << low << "\n";
 		std::cerr << "Bounding box max: " << hi << "\n";
-		THROW("Boundary face centroid not on bounding box. Maybe the grid is not an axis-aligned shoe-box?");
+		OPM_THROW(std::runtime_error, "Boundary face centroid not on bounding box. Maybe the grid is not an axis-aligned shoe-box?");
 	    }
             double relevant_coord = fcent[pddir];
             double pressure = pdrop*(1.0 - (relevant_coord - cmin)/cdelta);

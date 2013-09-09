@@ -38,7 +38,6 @@
 
 
 #include <fstream>
-#include <boost/static_assert.hpp>
 #include <array>
 #include <opm/core/io/eclipse/EclipseGridInspector.hpp>
 
@@ -180,9 +179,9 @@ namespace Opm
         {
             PermeabilityKind kind = classifyPermeability(parser);
             if (kind == Invalid) {
-                THROW("Invalid set of permeability fields given.");
+                OPM_THROW(std::runtime_error, "Invalid set of permeability fields given.");
             }
-            ASSERT (tensor.size() == 1);
+            assert (tensor.size() == 1);
             for (int i = 0; i < 9; ++i) { kmap[i] = 0; }
 
             enum { xx, xy, xz,    // 0, 1, 2
@@ -280,7 +279,7 @@ namespace Opm
                                                               const double theta)
     {
         // This code is mostly copied from ReservoirPropertyCommon::init(...).
-        BOOST_STATIC_ASSERT(dim == 3);
+        static_assert(dim == 3, "");
 
         permfield_valid_.assign(global_cell.size(),
                                 std::vector<unsigned char>::value_type(0));
@@ -382,7 +381,7 @@ namespace Opm
     typename ReservoirPropertyCommon<dim, RPImpl, RockType>::PermTensor
     ReservoirPropertyCommon<dim, RPImpl, RockType>::permeability(int cell_index) const
     {
-        ASSERT (permfield_valid_[cell_index]);
+        assert (permfield_valid_[cell_index]);
 
         const PermTensor K(dim, dim, &permeability_[dim*dim*cell_index]);
         return K;
@@ -407,7 +406,7 @@ namespace Opm
     template<class Vector>
     void ReservoirPropertyCommon<dim, RPImpl, RockType>::phaseDensities(int /*cell_index*/, Vector& density) const
     {
-        ASSERT (density.size() >= NumberOfPhases);
+        assert (density.size() >= NumberOfPhases);
         density[0] = densityFirstPhase();
         density[1] = densitySecondPhase();
     }
@@ -515,7 +514,7 @@ namespace Opm
             std::string filename = grid_prefix + "-poro.dat";
             std::ofstream file(filename.c_str());
             if (!file) {
-                THROW("Could not open file " << filename);
+                OPM_THROW(std::runtime_error, "Could not open file " << filename);
             }
             file << num_cells << '\n';
             std::copy(porosity_.begin(), porosity_.end(), std::ostream_iterator<double>(file, "\n"));
@@ -525,7 +524,7 @@ namespace Opm
             std::string filename = grid_prefix + "-perm.dat";
             std::ofstream file(filename.c_str());
             if (!file) {
-                THROW("Could not open file " << filename);
+                OPM_THROW(std::runtime_error, "Could not open file " << filename);
             }
             file << num_cells << '\n';
             switch (permeability_kind_) {
@@ -548,7 +547,7 @@ namespace Opm
                 }
                 break;
             default:
-                THROW("Cannot write invalid permeability.");
+                OPM_THROW(std::runtime_error, "Cannot write invalid permeability.");
             }
         }
     }
@@ -578,7 +577,7 @@ namespace Opm
             int num_global_cells = dims[0]*dims[1]*dims[2];
             const std::vector<double>& poro = parser.getFloatingPointValue("PORO");
             if (int(poro.size()) != num_global_cells) {
-                THROW("PORO field must have the same size as the "
+                OPM_THROW(std::runtime_error, "PORO field must have the same size as the "
                       "logical cartesian size of the grid: "
                       << poro.size() << " != " << num_global_cells);
             }
@@ -599,7 +598,7 @@ namespace Opm
 	Opm::EclipseGridInspector insp(parser);
         std::array<int, 3> dims = insp.gridSize();
         int num_global_cells = dims[0]*dims[1]*dims[2];
-        ASSERT (num_global_cells > 0);
+        assert (num_global_cells > 0);
 
         permeability_.assign(dim * dim * global_cell.size(), 0.0);
 
@@ -609,12 +608,12 @@ namespace Opm
         const std::vector<double> zero(num_global_cells, 0.0);
         tensor.push_back(&zero);
 
-        BOOST_STATIC_ASSERT(dim == 3);
+        static_assert(dim == 3, "");
         std::array<int,9> kmap;
         permeability_kind_ = fillTensor(parser, tensor, kmap);
         for (int i = 1; i < int(tensor.size()); ++i) {
             if (int(tensor[i]->size()) != num_global_cells) {
-                THROW("All permeability fields must have the same size as the "
+                OPM_THROW(std::runtime_error, "All permeability fields must have the same size as the "
                       "logical cartesian size of the grid: "
                       << (tensor[i]->size()) << " != " << num_global_cells);
             }
@@ -665,7 +664,7 @@ namespace Opm
             int num_global_cells = dims[0]*dims[1]*dims[2];
             const std::vector<int>& satnum = parser.getIntegerValue("SATNUM");
             if (int(satnum.size()) != num_global_cells) {
-                THROW("SATNUM field must have the same size as the "
+                OPM_THROW(std::runtime_error, "SATNUM field must have the same size as the "
                       "logical cartesian size of the grid: "
                       << satnum.size() << " != " << num_global_cells);
             }
@@ -680,7 +679,7 @@ namespace Opm
             int num_global_cells = dims[0]*dims[1]*dims[2];
             const std::vector<int>& satnum = parser.getIntegerValue("ROCKTYPE");
             if (int(satnum.size()) != num_global_cells) {
-                THROW("ROCKTYPE field must have the same size as the "
+                OPM_THROW(std::runtime_error, "ROCKTYPE field must have the same size as the "
                       "logical cartesian size of the grid: "
                       << satnum.size() << " != " << num_global_cells);
             }
@@ -699,11 +698,11 @@ namespace Opm
     {
         std::ifstream rl(rock_list_file.c_str());
         if (!rl) {
-            THROW("Could not open file " << rock_list_file);
+            OPM_THROW(std::runtime_error, "Could not open file " << rock_list_file);
         }
         int num_rocks = -1;
         rl >> num_rocks;
-        ASSERT(num_rocks >= 1);
+        assert(num_rocks >= 1);
         rock_.resize(num_rocks);
         std::string dir(rock_list_file.begin(), rock_list_file.begin() + rock_list_file.find_last_of('/') + 1);
         for (int i = 0; i < num_rocks; ++i) {

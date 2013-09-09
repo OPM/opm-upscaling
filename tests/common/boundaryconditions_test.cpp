@@ -101,6 +101,7 @@ BOOST_AUTO_TEST_CASE(saturationboundarycondition)
     BOOST_CHECK(bc2.saturation() == 0.3);
 }
 
+
 BOOST_AUTO_TEST_CASE(saturationboundaryconditions)
 {
     BasicBoundaryConditions<false, true> bc1;
@@ -114,6 +115,7 @@ BOOST_AUTO_TEST_CASE(saturationboundaryconditions)
     BOOST_CHECK(bc2.satCond(1).isDirichlet());
     BOOST_CHECK(bc2.satCond(1).saturation() == 0.8);
 }
+
 
 BOOST_AUTO_TEST_CASE(surfvolboundaryconditions)
 {
@@ -134,3 +136,4 @@ BOOST_AUTO_TEST_CASE(surfvolboundaryconditions)
     BOOST_CHECK(bc2.surfvolCond(1).isDirichlet());
     BOOST_CHECK(bc2.surfvolCond(1).surfvol() == z);
 }
+

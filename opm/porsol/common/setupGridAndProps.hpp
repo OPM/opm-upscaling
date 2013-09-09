@@ -73,7 +73,7 @@ namespace Opm
         if (fileformat == "sintef_legacy") {
             std::string grid_prefix = param.get<std::string>("grid_prefix");
             grid.readSintefLegacyFormat(grid_prefix);
-            MESSAGE("Warning: We do not yet read legacy reservoir properties. Using defaults.");
+            OPM_MESSAGE("Warning: We do not yet read legacy reservoir properties. Using defaults.");
             res_prop.init(grid.size(0));
         } else if (fileformat == "eclipse") {
             std::string ecl_file = param.get<std::string>("filename");
@@ -118,10 +118,10 @@ namespace Opm
             double default_poro = param.getDefault("default_poro", 0.2);
             double default_perm_md = param.getDefault("default_perm_md", 100.0);
             double default_perm = Opm::unit::convert::from(default_perm_md, Opm::prefix::milli*Opm::unit::darcy);
-            MESSAGE("Warning: For generated cartesian grids, we use uniform reservoir properties.");
+            OPM_MESSAGE("Warning: For generated cartesian grids, we use uniform reservoir properties.");
             res_prop.init(grid.size(0), default_poro, default_perm);
         } else {
-            THROW("Unknown file format string: " << fileformat);
+            OPM_THROW(std::runtime_error, "Unknown file format string: " << fileformat);
         }
         if (param.getDefault("use_unique_boundary_ids", false)) {
             grid.setUniqueBoundaryIds(true);
@@ -176,10 +176,10 @@ namespace Opm
             new (&grid) Dune::SGrid<3, 3>(&dims[0], &cellsz[0]);
             double default_poro = param.getDefault("default_poro", 0.2);
             double default_perm = param.getDefault("default_perm", 100.0*Opm::prefix::milli*Opm::unit::darcy);
-            MESSAGE("Warning: For generated cartesian grids, we use uniform reservoir properties.");
+            OPM_MESSAGE("Warning: For generated cartesian grids, we use uniform reservoir properties.");
             res_prop.init(grid.size(0), default_poro, default_perm);
         } else {
-            THROW("Dune::SGrid can only handle cartesian grids, unsupported file format string: " << fileformat);
+            OPM_THROW(std::runtime_error, "Dune::SGrid can only handle cartesian grids, unsupported file format string: " << fileformat);
         }
     }
 

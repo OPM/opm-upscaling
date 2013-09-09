@@ -132,7 +132,7 @@ namespace Opm
         FlowBC(BCType type, double value)
             : BCBase<double>(type, value)
         {
-	    ASSERT(isNeumann() || isDirichlet() || isPeriodic());
+	    assert(isNeumann() || isDirichlet() || isPeriodic());
         }
 
 	/// @brief Forwarding the relevant type queries.
@@ -144,21 +144,27 @@ namespace Opm
 	/// @return the pressure condition value
         double pressure() const
         {
-            ASSERT (isDirichlet());
+#ifndef NDEBUG
+            OPM_ERROR_IF(!isDirichlet(), "Pressure boundary conditions are only valid for Dirichlet boundaries");
+#endif
             return value_;
         }
 	/// @brief Query a Neumann condition.
 	/// @return the outwards flux condition value.
         double outflux() const
         {
-            ASSERT (isNeumann());
+#ifndef NDEBUG
+            OPM_ERROR_IF(!isNeumann(), "Outflux boundary conditions are only valid for Neumann boundaries");
+#endif
             return value_;
         }
 	/// @brief Query a Periodic condition.
 	/// @return the pressure difference condition value.
         double pressureDifference() const
         {
-            ASSERT (isPeriodic());
+#ifndef NDEBUG
+            OPM_ERROR_IF(!isPeriodic(), "Pressure difference boundary conditions are only valid for periodic boundaries");
+#endif
             return value_;
         }
     };
@@ -180,7 +186,7 @@ namespace Opm
         SatBC(BCType type, double value)
             : BCBase<double>(type, value)
         {
-	    ASSERT(isDirichlet() || isPeriodic());
+	    assert(isDirichlet() || isPeriodic());
         }
 	/// @brief Forwarding the relevant type queries.
 	using BCBase<double>::isDirichlet;
@@ -190,14 +196,14 @@ namespace Opm
 	/// @return the boundary saturation value
         double saturation() const
         {
-            ASSERT (isDirichlet());
+            assert (isDirichlet());
             return value_;
         }
 	/// @brief Query a Periodic condition.
 	/// @return the saturation difference value.
         double saturationDifference() const
         {
-            ASSERT (isPeriodic());
+            assert (isPeriodic());
             return value_;
         }
     };
@@ -220,7 +226,7 @@ namespace Opm
         explicit SurfvolBC(Dune::FieldVector<double, numComponents> value)
             : Base(Base::Dirichlet, value)
         {
-	    ASSERT(isDirichlet());
+	    assert(isDirichlet());
         }
 	/// @brief Forwarding the relevant type query.
 	using Base::isDirichlet;
@@ -272,29 +278,29 @@ namespace Opm
 
         void setPeriodicPartners(int boundary_id_1, int boundary_id_2)
         {
-            ASSERT(boundary_id_1 >= 0 && boundary_id_1 < int(periodic_partner_bid_.size()));
-            ASSERT(boundary_id_2 >= 0 && boundary_id_2 < int(periodic_partner_bid_.size()));
-            ASSERT(periodic_partner_bid_[boundary_id_1] == 0);
-            ASSERT(periodic_partner_bid_[boundary_id_2] == 0);
+            assert(boundary_id_1 >= 0 && boundary_id_1 < int(periodic_partner_bid_.size()));
+            assert(boundary_id_2 >= 0 && boundary_id_2 < int(periodic_partner_bid_.size()));
+            assert(periodic_partner_bid_[boundary_id_1] == 0);
+            assert(periodic_partner_bid_[boundary_id_2] == 0);
             periodic_partner_bid_[boundary_id_1] = boundary_id_2;
             periodic_partner_bid_[boundary_id_2] = boundary_id_1;
         }
 
         int getPeriodicPartner(int boundary_id) const
         {
-            ASSERT(boundary_id >= 0 && boundary_id < int(periodic_partner_bid_.size()));
+            assert(boundary_id >= 0 && boundary_id < int(periodic_partner_bid_.size()));
             return periodic_partner_bid_[boundary_id];
         }
 
 	void setCanonicalBoundaryId(int boundary_id, int canonical_bid)
 	{
-	    ASSERT(boundary_id >= 0 && boundary_id < int(canonical_bid_.size()));
+	    assert(boundary_id >= 0 && boundary_id < int(canonical_bid_.size()));
             canonical_bid_[boundary_id] = canonical_bid;
 	}
 
         int getCanonicalBoundaryId(int boundary_id) const
         {
-            ASSERT(boundary_id >= 0 && boundary_id < int(canonical_bid_.size()));
+            assert(boundary_id >= 0 && boundary_id < int(canonical_bid_.size()));
             return canonical_bid_[boundary_id];
         }
 
@@ -397,7 +403,7 @@ namespace Opm
         template <class BoundaryFace>
 	const FlowBC& flowCond(const BoundaryFace& bf) const
 	{
-            ASSERT(bf.boundary());
+            assert(bf.boundary());
 	    return FlowConds::operator[](bf.boundaryId());
 	}
 
@@ -414,7 +420,7 @@ namespace Opm
         template <class BoundaryFace>
 	const SatBC& satCond(const BoundaryFace& bf) const
 	{
-            ASSERT(bf.boundary());
+            assert(bf.boundary());
 	    return SatConds::operator[](bf.boundaryId());
 	}
 
@@ -431,7 +437,7 @@ namespace Opm
         template <class BoundaryFace>
 	const SurfvolBC<numComponents>& surfvolCond(const BoundaryFace& bf) const
 	{
-            ASSERT(bf.boundary());
+            assert(bf.boundary());
 	    return SurfvolConds::operator[](bf.boundaryId());
 	}
 

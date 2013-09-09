@@ -51,14 +51,14 @@ namespace Opm
         {
 	    const int region_number = 0;
 	    if (pvtw.size() != 1) {
-		THROW("More than one PVD-region");
+		OPM_THROW(std::runtime_error, "More than one PVD-region");
 	    }
             ref_press_ = pvtw[region_number][0];
             ref_B_     = pvtw[region_number][1];
             comp_      = pvtw[region_number][2];
             viscosity_ = pvtw[region_number][3];
             if (pvtw[region_number].size() > 4 && pvtw[region_number][4] != 0.0) {
-                THROW("MiscibilityWater does not support 'viscosibility'.");
+                OPM_THROW(std::runtime_error, "MiscibilityWater does not support 'viscosibility'.");
             }
         }
 

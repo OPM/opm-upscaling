@@ -37,13 +37,6 @@
 #ifndef OPENRS_EULERUPSTREAMIMPLICIT_IMPL_HEADER
 #define OPENRS_EULERUPSTREAMIMPLICIT_IMPL_HEADER
 
-#include <cmath>
-#include <algorithm>
-#include <limits>
-#include <vector>
-
-#include <array>
-
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/utility/Average.hpp>
 #include <opm/core/utility/Units.hpp>
@@ -51,6 +44,13 @@
 #include <opm/core/utility/StopWatch.hpp>
 #include <opm/porsol/common/ImplicitTransportDefs.hpp>
 #include <opm/core/pressure/tpfa/trans_tpfa.h>
+
+#include <cmath>
+#include <algorithm>
+#include <limits>
+#include <vector>
+#include <array>
+#include <iostream>
 
 namespace Opm
 {
@@ -156,7 +156,7 @@ namespace Opm
         direclet_sat_.resize(0);
         direclet_hfaces_.resize(0);
 
-        ASSERT(periodic_cells_.size()==0);
+        assert(periodic_cells_.size()==0);
         for (CIt c = g.cellbegin(); c != g.cellend(); ++c) {
             int cell0 = c->index();
             for (FIt f = c->facebegin(); f != c->faceend(); ++f) {
@@ -167,9 +167,9 @@ namespace Opm
                     bf_ind+=1;
                     if (b.satCond(*f).isPeriodic()) {
                         nbface = bid_to_face[b.getPeriodicPartner(f->boundaryId())];
-                        ASSERT(nbface != f);
+                        assert(nbface != f);
                         int cell1 = nbface->cellIndex();
-                        ASSERT(cell0 != cell1);
+                        assert(cell0 != cell1);
 
                         int f_ind=f->index();
 
@@ -177,10 +177,10 @@ namespace Opm
                         // mapping face indices
                         f_ind=egf_cf[f_ind];
                         fn_ind=egf_cf[fn_ind];
-                        ASSERT((c_grid.face_cells[2*f_ind]==-1) || (c_grid.face_cells[2*f_ind+1]==-1));
-                        ASSERT((c_grid.face_cells[2*fn_ind]==-1) || (c_grid.face_cells[2*fn_ind+1]==-1));
-                        ASSERT((c_grid.face_cells[2*f_ind]==cell0) || (c_grid.face_cells[2*f_ind+1]==cell0));
-                        ASSERT((c_grid.face_cells[2*fn_ind]==cell1) || (c_grid.face_cells[2*fn_ind+1]==cell1));
+                        assert((c_grid.face_cells[2*f_ind]==-1) || (c_grid.face_cells[2*f_ind+1]==-1));
+                        assert((c_grid.face_cells[2*fn_ind]==-1) || (c_grid.face_cells[2*fn_ind+1]==-1));
+                        assert((c_grid.face_cells[2*f_ind]==cell0) || (c_grid.face_cells[2*f_ind+1]==cell0));
+                        assert((c_grid.face_cells[2*fn_ind]==cell1) || (c_grid.face_cells[2*fn_ind+1]==cell1));
                         periodic_cells_.push_back(cell0);
                         periodic_cells_.push_back(cell1);
                         periodic_faces_.push_back(f_ind);
@@ -299,7 +299,7 @@ namespace Opm
                 if(repeats >max_repeats_){
                     finished=true;
                 }else{
-                    MESSAGE("Warning: Transport failed, retrying with more steps.");
+                    OPM_MESSAGE("Warning: Transport failed, retrying with more steps.");
                     nr_transport_steps *= 2;
                     dt_transport = time/nr_transport_steps;
                     if (ctrl_.verbosity){
@@ -345,7 +345,7 @@ namespace Opm
                 if (clamp_sat_) {
                     s[cell] = std::max(std::min(s[cell], 1.0), 0.0);
                 } else if (s[cell] > 1.001 || s[cell] < -0.001) {
-                    THROW("Saturation out of range in EulerUpstreamImplicit: Cell " << cell << "   sat " << s[cell]);
+                    OPM_THROW(std::runtime_error, "Saturation out of range in EulerUpstreamImplicit: Cell " << cell << "   sat " << s[cell]);
                 }
             }
         }

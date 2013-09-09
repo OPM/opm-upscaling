@@ -5,7 +5,7 @@
 // Created: Wed Sep  3 14:49:08 2008
 //
 // Author(s): Atgeirr F Rasmussen <atgeirr@sintef.no>
-//            Bjørn Spjelkavik    <bsp@sintef.no>
+//            Bjï¿½rn Spjelkavik    <bsp@sintef.no>
 //
 // $Date$
 //
@@ -36,8 +36,7 @@
 #ifndef OPENRS_MATRIXINVERSE_HEADER
 #define OPENRS_MATRIXINVERSE_HEADER
 
-#include <boost/type_traits/is_integral.hpp>
-#include <boost/static_assert.hpp>
+#include <type_traits>
 
     /** Inverting small matrices.
      *  Inverting 2x2 and 3x3 matrices. Not meant to extend to large systems,
@@ -53,8 +52,8 @@ namespace Opm {
 	    // Because then the divisions below would compile but not be correct, we must guard
 	    // against integral types.
 	    typedef typename M::value_type T;
-	    BOOST_STATIC_ASSERT(!boost::is_integral<T>::value);
-	    ASSERT(m.numRows() == 2 && m.numCols() == 2);
+	    static_assert(!std::is_integral<T>::value, "");
+	    assert(m.numRows() == 2 && m.numCols() == 2);
 
 	    T det = m(0,0)*m(1,1) - m(0,1)*m(1,0);
 	    M mi(2, 2, (double*)0);
@@ -70,7 +69,7 @@ namespace Opm {
 	M matprod(const M& m1, const M& m2)
 	{
 	    typedef typename M::value_type T;
-	    ASSERT(m1.numCols() == m2.numRows());
+	    assert(m1.numCols() == m2.numRows());
 	    int num_contracting = m1.numCols();
 	    M m(m1.numRows(), m2.numCols(), (double*)0);
 	    for (int r = 0; r < m1.numRows(); ++r) {
@@ -90,8 +89,8 @@ namespace Opm {
 	    // Because then the divisions below would compile but not be correct, we must guard
 	    // against integral types.
 	    typedef typename M::value_type T;
-	    BOOST_STATIC_ASSERT(!boost::is_integral<T>::value);
-	    ASSERT(m.numRows() == 3 && m.numCols() == 3);
+	    static_assert(!std::is_integral<T>::value, "");
+	    assert(m.numRows() == 3 && m.numCols() == 3);
 // 	    double det = m(0,0)*(m(1,1)*m(2,2)-m(1,2)*m(2,1))
 // 		- m(0,1)*(m(1,0)*m(2,2)-m(1,2)*m(2,0))
 // 		+ m(0,2)*(m(1,0)*m(2,1)-m(1,1)*m(2,0));

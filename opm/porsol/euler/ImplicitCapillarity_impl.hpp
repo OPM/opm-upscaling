@@ -36,12 +36,6 @@
 #ifndef OPENRS_IMPLICITCAPILLARITY_IMPL_HEADER
 #define OPENRS_IMPLICITCAPILLARITY_IMPL_HEADER
 
-
-
-#include <cassert>
-#include <cmath>
-#include <algorithm>
-
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/utility/Average.hpp>
 #include <opm/core/utility/Units.hpp>
@@ -49,6 +43,11 @@
 #include <dune/grid/common/Volumes.hpp>
 #include <opm/porsol/common/ReservoirPropertyFixedMobility.hpp>
 #include <opm/porsol/euler/MatchSaturatedVolumeFunctor.hpp>
+
+#include <cassert>
+#include <cmath>
+#include <algorithm>
+#include <iostream>
 
 namespace Opm
 {
@@ -241,7 +240,7 @@ namespace Opm
 		if (clamp_sat_) {
 		    s[cell] = std::max(std::min(s[cell], 1.0), 0.0);
 		} else if (s[cell] > 1.001 || s[cell] < -0.001) {
-		    THROW("Saturation out of range in ImplicitCapillarity: Cell " << cell << "   sat " << s[cell]);
+		    OPM_THROW(std::runtime_error, "Saturation out of range in ImplicitCapillarity: Cell " << cell << "   sat " << s[cell]);
 		}
 	    }
 	}

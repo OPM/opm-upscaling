@@ -73,7 +73,7 @@ namespace Opm {
 		double flux = std::max(flux_n, flux_p);
 		double loc_dt = (resprop.cflFactor()*c->volume()*resprop.porosity(c->index()))/flux;
 		if (loc_dt == 0.0) {
-		    THROW("Cfl computation gave dt = 0.0");
+		    OPM_THROW(std::runtime_error, "Cfl computation gave dt = 0.0");
 		}
 		if (loc_dt < dt){
 		    dt = loc_dt;
