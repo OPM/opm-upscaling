@@ -43,7 +43,7 @@
 using namespace std;
 
 
-int main(int argc, char** argv) {        
+int main(int argc, char** argv) try {        
     if (argc ==  1) { // If no arguments supplied 
         cout << "Usage: grdecldips gridfilename=foo.grdecl [mincellvolume=1e-8] " << endl;
         cout << "       [listallcells=false] [output=filename.txt]" << endl;
@@ -148,4 +148,9 @@ int main(int argc, char** argv) {
     }
     return 0;
     
-};
+}
+catch (const std::exception &e) {
+    std::cerr << "Program threw an exception: " << e.what() << "\n";
+    throw;
+}
+

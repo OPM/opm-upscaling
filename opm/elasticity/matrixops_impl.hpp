@@ -10,6 +10,8 @@
 //!
 //==============================================================================
 
+#include <iostream>
+
 void MatrixOps::fromAdjacency(Matrix& A, const std::vector< std::set<int> >& adj,
                               int rows, int cols)
 {

@@ -41,6 +41,7 @@
 //#include <opm/upscaling/UpscalingTraits.hpp>
 #include <opm/porsol/euler/EulerUpstreamImplicit.hpp>
 #include <opm/porsol/common/SimulatorTraits.hpp>
+#include <iostream>
 namespace Opm{
 	template <class IsotropyPolicy>
     struct Implicit
@@ -63,6 +64,7 @@ namespace Opm{
 using namespace Opm;
 
 int main(int argc, char** argv)
+try
 {
     // Initialize.
     Opm::parameter::ParameterGroup param(argc, argv);
@@ -71,3 +73,8 @@ int main(int argc, char** argv)
     SteadyStateUpscalerManagerImplicit<upscaler_t> mgr;
     mgr.upscale(param);
 }
+catch (const std::exception &e) {
+    std::cerr << "Program threw an exception: " << e.what() << "\n";
+    throw;
+}
+

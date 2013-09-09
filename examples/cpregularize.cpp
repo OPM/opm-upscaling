@@ -51,6 +51,7 @@
 
 
 int main(int argc, char** argv)
+try
 {
    if (argc == 1) {
         std::cout << "Usage: cpregularize gridfilename=filename.grdecl [ires=5] [jres=5] [zres=5] " << std::endl;
@@ -258,4 +259,9 @@ int main(int argc, char** argv)
     
     out.close();
 }
+catch (const std::exception &e) {
+    std::cerr << "Program threw an exception: " << e.what() << "\n";
+    throw;
+}
+
 

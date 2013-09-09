@@ -15,6 +15,8 @@
 
 #include "boundarygrid.hh"
 
+#include <iostream>
+
 
 namespace Opm {
 namespace Elasticity {

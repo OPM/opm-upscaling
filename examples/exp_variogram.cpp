@@ -52,6 +52,7 @@
 
 
 int main(int argc, char** argv)
+try
 {
     Opm::parameter::ParameterGroup param(argc, argv);
     std::string gridfilename = param.get<std::string>("gridfilename");
@@ -253,3 +254,8 @@ int main(int argc, char** argv)
     
     std::cout << outputtmp.str();
 }
+catch (const std::exception &e) {
+    std::cerr << "Program threw an exception: " << e.what() << "\n";
+    throw;
+}
+

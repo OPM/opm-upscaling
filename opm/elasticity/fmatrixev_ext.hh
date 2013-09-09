@@ -1,6 +1,8 @@
 #ifndef DUNE_FMATRIXEIGENVALUES_EXT_HH
 #define DUNE_FMATRIXEIGENVALUES_EXT_HH
 
+#include <iostream>
+
 namespace Opm {
 
 namespace FMatrixHelp {

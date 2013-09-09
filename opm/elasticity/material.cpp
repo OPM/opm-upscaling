@@ -13,7 +13,9 @@
 #include "config.h"
 #include "material.hh"
 #include "materials.hh"
+
 #include <fstream>
+#include <iostream>
 
 namespace Opm {
 namespace Elasticity {

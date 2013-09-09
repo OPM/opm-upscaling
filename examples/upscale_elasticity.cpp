@@ -213,6 +213,7 @@ void writeOutput(const Params& p, Opm::time::StopWatch& watch, int cells,
 
 //! \brief Main driver
 int main(int argc, char** argv)
+try
 {
   try {
     static const int dim = 3;
@@ -346,3 +347,8 @@ int main(int argc, char** argv)
   }
   return 1;
 }
+catch (const std::exception &e) {
+    std::cerr << "Program threw an exception: " << e.what() << "\n";
+    throw;
+}
+

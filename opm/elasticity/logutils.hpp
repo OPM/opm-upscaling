@@ -12,6 +12,8 @@
 #ifndef LOGUTILS_HPP_
 #define LOGUTILS_HPP_
 
+#include <iostream>
+
 class LoggerHelper {
   public:
     LoggerHelper(int max_, int chunks, int minsize)
