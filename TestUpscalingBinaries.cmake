@@ -62,6 +62,11 @@ macro (add_test_upscale_perm gridname bcs rows)
                        run_upscale_perm_BC${bcs}_${gridname})
 endmacro (add_test_upscale_perm gridname bcs)
 
+# Make sure that we build the helper executable before running tests
+# (the "tests" target is setup in OpmLibMain.cmake)
+add_dependencies (tests upscale_perm)
+add_dependencies (tests compare_upscaling_results)
+
 # Add tests for different models
 add_test_upscale_perm(PeriodicTilted p 3)
 add_test_upscale_perm(27cellsAniso flp 9)
