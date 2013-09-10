@@ -25,11 +25,11 @@
 
 #include <opm/core/io/eclipse/EclipseGridParser.hpp>
 
-#include <opm/common/exceptions.hh>
-#include <opm/material/fluidsystems/brineco2fluidsystem.hh>
-#include <opm/material/fluidstates/compositionalfluidstate.hh>
-#include <opm/material/constraintsolvers/misciblemultiphasecomposition.hh>
-#include <opm/material/constraintsolvers/computefromreferencephase.hh>
+#include <opm/common/Exceptions.hpp>
+#include <opm/material/fluidsystems/BrineCO2FluidSystem.hpp>
+#include <opm/material/fluidstates/CompositionalFluidState.hpp>
+#include <opm/material/constraintsolvers/MiscibleMultiPhaseComposition.hpp>
+#include <opm/material/constraintsolvers/ComputeFromReferencePhase.hpp>
 #include <opm/porsol/blackoil/co2fluid/benchmark3co2tables.hh>
 
 #include <opm/porsol/blackoil/fluid/MiscibilityProps.hpp>
