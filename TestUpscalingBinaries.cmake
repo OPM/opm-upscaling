@@ -45,14 +45,14 @@ file(MAKE_DIRECTORY ${RESULT_PATH})
 # and that upscale_perm_BC${bcs}_${gridname}.txt is found in ${INPUT_DATA_PATH}reference_solutions
 macro (add_test_upscale_perm gridname bcs rows)
   # Add test that runs upscale_perm and outputs the results to file
-  add_test(run_upscale_perm_BC${bcs}_${gridname}
-           ${PROJECT_BINARY_DIR}/bin/upscale_perm
+  add_test(NAME run_upscale_perm_BC${bcs}_${gridname}
+           COMMAND upscale_perm
            -bc ${bcs}
            -output ${RESULT_PATH}upscale_perm_BC${bcs}_${gridname}.txt
            ${INPUT_DATA_PATH}grids/${gridname}.grdecl)
   # Add test that compare the results from the previous test with a reference solution
-  add_test(compare_upscale_perm_BC${bcs}_${gridname}
-           ${PROJECT_BINARY_DIR}/bin/compare_upscaling_results
+  add_test(NAME compare_upscale_perm_BC${bcs}_${gridname}
+           COMMAND compare_upscaling_results
            ${INPUT_DATA_PATH}reference_solutions/upscale_perm_BC${bcs}_${gridname}.txt
            ${RESULT_PATH}upscale_perm_BC${bcs}_${gridname}.txt
            ${tol}
@@ -61,6 +61,11 @@ macro (add_test_upscale_perm gridname bcs rows)
   set_tests_properties(compare_upscale_perm_BC${bcs}_${gridname} PROPERTIES DEPENDS
                        run_upscale_perm_BC${bcs}_${gridname})
 endmacro (add_test_upscale_perm gridname bcs)
+
+# Make sure that we build the helper executable before running tests
+# (the "tests" target is setup in OpmLibMain.cmake)
+add_dependencies (tests upscale_perm)
+add_dependencies (tests compare_upscaling_results)
 
 # Add tests for different models
 add_test_upscale_perm(PeriodicTilted p 3)
