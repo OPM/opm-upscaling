@@ -23,6 +23,8 @@
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/utility/SparseTable.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <dune/common/fvector.hh>
+
 #include <vector>
 
 namespace Opm

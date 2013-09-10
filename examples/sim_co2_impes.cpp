@@ -21,29 +21,27 @@
 
 #include "config.h"
 
-#include <opm/porsol/blackoil/BlackoilSimulator.hpp>
 
 #include <dune/common/version.hh>
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
 #include <dune/common/parallel/mpihelper.hh>
 #else
-#include <dune/common/mpihelper.hh>
 #endif
 
 #include <opm/porsol/common/SimulatorUtilities.hpp>
-#include <dune/grid/CpGrid.hpp>
 #include <opm/porsol/common/Rock.hpp>
-#include <opm/core/utility/StopWatch.hpp>
-
 #include <opm/porsol/blackoil/co2fluid/BlackoilCo2PVT.hpp>
-namespace Opm
-{
-    typedef Opm::BlackoilCo2PVT BlackoilPVT;
-}
+#include <opm/porsol/blackoil/BlackoilSimulator.hpp>
 #include <opm/porsol/blackoil/BlackoilFluid.hpp>
 #include <opm/porsol/blackoil/BlackoilWells.hpp>
 #include <opm/porsol/mimetic/TpfaCompressible.hpp>
 #include <opm/porsol/blackoil/ComponentTransport.hpp>
+
+#include <opm/core/utility/StopWatch.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+
+#include <dune/grid/CpGrid.hpp>
+#include <dune/common/mpihelper.hh>
 
 #include <iostream>
 

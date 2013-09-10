@@ -48,6 +48,8 @@
 //#include <opm/core/utility/Units.hpp>
 //#include <dune/grid/common/Volumes.hpp>
 
+#include <opm/porsol/common/Matrix.hpp>
+
 #ifdef USE_TBB
 #include <tbb/parallel_for.h>
 #endif

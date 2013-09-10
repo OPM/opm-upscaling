@@ -23,6 +23,7 @@
 
 #include <opm/porsol/blackoil/fluid/FluidMatrixInteractionBlackoil.hpp>
 #include <opm/porsol/blackoil/fluid/FluidStateBlackoil.hpp>
+#include <opm/porsol/blackoil/fluid/BlackoilPVT.hpp>
 #include <dune/common/fvector.hh>
 #include <vector>
 
