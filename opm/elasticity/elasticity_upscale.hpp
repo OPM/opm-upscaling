@@ -14,6 +14,7 @@
 
 #include <dune/common/fmatrix.hh>
 #include <opm/core/io/eclipse/EclipseGridParser.hpp>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <dune/grid/common/mcmgmapper.hh>
 #include <dune/geometry/quadraturerules.hh>
 #include <dune/istl/ilu.hh>

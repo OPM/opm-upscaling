@@ -10,7 +10,14 @@
 //!
 //==============================================================================
 
+#include <dune/common/dynmatrix.hh>
+#include <dune/common/fmatrix.hh>
+
 #include <iostream>
+#include <fstream>
+
+namespace Opm {
+namespace Elasticity {
 
 void MatrixOps::fromAdjacency(Matrix& A, const std::vector< std::set<int> >& adj,
                               int rows, int cols)
@@ -263,3 +270,5 @@ Matrix MatrixOps::extractBlock(const Matrix& A, size_t r0, size_t N,
 
   return result;
 }
+
+}}
