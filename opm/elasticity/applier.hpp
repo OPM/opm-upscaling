@@ -27,6 +27,10 @@ struct OperatorApplier
 
   void apply(Vector& v, Vector& d);
 
+  void pre(Vector& x, Vector& b);
+
+  void post(Vector& x);
+
   T& A;
 };
 
@@ -44,6 +48,28 @@ void InverseApplier::apply(Vector& v, Vector& d)
 void PreApplier::apply(Vector& v, Vector& d)
 {
   A.apply(v, d);
+}
+
+  template<>
+void InverseApplier::pre(Vector& x, Vector& b)
+{
+}
+
+  template<>
+void PreApplier::pre(Vector& x, Vector& b)
+{
+  A.pre(x,b);
+}
+
+  template<>
+void InverseApplier::post(Vector& x)
+{
+}
+
+  template<>
+void PreApplier::post(Vector& x)
+{
+  A.post(x);
 }
 
 }

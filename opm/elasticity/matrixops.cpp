@@ -1,17 +1,20 @@
 //==============================================================================
 //!
-//! \file matrixops_impl.hpp
+//! \file matrixops.cpp
 //!
 //! \date Nov 9 2011
 //!
 //! \author Arne Morten Kvarving / SINTEF
 //!
-//! \brief Helper class with some matrix operations - template implementations
+//! \brief Helper class with some matrix operations
 //!
 //==============================================================================
 
-#include <dune/common/dynmatrix.hh>
-#include <dune/common/fmatrix.hh>
+#if HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include "matrixops.hpp"
 
 #include <iostream>
 #include <fstream>
