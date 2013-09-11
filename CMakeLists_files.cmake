@@ -33,6 +33,7 @@ list (APPEND MAIN_SOURCE_FILES
 	opm/elasticity/dynmatrixev.cpp
 	opm/elasticity/material.cpp
 	opm/elasticity/materials.cpp
+	opm/elasticity/matrixops.cpp
 	opm/elasticity/mpc.cpp
 	)
 
@@ -54,6 +55,8 @@ list (APPEND TEST_DATA_FILES
   tests/input_data/reference_solutions/upscale_perm_BCflp_27cellsIso.txt 
   tests/input_data/reference_solutions/upscale_perm_BCfl_EightCells.txt 
   tests/input_data/reference_solutions/upscale_perm_BCflp_Hummocky.txt 
+  tests/input_data/reference_solutions/upscale_elasticity_mpc_EightCells.txt
+  tests/input_data/reference_solutions/upscale_elasticity_mortar_EightCells.txt
 	)
 
 # originally generated with the command:
@@ -122,7 +125,6 @@ list (APPEND PUBLIC_HEADER_FILES
 	opm/elasticity/material.hh
 	opm/elasticity/materials.hh
 	opm/elasticity/matrixops.hpp
-	opm/elasticity/matrixops_impl.hpp
 	opm/elasticity/mortar_evaluator.hpp
 	opm/elasticity/mortar_schur.hpp
 	opm/elasticity/mortar_schur_precond.hpp

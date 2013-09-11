@@ -12,8 +12,9 @@
 #ifndef MATRIXOPS_HPP_
 #define MATRIXOPS_HPP_
 
-#include <dune/istl/bcrsmatrix.hh>
+#include <dune/common/fmatrix.hh> 
 #include <dune/common/dynmatrix.hh>
+#include <dune/istl/bcrsmatrix.hh>
 
 namespace Opm {
 namespace Elasticity {
@@ -87,7 +88,5 @@ class MatrixOps {
 
 }
 }
-
-#include "matrixops_impl.hpp"
 
 #endif
