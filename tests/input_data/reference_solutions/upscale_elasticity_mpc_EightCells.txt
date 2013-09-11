@@ -1,0 +1,34 @@
+######################################################################
+# Results from upscaling elastic moduli.
+#
+# Finished: Wed Sep 11 18:12:59 2013
+# Hostname: SINTEFPC4169
+#
+# Upscaling time: 0.007932 secs
+#
+# Eclipse file: ../grids/EightCells.grdecl
+#	 cells: 8
+#
+# Options used:
+#	         method: mpc
+#	 linsolver_type: iterative
+#	           ltol: 1e-08
+#
+# Materials: 8
+#	 Material1: 12.5%
+#	 Material2: 12.5%
+#	 Material3: 12.5%
+#	 Material4: 12.5%
+#	 Material5: 12.5%
+#	 Material6: 12.5%
+#	 Material7: 12.5%
+#	 Material8: 12.5%
+#
+######################################################################
+10.826 2.35184 1.62527 0 0 0
+2.35184 10.4438 1.58162 0 0 0
+1.62527 1.58162 7.50613 0 0 0
+0 0 0 3.01461 0 0
+0 0 0 0 3.08606 0
+0 0 0 0 0 3.69018
+
