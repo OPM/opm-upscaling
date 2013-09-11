@@ -342,7 +342,7 @@ try
                     if (satnums[cell_idx] > 0) { // Satnum zero is "no rock"
                         cellVolumes[cell_idx] = c->geometry().volume();
                         cellPoreVolumes[cell_idx] = cellVolumes[cell_idx] * poros[cell_idx];
-                        double Pcmincandidate, Pcmaxcandidate, minSw, maxSw;
+                        double Pcmincandidate = 0.0, Pcmaxcandidate = 0.0, minSw, maxSw;
                         if (!anisorocks) {
                             if (cappres) {
                                 Pcmincandidate = jfuncendpoints_[int(satnums[cell_idx])-1][1]
