@@ -12,6 +12,8 @@
 //!
 //==============================================================================
 
+#include <dune/istl/solvers.hh>
+
 namespace Opm {
   namespace Elasticity {
 

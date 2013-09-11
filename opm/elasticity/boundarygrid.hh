@@ -12,6 +12,7 @@
 #ifndef BOUNDARYGRID_HH_
 #define BOUNDARYGRID_HH_
 
+#include <dune/common/version.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/geometry/referenceelements.hh>
@@ -411,8 +412,13 @@ class HexGeometry<2, cdim, GridImp>
     LocalCoordinate local(const GlobalCoordinate& y) const
     {
       const ctype epsilon = 1e-10;
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2, 3)
+      const Dune::ReferenceElement< ctype , 2 > & refElement =
+        Dune::ReferenceElements< ctype, 2 >::general(type());
+#else
       const Dune::GenericReferenceElement< ctype , 2 > & refElement =
         Dune::GenericReferenceElements< ctype, 2 >::general(type());
+#endif
       LocalCoordinate x = refElement.position(0,0);
       LocalCoordinate dx;
       do {

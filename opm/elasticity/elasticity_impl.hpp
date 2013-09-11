@@ -10,13 +10,18 @@
 //!
 //==============================================================================
 
+#include <opm/elasticity/shapefunctions.hpp>
+
+namespace Opm {
+namespace Elasticity {
+
   template<class GridType>
     template<int components, int funcdim>
 void Elasticity<GridType>::getBmatrix(Dune::FieldMatrix<ctype,components,funcdim>& B,
                                const Dune::FieldVector<ctype,dim>& point,
                                const Dune::FieldMatrix<ctype,dim,dim>& Jinv)
 {
-  P1ShapeFunctionSet<ctype,ctype,dim> basis 
+    P1ShapeFunctionSet<ctype,ctype,dim> basis 
                              = P1ShapeFunctionSet<ctype,ctype,dim>::instance();
   int funcs = funcdim/dim;
 
@@ -90,3 +95,4 @@ void Elasticity<GridType>::getStressVector(Dune::FieldVector<ctype,comp>& sigma,
 {
   sigma = Dune::FMatrixHelp::mult(C,Dune::FMatrixHelp::mult(B,v)+eps0);
 }
+}}
