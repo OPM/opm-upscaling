@@ -57,7 +57,7 @@ Matrix readResultFile(const char* filename, int rows, int cols) {
     int col = 0;
     string line;
     while (getline(resultfile, line)) {
-        if (line[0] == '#') // Skip lines starting with #
+        if (line.empty() || line[0] == '#') // Skip empty lines and lines starting with #
             continue;
         istringstream iss(line);
         while (iss >> value) {
