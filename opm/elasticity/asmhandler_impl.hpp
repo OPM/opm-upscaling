@@ -10,6 +10,7 @@
 //!
 //==============================================================================
 
+#include <dune/common/version.hh>
 #include <iostream>
 
   template<class GridType>
@@ -116,8 +117,14 @@ void ASMHandler<GridType>::extractValues(Dune::FieldVector<double,comp>& v,
   v = 0;
   const LeafIndexSet& set = gv.leafView().indexSet();
   Dune::GeometryType gt = it->type();
+
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2, 3)
+  const Dune::template ReferenceElement<double,dim> &ref =
+                      Dune::ReferenceElements<double,dim>::general(gt);
+#else
   const Dune::template GenericReferenceElement<double,dim> &ref =
                       Dune::GenericReferenceElements<double,dim>::general(gt);
+#endif
   int vertexsize = ref.size(dim);
   int l=0;
   for (int i=0;i<vertexsize;++i) {
@@ -384,8 +391,14 @@ void ASMHandler<GridType>::determineAdjacencyPattern()
   int cell=0;
   for (LeafIterator it = gv.leafView().template begin<0>(); it != itend; ++it, ++cell) {
     Dune::GeometryType gt = it->type();
+
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2, 3)
+    const Dune::template ReferenceElement<double,dim>& ref =
+      Dune::ReferenceElements<double,dim>::general(gt);
+#else
     const Dune::template GenericReferenceElement<double,dim>& ref =
       Dune::GenericReferenceElements<double,dim>::general(gt);
+#endif
 
     int vertexsize = ref.size(dim);
     for (int i=0; i < vertexsize; i++) {
