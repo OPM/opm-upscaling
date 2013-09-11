@@ -13,6 +13,7 @@
 #define MORTAR_EVALUATOR_HPP_
 
 #include <dune/istl/matrixmatrix.hh>
+#include <dune/istl/solvers.hh>
 #include <opm/elasticity/matrixops.hpp>
 #include <opm/elasticity/mortar_utils.hpp>
 

@@ -13,6 +13,8 @@
 #ifndef APPLIER_H_
 #define APPLIER_H_
 
+#include <opm/elasticity/matrixops.hpp>
+
 namespace Opm {
   namespace Elasticity {
 

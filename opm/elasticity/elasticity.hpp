@@ -12,6 +12,8 @@
 #ifndef ELASTICITY_HPP_
 #define ELASTICITY_HPP_
 
+#include <dune/common/fmatrix.hh>
+
 namespace Opm {
 namespace Elasticity {
 
@@ -66,9 +68,9 @@ class Elasticity {
     const GridType& gv;
 };
 
-#include "elasticity_impl.hpp"
+}
+}
 
-}
-}
+#include "elasticity_impl.hpp"
 
 #endif
