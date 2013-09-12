@@ -23,7 +23,14 @@
 
 #include <opm/core/io/eclipse/EclipseGridParser.hpp>
 #include <opm/porsol/blackoil/BlackoilSimulator.hpp>
+
+#include <dune/common/version.hh>
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
+#include <dune/common/parallel/mpihelper.hh>
+#else
 #include <dune/common/mpihelper.hh>
+#endif
+
 #include <opm/porsol/common/SimulatorUtilities.hpp>
 #include <dune/grid/CpGrid.hpp>
 #include <opm/porsol/common/Rock.hpp>
