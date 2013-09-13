@@ -178,6 +178,9 @@ try
 
    Dune::MPIHelper& mpi=Dune::MPIHelper::instance(varnum, vararg);
    const int mpi_rank = mpi.rank();
+#ifdef HAVE_MPI
+   const int mpi_nodecount = mpi.size();
+#endif
    bool isMaster = (mpi_rank == 0);
    if (varnum == 1) { /* If no arguments supplied ("upscale_cond" is the first "argument") */
        usageandexit();
