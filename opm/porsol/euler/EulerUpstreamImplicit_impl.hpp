@@ -143,6 +143,7 @@ namespace Opm
             cix+=1;
         }
 
+        const UnstructuredGrid& c_grid=*mygrid_.c_grid();
         int hf_ind=0;
         int bf_ind=0;
         periodic_cells_.resize(0);
