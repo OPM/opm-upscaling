@@ -37,6 +37,7 @@
 
 #include <dune/istl/paamg/amg.hh>
 #include <dune/istl/paamg/fastamg.hh>
+#include <dune/istl/overlappingschwarz.hh>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -123,7 +124,8 @@ struct LinSolParams {
 };
 
 //! \brief The smoother used in the AMG
-typedef Dune::SeqSSOR<Matrix, Vector, Vector> Smoother;
+//typedef Dune::SeqSSOR<Matrix, Vector, Vector> Smoother;
+typedef Dune::SeqOverlappingSchwarz<Matrix,Vector,Dune::MultiplicativeSchwarzMode> Smoother;
 
 //! \brief The coupling metric used in the AMG
 typedef Dune::Amg::RowSum CouplingMetric;

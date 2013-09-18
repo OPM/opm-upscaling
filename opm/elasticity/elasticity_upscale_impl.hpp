@@ -849,7 +849,7 @@ void ElasticityUpscale<GridType, EAMG>::periodicBCsMortar(const double* min,
 AMG* setupAMG<AMG>(int pre, int post, int target, int zcells, Operator* op)
 {
   Criterion crit;
-  typename AMG::SmootherArgs args;
+  AMG::SmootherArgs args;
   args.relaxationFactor = 1.0;
   crit.setCoarsenTarget(target);
   crit.setGamma(1);
