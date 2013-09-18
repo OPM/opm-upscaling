@@ -237,7 +237,9 @@ int run(Params& p)
       cells[1] = p.cellsy;
       cells[2] = p.cellsz;
       std::array<double,3> cellsize;
-      cellsize[0] = cellsize[1] = cellsize[2] = 1.f; 
+      cellsize[0] = p.max[0] > -1?p.max[0]/cells[0]:1.0;
+      cellsize[1] = p.max[1] > -1?p.max[1]/cells[1]:1.0;
+      cellsize[2] = p.max[2] > -1?p.max[2]/cells[2]:1.0;
       grid.createCartesian(cells,cellsize);
     } else
       grid.readEclipseFormat(p.file,p.ctol,false);
