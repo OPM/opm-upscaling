@@ -1,0 +1,6 @@
+Module maintainer:
+Arne Morten Kvarving (arne.morten.kvarving@sintef.no)
+
+Parts of the module are maintained by separate people:
+
+opm/elasticity, examples/upscale_elasticity: Arne Morten Kvarving
