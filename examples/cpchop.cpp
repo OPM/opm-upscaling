@@ -202,6 +202,9 @@ try
     int linsolver_verbosity = param.getDefault("linsolver_verbosity", 0);
     int linsolver_type = param.getDefault("linsolver_type", 1);
 
+    //  Guarantee initialization
+    double Pcmax = -DBL_MAX, Pcmin = DBL_MAX;
+
     // Check that we do not have any user input
     // that goes outside the coordinates described in
     // the cornerpoint file (runtime-exception will be thrown in case of error)
@@ -329,7 +332,6 @@ try
                 cellVolumes.resize(satnums.size(), 0.0);
                 cellPoreVolumes.resize(satnums.size(), 0.0);
                 int tesselatedCells = 0;
-                double Pcmax = -DBL_MAX, Pcmin = DBL_MAX;
                 //double maxSinglePhasePerm = 0;
                 double Swirvolume = 0;
                 double Sworvolume = 0;
@@ -340,7 +342,7 @@ try
                     if (satnums[cell_idx] > 0) { // Satnum zero is "no rock"
                         cellVolumes[cell_idx] = c->geometry().volume();
                         cellPoreVolumes[cell_idx] = cellVolumes[cell_idx] * poros[cell_idx];
-                        double Pcmincandidate, Pcmaxcandidate, minSw, maxSw;
+                        double Pcmincandidate = 0.0, Pcmaxcandidate = 0.0, minSw, maxSw;
                         if (!anisorocks) {
                             if (cappres) {
                                 Pcmincandidate = jfuncendpoints_[int(satnums[cell_idx])-1][1]
