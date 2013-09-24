@@ -27,8 +27,8 @@
 #ifndef OPM_BENCHMARK3_CO2TABLES_HH
 #define OPM_BENCHMARK3_CO2TABLES_HH
 
-#include <opm/common/tabulated2dfunction.hh>
-#include <opm/common/statictabulated2dfunction.hh>
+#include <opm/common/Tabulated2dFunction.hpp>
+#include <opm/common/StaticTabulated2dFunction.hpp>
 
 #include <assert.h>
 
