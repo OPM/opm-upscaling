@@ -59,7 +59,6 @@ try
 {
     typedef Opm::GridInterfaceEuler<Dune::CpGrid>                       GI;
     typedef GI  ::CellIterator                                     CI;
-    typedef CI  ::FaceIterator                                     FI;
     typedef Opm::BasicBoundaryConditions<true, false>                  BCs;
     typedef Opm::ReservoirPropertyCapillary<3>                    RI;
     typedef Opm::IncompFlowSolverHybrid<GI, RI, BCs,
