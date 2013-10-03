@@ -68,7 +68,6 @@ namespace Opm {
 	template <typename M>
 	M matprod(const M& m1, const M& m2)
 	{
-	    typedef typename M::value_type T;
 	    assert(m1.numCols() == m2.numRows());
 	    int num_contracting = m1.numCols();
 	    M m(m1.numRows(), m2.numCols(), (double*)0);
