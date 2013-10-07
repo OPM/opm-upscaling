@@ -64,7 +64,7 @@ try
         exit(1);
     }
 #ifdef HAVE_MPI
-    MPI_init(&argc, &argv);
+    MPI_Init(&argc, &argv);
 #endif
 
     Opm::parameter::ParameterGroup param(argc, argv);
