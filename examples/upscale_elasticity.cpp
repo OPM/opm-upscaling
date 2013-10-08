@@ -17,6 +17,7 @@
 #include <unistd.h>
 #include <cstring>
 #include <dune/common/exceptions.hh> // We use exceptions
+#include <dune/common/version.hh>
 #include <opm/core/utility/StopWatch.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
@@ -25,8 +26,11 @@
 #include <omp.h>
 #endif
 
-#ifdef HAVE_MPI
-#include <mpi.h>
+#include <dune/common/version.hh>
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
+#include <dune/common/parallel/mpihelper.hh>
+#else
+#include <dune/common/mpihelper.hh>
 #endif
 
 #include <opm/elasticity/elasticity_upscale.hpp>
@@ -215,29 +219,17 @@ void writeOutput(const Params& p, Opm::time::StopWatch& watch, int cells,
     << C << std::endl;
 }
 
-void shutdown()
-{
-#ifdef HAVE_MPI
-  MPI_Finalize();
-#endif
-}
-
 //! \brief Main driver
 int main(int argc, char** argv)
 try
 {
   try {
-#ifdef HAVE_MPI
-     int rank, size;
-     MPI_Init(&argc, &argv);
-     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-     MPI_Comm_size(MPI_COMM_WORLD, &size);
-     if (size != 1) {
-       std::cerr << "This program does not support MPI parallelization" << std::endl;
-       shutdown();
-       return 2;
-     }
-#endif 
+    Dune::MPIHelper& mpi=Dune::MPIHelper::instance(argc, argv);
+    const int size = mpi.size();
+    if (size != 1) {
+      std::cerr << "This program does not support MPI parallelization" << std::endl;
+      return 2;
+    }
     static const int dim = 3;
 
     typedef Dune::CpGrid GridType;
@@ -246,7 +238,6 @@ try
                  || strcmp(argv[1],"--help") == 0
                  || strcmp(argv[1],"-?") == 0) {
       syntax(argv);
-      shutdown();
       exit(1);
     }
     Params p;
@@ -360,7 +351,6 @@ try
       writeOutput(p,watch,grid.size(0),upscale.volumeFractions,C);
     }
 
-    shutdown();
     return 0;
   }
   catch (Dune::Exception &e) {
@@ -369,12 +359,10 @@ try
   catch (...) {
     std::cerr << "Unknown exception thrown!" << std::endl;
   }
-  shutdown();
   return 1;
 }
 catch (const std::exception &e) {
     std::cerr << "Program threw an exception: " << e.what() << "\n";
-    shutdown();
     throw;
 }
 

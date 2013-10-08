@@ -53,7 +53,13 @@
 #include <sys/utsname.h>
 
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
+
+#include <dune/common/version.hh>
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
+#include <dune/common/parallel/mpihelper.hh>
+#else
 #include <dune/common/mpihelper.hh>
+#endif
 
 using namespace std;
 
@@ -83,8 +89,7 @@ void usage() {
    @return int
 */
 int upscale(int varnum, char** vararg) {
-    Dune::MPIHelper& mpi=Dune::MPIHelper::instance(varnum, vararg);
-    mpi.rank();
+    Dune::MPIHelper::instance(varnum, vararg);
     if (varnum ==  1) { // If no arguments supplied ("upscale_perm" is the first argument)
         cout << "Error: No eclipsefile provided" << endl;
         usage();

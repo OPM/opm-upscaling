@@ -43,6 +43,14 @@
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 #include <sys/utsname.h>
 #include <iostream>
+
+#include <dune/common/version.hh>
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
+#include <dune/common/parallel/mpihelper.hh>
+#else
+#include <dune/common/mpihelper.hh>
+#endif
+
 namespace Opm{
 	template <class IsotropyPolicy>
     struct Implicit
@@ -173,6 +181,8 @@ std::string toString(T const& value) {
 int main(int argc, char** argv)
 try
 {
+    Dune::MPIHelper::instance(argc, argv);
+
     if (argc == 1) {
         usageandexit();
     }

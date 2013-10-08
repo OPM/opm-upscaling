@@ -44,7 +44,7 @@ include (${project}-prereqs)
 include (CMakeLists_files.cmake)
 
 macro (config_hook)
-	#	opm_need_version_of ("dune-common")
+	opm_need_version_of ("dune-common")
 	list (APPEND ${project}_CONFIG_IMPL_VARS
 		HAVE_LAPACK
 		)
