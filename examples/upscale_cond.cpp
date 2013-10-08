@@ -61,8 +61,11 @@
 #include <map>
 #include <sys/utsname.h>
 
-#ifdef USEMPI
-#include <mpi.h>
+#include <dune/common/version.hh>
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
+#include <dune/common/parallel/mpihelper.hh>
+#else
+#include <dune/common/mpihelper.hh>
 #endif
 
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
@@ -122,9 +125,6 @@ void usage()
 
 void usageandexit() {
     usage();
-#ifdef USEMPI
-    MPI_Finalize();
-#endif
     exit(1);
 }
 // Assumes that permtensor_t use C ordering.
@@ -176,14 +176,8 @@ try
    double timeused = 0, timeused_tesselation = 0;
    double timeused_upscale_wallclock = 0.0;
 
-
-   int mpi_rank = 0;
-#ifdef USEMPI
-   int mpi_nodecount = 1;
-   MPI_Init(&varnum, &vararg);
-   MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
-   MPI_Comm_size(MPI_COMM_WORLD, &mpi_nodecount);
-#endif 
+   Dune::MPIHelper& mpi=Dune::MPIHelper::instance(varnum, vararg);
+   const int mpi_rank = mpi.rank();
    bool isMaster = (mpi_rank == 0);
    if (varnum == 1) { /* If no arguments supplied ("upscale_cond" is the first "argument") */
        usageandexit();
@@ -819,7 +813,7 @@ try
        node_vs_pressurepoint.push_back(0);
    }
    
-#if USEMPI
+#ifdef HAVE_MPI
    // Distribute work load over mpi nodes.
    for (int idx=0; idx < points; ++idx) {
        // Ensure master node gets equal or less work than the other nodes, since
@@ -930,7 +924,7 @@ try
       //timeused_upscale_acc += timeused;
 
       // Output computed values for impatient users..
-#ifdef USEMPI
+#ifdef HAVE_MPI
            cout << "Rank " << mpi_rank << ": ";
 #endif
       cout << Ptestvalue << "\t" << waterVolumeLF/poreVolume;
@@ -946,7 +940,7 @@ try
 
       /****** FINISHED WITH MAIN COMPUTATION ******/
 
-#ifdef USEMPI   
+#ifdef HAVE_MPI
    /* Step 7b: Transfer all computed data to master node.
       Master node should post a receive for all values missing,
       other nodes should post a send for all the values they have.
@@ -986,7 +980,7 @@ try
 
 
    // Average time pr. upscaling point:
-#ifdef USEMPI
+#ifdef HAVE_MPI
    // Sum the upscaling time used by all processes
    double timeused_total;
    MPI_Reduce(&timeused_upscale_wallclock, &timeused_total, 1, MPI_DOUBLE, 
@@ -1014,7 +1008,7 @@ try
        outputtmp << "######################################################################" << endl;
        outputtmp << "# Results from upscaling resistivity."<< endl;
        outputtmp << "#" << endl;
-#if USEMPI
+#ifdef HAVE_MPI
        outputtmp << "#          (MPI-version)" << endl;
 #endif
        time_t now = std::time(NULL);
@@ -1037,7 +1031,7 @@ try
              outputtmp << "#" << endl;
        outputtmp << "# Timings:   Tesselation: " << timeused_tesselation << " secs" << endl;
        outputtmp << "#              Upscaling: " << timeused_upscale_wallclock << " secs";
-#ifdef USEMPI
+#ifdef HAVE_MPI
        outputtmp << " (wallclock time)" << endl;
        outputtmp << "#                         " << avg_upscaling_time_pr_point << " secs pr. saturation point" << endl;
        outputtmp << "#              MPI-nodes: " << mpi_nodecount << endl;
@@ -1195,9 +1189,6 @@ try
            outfile.close();      
        }
    }
-#if USEMPI
-   MPI_Finalize();
-#endif
 
     return 0;
 }

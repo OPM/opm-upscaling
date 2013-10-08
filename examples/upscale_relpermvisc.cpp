@@ -79,12 +79,15 @@
 #include <map>
 #include <sys/utsname.h>
 
-#ifdef USEMPI
-#include <mpi.h>
-#endif
-
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
+
+#include <dune/common/version.hh>
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
+#include <dune/common/parallel/mpihelper.hh>
+#else
+#include <dune/common/mpihelper.hh>
+#endif
 
 using namespace Opm;
 using namespace std;
@@ -137,9 +140,6 @@ void usage()
 }
 
 void usageandexit() {
-#ifdef USEMPI
-    MPI_Finalize();
-#endif
     usage();
     exit(1);
 }
@@ -198,13 +198,11 @@ try
      * Process command line options
      */
     
-    int mpi_rank = 0;
-#ifdef USEMPI
-    int mpi_nodecount = 1;
-    MPI_Init(&varnum, &vararg);
-    MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &mpi_nodecount);
-#endif 
+    Dune::MPIHelper& mpi=Dune::MPIHelper::instance(varnum, vararg);
+    const int mpi_rank = mpi.rank();
+#ifdef HAVE_MPI
+    const int mpi_nodecount = mpi.size();
+#endif
     bool isMaster = (mpi_rank == 0);
     if (varnum == 1) { /* If no arguments supplied ("upscale_relpermvisc" is the first "argument") */
         usage();
@@ -1220,7 +1218,7 @@ try
         node_vs_fracflowratiopoint.push_back(0);
     }
     
-#if USEMPI
+#ifdef HAVE_MPI
     // Distribute work load over mpi nodes.
     for (int idx=0; idx < points; ++idx) {
         // Ensure master node gets equal or less work than the other nodes, since
@@ -1366,7 +1364,7 @@ try
                 //cout << waterVolumeLF/poreVolume;
                 WaterSaturation[pointidx] =  waterVolumeLF/poreVolume;
                 
-#ifdef USEMPI
+#ifdef HAVE_MPI
                 cout << "Rank " << mpi_rank << ": " << endl;;
 #endif
                 cout << fracFlowRatioTestvalue << "\t" << WaterSaturation[pointidx];
@@ -1382,7 +1380,7 @@ try
     clock_t finish_upscale_wallclock = clock();
     timeused_upscale_wallclock = (double(finish_upscale_wallclock)-double(start_upscale_wallclock))/CLOCKS_PER_SEC;
     //double timeused_upscale_total = timeused_upscale_wallclock;
-#ifdef USEMPI   
+#ifdef HAVE_MPI
     /* Step Xb: Transfer all computed data to master node.
        Master node should post a receive for all values missing,
        other nodes should post a send for all the values they have.
@@ -1425,7 +1423,7 @@ try
 #endif
 
     // Average time pr. upscaling point:
-#ifdef USEMPI
+#ifdef HAVE_MPI
     // Sum the upscaling time used by all processes
     double timeused_total;
     MPI_Reduce(&timeused_upscale_wallclock, &timeused_total, 1, MPI_DOUBLE, 
@@ -1519,7 +1517,7 @@ try
        outheadtmp << "#" << endl;
        outheadtmp << "# Timings:   Tesselation: " << timeused_tesselation << " secs" << endl;
        outheadtmp << "#              Upscaling: " << timeused_upscale_wallclock << " secs";
-#ifdef USEMPI
+#ifdef HAVE_MPI
        outheadtmp << " (wallclock time)" << endl;
        outheadtmp << "#                         " << avg_upscaling_time_pr_point << " secs pr. saturation point" << endl;
        outheadtmp << "#              MPI-nodes: " << mpi_nodecount << endl;
@@ -1669,10 +1667,6 @@ try
            outfile.close();      
        }
    }
-
-#if USEMPI
-   MPI_Finalize();
-#endif
 
    return 0;
 }

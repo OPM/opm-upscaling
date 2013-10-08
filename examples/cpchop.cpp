@@ -40,16 +40,12 @@
 #include <cfloat>
 #include <cmath>
 
-#ifdef HAVE_MPI
-#include <mpi.h>
+#include <dune/common/version.hh>
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
+#include <dune/common/parallel/mpihelper.hh>
+#else
+#include <dune/common/mpihelper.hh>
 #endif
-
-void shutdown()
-{
-#ifdef HAVE_MPI
-  MPI_Finalize();
-#endif
-}
 
 int main(int argc, char** argv)
 try
@@ -63,9 +59,8 @@ try
         std::cout << "       [rock_list=] [anisotropicrocks=false]" << std::endl;
         exit(1);
     }
-#ifdef HAVE_MPI
-    MPI_Init(&argc, &argv);
-#endif
+
+    Dune::MPIHelper::instance(argc, argv);
 
     Opm::parameter::ParameterGroup param(argc, argv);
     std::string gridfilename = param.get<std::string>("gridfilename");
@@ -165,7 +160,6 @@ try
                 catch (const char * errormessage) {
                     std::cerr << "Error: " << errormessage << std::endl;
                     std::cerr << "Check filename" << std::endl;
-                    shutdown();
                     exit(1);
                 }
                 
@@ -175,7 +169,6 @@ try
                 }
                 else {
                     std::cerr << "Error: Jfunction " << i+1 << " in rock file " << rockname << " was not invertible." << std::endl;
-                    shutdown();
                     exit(1);
                 }
                 
@@ -196,7 +189,6 @@ try
                 catch (const char * errormessage) {
                     std::cerr << "Error: " << errormessage << std::endl;
                     std::cerr << "Check filename and columns 1 and 2 (Pc and Sw)" << std::endl;
-                    shutdown();
                     exit(1);
                 }
                 if (cappres) {
@@ -206,7 +198,6 @@ try
                     }
                     else {
                         std::cerr << "Error: Pc(Sw) curve " << i+1 << " in rock file " << rockname << " was not invertible." << std::endl;
-                        shutdown();
                         exit(1);
                     }
                 }
@@ -660,11 +651,9 @@ try
 
 
     std::cout << outputtmp.str();
-    shutdown();
 }
 catch (const std::exception &e) {
     std::cerr << "Program threw an exception: " << e.what() << "\n";
-    shutdown();
     throw;
 }
 
