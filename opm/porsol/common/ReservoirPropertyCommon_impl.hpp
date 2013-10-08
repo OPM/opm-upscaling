@@ -285,6 +285,7 @@ namespace Opm
                                 std::vector<unsigned char>::value_type(0));
 
         assignPorosity    (parser, global_cell);
+        assignNTG         (parser, global_cell);
         assignPermeability(parser, global_cell, perm_threshold);
         assignRockTable   (parser, global_cell);
 
@@ -374,6 +375,12 @@ namespace Opm
     double ReservoirPropertyCommon<dim, RPImpl, RockType>::porosity(int cell_index) const
     {
         return porosity_[cell_index];
+    }
+
+    template <int dim, class RPImpl, class RockType>
+    double ReservoirPropertyCommon<dim, RPImpl, RockType>::ntg(int cell_index) const
+    {
+        return ntg_[cell_index];
     }
 
 
@@ -587,6 +594,27 @@ namespace Opm
         }
     }
 
+    template <int dim, class RPImpl, class RockType>
+    void ReservoirPropertyCommon<dim, RPImpl, RockType>::assignNTG(const Opm::EclipseGridParser& parser,
+                                                         const std::vector<int>& global_cell)
+    {
+        ntg_.assign(global_cell.size(), 1.0);
+
+        if (parser.hasField("NTG")) {
+	    Opm::EclipseGridInspector insp(parser);
+            std::array<int, 3> dims = insp.gridSize();
+            int num_global_cells = dims[0]*dims[1]*dims[2];
+            const std::vector<double>& ntg = parser.getFloatingPointValue("NTG");
+            if (int(ntg.size()) != num_global_cells) {
+                OPM_THROW(std::runtime_error, "NTG field must have the same size as the "
+                      "logical cartesian size of the grid: "
+                      << ntg.size() << " != " << num_global_cells);
+            }
+            for (int c = 0; c < int(ntg_.size()); ++c) {
+                ntg_[c] = ntg[global_cell[c]];
+            }
+        }
+    }
 
 
 
