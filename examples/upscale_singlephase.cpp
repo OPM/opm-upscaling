@@ -26,6 +26,13 @@
 #include <opm/core/utility/Units.hpp>
 #include <iostream>
 
+#include <dune/common/version.hh>
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
+#include <dune/common/parallel/mpihelper.hh>
+#else
+#include <dune/common/mpihelper.hh>
+#endif
+
 using namespace Opm;
 using namespace Opm::prefix;
 using namespace Opm::unit;
@@ -33,6 +40,8 @@ using namespace Opm::unit;
 int main(int argc, char** argv)
 try
 {
+    Dune::MPIHelper::instance(argc, argv);
+
     Opm::parameter::ParameterGroup param(argc, argv);
     // MPIHelper::instance(argc,argv);
     SinglePhaseUpscaler upscaler;

@@ -52,6 +52,13 @@
 
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 
+#include <dune/common/version.hh>
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
+#include <dune/common/parallel/mpihelper.hh>
+#else
+#include <dune/common/mpihelper.hh>
+#endif
+
 using namespace Opm;
 using namespace std;
 
@@ -72,6 +79,8 @@ void usageandexit() {
    @brief Computes simple statistics.
 */
 int main(int varnum, char** vararg) try {        
+
+    Dune::MPIHelper::instance(varnum, vararg);
 
     const double emptycellvolumecutoff = 1e-10;
 

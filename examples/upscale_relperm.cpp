@@ -69,8 +69,11 @@
 #include <map>
 #include <sys/utsname.h>
 
-#ifdef HAVE_MPI
-#include <mpi.h>
+#include <dune/common/version.hh>
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
+#include <dune/common/parallel/mpihelper.hh>
+#else
+#include <dune/common/mpihelper.hh>
 #endif
 
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
@@ -147,9 +150,6 @@ void usage()
 
 void usageandexit() {
     usage();
-#ifdef HAVE_MPI
-    MPI_Finalize();
-#endif
     exit(1);
 }
 
@@ -207,13 +207,11 @@ try
     * Process command line options
     */
 
-   int mpi_rank = 0;
+   Dune::MPIHelper& mpi=Dune::MPIHelper::instance(varnum, vararg);
+   const int mpi_rank = mpi.rank();
 #ifdef HAVE_MPI
-   int mpi_nodecount = 1;
-   MPI_Init(&varnum, &vararg);
-   MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
-   MPI_Comm_size(MPI_COMM_WORLD, &mpi_nodecount);
-#endif 
+   const int mpi_nodecount = mpi.size();
+#endif
    bool isMaster = (mpi_rank == 0);
    if (varnum == 1) { /* If no arguments supplied ("upscale_relperm" is the first "argument") */
       usage();
@@ -2043,10 +2041,6 @@ try
        }
 
    }
-
-#if HAVE_MPI
-   MPI_Finalize();
-#endif
 
    return 0;
 }
