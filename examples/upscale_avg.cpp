@@ -51,6 +51,7 @@
 #include <sys/utsname.h>
 
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
+#include <opm/core/io/eclipse/EclipseGridInspector.hpp>
 
 #include <dune/common/version.hh>
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
