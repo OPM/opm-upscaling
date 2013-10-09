@@ -20,6 +20,7 @@
 #include <config.h>
 
 #include <opm/core/io/eclipse/CornerpointChopper.hpp>
+#include <opm/core/io/eclipse/EclipseGridInspector.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
 #include <opm/porsol/common/setupBoundaryConditions.hpp>
