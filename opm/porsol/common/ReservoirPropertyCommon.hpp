@@ -128,6 +128,11 @@ namespace Opm
         /// @return porosity value of the cell.
         double porosity(int cell_index) const;
 
+        /// @brief Read-access to ntg.
+        /// @param cell_index index of a grid cell.
+        /// @return ntg value of the cell.
+        double ntg(int cell_index) const;
+
         /// @brief Read-access to permeability.
         /// @param cell_index index of a grid cell.
         /// @return permeability value of the cell.
@@ -197,6 +202,8 @@ namespace Opm
 	// Methods
         void assignPorosity(const Opm::EclipseGridParser& parser,
                             const std::vector<int>& global_cell);
+        void assignNTG(const Opm::EclipseGridParser& parser,
+                            const std::vector<int>& global_cell);
         void assignPermeability(const Opm::EclipseGridParser& parser,
                                 const std::vector<int>& global_cell,
                                 const double perm_threshold);
@@ -209,6 +216,7 @@ namespace Opm
 
 	// Data members.
         std::vector<double>        porosity_;
+        std::vector<double>        ntg_;
         std::vector<double>        permeability_;
         std::vector<unsigned char> permfield_valid_;
         double density1_;
