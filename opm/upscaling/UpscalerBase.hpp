@@ -53,29 +53,29 @@ namespace Opm
     {
     protected:
     public:
-        // ------- Typedefs  -------
-        typedef Dune::CpGrid GridType;
-        enum { Dimension = GridType::dimension };
-        typedef GridInterfaceEuler<GridType> GridInterface;
-        typedef typename Traits::template ResProp<Dimension>::Type ResProp;
+	// ------- Typedefs  -------
+	typedef Dune::CpGrid GridType;
+ 	enum { Dimension = GridType::dimension };
+	typedef GridInterfaceEuler<GridType> GridInterface;
+    typedef typename Traits::template ResProp<Dimension>::Type ResProp;
 
-        /// A type for the upscaled permeability.
-        typedef typename ResProp::MutablePermTensor permtensor_t;
+	/// A type for the upscaled permeability.
+	typedef typename ResProp::MutablePermTensor permtensor_t;
 
-        enum BoundaryConditionType { Fixed = 0, Linear = 1, Periodic = 2 };
+	enum BoundaryConditionType { Fixed = 0, Linear = 1, Periodic = 2 };
 
-        // ------- Methods -------
+	// ------- Methods -------
 
-        /// Default constructor.
-        UpscalerBase();
-        
+	/// Default constructor.
+	UpscalerBase();
+
         virtual ~UpscalerBase() {;} ;
-        
-        /// Initializes the upscaler from parameters.
-        void init(const Opm::parameter::ParameterGroup& param);
-        
-        /// Initializes the upscaler from given arguments.
-        void init(const Opm::EclipseGridParser& parser,
+
+	/// Initializes the upscaler from parameters.
+	void init(const Opm::parameter::ParameterGroup& param);
+
+	/// Initializes the upscaler from given arguments.
+	void init(const Opm::EclipseGridParser& parser,
                   BoundaryConditionType bctype,
                   double perm_threshold,
                   double z_tolerance = 0.0,
@@ -86,10 +86,10 @@ namespace Opm
                   int linsolver_maxit = 0,
                   double linsolver_prolongate_factor = 1.0,
                   int linsolver_smooth_steps = 1);
-        
-        /// Access the grid.
-        const GridType& grid() const;
-        
+
+	/// Access the grid.
+	const GridType& grid() const;
+
         /// Set boundary condition type. This may not be used to swicth
         /// between Periodic and the other types, since the grid is
         /// modified for Periodic conditions.
@@ -99,9 +99,9 @@ namespace Opm
         /// the permeability that was read from the eclipse file.
         void setPermeability(const int cell_index, const permtensor_t& k);
 
-        /// Does a single-phase upscaling.
-        /// @return an upscaled permeability tensor.
-        permtensor_t upscaleSinglePhase();
+	/// Does a single-phase upscaling.
+	/// @return an upscaled permeability tensor.
+	permtensor_t upscaleSinglePhase();
 
         /// Compute upscaled porosity.
         /// @return total pore volume of all cells divided by total volume.
@@ -116,42 +116,42 @@ namespace Opm
         double upscaleNTG() const;
 
     protected:
-        // ------- Typedefs and enums -------
-        typedef GridInterface::CellIterator                CellIter;
-        typedef CellIter::FaceIterator                     FaceIter;
-        typedef BasicBoundaryConditions<true, true>             BCs;
+	// ------- Typedefs and enums -------
+	typedef GridInterface::CellIterator                CellIter;
+	typedef CellIter::FaceIterator                     FaceIter;
+	typedef BasicBoundaryConditions<true, true>             BCs;
         typedef typename Traits::template FlowSolver<GridInterface, BCs>::Type FlowSolver;
 
-        // ------- Methods -------
-        template <class FlowSol>
-        double computeAverageVelocity(const FlowSol& flow_solution,
-                                      const int flow_dir,
-                                      const int pdrop_dir) const;
+	// ------- Methods -------
+	template <class FlowSol>
+	double computeAverageVelocity(const FlowSol& flow_solution,
+				      const int flow_dir,
+				      const int pdrop_dir) const;
 
-        double computeDelta(const int flow_dir) const;
+	double computeDelta(const int flow_dir) const;
 
         template <class FluidInterface>
         permtensor_t upscaleEffectivePerm(const FluidInterface& fluid);
 
-        virtual void initImpl(const Opm::parameter::ParameterGroup& param);
+	virtual void initImpl(const Opm::parameter::ParameterGroup& param);
 
-        virtual void initFinal(const Opm::parameter::ParameterGroup& param);
+	virtual void initFinal(const Opm::parameter::ParameterGroup& param);
 
-        // ------- Data members -------
-        BoundaryConditionType bctype_;
-        bool twodim_hack_;
-        double residual_tolerance_;
+	// ------- Data members -------
+	BoundaryConditionType bctype_;
+	bool twodim_hack_;
+	double residual_tolerance_;
         int linsolver_maxit_;
         double linsolver_prolongate_factor_;
-        int linsolver_verbosity_;
+	int linsolver_verbosity_;
         int linsolver_type_;
         int linsolver_smooth_steps_;
 
-        GridType grid_;
-        GridInterface ginterf_;
-        ResProp res_prop_;
-        BCs bcond_;
-        FlowSolver flow_solver_;
+	GridType grid_;
+	GridInterface ginterf_;
+	ResProp res_prop_;
+	BCs bcond_;
+	FlowSolver flow_solver_;
     };
 
 } // namespace Opm
