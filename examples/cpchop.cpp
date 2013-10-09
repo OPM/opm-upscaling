@@ -144,10 +144,10 @@ try
             }
             // Read the contents of the i'th rock
             std::istringstream specstream(spec);
-	    std::string rockname;
-	    specstream >> rockname;
+            std::string rockname;
+            specstream >> rockname;
             std::string rockfilename = rockname;
-
+            
             std::ifstream rock_stream(rockfilename.c_str());
             if (!rock_stream) {
                 OPM_THROW(std::runtime_error, "Could not open file " << rockfilename);
@@ -220,12 +220,12 @@ try
     // that goes outside the coordinates described in
     // the cornerpoint file (runtime-exception will be thrown in case of error)
     ch.verifyInscribedShoebox(imin, ilen, imax,
-			      jmin, jlen, jmax,
-			      zmin, zlen, zmax);
-
+                              jmin, jlen, jmax,
+                              zmin, zlen, zmax);
+    
     // Random number generator from boost.
     boost::mt19937 gen;
-
+    
     // Seed the random number generators with the current time, unless specified on command line
     // Warning: Current code does not allow 0 for the seed!!
     boost::mt19937::result_type autoseed = time(NULL);
@@ -257,8 +257,8 @@ try
 
     // Check for unused parameters (potential typos).
     if (param.anyUnused()) {
-	std::cout << "*****     WARNING: Unused parameters:     *****\n";
-	param.displayUsage();
+        std::cout << "*****     WARNING: Unused parameters:     *****\n";
+        param.displayUsage();
     }
     
     // Note that end is included in interval for uniform_int.
@@ -473,70 +473,70 @@ try
                 }
                 
             }
-
-
-	    if (dips) {
-		Opm::EclipseGridParser subparser = ch.subparser();
-		std::vector<int>  griddims = subparser.getSPECGRID().dimensions;
-		std::vector<double> xdips_subsample, ydips_subsample;
-
-		Opm::EclipseGridInspector gridinspector(subparser);
-		for (int k=0; k < griddims[2]; ++k) {
-		    for (int j=0; j < griddims[1]; ++j) {
-			for (int i=0; i < griddims[0]; ++i) {
-			    if (gridinspector.cellVolumeVerticalPillars(i, j, k) > mincellvolume) {
-				std::pair<double,double> xydip = gridinspector.cellDips(i, j, k);                       
-				xdips_subsample.push_back(xydip.first);
-				ydips_subsample.push_back(xydip.second);
-			    }
-			}
-		    }
-		}
-
-
+            
+            
+            if (dips) {
+                Opm::EclipseGridParser subparser = ch.subparser();
+                std::vector<int>  griddims = subparser.getSPECGRID().dimensions;
+                std::vector<double> xdips_subsample, ydips_subsample;
+                
+                Opm::EclipseGridInspector gridinspector(subparser);
+                for (int k=0; k < griddims[2]; ++k) {
+                    for (int j=0; j < griddims[1]; ++j) {
+                        for (int i=0; i < griddims[0]; ++i) {
+                            if (gridinspector.cellVolumeVerticalPillars(i, j, k) > mincellvolume) {
+                                std::pair<double,double> xydip = gridinspector.cellDips(i, j, k);                       
+                                xdips_subsample.push_back(xydip.first);
+                                ydips_subsample.push_back(xydip.second);
+                            }
+                        }
+                    }
+                }
+                
+                
                 //  double azimuth = atan(xydip.first/xydip.second);
                 //              double dip = acos(1.0/sqrt(pow(xydip.first,2.0)+pow(xydip.second,2.0)+1.0));
-                //	dips_subsample.push_back( xydip.first );
-                //	azims_subsample.push_back(atan(xydip.first/xydip.second));         
-
-		// Average xdips and ydips
-		double xdipaverage = accumulate(xdips_subsample.begin(), xdips_subsample.end(), 0.0)/xdips_subsample.size();
-		double ydipaverage = accumulate(ydips_subsample.begin(), ydips_subsample.end(), 0.0)/ydips_subsample.size();
-
+                //      dips_subsample.push_back( xydip.first );
+                //      azims_subsample.push_back(atan(xydip.first/xydip.second));         
+                
+                // Average xdips and ydips
+                double xdipaverage = accumulate(xdips_subsample.begin(), xdips_subsample.end(), 0.0)/xdips_subsample.size();
+                double ydipaverage = accumulate(ydips_subsample.begin(), ydips_subsample.end(), 0.0)/ydips_subsample.size();
+                
                 // Convert to dip and azimuth
                 double azimuth = atan(xdipaverage/ydipaverage)+azimuthdisplacement;
                 double dip = acos(1.0/sqrt(pow(xdipaverage,2.0)+pow(ydipaverage,2.0)+1.0));
                 dipangs.push_back(dip);
                 azimuths.push_back(azimuth);                    
-	    }
+            }
 
-	    if (satnumvolumes) {
-		Opm::EclipseGridParser subparser = ch.subparser();
-		Opm::EclipseGridInspector subinspector(subparser);
-		std::vector<int>  griddims = subparser.getSPECGRID().dimensions;
-		int number_of_subsamplecells = griddims[0] * griddims[1] * griddims[2];
+            if (satnumvolumes) {
+                Opm::EclipseGridParser subparser = ch.subparser();
+                Opm::EclipseGridInspector subinspector(subparser);
+                std::vector<int>  griddims = subparser.getSPECGRID().dimensions;
+                int number_of_subsamplecells = griddims[0] * griddims[1] * griddims[2];
 
-		// If SATNUM is non-existent in input grid, this will fail:
-		std::vector<int> satnums = subparser.getIntegerValue("SATNUM");
+                // If SATNUM is non-existent in input grid, this will fail:
+                std::vector<int> satnums = subparser.getIntegerValue("SATNUM");
 
-		std::vector<double> rockvolumessubsample;
-		for (int cell_idx=0; cell_idx < number_of_subsamplecells; ++cell_idx) {
-		    maxSatnum = std::max(maxSatnum, int(satnums[cell_idx]));
-		    rockvolumessubsample.resize(maxSatnum); // Ensure long enough vector
-		    rockvolumessubsample[int(satnums[cell_idx])-1] += subinspector.cellVolumeVerticalPillars(cell_idx);
-		}
+                std::vector<double> rockvolumessubsample;
+                for (int cell_idx=0; cell_idx < number_of_subsamplecells; ++cell_idx) {
+                    maxSatnum = std::max(maxSatnum, int(satnums[cell_idx]));
+                    rockvolumessubsample.resize(maxSatnum); // Ensure long enough vector
+                    rockvolumessubsample[int(satnums[cell_idx])-1] += subinspector.cellVolumeVerticalPillars(cell_idx);
+                }
 
-		// Normalize volumes to obtain relative volumes:
-		double subsamplevolume = std::accumulate(rockvolumessubsample.begin(),
-							 rockvolumessubsample.end(), 0.0);
-		std::vector<double> rockvolumessubsample_normalized;
-		for (size_t satnum_idx = 0; satnum_idx < rockvolumessubsample.size(); ++satnum_idx) {
-		    rockvolumessubsample_normalized.push_back(rockvolumessubsample[satnum_idx]/subsamplevolume);
-		}
-		rockvolumes.push_back(rockvolumessubsample_normalized);
-	    }
+                // Normalize volumes to obtain relative volumes:
+                double subsamplevolume = std::accumulate(rockvolumessubsample.begin(),
+                                                         rockvolumessubsample.end(), 0.0);
+                std::vector<double> rockvolumessubsample_normalized;
+                for (size_t satnum_idx = 0; satnum_idx < rockvolumessubsample.size(); ++satnum_idx) {
+                    rockvolumessubsample_normalized.push_back(rockvolumessubsample[satnum_idx]/subsamplevolume);
+                }
+                rockvolumes.push_back(rockvolumessubsample_normalized);
+            }
 
-	    finished_subsamples++;
+            finished_subsamples++;
         }
         catch (...) {
             std::cerr << "Warning: Upscaling chopped subsample nr. " << sample << " failed, proceeding to next subsample\n";
@@ -607,26 +607,26 @@ try
         outputtmp << "                  dip                     azim(displacement:" << azimuthdisplacement << ")";
     }
     if (satnumvolumes) {
-	for (int satnumidx = 0; satnumidx < maxSatnum; ++satnumidx) {
-	    outputtmp << "               satnum_" << satnumidx+1;
-	}
+        for (int satnumidx = 0; satnumidx < maxSatnum; ++satnumidx) {
+            outputtmp << "               satnum_" << satnumidx+1;
+        }
     }
     outputtmp << std::endl;
 
     const int fieldwidth = outputprecision + 8;
     for (int sample = 1; sample <= finished_subsamples; ++sample) {
-	outputtmp << sample << '\t';
-	if (upscale) {
-	    outputtmp <<
-		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << porosities[sample-1] << '\t';
+        outputtmp << sample << '\t';
+        if (upscale) {
+            outputtmp <<
+                std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << porosities[sample-1] << '\t';
             if (ch.hasNTG()) {
-		outputtmp << std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << netporosities[sample-1] << '\t' <<
+                outputtmp << std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << netporosities[sample-1] << '\t' <<
                     std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << ntgs[sample-1] << '\t';
             }
             outputtmp <<
-		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permxs[sample-1] << '\t' <<
-		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permys[sample-1] << '\t' <<
-		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permzs[sample-1] << '\t';
+                std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permxs[sample-1] << '\t' <<
+                std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permys[sample-1] << '\t' <<
+                std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permzs[sample-1] << '\t';
             if (isPeriodic) {
                 outputtmp <<
                     std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permyzs[sample-1] << '\t' <<
@@ -637,8 +637,8 @@ try
                 outputtmp <<
                     std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << (permxs[sample-1]+permys[sample-1])/(2.0*ntgs[sample-1]) << '\t';
             }
-	}
-	if (endpoints) {
+        }
+        if (endpoints) {
             if (!upscale) {
                 outputtmp <<
                     std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << porosities[sample-1] << '\t';
@@ -649,9 +649,9 @@ try
                 }
 
             }
-	    outputtmp <<
-		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << minsws[sample-1] << '\t' <<
-		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << maxsws[sample-1];
+            outputtmp <<
+                std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << minsws[sample-1] << '\t' <<
+                std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << maxsws[sample-1];
             if (cappres) {
                 outputtmp <<
                     std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << pcvalues[sample-1][0] << '\t' <<
@@ -660,28 +660,28 @@ try
                     std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << pcvalues[sample-1][3] << '\t' <<
                     std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << pcvalues[sample-1][4];
             }
-	}
-	if (dips) {
-	    outputtmp <<
-		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << dipangs[sample-1] << '\t' <<
-		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << azimuths[sample-1];
-	}
-	if (satnumvolumes) {
-	    rockvolumes[sample-1].resize(maxSatnum, 0.0);
-	    for (int satnumidx = 0; satnumidx < maxSatnum; ++satnumidx) {
-		outputtmp <<
-		    std::showpoint << std::setw(fieldwidth) <<
-		    std::setprecision(outputprecision) << rockvolumes[sample-1][satnumidx] << '\t';
-	    }
-	}
-	outputtmp <<  std::endl;
+        }
+        if (dips) {
+            outputtmp <<
+                std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << dipangs[sample-1] << '\t' <<
+                std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << azimuths[sample-1];
+        }
+        if (satnumvolumes) {
+            rockvolumes[sample-1].resize(maxSatnum, 0.0);
+            for (int satnumidx = 0; satnumidx < maxSatnum; ++satnumidx) {
+                outputtmp <<
+                    std::showpoint << std::setw(fieldwidth) <<
+                    std::setprecision(outputprecision) << rockvolumes[sample-1][satnumidx] << '\t';
+            }
+        }
+        outputtmp <<  std::endl;
     }
 
     if (resultfile != "") {
-	std::cout << "Writing results to " << resultfile << std::endl;
-	std::ofstream outfile;
-	outfile.open(resultfile.c_str(), std::ios::out | std::ios::trunc);
-	outfile << outputtmp.str();
+        std::cout << "Writing results to " << resultfile << std::endl;
+        std::ofstream outfile;
+        outfile.open(resultfile.c_str(), std::ios::out | std::ios::trunc);
+        outfile << outputtmp.str();
             outfile.close();
     }
 
