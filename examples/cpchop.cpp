@@ -271,6 +271,8 @@ try
 
     // Storage for results
     std::vector<double> porosities;
+    std::vector<double> netporosities;
+    std::vector<double> ntgs;
     std::vector<double> permxs;
     std::vector<double> permys;
     std::vector<double> permzs;
@@ -319,6 +321,10 @@ try
 
 
                 porosities.push_back(upscaler.upscalePorosity());
+                if (ch.hasNTG()) {
+                    netporosities.push_back(upscaler.upscaleNetPorosity());
+                    ntgs.push_back(upscaler.upscaleNTG());                    
+                }
                 permxs.push_back(upscaled_K(0,0));
                 permys.push_back(upscaled_K(1,1));
                 permzs.push_back(upscaled_K(2,2));
@@ -567,15 +573,30 @@ try
     outputtmp << "# id";
     if (upscale) {
         if (isPeriodic) {
-            outputtmp << "          porosity                 permx                   permy                   permz                   permyz                  permxz                  permxy";
+            if (ch.hasNTG()) {
+                outputtmp << "          porosity                netporosity             ntg                      permx                   permy                   permz                   permyz                  permxz                  permxy                  netpermh";
+            }
+            else {
+                outputtmp << "          porosity                 permx                   permy                   permz                   permyz                  permxz                  permxy";
+            }
         }
         else if (isFixed) {
-            outputtmp << "          porosity                 permx                   permy                   permz";
+            if (ch.hasNTG()) {
+                outputtmp << "          porosity                netporosity             ntg                      permx                   permy                   permz                   netpermh";
+            }
+            else {
+                outputtmp << "          porosity                 permx                   permy                   permz";
+            }
         }
     }
     if (endpoints) {
         if (!upscale) {
-            outputtmp << "          porosity";
+            if (ch.hasNTG()) {
+                outputtmp << "          porosity                netporosity            ntg";
+            }
+            else {
+                outputtmp << "          porosity";
+            }
         }
         outputtmp << "                  Swir                    Swor";
         if (cappres) {
@@ -597,7 +618,12 @@ try
 	outputtmp << sample << '\t';
 	if (upscale) {
 	    outputtmp <<
-		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << porosities[sample-1] << '\t' <<
+		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << porosities[sample-1] << '\t';
+            if (ch.hasNTG()) {
+		outputtmp << std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << netporosities[sample-1] << '\t' <<
+                    std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << ntgs[sample-1] << '\t';
+            }
+            outputtmp <<
 		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permxs[sample-1] << '\t' <<
 		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permys[sample-1] << '\t' <<
 		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permzs[sample-1] << '\t';
@@ -607,11 +633,17 @@ try
                     std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permxzs[sample-1] << '\t' <<
                     std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permxys[sample-1] << '\t';                
             }
+            if (ch.hasNTG()) {
+                outputtmp <<
+                    std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << (permxs[sample-1]+permys[sample-1])/(2.0*ntgs[sample-1]) << '\t';
+            }
 	}
 	if (endpoints) {
             if (!upscale) {
                 outputtmp <<
-                    std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << porosities[sample-1] << '\t';
+                    std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << porosities[sample-1] << '\t'<<
+                    std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << netporosities[sample-1] << '\t' <<
+                    std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << ntgs[sample-1] << '\t';
             }
 	    outputtmp <<
 		std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << minsws[sample-1] << '\t' <<
@@ -657,5 +689,3 @@ catch (const std::exception &e) {
     std::cerr << "Program threw an exception: " << e.what() << "\n";
     throw;
 }
-
-
