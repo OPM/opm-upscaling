@@ -134,8 +134,8 @@ try
         int num_rocks = -1;
         rl >> num_rocks;
         assert(num_rocks >= 1);
-        rocksatendpoints_.resize(num_rocks);
-        jfuncendpoints_.resize(num_rocks);
+        rocksatendpoints_.resize(num_rocks, std::vector<double>(2, 0.0));
+        jfuncendpoints_.resize(num_rocks, std::vector<double>(2, 0.0));
         // Loop through rock files defined in rock_list and store the data we need
         for (int i = 0; i < num_rocks; ++i) {
             std::string spec;
