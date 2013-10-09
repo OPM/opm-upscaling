@@ -387,7 +387,29 @@ namespace Opm
     }
 
 
+    template <class Traits>
+    double UpscalerBase<Traits>::upscaleNetPorosity() const
+    {
+        double total_vol = 0.0;
+        double total_pore_vol = 0.0;
+	for (CellIter c = ginterf_.cellbegin(); c != ginterf_.cellend(); ++c) {
+            total_vol += c->volume();
+            total_pore_vol += c->volume()*res_prop_.porosity(c->index())*res_prop_.ntg(c->index());
+        }
+        return total_pore_vol/total_vol;
+    }
 
+    template <class Traits>
+    double UpscalerBase<Traits>::upscaleNTG() const
+    {
+        double total_vol = 0.0;
+        double total_net_vol = 0.0;
+	for (CellIter c = ginterf_.cellbegin(); c != ginterf_.cellend(); ++c) {
+            total_vol += c->volume();
+            total_net_vol += c->volume()*res_prop_.ntg(c->index());
+        }
+        return total_net_vol/total_vol;
+    }
 
 } // namespace Opm
 
