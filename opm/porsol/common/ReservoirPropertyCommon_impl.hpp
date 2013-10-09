@@ -616,8 +616,6 @@ namespace Opm
         }
     }
 
-
-
     template <int dim, class RPImpl, class RockType>
     void ReservoirPropertyCommon<dim, RPImpl, RockType>::assignPermeability(const Opm::EclipseGridParser& parser,
                                                                             const std::vector<int>& global_cell,
