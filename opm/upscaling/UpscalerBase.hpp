@@ -103,9 +103,17 @@ namespace Opm
 	/// @return an upscaled permeability tensor.
 	permtensor_t upscaleSinglePhase();
 
-    /// Compute upscaled porosity.
-    /// @return total pore volume of all cells divided by total volume.
-    double upscalePorosity() const;
+        /// Compute upscaled porosity.
+        /// @return total pore volume of all cells divided by total volume.
+        double upscalePorosity() const;
+
+        /// Compute upscaled net porosity.
+        /// @return total pore volume (with NTG) of all cells divided by total volume.
+        double upscaleNetPorosity() const;
+
+        /// Compute upscaled NTG.
+        /// @return total net of all cells divided by total volume.
+        double upscaleNTG() const;
 
     protected:
 	// ------- Typedefs and enums -------
