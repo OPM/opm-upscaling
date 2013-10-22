@@ -1,3 +1,9 @@
+opm-upscaling (2013.10-2~precise) precise; urgency=low
+
+  * New release
+
+ -- Arne Morten Kvarving <arne.morten.kvarving@sintef.no>  Tue, 22 Oct 2013 12:21:11 +0200
+
 opm-upscaling (2013.03-3) precise; urgency=low
 
   * Fix dependencies for -bin package

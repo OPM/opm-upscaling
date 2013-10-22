@@ -1,9 +1,9 @@
 #
-# spec file for package opm-core
+# spec file for package opm-upscaling
 #
 
 Name:           opm-upscaling
-Version:        2013.03
+Version:        2013.10
 Release:        0
 Summary:        Open Porous Media - upscaling library
 License:        GPL-3.0
@@ -13,7 +13,7 @@ Source0:        %{name}-%{version}.tar.gz
 BuildRequires:  blas-devel gcc-c++ gcc-gfortran lapack-devel dune-common-devel
 BuildRequires:  boost-devel git suitesparse-devel cmake28 doxygen bc
 BuildRequires:  tinyxml-devel dune-istl-devel superlu-devel opm-core-devel
-BuildRequires:  opm-porsol-devel
+BuildRequires:  opm-porsol-devel opm-material-deve ert-devel
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Requires:       libopm-upscaling1 = %{version}
 

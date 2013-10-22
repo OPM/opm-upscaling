@@ -5,7 +5,7 @@ Build-Depends: build-essential, debhelper (>= 9), libboost-filesystem-dev,
                libboost-system-dev, libboost-date-time-dev, libboost-test-dev,
                libsuperlu3-dev, gfortran, libsuitesparse-dev, libopm-core-dev,
                libdune-common-dev, libdune-istl-dev, cmake, libtinyxml-dev, bc,
-               libert.ecl-dev, git, zlib1g-dev, libtool,
+               libert.ecl-dev, git, zlib1g-dev, libtool, libopm-material-dev,
                libdune-cornerpoint-dev, libdune-grid-dev, libopm-porsol-dev,
                doxygen, texlive-latex-extra, texlive-latex-recommended, ghostscript
 Standards-Version: 3.9.2
