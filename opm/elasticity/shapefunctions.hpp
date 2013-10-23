@@ -16,6 +16,7 @@
 #include <dune/common/dynmatrixev.hh>
 
 #include <complex>
+#include <array>
 
 namespace Opm {
 namespace Elasticity {
@@ -264,7 +265,7 @@ private:
     }
 
     //! \brief Our shape functions
-    ShapeFunction f[n];
+    std::array<ShapeFunction, n> f;
 };
 
   template<int dim>
