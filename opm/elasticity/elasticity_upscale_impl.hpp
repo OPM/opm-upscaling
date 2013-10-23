@@ -929,7 +929,7 @@ IMPL_FUNC(void, setupSolvers(const LinSolParams& params))
                                                      params.maxit,
                                                      verbose?2:(params.report?1:0)));
         op2.reset(new SchurEvaluator(*innersolver, B));
-        lprep.reset(new Dune::SuperLU<Matrix>(P));
+        lprep.reset(new LUSolver(P));
         lpre.reset(new SeqLU(*lprep));
         std::shared_ptr<Dune::InverseOperator<Vector,Vector> > outersolver;
         outersolver.reset(new Dune::CGSolver<Vector>(*op2, *lpre, params.tol*10,
@@ -962,10 +962,10 @@ IMPL_FUNC(void, setupSolvers(const LinSolParams& params))
     if (B.N()) 
       A.getOperator() = MatrixOps::augment(A.getOperator(), B,
                                            0, A.getOperator().M(), true);
-#if HAVE_SUPERLU
-    solver.reset(new Dune::SuperLU<Matrix>(A.getOperator(), verbose?2:(params.report?1:0)));
+#if HAVE_UMFPACK || HAVE_SUPERLU
+    solver.reset(new LUSolver(A.getOperator(), verbose?2:(params.report?1:0)));
 #else
-    std::cerr << "SuperLU solver not enabled" << std::endl;
+    std::cerr << "No direct solver available" << std::endl;
     exit(1);
 #endif
     siz = A.getOperator().N();

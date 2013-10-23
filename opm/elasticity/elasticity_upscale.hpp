@@ -446,11 +446,11 @@ class ElasticityUpscale
     PCPtr upre;
 
     //! \brief An LU solve as a preconditioner
-    typedef Dune::InverseOperator2Preconditioner<Dune::SuperLU<Matrix>,
+    typedef Dune::InverseOperator2Preconditioner<LUSolver,
                                         Dune::SolverCategory::sequential> SeqLU;
     //! \brief The preconditioner for the multiplier block (used with uzawa)
     std::shared_ptr<SeqLU> lpre;
-    std::shared_ptr< Dune::SuperLU<Matrix> > lprep;
+    std::shared_ptr<LUSolver> lprep;
 
     //! \brief Preconditioner for the Mortar system
     typedef std::shared_ptr< MortarSchurPre<PCType> > MortarAmgPtr;

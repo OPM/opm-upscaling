@@ -12,11 +12,11 @@
 #ifndef SCHUR_PRECOND_HPP_
 #define SCHUR_PRECOND_HPP_
 
-#include <dune/istl/superlu.hh>
 #include <dune/istl/preconditioners.hh>
 #include <dune/istl/matrixmatrix.hh>
 #include <opm/elasticity/matrixops.hpp>
 #include <opm/elasticity/mortar_utils.hpp>
+#include <opm/elasticity/elasticity_preconditioners.hpp>
 
 namespace Opm {
 namespace Elasticity {
@@ -115,7 +115,7 @@ class MortarSchurPre : public Dune::Preconditioner<Vector,Vector> {
     int M;
 
     //! \brief Linear solver for the multiplier block
-    Dune::SuperLU<Matrix> Lpre;
+    LUSolver Lpre;
 
     //! \brief Whether or not to use a symmetric preconditioner
     bool symmetric; 

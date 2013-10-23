@@ -60,7 +60,7 @@ void syntax(char** argv)
             << "\t ctol                     - collapse tolerance in grid parsing" << std::endl
             << "\t ltol                     - tolerance in iterative linear solvers" << std::endl
             << "\t linsolver_type=iterative - use a suitable iterative method (cg or gmres)" << std::endl
-            << "\t linsolver_type=direct    - use the SuperLU sparse direct solver" << std::endl
+            << "\t linsolver_type=direct    - use the SuperLU or UMFPACK sparse direct solvers" << std::endl
             << "\t verbose                  - set to true to get verbose output" << std::endl
             << "\t linsolver_pre            - preconditioner for elasticity block. amg, fastamg or schwarz" << std::endl
             << "\t linsolver_restart        - number of iterations before gmres is restarted" << std::endl
@@ -261,6 +261,7 @@ int run(Params& p)
     typedef typename GridType::ctype ctype;
     ElasticityUpscale<GridType, AMG> upscale(grid, p.ctol, p.Emin, p.file,
                                              p.rocklist, p.verbose);
+
     if (p.max[0] < 0 || p.min[0] < 0) {
       std::cout << "determine side coordinates..." << std::endl;
       upscale.findBoundaries(p.min,p.max);

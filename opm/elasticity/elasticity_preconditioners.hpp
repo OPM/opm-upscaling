@@ -24,6 +24,7 @@
 #include <opm/elasticity/matrixops.hpp>
 
 #include <dune/istl/superlu.hh>
+#include <dune/istl/umfpack.hh>
 #include <dune/istl/paamg/amg.hh>
 #include <dune/istl/paamg/fastamg.hh>
 #include <dune/istl/paamg/twolevelmethod.hh>
@@ -31,6 +32,14 @@
 
 namespace Opm {
 namespace Elasticity {
+
+#if defined(HAVE_UMFPACK)
+typedef Dune::UMFPack<Matrix> LUSolver;
+#elif defined(HAVE_SUPERLU)
+typedef Dune::SuperLU<Matrix> LUSolver;
+#else
+static_assert("Enable either SuperLU or UMFPACK");
+#endif
 
 //! \brief A linear operator
 typedef Dune::MatrixAdapter<Matrix,Vector,Vector> Operator;
@@ -46,13 +55,13 @@ typedef Dune::SeqILU0<Matrix, Vector, Vector> ILUSmoother;
 
 //! \brief Schwarz + ILU0 AMG smoother
 typedef Dune::SeqOverlappingSchwarz<Matrix,Vector,
-                              Dune::SymmetricMultiplicativeSchwarzMode> SchwarzSmoother;
+                              Dune::SymmetricMultiplicativeSchwarzMode, LUSolver> SchwarzSmoother;
 
 //! \brief Overlapping Schwarz preconditioner
 struct Schwarz {
   typedef Dune::SeqOverlappingSchwarz<Matrix, Vector,
                                       Dune::SymmetricMultiplicativeSchwarzMode,
-                                      Dune::SuperLU<Matrix> > type;
+                                      LUSolver> type;
   //! \brief Setup preconditioner
   //! \param[in] pre The number of pre-smoothing steps
   //! \param[in] post The number of post-smoothing steps
