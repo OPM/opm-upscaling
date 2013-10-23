@@ -13,6 +13,9 @@
 #define LOGUTILS_HPP_
 
 #include <iostream>
+#ifdef HAVE_OPENMP
+#include <omp.h>
+#endif
 
 class LoggerHelper {
   public:

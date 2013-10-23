@@ -14,6 +14,10 @@
 
 #include <iostream>
 
+#ifdef HAVE_OPENMP
+#include <omp.h>
+#endif
+
 namespace Opm {
 namespace Elasticity {
 
@@ -438,72 +442,78 @@ IMPL_FUNC(void, assemble(int loadcase, bool matrix))
   const int comp = 3+(dim-2)*3;
   static const int bfunc = 4+(dim-2)*4;
 
-  const LeafIterator itend = gv.leafView().template end<0>();
-
-  Dune::FieldMatrix<ctype,comp,comp> C;
-  Dune::FieldMatrix<ctype,dim*bfunc,dim*bfunc> K;
-  Dune::FieldVector<ctype,dim*bfunc> ES;
-  Dune::FieldVector<ctype,dim*bfunc>* EP=0;
   Dune::FieldVector<ctype,comp> eps0;
   eps0 = 0;
   if (loadcase > -1) {
-    EP = &ES;
     eps0[loadcase] = 1;
     b[loadcase] = 0;
   }
-  int m=0;
-  Dune::FieldMatrix<ctype,dim*bfunc,dim*bfunc>* KP=0;
-  if (matrix) {
-    KP = &K;
+  if (matrix)
     A.getOperator() = 0;
-  }
 
-  LoggerHelper help(gv.size(0), 10, 1000);
-  for (LeafIterator it = gv.leafView().template begin<0>(); it != itend; ++it) {
-    materials[m++]->getConstitutiveMatrix(C);
-    // determine geometry type of the current element and get the matching reference element
-    Dune::GeometryType gt = it->type();
+  for (int i=0;i<2;++i) {
+    if (color[1].size() && matrix)
+      std::cout << "\tprocessing " << (i==0?"red ":"black ") << "elements" << std::endl;
+#pragma omp parallel for schedule(static)
+    for (size_t j=0;j<color[i].size();++j) {
+      Dune::FieldMatrix<ctype,comp,comp> C;
+      Dune::FieldMatrix<ctype,dim*bfunc,dim*bfunc> K;
+      Dune::FieldMatrix<ctype,dim*bfunc,dim*bfunc>* KP=0;
+      Dune::FieldVector<ctype,dim*bfunc> ES;
+      Dune::FieldVector<ctype,dim*bfunc>* EP=0;
+      if (matrix)
+        KP = &K;
+      if (loadcase > -1)
+        EP = &ES;
 
-    Dune::FieldMatrix<ctype,dim*bfunc,dim*bfunc> Aq;
-    K = 0;
-    ES = 0;
+      for (size_t k=0;k<color[i][j].size();++k) {
+        LeafIterator it = gv.leafView().template begin<0>();
+        for (int l=0;l<color[i][j][k];++l)
+          ++it;
+        materials[color[i][j][k]]->getConstitutiveMatrix(C);
+        // determine geometry type of the current element and get the matching reference element
+        Dune::GeometryType gt = it->type();
 
-    // get a quadrature rule of order two for the given geometry type
-    const Dune::QuadratureRule<ctype,dim>& rule = Dune::QuadratureRules<ctype,dim>::rule(gt,2);
-    for (typename Dune::QuadratureRule<ctype,dim>::const_iterator r = rule.begin();
-        r != rule.end() ; ++r) {
-      // compute the jacobian inverse transposed to transform the gradients
-      Dune::FieldMatrix<ctype,dim,dim> jacInvTra =
-        it->geometry().jacobianInverseTransposed(r->position());
+        Dune::FieldMatrix<ctype,dim*bfunc,dim*bfunc> Aq;
+        K = 0;
+        ES = 0;
 
-      ctype detJ = it->geometry().integrationElement(r->position());
-      if (detJ <= 1.e-5 && verbose) {
-        std::cout << "cell " << m << " is (close to) degenerated, detJ " << detJ << std::endl;
-        double zdiff=0.0;
-        for (int i=0;i<4;++i)
-          zdiff = std::max(zdiff, it->geometry().corner(i+4)[2]-it->geometry().corner(i)[2]);
-        std::cout << "  - Consider setting ctol larger than " << zdiff << std::endl;
-      }
+        // get a quadrature rule of order two for the given geometry type
+        const Dune::QuadratureRule<ctype,dim>& rule = Dune::QuadratureRules<ctype,dim>::rule(gt,2);
+        for (typename Dune::QuadratureRule<ctype,dim>::const_iterator r = rule.begin();
+            r != rule.end() ; ++r) {
+          // compute the jacobian inverse transposed to transform the gradients
+          Dune::FieldMatrix<ctype,dim,dim> jacInvTra =
+            it->geometry().jacobianInverseTransposed(r->position());
 
-      Dune::FieldMatrix<ctype,comp,dim*bfunc> B;
-      E.getBmatrix(B,r->position(),jacInvTra);
+          ctype detJ = it->geometry().integrationElement(r->position());
+          if (detJ <= 1.e-5 && verbose) {
+            std::cout << "cell " << color[i][j][k] << " is (close to) degenerated, detJ " << detJ << std::endl;
+            double zdiff=0.0;
+            for (int i=0;i<4;++i)
+              zdiff = std::max(zdiff, it->geometry().corner(i+4)[2]-it->geometry().corner(i)[2]);
+            std::cout << " - Consider setting ctol larger than " << zdiff << std::endl;
+          }
 
-      if (matrix) {
-        E.getStiffnessMatrix(Aq,B,C,detJ*r->weight());
-        K += Aq;
-      }
+          Dune::FieldMatrix<ctype,comp,dim*bfunc> B;
+          E.getBmatrix(B,r->position(),jacInvTra);
 
-      // load vector
-      if (EP) {
-        Dune::FieldVector<ctype,dim*bfunc> temp;
-        temp = Dune::FMatrixHelp::multTransposed(B,Dune::FMatrixHelp::mult(C,eps0));
-        temp *= -detJ*r->weight();
-        ES += temp;
+          if (matrix) {
+            E.getStiffnessMatrix(Aq,B,C,detJ*r->weight());
+            K += Aq;
+          }
+
+          // load vector
+          if (EP) {
+            Dune::FieldVector<ctype,dim*bfunc> temp;
+            temp = Dune::FMatrixHelp::multTransposed(B,Dune::FMatrixHelp::mult(C,eps0));
+            temp *= -detJ*r->weight();
+            ES += temp;
+          }
+        }
+        A.addElement(KP,EP,it,(loadcase > -1)?&b[loadcase]:NULL);
       }
     }
-
-    A.addElement(KP,EP,it,(loadcase > -1)?&b[loadcase]:NULL);
-    help.log(m, "\t\t... still processing ... cell ");
   }
 }
 
@@ -848,12 +858,17 @@ static void applyMortarBlock(int i, const Matrix& B, M& T,
 IMPL_FUNC(void, setupSolvers(const LinSolParams& params))
 {
   int siz = A.getOperator().N(); // system size
+  int numsolvers = 1;
+#ifdef HAVE_OPENMP
+   numsolvers = omp_get_max_threads();
+#endif
+          
   if (params.type == ITERATIVE) {
     op.reset(new Operator(A.getOperator()));
     bool copy;
-    upre = PC::setup(params.steps[0], params.steps[1],
-                     params.coarsen_target, params.zcells,
-                     op, gv, A, copy);
+    upre.push_back(PC::setup(params.steps[0], params.steps[1],
+                             params.coarsen_target, params.zcells,
+                             op, gv, A, copy));
 
     // Mortar in use
     if (B.N()) {
@@ -865,38 +880,54 @@ IMPL_FUNC(void, setupSolvers(const LinSolParams& params))
         std::cout << "\tBuilding preconditioner for multipliers..." << std::endl;
         LoggerHelper help(B.M(), 5, 100);
 
-        std::shared_ptr< Dune::Preconditioner<Vector,Vector> > pc;
+        std::vector< std::shared_ptr<Dune::Preconditioner<Vector,Vector> > > pc;
+        pc.resize(B.M());
 
-        if (params.mortarpre == SCHUR             ||
-            (params.mortarpre == SCHURAMG      && 
-             params.pre == AMG)                   ||
-            (params.mortarpre == SCHURSCHWARZ  && 
-             params.pre == SCHWARZ)               ||
-            (params.mortarpre == SCHURTWOLEVEL && 
+        if (params.mortarpre == SCHUR ||
+            (params.mortarpre == SCHURAMG &&
+             params.pre == AMG) ||
+            (params.mortarpre == SCHURSCHWARZ &&
+             params.pre == SCHWARZ) ||
+            (params.mortarpre == SCHURTWOLEVEL &&
              params.pre == TWOLEVEL)) {
-          pc = upre;
+          pc[0] = upre[0];
+          if (copy) {
+            for (size_t i=1;i<B.M();++i)
+              pc[i].reset(new PCType(*upre[0]));
+          }
         } else if (params.mortarpre == SCHURAMG) {
-          pc = AMG1<SSORSmoother>::setup(params.steps[0],
-                                         params.steps[1],
-                                         params.coarsen_target,
-                                         params.zcells,
-                                         op, gv, A, copy);
+          std::shared_ptr<AMG1<SSORSmoother>::type> mpc;
+          pc[0] = mpc = AMG1<SSORSmoother>::setup(params.steps[0],
+                                                  params.steps[1],
+                                                  params.coarsen_target,
+                                                  params.zcells,
+                                                  op, gv, A, copy);
+          for (size_t i=1;i<B.M();++i)
+            pc[i].reset(new AMG1<SSORSmoother>::type(*mpc));
         } else if (params.mortarpre == SCHURSCHWARZ) {
-          pc = Schwarz::setup(params.steps[0],
-                              params.steps[1],
-                              params.coarsen_target,
-                              params.zcells,
-                              op, gv, A, copy);
+          std::shared_ptr<Schwarz::type> mpc;
+          pc[0] = mpc = Schwarz::setup(params.steps[0],
+                                       params.steps[1],
+                                       params.coarsen_target,
+                                       params.zcells,
+                                       op, gv, A, copy);
         } else if (params.mortarpre == SCHURTWOLEVEL) {
-          pc = AMG2Level<SSORSmoother>::setup(params.steps[0],
-                                              params.steps[1],
-                                              params.coarsen_target,
-                                              params.zcells,
-                                              op, gv, A, copy);
+          std::shared_ptr<AMG2Level<SSORSmoother>::type> mpc;
+          pc[0] = mpc = AMG2Level<SSORSmoother>::setup(params.steps[0],
+                                                       params.steps[1],
+                                                       params.coarsen_target,
+                                                       params.zcells,
+                                                       op, gv, A, copy);
+          for (size_t i=1;i<B.M();++i)
+            pc[i].reset(new AMG2Level<SSORSmoother>::type(*mpc));
         }
-        for (size_t i=0; i < B.M(); ++i) {
-          applyMortarBlock(i, B, T, *pc);
-          help.log(i, "\t\t... still processing ... multiplier ");
+        for (int t=0;t<5;++t) {
+#pragma omp parallel for schedule(static)
+          for (int i=help.group(t).first; i < help.group(t).second; ++i)
+            applyMortarBlock(i, B, T, *pc[copy?i:0]);
+
+          help.log(help.group(t).second,
+                   "\t\t... still processing ... multiplier ");
         }
         P = MatrixOps::fromDense(T);
       } else if (params.mortarpre == SIMPLE) {
@@ -925,7 +956,7 @@ IMPL_FUNC(void, setupSolvers(const LinSolParams& params))
       if (params.uzawa) {
         std::shared_ptr<Dune::InverseOperator<Vector,Vector> > innersolver;
 
-        innersolver.reset(new Dune::CGSolver<Vector>(*op, *upre, params.tol,
+        innersolver.reset(new Dune::CGSolver<Vector>(*op, *upre[0], params.tol,
                                                      params.maxit,
                                                      verbose?2:(params.report?1:0)));
         op2.reset(new SchurEvaluator(*innersolver, B));
@@ -935,35 +966,50 @@ IMPL_FUNC(void, setupSolvers(const LinSolParams& params))
         outersolver.reset(new Dune::CGSolver<Vector>(*op2, *lpre, params.tol*10,
                                                      params.maxit,
                                                      verbose?2:(params.report?1:0)));
-        solver.reset(new UzawaSolver<Vector, Vector>(innersolver, outersolver, B));
+        tsolver.push_back(SolverPtr(new UzawaSolver<Vector, Vector>(innersolver, outersolver, B)));
       } else {
-        tmpre.reset(new MortarSchurPre<typename PC::type>(P, B, *upre, params.symmetric));
+        for (int i=0;i<numsolvers;++i) {
+          if (copy && i != 0)
+            upre.push_back(PCPtr(new PCType(*upre[0])));
+          tmpre.push_back(MortarAmgPtr(new MortarSchurPre<PCType>(P, B,
+                                                                *upre[copy?i:0],
+                                                            params.symmetric)));
+        }
         meval.reset(new MortarEvaluator(A.getOperator(), B));
         if (params.symmetric) {
-          solver.reset(new Dune::MINRESSolver<Vector>(*meval, *tmpre, 
-                                                      params.tol, 
-                                                      params.maxit,
-                                                      verbose?2:(params.report?1:0)));
+          for (int i=0;i<numsolvers;++i)
+           tsolver.push_back(SolverPtr(new Dune::MINRESSolver<Vector>(*meval, *tmpre[i],
+                                                                      params.tol,
+                                                                      params.maxit,
+                                                                      verbose?2:(params.report?1:0))));
         } else {
-          solver.reset(new Dune::RestartedGMResSolver<Vector>(*meval, *tmpre, 
-                                                              params.tol,
-                                                              params.restart,
-                                                              params.maxit,
-                                                              verbose?2:0, true));
+          for (int i=0;i<numsolvers;++i)
+            tsolver.push_back(SolverPtr(new Dune::RestartedGMResSolver<Vector>(*meval, *tmpre[i],
+                                                                               params.tol,
+                                                                               params.restart,
+                                                                               params.maxit,
+                                                                               verbose?2:(params.report?1:0), true)));
         }
       }
     } else {
-        solver.reset(new Dune::CGSolver<Vector>(*op, *upre,
-                                                params.tol,
-                                                params.maxit,
-                                                verbose?2:(params.report?1:0)));
+      for (int i=0;i<numsolvers;++i) {
+        if (copy && i != 0)
+          upre.push_back(PCPtr(new PCType(*upre[0])));
+        tsolver.push_back(SolverPtr(new Dune::CGSolver<Vector>(*op, *upre[copy?i:0],
+                                                               params.tol,
+                                                               params.maxit,
+                                                               verbose?2:(params.report?1:0))));
+      }
     }
   } else {
     if (B.N()) 
       A.getOperator() = MatrixOps::augment(A.getOperator(), B,
                                            0, A.getOperator().M(), true);
 #if HAVE_UMFPACK || HAVE_SUPERLU
-    solver.reset(new LUSolver(A.getOperator(), verbose?2:(params.report?1:0)));
+    tsolver.push_back(SolverPtr(new LUSolver(A.getOperator(),
+                                             verbose?2:(params.report?1:0))));
+    for (int i=1;i<numsolvers;++i)
+      tsolver.push_back(tsolver.front());
 #else
     std::cerr << "No direct solver available" << std::endl;
     exit(1);
@@ -981,8 +1027,12 @@ IMPL_FUNC(void, solve(int loadcase))
     Dune::InverseOperatorResult r;
     u[loadcase].resize(b[loadcase].size(), false);
     u[loadcase] = 0;
+    int solver=0;
+#ifdef HAVE_OPENMP
+    solver = omp_get_thread_num();
+#endif
 
-    solver->apply(u[loadcase], b[loadcase], r);
+    tsolver[solver]->apply(u[loadcase], b[loadcase], r);
 
     std::cout << "\tsolution norm: " << u[loadcase].two_norm() << std::endl;
   } catch (Dune::ISTLError& e) {

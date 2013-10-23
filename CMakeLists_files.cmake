@@ -34,6 +34,7 @@ list (APPEND MAIN_SOURCE_FILES
 	opm/elasticity/material.cpp
 	opm/elasticity/materials.cpp
 	opm/elasticity/matrixops.cpp
+	opm/elasticity/meshcolorizer.cpp
 	opm/elasticity/mpc.cpp
 	)
 

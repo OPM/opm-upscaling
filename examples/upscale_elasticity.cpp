@@ -23,7 +23,7 @@
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 #include <dune/istl/matrixmarket.hh>
 
-#if HAVE_OPENMP
+#ifdef HAVE_OPENMP
 #include <omp.h>
 #endif
 
@@ -321,9 +321,6 @@ int run(Params& p)
     }
 
     Dune::FieldMatrix<double,6,6> C;
-    Dune::VTKWriter<typename GridType::LeafGridView>* vtkwriter=0;
-    if (!p.vtufile.empty())
-      vtkwriter = new Dune::VTKWriter<typename GridType::LeafGridView>(grid.leafView());
     Opm::Elasticity::Vector field[6];
     std::cout << "assembling elasticity operator..." << "\n";
     upscale.assemble(-1,true);
@@ -332,6 +329,16 @@ int run(Params& p)
 
     if (p.inspect == "load")
       Dune::storeMatrixMarket(upscale.A.getOperator(), "A.mtx");
+
+    // the uzawa solver cannot run multithreaded
+#ifdef HAVE_OPENMP
+    if (p.linsolver.uzawa) {
+      std::cout << "WARNING: disabling multi-threaded solves due to uzawa" << std::endl;
+      omp_set_num_threads(1);
+    }
+#endif
+
+#pragma omp parallel for schedule(static)
     for (int i=0;i<6;++i) {
       std::cout << "processing case " << i+1 << "..." << std::endl;
       if (p.inspect == "results") {
@@ -365,16 +372,18 @@ int run(Params& p)
       for (int j=0;j<6;++j)
         C[i][j] = CLAMP(v[j]);
     }
-    for (int i=0;i<6;++i) {
-      std::stringstream str;
-      str << "sol " << i+1;
-      if (vtkwriter)
-        vtkwriter->addVertexData(field[i], str.str().c_str(), dim);
+
+    if (!p.vtufile.empty()) {
+      Dune::VTKWriter<typename GridType::LeafGridView> vtkwriter(grid.leafView());
+
+      for (int i=0;i<6;++i) {
+        std::stringstream str;
+        str << "sol " << i+1;
+        vtkwriter.addVertexData(field[i], str.str().c_str(), dim);
+      }
+      vtkwriter.write(p.vtufile);
     }
-    if (vtkwriter) {
-      vtkwriter->write(p.vtufile);
-      delete vtkwriter;
-    }
+
     // voigt notation
     for (int j=0;j<6;++j)
       std::swap(C[3][j],C[5][j]);
@@ -382,9 +391,8 @@ int run(Params& p)
       std::swap(C[j][3],C[j][5]);
     std::cout << "---------" << std::endl;
     std::cout << C << std::endl;
-    if (!p.output.empty()) {
+    if (!p.output.empty())
       writeOutput(p,watch,grid.size(0),upscale.volumeFractions,C);
-    }
 
     return 0;
   }

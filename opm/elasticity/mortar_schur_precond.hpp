@@ -50,7 +50,7 @@ class MortarSchurPre : public Dune::Preconditioner<Vector,Vector> {
     MortarSchurPre(const Matrix& P_, const Matrix& B_,
                    PrecondElasticityBlock& Apre_, bool symmetric_=false) :
       Apre(Apre_), B(B_), N(B.N()), M(B.M()),
-      Lpre(P_, false), symmetric(symmetric_)
+      Lpre(P_, false, false), symmetric(symmetric_)
     {
     }
 

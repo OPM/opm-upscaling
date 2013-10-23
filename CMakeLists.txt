@@ -34,6 +34,8 @@ endmacro (dir_hook)
 # the build starts, so it makes sense to keep the data there then.
 include (OpmInit)
 
+set(USE_OPENMP_DEFAULT ON)
+
 # list of prerequisites for this particular project; this is in a
 # separate file (in cmake/Modules sub-directory) because it is shared
 # with the find module
