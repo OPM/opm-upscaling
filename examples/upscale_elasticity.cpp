@@ -289,6 +289,21 @@ int run(Params& p)
     if (p.inspect == "mesh")
       return 0;
 
+    if (p.linsolver.pre == UNDETERMINED) {
+      double hx = (p.max[0]-p.min[0])/grid.logicalCartesianSize()[0];
+      double hy = (p.max[1]-p.min[1])/grid.logicalCartesianSize()[1];
+      double hz = (p.max[2]-p.min[2])/grid.logicalCartesianSize()[2];
+      double aspect = sqrt(hx*hy)/hz;
+      std::cout << "Estimated cell aspect ratio: " << aspect;
+      if (aspect > 80) {
+        p.linsolver.pre = TWOLEVEL;
+        std::cout << " => Using two level preconditioner" << std::endl;
+      } else {
+        p.linsolver.pre = Opm::Elasticity::AMG;
+        std::cout << " => Using AMG preconditioner" << std::endl;
+      }
+    }
+
     if (p.method == UPSCALE_MPC) {
       std::cout << "using MPC couplings in all directions..." << std::endl;
       upscale.periodicBCs(p.min, p.max);
