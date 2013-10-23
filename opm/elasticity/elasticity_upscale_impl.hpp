@@ -300,36 +300,47 @@ IMPL_FUNC(void, assembleBBlockMortar(const BoundaryGrid& b1,
   typename Dune::QuadratureRule<ctype,2>::const_iterator r;
   Dune::DynamicMatrix<ctype> E(ubasis.n,(n1+1)*(n2+1),0.0);
   LoggerHelper help(interface.size(), 5, 1000);
-  for (size_t p=0;p<interface.size();++p) {
-    const BoundaryGrid::Quad& qi(interface[p]);
-    HexGeometry<2,2,GridType> lg(qi);
-    for (size_t q=0;q<b1.colSize(p);++q) {
-      const BoundaryGrid::Quad& qu = b1.getQuad(p,q);
-      HexGeometry<2,2,GridType> hex(qu,gv,dir);
-      E = 0;
-      for (r = rule.begin(); r != rule.end();++r) {
-        ctype detJ = hex.integrationElement(r->position());
-        if (detJ < 0)
-          assert(0);
+  for (int g=0;g<5;++g) {
+    for (int p=help.group(g).first;p<help.group(g).second;++p) {
+      const BoundaryGrid::Quad& qi(interface[p]);
+      HexGeometry<2,2,GridType> lg(qi);
+      for (size_t q=0;q<b1.colSize(p);++q) {
+        const BoundaryGrid::Quad& qu = b1.getQuad(p,q);
+        HexGeometry<2,2,GridType> hex(qu,gv,dir);
+        E = 0;
+        for (r = rule.begin(); r != rule.end();++r) {
+          ctype detJ = hex.integrationElement(r->position());
+          if (detJ < 0)
+            assert(0);
 
-        typename HexGeometry<2,2,GridType>::LocalCoordinate loc = 
-                                        lg.local(hex.global(r->position()));
-        assert(loc[0] <= 1.0+1.e-4 && loc[0] >= 0.0 && loc[1] <= 1.0+1.e-4 && loc[1] >= 0.0);
-        for (int i=0;i<ubasis.n;++i) {
-          for (int j=0;j<lbasis.size();++j) {
-            E[i][j] += ubasis[i].evaluateFunction(r->position())*
-                       lbasis[j].evaluateFunction(loc)*detJ*r->weight();
+          typename HexGeometry<2,2,GridType>::LocalCoordinate loc =
+                                          lg.local(hex.global(r->position()));
+          assert(loc[0] <= 1.0+1.e-4 && loc[0] >= 0.0 && loc[1] <= 1.0+1.e-4 && loc[1] >= 0.0);
+          for (int i=0;i<ubasis.n;++i) {
+            for (int j=0;j<lbasis.size();++j) {
+              E[i][j] += ubasis[i].evaluateFunction(r->position())*
+                         lbasis[j].evaluateFunction(loc)*detJ*r->weight();
+            }
           }
         }
-      }
 
-      // and assemble element contributions
-      for (int d=0;d<3;++d) {
-        for (int i=0;i<4;++i) {
-          const MPC* mpc = A.getMPC(qu.v[i].i,d);
-          if (mpc) {
-            for (size_t n=0;n<mpc->getNoMaster();++n) {
-              int indexi = A.getEquationForDof(mpc->getMaster(n).node,d);
+        // and assemble element contributions
+        for (int d=0;d<3;++d) {
+          for (int i=0;i<4;++i) {
+            const MPC* mpc = A.getMPC(qu.v[i].i,d);
+            if (mpc) {
+              for (size_t n=0;n<mpc->getNoMaster();++n) {
+                int indexi = A.getEquationForDof(mpc->getMaster(n).node,d);
+                if (indexi > -1) {
+                  for (size_t j=0;j<lnodes[p].size();++j) {
+                    int indexj = lnodes[p][j]*3+d;
+                    if (indexj > -1)
+                      B[indexi][indexj+colofs] += alpha*E[i][j];
+                  }
+                }
+              }
+            } else {
+              int indexi = A.getEquationForDof(qu.v[i].i,d);
               if (indexi > -1) {
                 for (size_t j=0;j<lnodes[p].size();++j) {
                   int indexj = lnodes[p][j]*3+d;
@@ -338,20 +349,11 @@ IMPL_FUNC(void, assembleBBlockMortar(const BoundaryGrid& b1,
                 }
               }
             }
-          } else {
-            int indexi = A.getEquationForDof(qu.v[i].i,d);
-            if (indexi > -1) {
-              for (size_t j=0;j<lnodes[p].size();++j) {
-                int indexj = lnodes[p][j]*3+d;
-                if (indexj > -1)
-                  B[indexi][indexj+colofs] += alpha*E[i][j];
-              }
-            }
           }
         }
       }
     }
-    help.log(p, "\t\t\t... still processing ... pillar ");
+    help.log(g, "\t\t\t... still processing ... pillar ");
   }
 }
 
@@ -447,7 +449,6 @@ IMPL_FUNC(void, assemble(int loadcase, bool matrix))
   if (loadcase > -1) {
     EP = &ES;
     eps0[loadcase] = 1;
-    A.getLoadVector() = 0;
     b[loadcase] = 0;
   }
   int m=0;
@@ -457,7 +458,7 @@ IMPL_FUNC(void, assemble(int loadcase, bool matrix))
     A.getOperator() = 0;
   }
 
-  LoggerHelper help(gv.size(0), 5, 50000);
+  LoggerHelper help(gv.size(0), 10, 1000);
   for (LeafIterator it = gv.leafView().template begin<0>(); it != itend; ++it) {
     materials[m++]->getConstitutiveMatrix(C);
     // determine geometry type of the current element and get the matching reference element
@@ -862,7 +863,7 @@ IMPL_FUNC(void, setupSolvers(const LinSolParams& params))
       if (params.mortarpre >= SCHUR) {
         Dune::DynamicMatrix<double> T(B.M(), B.M());
         std::cout << "\tBuilding preconditioner for multipliers..." << std::endl;
-        LoggerHelper help(B.M(), 10, 100);
+        LoggerHelper help(B.M(), 5, 100);
 
         std::shared_ptr< Dune::Preconditioner<Vector,Vector> > pc;
 

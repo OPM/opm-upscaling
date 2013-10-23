@@ -422,7 +422,8 @@ void ASMHandler<GridType>::determineAdjacencyPattern()
           nodeAdjacency(it,vertexsize,meqn[indexi*dim+k]);
       }
     }
-    help.log(cell, "\t\t... still processing ... cell ");
+    if (cell % 10000 == 0)
+      help.log(cell, "\t\t... still processing ... cell ");
   }
 }
 
