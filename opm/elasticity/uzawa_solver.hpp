@@ -17,11 +17,18 @@
 namespace Opm {
   namespace Elasticity {
 
+/*! Template implementing an Uzawa scheme (block Gaussian-elimination) for
+ *  a (symmetric indefinite) saddle-point system */
+
   template<class X, class Y>
 class UzawaSolver : public Dune::InverseOperator<X,Y>
 {
   public:
     typedef std::shared_ptr<Dune::InverseOperator<X,Y> > OperatorPtr;
+    //! \brief Default constructor
+    //! \param[in] innersolver_ The inner solver
+    //! \param[in] outersolve_ The outer solver
+    //! \param[in] B Coupling matrix
     UzawaSolver(OperatorPtr& innersolver_,
                 OperatorPtr& outersolver_,
                 const Matrix& B_) :
@@ -29,12 +36,21 @@ class UzawaSolver : public Dune::InverseOperator<X,Y>
     {
     }
 
+    //! \brief Apply the scheme to a vector
+    //! \param[in] x The solution vector
+    //! \param[in] b The load vector
+    //! \param[in] reduction Ignored
+    //! \param[in] res The inverse operator result
     void apply(X& x, Y& b, double reduction, 
                Dune::InverseOperatorResult& res)
     {
       apply(x, b, res);
     }
 
+    //! \brief Apply the scheme to a vector
+    //! \param[in] x The solution vector
+    //! \param[in] b The load vector
+    //! \param[in] res The inverse operator result
     void apply(X& x, Y& b, Dune::InverseOperatorResult& res)
     {
       Vector lambda, lambda2, u, u2;
@@ -56,9 +72,9 @@ class UzawaSolver : public Dune::InverseOperator<X,Y>
       MortarUtils::injectBlock(x, lambda2, B.M(), B.N());
     }
   protected:
-    OperatorPtr innersolver;
-    OperatorPtr outersolver;
-    const Matrix& B;
+    OperatorPtr innersolver; //!< The inner solver
+    OperatorPtr outersolver; //!< The outer solver
+    const Matrix& B;         //!< The coupling matrix
 };
 
 }

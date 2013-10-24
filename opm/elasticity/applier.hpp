@@ -18,17 +18,28 @@
 namespace Opm {
   namespace Elasticity {
 
+/*! \brief Class abstracting a preconditioner or an inverse operator */
   template<class T>
 struct OperatorApplier
 {
+  //! \brief Constructor
+  //! \param[in] t The preconditioner or inverse operator
   OperatorApplier(T& t) : A(t)
   {
   }
 
+  //! \brief Apply the given operator to a vector
+  //! \param[out] v The result
+  //! \param[in] d The vector to apply to
   void apply(Vector& v, Vector& d);
 
+  //! \brief Preprocess a preconditioner, noop for an inverse operator
+  //! \param[in/out] b The load vector
+  //! \param[in/out] x The initial (guessed) solution
   void pre(Vector& x, Vector& b);
 
+  //! \brief Postprocess a preconditioner, noop for an inverse operator
+  //! \param[in/out] x The final solution
   void post(Vector& x);
 
   T& A;

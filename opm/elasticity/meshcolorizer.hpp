@@ -24,30 +24,36 @@
  */
   template<class GridType>
 class MeshColorizer {
-  typedef std::vector<int> IntVec;
-  typedef std::vector<IntVec> IntMat;
+  typedef std::vector<int> IntVec; //!< A vector of integers
+  typedef std::vector<IntVec> IntMat; //!< A matrix of integers
 
   public:
+    //! \brief Default constructor
+    //! \param[in] grid_ The grid to colorize
     MeshColorizer(const GridType& grid_) :
       grid(grid_)
     {
       calcGroups();
     }
 
+    //! \brief Return a color group
+    //! \param[in] i The color to return, either 0 or 1
     const IntMat& operator[](unsigned int i)
     {
       return tg[i];
     }
 
+    //! \brief Calculate the coloring
     void calcGroups();
-
-    ~MeshColorizer()
-    {
-    }
   private:
-    IntMat tg[2];
-    const GridType& grid;
+    IntMat tg[2]; //!< The color groups
+    const GridType& grid; //!< Reference to grid being colored
 
+    //! \brief Find the optimal stripping direction (x, y or z)
+    //! \param[in] nel1 Number of elements in x direction
+    //! \param[in] nel2 Number of elements in y direction
+    //! \param[in] nel3 Number of elements in z direction
+    //! \param[in] parts Number of parts (threads) to use
     int getStripDirection (int nel1, int nel2, int nel3, int parts)
     {
       int s1 = nel1 / parts;

@@ -17,8 +17,13 @@
 #include <omp.h>
 #endif
 
+/*! \brief Helper class for progress logging during time consuming processes */
 class LoggerHelper {
   public:
+    //! \brief Default constructor
+    //! \param[in] max_ The total number of tasks
+    //! \param[in] chunks The number of chunks to divide tasks into
+    //! \param[in] minsize The minimum amount of tasks to enable logging
     LoggerHelper(int max_, int chunks, int minsize)
       : per_chunk(max_/chunks), max(max_)
     {
@@ -36,11 +41,16 @@ class LoggerHelper {
         per_chunk=-1;
     }
 
+    //! \brief Returns the start and end offsets of a chunk group
+    //! \param[in] group The requested chunk 
     std::pair<int, int> group(int group)
     {
       return std::make_pair(groups[group],groups[group+1]);
     }
 
+    //! \brief Log to the terminal.
+    //! \param[in] it Current chunk
+    //! \param[in] prefix The prefix for the logging
     void log(int it, const std::string& prefix)
     {
       if(per_chunk == -1)
