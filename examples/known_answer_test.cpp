@@ -44,6 +44,11 @@
 
 #include <array>
 #include <dune/common/mpihelper.hh>
+
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2, 3)
+#define DUNE_GRID_EXPERIMENTAL_GRID_EXTENSIONS 1
+#endif
+
 #include <opm/core/utility/Units.hpp>
 
 // #if HAVE_ALUGRID
