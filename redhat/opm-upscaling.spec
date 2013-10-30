@@ -2,7 +2,7 @@
 # spec file for package opm-upscaling
 #
 
-%define tag rc2
+%define tag final
 
 Name:           opm-upscaling
 Version:        2013.10
