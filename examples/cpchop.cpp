@@ -211,7 +211,7 @@ try
     double z_tolerance = param.getDefault("z_tolerance", 0.0);
     double residual_tolerance = param.getDefault("residual_tolerance", 1e-8);
     int linsolver_verbosity = param.getDefault("linsolver_verbosity", 0);
-    int linsolver_type = param.getDefault("linsolver_type", 1);
+    int linsolver_type = param.getDefault("linsolver_type", 3);
 
     //  Guarantee initialization
     double Pcmax = -DBL_MAX, Pcmin = DBL_MAX;
