@@ -1360,6 +1360,9 @@ namespace Opm {
                 const int c0 = cell[ci];            assert (c0 < cf.size());
                 const int nf = cf[c0].size();
 
+                rhs  .resize(nf);
+                gflux.resize(nf);
+
                 setExternalContrib(c, c0, bc, src[ci], rhs,
                                    facetype, condval, ppartner);
 
