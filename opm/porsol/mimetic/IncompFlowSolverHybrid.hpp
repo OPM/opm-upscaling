@@ -60,6 +60,10 @@
 #include <dune/istl/solvers.hh>
 #include <dune/istl/owneroverlapcopy.hh>
 #include <dune/istl/paamg/amg.hh>
+#include <dune/common/version.hh>
+#if DUNE_VERSION_NEWER(DUNE_ISTL, 2, 3)
+#include <dune/istl/paamg/fastamg.hh>
+#endif
 #include <dune/istl/paamg/kamg.hh>
 #include <dune/istl/paamg/pinfo.hh>
 
@@ -681,7 +685,7 @@ namespace Opm {
 				      linsolver_maxit, prolongate_factor, same_matrix,smooth_steps);
                 break;
             case 3: // CG preconditioned with AMG that uses less memory badwidth
-#ifdef HAS_DUNE_FAST_AMG
+#if defined(HAS_DUNE_FAST_AMG) || DUNE_VERSION_NEWER(DUNE_ISTL, 2, 3)
                 solveLinearSystemFastAMG(residual_tolerance, linsolver_verbosity, 
                              linsolver_maxit, prolongate_factor, same_matrix,smooth_steps);
 #else
@@ -1533,7 +1537,7 @@ namespace Opm {
 
         }
 
-#ifdef HAS_DUNE_FAST_AMG
+#if defined(HAS_DUNE_FAST_AMG) || DUNE_VERSION_NEWER(DUNE_ISTL, 2, 3)
 
         // ----------------------------------------------------------------
         void solveLinearSystemFastAMG(double residual_tolerance, int verbosity_level,
