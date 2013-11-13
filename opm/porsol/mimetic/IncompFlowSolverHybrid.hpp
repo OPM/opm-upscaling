@@ -1692,6 +1692,9 @@ namespace Opm {
                 const int c0 = cell[c->index()];
                 const int nf = cf.rowSize(c0);
 
+                pi   .resize(nf);
+                gflux.resize(nf);
+
                 // Extract contact pressures for cell 'c'.
                 for (int i = 0; i < nf; ++i) {
                     pi[i] = soln_[cf[c0][i]];
