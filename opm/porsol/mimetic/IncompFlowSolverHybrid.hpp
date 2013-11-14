@@ -1360,6 +1360,9 @@ namespace Opm {
                 const int c0 = cell[ci];            assert (c0 < cf.size());
                 const int nf = cf[c0].size();
 
+                rhs  .resize(nf);
+                gflux.resize(nf);
+
                 setExternalContrib(c, c0, bc, src[ci], rhs,
                                    facetype, condval, ppartner);
 
@@ -1688,6 +1691,9 @@ namespace Opm {
             for (CI c = pgrid_->cellbegin(); c != pgrid_->cellend(); ++c) {
                 const int c0 = cell[c->index()];
                 const int nf = cf.rowSize(c0);
+
+                pi   .resize(nf);
+                gflux.resize(nf);
 
                 // Extract contact pressures for cell 'c'.
                 for (int i = 0; i < nf; ++i) {
