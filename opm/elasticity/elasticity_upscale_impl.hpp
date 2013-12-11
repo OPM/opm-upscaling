@@ -586,6 +586,12 @@ IMPL_FUNC(void, loadMaterialsFromGrid(const std::string& file))
     if (deck->hasKeyword("YOUNGMOD") && deck->hasKeyword("POISSONMOD")) {
       Emod = deck->getKeyword("YOUNGMOD")->getRawDoubleData();
       Poiss = deck->getKeyword("POISSONMOD")->getRawDoubleData();
+      std::vector<double>::const_iterator it = std::min_element(Poiss.begin(), Poiss.end());
+      if (*it < 0) {
+        std::cerr << "Auxetic material specified for cell " << it-Poiss.begin() << std::endl
+                  << "Emod: "<< Emod[it-Poiss.begin()] << " Poisson's ratio: " << *it << std::endl << "bailing..." << std::endl;
+        exit(1);
+      }
     } else if (deck->hasKeyword("LAMEMOD") && deck->hasKeyword("SHEARMOD")) {
       std::vector<double> lame = deck->getKeyword("LAMEMOD")->getRawDoubleData();
       std::vector<double> shear = deck->getKeyword("SHEARMOD")->getRawDoubleData();
@@ -595,6 +601,13 @@ IMPL_FUNC(void, loadMaterialsFromGrid(const std::string& file))
         Emod[i]  = shear[i]*(3*lame[i]+2*shear[i])/(lame[i]+shear[i]);
         Poiss[i] = 0.5*lame[i]/(lame[i]+shear[i]);
       }
+      std::vector<double>::const_iterator it = std::min_element(Poiss.begin(), Poiss.end());
+      if (*it < 0) {
+        std::cerr << "Auxetic material specified for cell " << it-Poiss.begin() << std::endl
+                  << "Lamè modulus: " << lame[it-Poiss.begin()] << " Shearmodulus: " << shear[it-Poiss.begin()] << std::endl
+                  << "Emod: "<< Emod[it-Poiss.begin()] << " Poisson's ratio: " << *it << std::endl << "bailing..." << std::endl;
+        exit(1);
+      }
     } else if (deck->hasKeyword("BULKMOD") && deck->hasKeyword("SHEARMOD")) {
       std::vector<double> bulk = deck->getKeyword("BULKMOD")->getRawDoubleData();
       std::vector<double> shear = deck->getKeyword("SHEARMOD")->getRawDoubleData();
@@ -603,6 +616,13 @@ IMPL_FUNC(void, loadMaterialsFromGrid(const std::string& file))
       for (size_t i=0;i<bulk.size();++i) {
         Emod[i]  = 9*bulk[i]*shear[i]/(3*bulk[i]+shear[i]);
         Poiss[i] = 0.5*(3*bulk[i]-2*shear[i])/(3*bulk[i]+shear[i]);
+      }
+      std::vector<double>::const_iterator it = std::min_element(Poiss.begin(), Poiss.end());
+      if (*it < 0) {
+        std::cerr << "Auxetic material specified for cell " << it-Poiss.begin() << std::endl
+                  << "Bulkmodulus: " << bulk[it-Poiss.begin()] << " Shearmodulus: " << shear[it-Poiss.begin()] << std::endl
+                 << "Emod: "<< Emod[it-Poiss.begin()] << " Poisson's ratio: " << *it << std::endl << "bailing..." << std::endl;
+        exit(1);
       }
     } else if (deck->hasKeyword("PERMX") && deck->hasKeyword("PORO")) {
       std::cerr << "WARNING: Using PERMX and PORO for elastic material properties" << std::endl;
