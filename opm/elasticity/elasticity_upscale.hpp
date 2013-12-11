@@ -217,8 +217,10 @@ class ElasticityUpscale
     //! \brief The load vectors
     Vector b[6];
 
-    //! \brief Vector holding the volume fractions for materials
+    //! \brief Vector holding the volume fractions for materials (grouped by SATNUM)
     std::vector<double> volumeFractions;
+    //! \brief Are volume fractions grouped by SATNUM?
+    bool bySat; 
 
     //! \brief Main constructor
     //! \param[in] gv_ The grid to operate on

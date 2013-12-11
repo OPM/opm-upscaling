@@ -576,6 +576,7 @@ IMPL_FUNC(void, loadMaterialsFromGrid(const std::string& file))
   MaterialMap cache;
   std::vector<double> Emod;
   std::vector<double> Poiss;
+  std::vector<int> satnum;
   if (file == "uniform") {
     int cells = gv.size(0);
     Emod.insert(Emod.begin(),cells,100.f);
@@ -632,6 +633,8 @@ IMPL_FUNC(void, loadMaterialsFromGrid(const std::string& file))
       std::cerr << "No material data found in eclipse file, aborting" << std::endl;
       exit(1);
     }
+    if (deck->hasKeyword("SATNUM"))
+      satnum = deck->getKeyword("SATNUM")->getIntData();
   }
   // scale E modulus of materials
   if (Escale > 0) {
@@ -651,31 +654,44 @@ IMPL_FUNC(void, loadMaterialsFromGrid(const std::string& file))
   for (size_t i=0;i<cells.size();++i) {
     int k = cells[i];
     MaterialMap::iterator it;
-    if ((it = cache.find(std::make_pair(Emod[k],Poiss[k]))) != cache.end())
-    {
+    if ((it = cache.find(std::make_pair(Emod[k],Poiss[k]))) != cache.end()) {
       assert(gv.cellVolume(i) > 0);
       volume[it->second.get()] += gv.cellVolume(i);
       materials.push_back(it->second);
-    }
-    else {
+    } else {
       std::shared_ptr<Material> mat(new Isotropic(j++,Emod[k],Poiss[k]));
       cache.insert(std::make_pair(std::make_pair(Emod[k],Poiss[k]),mat));
       assert(gv.cellVolume(i) > 0);
       volume.insert(std::make_pair(mat.get(),gv.cellVolume(i)));
       materials.push_back(mat);
     }
+    if (!satnum.empty()) {
+      if (satnum[k] > (int)volumeFractions.size())
+        volumeFractions.resize(satnum[k]);
+      volumeFractions[satnum[k]-1] += gv.cellVolume(i);
+    }
   }
   std::cout << "Number of materials: " << cache.size() << std::endl;
-  // statistics
+
   double totalvolume=0;
   for (std::map<Material*,double>::iterator it  = volume.begin(); 
                                             it != volume.end(); ++it) 
     totalvolume += it->second;
 
-  int i=0;
-  for (MaterialMap::iterator it = cache.begin(); it != cache.end(); ++it, ++i) {
-    std::cout << "  Material" << i+1 << ": " << 100.f*volume[it->second.get()]/totalvolume << '%' << std::endl;
-    volumeFractions.push_back(volume[it->second.get()]/totalvolume);
+  // statistics
+  if (satnum.empty()) {
+    int i=0;
+    for (MaterialMap::iterator it = cache.begin(); it != cache.end(); ++it, ++i) {
+      std::cout << "  Material" << i+1 << ": " << 100.f*volume[it->second.get()]/totalvolume << '%' << std::endl;
+      volumeFractions.push_back(volume[it->second.get()]/totalvolume);
+    }
+    bySat = false;
+  } else {
+    for (size_t j=0; j < volumeFractions.size(); ++j) {
+      volumeFractions[j] /= totalvolume;
+      std::cout << "SATNUM " << j+1 << ": " << volumeFractions[j]*100 << '%' << std::endl;
+    }
+    bySat = true;
   }
 }
 
@@ -736,9 +752,10 @@ IMPL_FUNC(void, loadMaterialsFromRocklist(const std::string& file,
   // statistics
   double totalvolume = std::accumulate(volume.begin(),volume.end(),0.f);
   for (size_t i=0;i<cache.size();++i) {
-    std::cout << "  Material" << i+1 << ": " << 100.f*volume[i]/totalvolume << '%' << std::endl;
+    std::cout << " SATNUM " << i+1 << ": " << 100.f*volume[i]/totalvolume << '%' << std::endl;
     volumeFractions.push_back(volume[i]/totalvolume);
   }
+  bySat = true;
 }
 
 IMPL_FUNC(void, fixCorners(const double* min, const double* max))

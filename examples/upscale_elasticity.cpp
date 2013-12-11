@@ -171,7 +171,7 @@ void parseCommandLine(int argc, char** argv, Params& p)
 
 //! \brief Write a log of the simulation to a text file
 void writeOutput(const Params& p, Opm::time::StopWatch& watch, int cells,
-                 const std::vector<double>& volume, 
+                 const std::vector<double>& volume, bool bySat,
                  const Dune::FieldMatrix<double,6,6>& C)
 {
   // get current time
@@ -225,10 +225,16 @@ void writeOutput(const Params& p, Opm::time::StopWatch& watch, int cells,
       << "#\t          cellsy: " << p.cellsy << std::endl
       << "#\t          cellsz: " << p.cellsz << std::endl;
   }
-  f << "#" << std::endl
-    <<"# Materials: " << volume.size() << std::endl;
-  for (size_t i=0;i<volume.size();++i)
-    f << "#\t Material" << i+1 << ": " << volume[i]*100 << "%" << std::endl;
+  f << "#" << std::endl;
+  if (bySat) {
+    f << "# SATNUM: " << volume.size() << std::endl;
+    for (size_t i=0;i<volume.size();++i)
+      f << "#\t SATNUM " << i+1 << ": " << volume[i]*100 << "%" << std::endl;
+  } else {
+    f <<"# Materials: " << volume.size() << std::endl;
+    for (size_t i=0;i<volume.size();++i)
+      f << "#\t Material" << i+1 << ": " << volume[i]*100 << "%" << std::endl;
+  }
   f << "#" << std::endl
     << "######################################################################" << std::endl
     << C << std::endl;
@@ -392,7 +398,8 @@ int run(Params& p)
     std::cout << "---------" << std::endl;
     std::cout << C << std::endl;
     if (!p.output.empty())
-      writeOutput(p,watch,grid.size(0),upscale.volumeFractions,C);
+      writeOutput(p, watch, grid.size(0), upscale.volumeFractions,
+                  upscale.bySat, C);
 
     return 0;
   }
