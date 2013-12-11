@@ -172,7 +172,8 @@ void parseCommandLine(int argc, char** argv, Params& p)
 //! \brief Write a log of the simulation to a text file
 void writeOutput(const Params& p, Opm::time::StopWatch& watch, int cells,
                  const std::vector<double>& volume, bool bySat,
-                 const Dune::FieldMatrix<double,6,6>& C)
+                 const Dune::FieldMatrix<double,6,6>& C,
+                 double upscaledRho)
 {
   // get current time
   time_t rawtime;
@@ -235,6 +236,9 @@ void writeOutput(const Params& p, Opm::time::StopWatch& watch, int cells,
     for (size_t i=0;i<volume.size();++i)
       f << "#\t Material" << i+1 << ": " << volume[i]*100 << "%" << std::endl;
   }
+  if (upscaledRho > 0)
+    f << "#" << std::endl << "# Upscaled density: " << upscaledRho << std::endl;
+
   f << "#" << std::endl
     << "######################################################################" << std::endl
     << C << std::endl;
@@ -399,7 +403,7 @@ int run(Params& p)
     std::cout << C << std::endl;
     if (!p.output.empty())
       writeOutput(p, watch, grid.size(0), upscale.volumeFractions,
-                  upscale.bySat, C);
+                  upscale.bySat, C, upscale.upscaledRho);
 
     return 0;
   }

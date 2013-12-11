@@ -222,6 +222,9 @@ class ElasticityUpscale
     //! \brief Are volume fractions grouped by SATNUM?
     bool bySat; 
 
+    //! \brief Upscaled density
+    double upscaledRho;
+
     //! \brief Main constructor
     //! \param[in] gv_ The grid to operate on
     //! \param[in] tol_ The tolerance to use when deciding whether or not a coordinate falls on a plane/line/point. \sa tol

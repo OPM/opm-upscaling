@@ -577,6 +577,9 @@ IMPL_FUNC(void, loadMaterialsFromGrid(const std::string& file))
   std::vector<double> Emod;
   std::vector<double> Poiss;
   std::vector<int> satnum;
+  std::vector<double> rho;
+  upscaledRho = -1;
+
   if (file == "uniform") {
     int cells = gv.size(0);
     Emod.insert(Emod.begin(),cells,100.f);
@@ -635,6 +638,8 @@ IMPL_FUNC(void, loadMaterialsFromGrid(const std::string& file))
     }
     if (deck->hasKeyword("SATNUM"))
       satnum = deck->getKeyword("SATNUM")->getIntData();
+    if (deck->hasKeyword("RHO"))
+      rho = deck->getKeyword("RHO")->getRawDoubleData();
   }
   // scale E modulus of materials
   if (Escale > 0) {
@@ -670,6 +675,8 @@ IMPL_FUNC(void, loadMaterialsFromGrid(const std::string& file))
         volumeFractions.resize(satnum[k]);
       volumeFractions[satnum[k]-1] += gv.cellVolume(i);
     }
+    if (!rho.empty())
+      upscaledRho += gv.cellVolume(i)*rho[k];
   }
   std::cout << "Number of materials: " << cache.size() << std::endl;
 
@@ -692,6 +699,10 @@ IMPL_FUNC(void, loadMaterialsFromGrid(const std::string& file))
       std::cout << "SATNUM " << j+1 << ": " << volumeFractions[j]*100 << '%' << std::endl;
     }
     bySat = true;
+  }
+  if (upscaledRho > 0) {
+    upscaledRho /= totalvolume;
+    std::cout << "Upscaled density: " << upscaledRho << std::endl;
   }
 }
 
