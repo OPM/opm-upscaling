@@ -97,6 +97,43 @@ void Elasticity<GridType>::getStressVector(Dune::FieldVector<ctype,comp>& sigma,
 {
   sigma = Dune::FMatrixHelp::mult(C,Dune::FMatrixHelp::mult(B,v)+eps0);
 }
+
+Dune::FieldVector<double,3> waveSpeeds(const Dune::FieldMatrix<double,6,6>& C, double phi, double theta, double density)
+{
+  const double r = 1;
+  Dune::FieldVector<double, 3> x;
+  x[0] = r*cos(theta)*cos(phi);
+  x[1] = r*sin(theta)*cos(phi);
+  x[2] = r*sin(phi);
+  
+  Dune::FieldMatrix<double, 3, 6> D;
+  D[0][0] = x[0];
+  D[0][4] = x[2];
+  D[0][5] = x[1];
+  D[1][1] = x[1];
+  D[1][3] = x[2];
+  D[1][5] = x[0];
+  D[2][2] = x[2];
+  D[2][3] = x[1];
+  D[2][4] = x[0];
+  D /= x.two_norm();
+  Dune::FieldMatrix<double, 6, 3> Dt;
+  for (size_t i=0;i<6;++i)
+    for (size_t j=0;j<3;++j)
+      Dt[i][j] = D[j][i];
+
+  Dune::FieldMatrix<double, 3, 6> T;
+  Dune::FieldMatrix<double, 3, 3> E;
+  Dune::FMatrixHelp::multMatrix(D, C, T);
+  Dune::FMatrixHelp::multMatrix(T, Dt, E);
+  Dune::FieldVector<double, 3> eigenvalues;
+  Dune::FMatrixHelp::eigenValues(E, eigenvalues);
+  std::sort(eigenvalues.begin(), eigenvalues.end(), std::greater<double>());
+  for (size_t i=0;i<3;++i)
+    eigenvalues[i] = sqrt(eigenvalues[i]/density);
+
+  return eigenvalues;
+}
 }}
 
 #endif

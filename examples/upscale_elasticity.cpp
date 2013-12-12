@@ -22,6 +22,7 @@
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 #include <dune/istl/matrixmarket.hh>
+#include <dune/common/fmatrix.hh>
 
 #ifdef HAVE_OPENMP
 #include <omp.h>
@@ -38,6 +39,10 @@
 #include <opm/elasticity/matrixops.hpp>
 
 using namespace Opm::Elasticity;
+
+#ifndef M_PI
+#define M_PI std::acos(-1.0)
+#endif
 
 //! \brief Display the available command line parameters
 void syntax(char** argv)
@@ -107,6 +112,10 @@ struct Params {
   int n1;
   //! \brief Number of elements on interface grid in the y direction
   int n2;
+  //! \brief Dip angle for wavespeeds
+  double dip;
+  //! \brief Azimuth angle for wavespeeds
+  double azimuth;
 
   //! \brief Linear solver parameters
   LinSolParams linsolver;
@@ -147,6 +156,8 @@ void parseCommandLine(int argc, char** argv, Params& p)
   if (method == "none")
     p.method = UPSCALE_NONE;
   p.Emin     = param.getDefault<double>("Emin",0.0);
+  p.dip      = param.getDefault<double>("dip_angle", M_PI/2);
+  p.azimuth  = param.getDefault<double>("azimuth_angle", 0.0);
   p.ctol     = param.getDefault<double>("ctol",1.e-6);
   p.file     = param.get<std::string>("gridfilename");
   p.rocklist = param.getDefault<std::string>("rock_list","");
@@ -173,7 +184,7 @@ void parseCommandLine(int argc, char** argv, Params& p)
 void writeOutput(const Params& p, Opm::time::StopWatch& watch, int cells,
                  const std::vector<double>& volume, bool bySat,
                  const Dune::FieldMatrix<double,6,6>& C,
-                 double upscaledRho)
+                 double upscaledRho, const Dune::FieldVector<double,3>& speeds)
 {
   // get current time
   time_t rawtime;
@@ -236,8 +247,10 @@ void writeOutput(const Params& p, Opm::time::StopWatch& watch, int cells,
     for (size_t i=0;i<volume.size();++i)
       f << "#\t Material" << i+1 << ": " << volume[i]*100 << "%" << std::endl;
   }
-  if (upscaledRho > 0)
+  if (upscaledRho > 0) {
     f << "#" << std::endl << "# Upscaled density: " << upscaledRho << std::endl;
+    f << "#" << std::endl << "# Wave speeds: " << speeds << std::endl;
+  }
 
   f << "#" << std::endl
     << "######################################################################" << std::endl
@@ -394,6 +407,12 @@ int run(Params& p)
       vtkwriter.write(p.vtufile);
     }
 
+    Dune::FieldVector<double,3> speeds;
+    if (upscale.upscaledRho > -1) {
+      speeds = Opm::Elasticity::waveSpeeds(C, p.dip, p.azimuth, 1.0);
+      std::cout << "Wave speeds: " << speeds << std::endl;
+    }
+
     // voigt notation
     for (int j=0;j<6;++j)
       std::swap(C[3][j],C[5][j]);
@@ -403,7 +422,7 @@ int run(Params& p)
     std::cout << C << std::endl;
     if (!p.output.empty())
       writeOutput(p, watch, grid.size(0), upscale.volumeFractions,
-                  upscale.bySat, C, upscale.upscaledRho);
+                  upscale.bySat, C, upscale.upscaledRho, speeds);
 
     return 0;
   }
