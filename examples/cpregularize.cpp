@@ -161,12 +161,13 @@ try
     for (int zidx_c=0; zidx_c < zres; ++zidx_c) {
         for (int jidx_c=0; jidx_c < jres; ++jidx_c) {
             for (int iidx_c=0; iidx_c < ires; ++iidx_c) {
+                Opm::CornerPointChopper::ChopContext context;
                 ch.chop(iidx_f[iidx_c], iidx_f[iidx_c+1],
 			jidx_f[jidx_c], jidx_f[jidx_c+1],
 			zcorn_c[zidx_c], zcorn_c[zidx_c+1],
-			false);
+			context, false);
 		try {
-		    Opm::EclipseGridParser subparser = ch.subparser();
+		    Opm::EclipseGridParser subparser = ch.subparser(context);
                     subparser.convertToSI(); // Because the upscaler expects SI units.
 		    Opm::SinglePhaseUpscaler upscaler;
 		    upscaler.init(subparser, Opm::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
