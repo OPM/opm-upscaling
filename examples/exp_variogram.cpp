@@ -171,9 +171,10 @@ try
         int istart_1 = ri();
         int jstart_1 = rj();
         double zstart_1 = rz();
-        ch.chop(istart_1, istart_1 + ilen, jstart_1, jstart_1 + jlen, zstart_1, zstart_1 + zlen, false);
+        Opm::CornerPointChopper::ChopContext context;
+        ch.chop(istart_1, istart_1 + ilen, jstart_1, jstart_1 + jlen, zstart_1, zstart_1 + zlen, context, false);
 	
-        Opm::EclipseGridParser subparser_1 = ch.subparser();
+        Opm::EclipseGridParser subparser_1 = ch.subparser(context);
         subparser_1.convertToSI();
         Opm::SinglePhaseUpscaler upscaler_1;
         upscaler_1.init(subparser_1, Opm::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
@@ -195,9 +196,10 @@ try
             jstart_2 = jstart_1;
             zstart_2 = rz();
         }   
-        ch.chop(istart_2, istart_2 + ilen, jstart_2, jstart_2 + jlen, zstart_2, zstart_2 + zlen, false);
+        Opm::CornerPointChopper::ChopContext context2;
+        ch.chop(istart_2, istart_2 + ilen, jstart_2, jstart_2 + jlen, zstart_2, zstart_2 + zlen, context2, false);
 	
-        Opm::EclipseGridParser subparser_2 = ch.subparser();
+        Opm::EclipseGridParser subparser_2 = ch.subparser(context2);
 	subparser_2.convertToSI();
         Opm::SinglePhaseUpscaler upscaler_2;
         upscaler_2.init(subparser_2, Opm::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,

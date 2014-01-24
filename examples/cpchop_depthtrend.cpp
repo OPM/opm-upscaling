@@ -148,7 +148,8 @@ try
            to have ilen=imax-min so that there is no randomness */
         int istart = ri();
         int jstart = rj();
-        ch.chop(istart, istart + ilen, jstart, jstart + jlen, zstart, std::min(zstart + zlen,zmax), resettoorigin);
+        Opm::CornerPointChopper::ChopContext context;
+        ch.chop(istart, istart + ilen, jstart, jstart + jlen, zstart, std::min(zstart + zlen,zmax), context, resettoorigin);
         std::string subsampledgrdecl = filebase;
 
         // Output grdecl-data to file if a filebase is supplied.
@@ -157,12 +158,12 @@ try
             oss << 'Z' << std::setw(4) << std::setfill('0') << zstart;
             subsampledgrdecl += oss.str();
             subsampledgrdecl += ".grdecl";
-            ch.writeGrdecl(subsampledgrdecl);
+            ch.writeGrdecl(subsampledgrdecl, context);
         }
 
         try { /* The upscaling may fail to converge on icky grids, lets just pass by those */
             if (upscale) {
-                Opm::EclipseGridParser subparser = ch.subparser();
+                Opm::EclipseGridParser subparser = ch.subparser(context);
                 subparser.convertToSI();
                 Opm::SinglePhaseUpscaler upscaler;
                 upscaler.init(subparser, Opm::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
