@@ -115,6 +115,14 @@ namespace Opm
         /// @return total net of all cells divided by total volume.
         double upscaleNTG() const;
 
+        /// Compute upscaled SWCR.
+        /// @return total irreducible water volume divided by total pore volume
+        double upscaleSWCR(const bool NTG) const;
+
+        /// Compute upscaled SOWCR.
+        /// @return total irreducible oil volume divided by total pore volume
+        double upscaleSOWCR(const bool NTG) const;
+
     protected:
 	// ------- Typedefs and enums -------
 	typedef GridInterface::CellIterator                CellIter;

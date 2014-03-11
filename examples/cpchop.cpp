@@ -277,6 +277,8 @@ try
     std::vector<double> porosities;
     std::vector<double> netporosities;
     std::vector<double> ntgs;
+    std::vector<double> swcrs;
+    std::vector<double> sowcrs;
     std::vector<double> permxs;
     std::vector<double> permys;
     std::vector<double> permzs;
@@ -329,6 +331,12 @@ try
                     netporosities.push_back(upscaler.upscaleNetPorosity());
                     ntgs.push_back(upscaler.upscaleNTG());                    
                 }
+                if (ch.hasSWCR()) {
+                    swcrs.push_back(upscaler.upscaleSWCR(ch.hasNTG()));
+                }
+                if (ch.hasSOWCR()) {
+                    sowcrs.push_back(upscaler.upscaleSOWCR(ch.hasNTG()));
+                }
                 permxs.push_back(upscaled_K(0,0));
                 permys.push_back(upscaled_K(1,1));
                 permzs.push_back(upscaled_K(2,2));
@@ -339,7 +347,7 @@ try
             }
 
             if (endpoints) {
-                // Calculate minimum and maximum water volume in each cell
+                // Calculate minimum and maximum water volume in each cell based on input pc-curves per rock type
                 // Create single-phase upscaling object to get poro and perm values from the grid
                 Opm::EclipseGridParser subparser = ch.subparser();
                 std::vector<double>  perms = subparser.getFloatingPointValue("PERMX");
@@ -592,6 +600,12 @@ try
                 outputtmp << "          porosity                 permx                   permy                   permz";
             }
         }
+        if (ch.hasSWCR()) {
+            outputtmp << "               swcr ";
+        }
+        if (ch.hasSOWCR()) {
+            outputtmp << "               sowcr ";
+        }
     }
     if (endpoints) {
         if (!upscale) {
@@ -640,6 +654,14 @@ try
             if (ch.hasNTG()) {
                 outputtmp <<
                     std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << (permxs[sample-1]+permys[sample-1])/(2.0*ntgs[sample-1]) << '\t';
+            }
+            if (ch.hasSWCR()) {
+                outputtmp <<
+                    std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << swcrs[sample-1] << '\t';
+            }
+            if (ch.hasSOWCR()) {
+                outputtmp <<
+                    std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << sowcrs[sample-1] << '\t';
             }
 	}
 	if (endpoints) {
