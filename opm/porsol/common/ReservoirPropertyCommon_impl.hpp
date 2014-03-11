@@ -286,6 +286,8 @@ namespace Opm
 
         assignPorosity    (parser, global_cell);
         assignNTG         (parser, global_cell);
+        assignSWCR        (parser, global_cell);
+        assignSOWCR       (parser, global_cell);
         assignPermeability(parser, global_cell, perm_threshold);
         assignRockTable   (parser, global_cell);
 
@@ -381,6 +383,18 @@ namespace Opm
     double ReservoirPropertyCommon<dim, RPImpl, RockType>::ntg(int cell_index) const
     {
         return ntg_[cell_index];
+    }
+
+    template <int dim, class RPImpl, class RockType>
+    double ReservoirPropertyCommon<dim, RPImpl, RockType>::swcr(int cell_index) const
+    {
+        return swcr_[cell_index];
+    }
+
+    template <int dim, class RPImpl, class RockType>
+    double ReservoirPropertyCommon<dim, RPImpl, RockType>::sowcr(int cell_index) const
+    {
+        return sowcr_[cell_index];
     }
 
 
@@ -612,6 +626,50 @@ namespace Opm
             }
             for (int c = 0; c < int(ntg_.size()); ++c) {
                 ntg_[c] = ntg[global_cell[c]];
+            }
+        }
+    }
+
+    template <int dim, class RPImpl, class RockType>
+    void ReservoirPropertyCommon<dim, RPImpl, RockType>::assignSWCR(const Opm::EclipseGridParser& parser,
+                                                         const std::vector<int>& global_cell)
+    {
+        swcr_.assign(global_cell.size(), 0.0);
+
+        if (parser.hasField("SWCR")) {
+            Opm::EclipseGridInspector insp(parser);
+            std::array<int, 3> dims = insp.gridSize();
+            int num_global_cells = dims[0]*dims[1]*dims[2];
+            const std::vector<double>& swcr = parser.getFloatingPointValue("SWCR");
+            if (int(swcr.size()) != num_global_cells) {
+                OPM_THROW(std::runtime_error, "SWCR field must have the same size as the "
+                      "logical cartesian size of the grid: "
+                      << swcr.size() << " != " << num_global_cells);
+            }
+            for (int c = 0; c < int(swcr_.size()); ++c) {
+                swcr_[c] = swcr[global_cell[c]];
+            }
+        }
+    }
+
+    template <int dim, class RPImpl, class RockType>
+    void ReservoirPropertyCommon<dim, RPImpl, RockType>::assignSOWCR(const Opm::EclipseGridParser& parser,
+                                                         const std::vector<int>& global_cell)
+    {
+        sowcr_.assign(global_cell.size(), 0.0);
+
+        if (parser.hasField("SOWCR")) {
+            Opm::EclipseGridInspector insp(parser);
+            std::array<int, 3> dims = insp.gridSize();
+            int num_global_cells = dims[0]*dims[1]*dims[2];
+            const std::vector<double>& sowcr = parser.getFloatingPointValue("SOWCR");
+            if (int(sowcr.size()) != num_global_cells) {
+                OPM_THROW(std::runtime_error, "SOWCR field must have the same size as the "
+                      "logical cartesian size of the grid: "
+                      << sowcr.size() << " != " << num_global_cells);
+            }
+            for (int c = 0; c < int(sowcr_.size()); ++c) {
+                sowcr_[c] = sowcr[global_cell[c]];
             }
         }
     }

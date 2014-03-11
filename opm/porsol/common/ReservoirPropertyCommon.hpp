@@ -133,6 +133,16 @@ namespace Opm
         /// @return ntg value of the cell.
         double ntg(int cell_index) const;
 
+        /// @brief Read-access to swcr.
+        /// @param cell_index index of a grid cell.
+        /// @return swcr value of the cell.
+        double swcr(int cell_index) const;
+
+        /// @brief Read-access to sowcr.
+        /// @param cell_index index of a grid cell.
+        /// @return sowcr value of the cell.
+        double sowcr(int cell_index) const;
+
         /// @brief Read-access to permeability.
         /// @param cell_index index of a grid cell.
         /// @return permeability value of the cell.
@@ -204,6 +214,10 @@ namespace Opm
                             const std::vector<int>& global_cell);
         void assignNTG(const Opm::EclipseGridParser& parser,
                             const std::vector<int>& global_cell);
+        void assignSWCR(const Opm::EclipseGridParser& parser,
+                            const std::vector<int>& global_cell);
+        void assignSOWCR(const Opm::EclipseGridParser& parser,
+                            const std::vector<int>& global_cell);
         void assignPermeability(const Opm::EclipseGridParser& parser,
                                 const std::vector<int>& global_cell,
                                 const double perm_threshold);
@@ -217,6 +231,8 @@ namespace Opm
 	// Data members.
         std::vector<double>        porosity_;
         std::vector<double>        ntg_;
+        std::vector<double>        swcr_;
+        std::vector<double>        sowcr_;
         std::vector<double>        permeability_;
         std::vector<unsigned char> permfield_valid_;
         double density1_;
