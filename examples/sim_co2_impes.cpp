@@ -21,7 +21,6 @@
 
 #include "config.h"
 
-#include <opm/core/io/eclipse/EclipseGridParser.hpp>
 #include <opm/porsol/blackoil/BlackoilSimulator.hpp>
 
 #include <dune/common/version.hh>

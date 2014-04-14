@@ -37,15 +37,19 @@
 
 #include "MiscibilityProps.hpp"
 #include <opm/core/utility/UniformTableLinear.hpp>
+#include <opm/parser/eclipse/Utility/PvdoTable.hpp>
+#include <opm/parser/eclipse/Utility/PvdgTable.hpp>
 
 namespace Opm
 {
     class MiscibilityDead : public MiscibilityProps
     {
     public:
-	typedef std::vector<std::vector<std::vector<double> > > table_t;
+    typedef std::vector<std::vector<std::vector<double> > > table_t;
+    MiscibilityDead(const table_t& pvd_table);
 
-	MiscibilityDead(const table_t& pvd_table);
+        MiscibilityDead(const PvdoTable& pvdoTable);
+        MiscibilityDead(const PvdgTable& pvdgTable);
 	virtual ~MiscibilityDead();
 
         virtual double getViscosity(int region, double press, const surfvol_t& surfvol) const;

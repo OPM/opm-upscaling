@@ -47,37 +47,60 @@ namespace Opm
     /// Constructor
     MiscibilityLiveGas::MiscibilityLiveGas(const table_t& pvtg)
     {
-	// GAS, PVTG
-	const int region_number = 0;
-	if (pvtg.size() != 1) {
-	    OPM_THROW(std::runtime_error, "More than one PVD-region");
-	}
-	saturated_gas_table_.resize(4);
-	const int sz = pvtg[region_number].size();
-	for (int k=0; k<4; ++k) {
-	    saturated_gas_table_[k].resize(sz);
-	}
+        // GAS, PVTG
+        const int region_number = 0;
+        if (pvtg.size() != 1) {
+            OPM_THROW(std::runtime_error, "More than one PVD-region");
+        }
+        saturated_gas_table_.resize(4);
+        const int sz = pvtg[region_number].size();
+        for (int k=0; k<4; ++k) {
+            saturated_gas_table_[k].resize(sz);
+        }
 
-	for (int i=0; i<sz; ++i) {
-	    saturated_gas_table_[0][i] = pvtg[region_number][i][0];  // p
-	    saturated_gas_table_[1][i] = pvtg[region_number][i][2];  // Bg
-	    saturated_gas_table_[2][i] = pvtg[region_number][i][3];  // mu_g
-	    saturated_gas_table_[3][i] = pvtg[region_number][i][1]; // Rv
-	}
+        for (int i=0; i<sz; ++i) {
+            saturated_gas_table_[0][i] = pvtg[region_number][i][0];  // p
+            saturated_gas_table_[1][i] = pvtg[region_number][i][2];  // Bg
+            saturated_gas_table_[2][i] = pvtg[region_number][i][3];  // mu_g
+            saturated_gas_table_[3][i] = pvtg[region_number][i][1]; // Rv
+        }
 
-	undersat_gas_tables_.resize(sz);
-	for (int i=0; i<sz; ++i) {
-	    undersat_gas_tables_[i].resize(3);
-	    int tsize = (pvtg[region_number][i].size() - 1)/3;
-	    undersat_gas_tables_[i][0].resize(tsize);
-	    undersat_gas_tables_[i][1].resize(tsize);
-	    undersat_gas_tables_[i][2].resize(tsize);
-	    for (int j=0, k=0; j<tsize; ++j) {
-		undersat_gas_tables_[i][0][j] = pvtg[region_number][i][++k]; // Rv
-		undersat_gas_tables_[i][1][j] = pvtg[region_number][i][++k]; // Bg
-		undersat_gas_tables_[i][2][j] = pvtg[region_number][i][++k]; // mu_g
-	    }
-	}
+        undersat_gas_tables_.resize(sz);
+        for (int i=0; i<sz; ++i) {
+            undersat_gas_tables_[i].resize(3);
+            int tsize = (pvtg[region_number][i].size() - 1)/3;
+            undersat_gas_tables_[i][0].resize(tsize);
+            undersat_gas_tables_[i][1].resize(tsize);
+            undersat_gas_tables_[i][2].resize(tsize);
+            for (int j=0, k=0; j<tsize; ++j) {
+                undersat_gas_tables_[i][0][j] = pvtg[region_number][i][++k]; // Rv
+                undersat_gas_tables_[i][1][j] = pvtg[region_number][i][++k]; // Bg
+                undersat_gas_tables_[i][2][j] = pvtg[region_number][i][++k]; // mu_g
+            }
+        }
+    }
+
+    /// Constructor
+    MiscibilityLiveGas::MiscibilityLiveGas(const Opm::PvtgTable& pvtgTable)
+    {
+        // GAS, PVTG
+        const auto &saturatedPvtgTable = *pvtgTable.getOuterTable();
+
+        saturated_gas_table_.resize(4);
+        saturated_gas_table_[0] = saturatedPvtgTable.getPressureColumn();
+        saturated_gas_table_[1] = saturatedPvtgTable.getGasFormationFactorColumn();
+	    saturated_gas_table_[2] = saturatedPvtgTable.getGasViscosityColumn();
+	    saturated_gas_table_[3] = saturatedPvtgTable.getOilSolubilityColumn();
+
+        int sz = saturated_gas_table_[0].size();
+        undersat_gas_tables_.resize(sz);
+        for (int i=0; i<sz; ++i) {
+            const auto &undersaturatedPvtgTable = *pvtgTable.getInnerTable(i);
+
+            undersat_gas_tables_[i][0] = undersaturatedPvtgTable.getOilSolubilityColumn();
+            undersat_gas_tables_[i][1] = undersaturatedPvtgTable.getGasFormationFactorColumn();
+            undersat_gas_tables_[i][2] = undersaturatedPvtgTable.getGasViscosityColumn();
+        }
     }
 
     // Destructor

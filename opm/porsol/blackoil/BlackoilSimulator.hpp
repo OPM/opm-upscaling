@@ -25,11 +25,12 @@
 
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 #include <opm/core/utility/Units.hpp>
-#include <opm/core/io/eclipse/EclipseGridParser.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/porsol/common/BoundaryConditions.hpp>
 #include <opm/porsol/blackoil/BlackoilInitialization.hpp>
 #include <opm/porsol/common/SimulatorUtilities.hpp>
+#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <boost/filesystem/convenience.hpp>
 #include <boost/lexical_cast.hpp>
 #include <iostream>
@@ -115,16 +116,17 @@ init(const Opm::parameter::ParameterGroup& param)
     using namespace Opm;
     std::string fileformat = param.getDefault<std::string>("fileformat", "cartesian");
     if (fileformat == "eclipse") {
-        Opm::EclipseGridParser parser(param.get<std::string>("filename"));
+        Opm::ParserPtr parser(new Opm::Parser());
+        Opm::DeckConstPtr deck = parser->parseFile(param.get<std::string>("filename"));
         double z_tolerance = param.getDefault<double>("z_tolerance", 0.0);
         bool periodic_extension = param.getDefault<bool>("periodic_extension", false);
         bool turn_normals = param.getDefault<bool>("turn_normals", false);
-        grid_.processEclipseFormat(parser, z_tolerance, periodic_extension, turn_normals);
+        grid_.processEclipseFormat(deck, z_tolerance, periodic_extension, turn_normals);
         double perm_threshold_md = param.getDefault("perm_threshold_md", 0.0);
         double perm_threshold = Opm::unit::convert::from(perm_threshold_md, Opm::prefix::milli*Opm::unit::darcy);
-        rock_.init(parser, grid_.globalCell(), perm_threshold);
-        fluid_.init(parser);
-        wells_.init(parser, grid_, rock_);
+        rock_.init(deck, grid_.globalCell(), perm_threshold);
+        fluid_.init(deck);
+        wells_.init(deck, grid_, rock_);
     } else if (fileformat == "cartesian") {
         std::array<int, 3> dims = {{ param.getDefault<int>("nx", 1),
                                       param.getDefault<int>("ny", 1),
@@ -138,9 +140,11 @@ init(const Opm::parameter::ParameterGroup& param)
         double default_perm = unit::convert::from(default_perm_md, prefix::milli*unit::darcy);
         OPM_MESSAGE("Warning: For generated cartesian grids, we use uniform rock properties.");
         rock_.init(grid_.size(0), default_poro, default_perm);
-	Opm::EclipseGridParser parser(param.get<std::string>("filename")); // Need a parser for the fluids anyway.
-        fluid_.init(parser);
-        wells_.init(parser, grid_, rock_);
+
+        Opm::ParserPtr parser(new Opm::Parser());
+        Opm::DeckConstPtr deck = parser->parseFile(param.get<std::string>("filename"));
+        fluid_.init(deck);
+        wells_.init(deck, grid_, rock_);
     } else {
         OPM_THROW(std::runtime_error, "Unknown file format string: " << fileformat);
     }

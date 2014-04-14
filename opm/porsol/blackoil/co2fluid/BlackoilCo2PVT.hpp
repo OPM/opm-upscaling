@@ -20,10 +20,10 @@
 #ifndef OPM_BLACKOILCO2PVT_HEADER_INCLUDED
 #define OPM_BLACKOILCO2PVT_HEADER_INCLUDED
 
+#include <opm/core/io/eclipse/EclipseGridParser.hpp>
+
 #define OPM_DEPRECATED __attribute__((deprecated))
 #define OPM_DEPRECATED_MSG(msg) __attribute__((deprecated))
-
-#include <opm/core/io/eclipse/EclipseGridParser.hpp>
 
 #include <opm/material/fluidsystems/BrineCO2FluidSystem.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
@@ -36,8 +36,11 @@
 #include <opm/porsol/blackoil/fluid/MiscibilityProps.hpp>
 #include <opm/porsol/blackoil/fluid/BlackoilDefs.hpp>
 
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+
 #include <string>
 #include <iostream>
+#include <fstream>
 
 
 namespace Opm
@@ -48,8 +51,9 @@ public:
         
     typedef Opm::FluidSystems::BrineCO2</*Scalar=*/double, Opm::Benchmark3::CO2Tables> FluidSystem;
     typedef Opm::CompositionalFluidState<double, FluidSystem> CompositionalFluidState;
-	
-	void init(const Opm::EclipseGridParser& ep);
+
+    void init(const Opm::EclipseGridParser& ep);
+	void init(Opm::DeckConstPtr deck);
 
     void generateBlackOilTables(double temperature);
 
@@ -117,6 +121,17 @@ private:
 // ------------ Method implementations --------------
 
 void BlackoilCo2PVT::init(const Opm::EclipseGridParser& ep)
+{
+        surfaceDensities_[Water]   = 1000.;
+        surfaceDensities_[Gas] = 2.0;
+        surfaceDensities_[Oil] = 1000.;
+
+    temperature_ = 300.;
+
+    brineCo2_.init();
+}
+
+void BlackoilCo2PVT::init(Opm::DeckConstPtr deck)
 {
 	surfaceDensities_[Water]   = 1000.;
 	surfaceDensities_[Gas] = 2.0;

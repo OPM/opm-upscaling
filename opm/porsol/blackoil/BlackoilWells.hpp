@@ -26,6 +26,7 @@
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/utility/SparseTable.hpp>
 #include <opm/porsol/common/Rock.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <dune/common/fvector.hh>
 #include <vector>
 #include <iostream>
@@ -39,8 +40,11 @@ namespace Opm
     {
     public:
         void init(const Opm::EclipseGridParser& parser,
-		  const Dune::CpGrid& grid,
-		  const Opm::Rock<3>& rock);
+                  const Dune::CpGrid& grid,
+                  const Opm::Rock<3>& rock);
+        void init(Opm::DeckConstPtr deck,
+                  const Dune::CpGrid& grid,
+                  const Opm::Rock<3>& rock);
 
         // Well-centric interface. Mostly used by pressure solver.
         int numWells() const;
@@ -122,31 +126,31 @@ namespace Opm
     } // anon namespace
 
     inline void BlackoilWells::init(const Opm::EclipseGridParser& parser,
-				    const Dune::CpGrid& grid,
-				    const Opm::Rock<3>& rock) 
+                                    const Dune::CpGrid& grid,
+                                    const Opm::Rock<3>& rock) 
     {
-	std::vector<std::string> keywords;
-	keywords.push_back("WELSPECS");
-	keywords.push_back("COMPDAT");
-// 	keywords.push_back("WELTARG");
-	if (!parser.hasFields(keywords)) {
-	    OPM_MESSAGE("Missing well keywords in deck, initializing no wells.");
+        std::vector<std::string> keywords;
+        keywords.push_back("WELSPECS");
+        keywords.push_back("COMPDAT");
+//      keywords.push_back("WELTARG");
+        if (!parser.hasFields(keywords)) {
+            OPM_MESSAGE("Missing well keywords in deck, initializing no wells.");
             return;
-	}
-	if (!(parser.hasField("WCONINJE") || parser.hasField("WCONPROD")) ) {
-	    OPM_THROW(std::runtime_error, "Needed field is missing in file");
-	}
+        }
+        if (!(parser.hasField("WCONINJE") || parser.hasField("WCONPROD")) ) {
+            OPM_THROW(std::runtime_error, "Needed field is missing in file");
+        }
         using namespace Opm;
 
-	// Get WELLSPECS data
-	const WELSPECS& welspecs = parser.getWELSPECS();
-	const int num_welspecs   = welspecs.welspecs.size();
-	well_names_.reserve(num_welspecs);
-	well_data_.reserve(num_welspecs);
-	for (int i=0; i<num_welspecs; ++i) {
-	    well_names_.push_back(welspecs.welspecs[i].name_);
-	    WellData wd;
-	    well_data_.push_back(wd);
+        // Get WELLSPECS data
+        const WELSPECS& welspecs = parser.getWELSPECS();
+        const int num_welspecs   = welspecs.welspecs.size();
+        well_names_.reserve(num_welspecs);
+        well_data_.reserve(num_welspecs);
+        for (int i=0; i<num_welspecs; ++i) {
+            well_names_.push_back(welspecs.welspecs[i].name_);
+            WellData wd;
+            well_data_.push_back(wd);
             well_data_.back().reference_bhp_depth = welspecs.welspecs[i].datum_depth_BHP_;
             if (welspecs.welspecs[i].datum_depth_BHP_ < 0.0) {
                 // Set refdepth to a marker value, will be changed
@@ -156,30 +160,30 @@ namespace Opm
             }
         }
 
-	// Get COMPDAT data   
-	const COMPDAT& compdats = parser.getCOMPDAT();
-	const int num_compdats  = compdats.compdat.size();
+        // Get COMPDAT data   
+        const COMPDAT& compdats = parser.getCOMPDAT();
+        const int num_compdats  = compdats.compdat.size();
         std::vector<std::vector<PerfData> > wellperf_data(num_welspecs);
-	for (int kw=0; kw<num_compdats; ++kw) {
-	    std::string name = compdats.compdat[kw].well_;
-	    std::string::size_type len = name.find('*');
-	    if (len != std::string::npos) {
-		name = name.substr(0, len);
-	    }
+        for (int kw=0; kw<num_compdats; ++kw) {
+            std::string name = compdats.compdat[kw].well_;
+            std::string::size_type len = name.find('*');
+            if (len != std::string::npos) {
+                name = name.substr(0, len);
+            }
 
-	    // global_cell is a map from compressed cells to Cartesian grid cells 
-	    const std::vector<int>& global_cell = grid.globalCell();
-	    const std::array<int, 3>& cpgdim = grid.logicalCartesianSize();
-	    std::map<int,int> cartesian_to_compressed;
-	    for (int i=0; i<int(global_cell.size()); ++i) {
-		cartesian_to_compressed.insert(std::make_pair(global_cell[i], i));
-	    }
-	    bool found = false;
-	    for (int wix=0; wix<num_welspecs; ++wix) {
-		if (well_names_[wix].compare(0,len, name) == 0) { //equal
-		    int ix = compdats.compdat[kw].grid_ind_[0] - 1;
-		    int jy = compdats.compdat[kw].grid_ind_[1] - 1;
-		    int kz1 = compdats.compdat[kw].grid_ind_[2] - 1;
+            // global_cell is a map from compressed cells to Cartesian grid cells 
+            const std::vector<int>& global_cell = grid.globalCell();
+            const std::array<int, 3>& cpgdim = grid.logicalCartesianSize();
+            std::map<int,int> cartesian_to_compressed;
+            for (int i=0; i<int(global_cell.size()); ++i) {
+                cartesian_to_compressed.insert(std::make_pair(global_cell[i], i));
+            }
+            bool found = false;
+            for (int wix=0; wix<num_welspecs; ++wix) {
+                if (well_names_[wix].compare(0,len, name) == 0) { //equal
+                    int ix = compdats.compdat[kw].grid_ind_[0] - 1;
+                    int jy = compdats.compdat[kw].grid_ind_[1] - 1;
+                    int kz1 = compdats.compdat[kw].grid_ind_[2] - 1;
                     int kz2 = compdats.compdat[kw].grid_ind_[3] - 1;
                     for (int kz = kz1; kz <= kz2; ++kz) {
                         int cart_grid_indx = ix + cpgdim[0]*(jy + cpgdim[1]*kz);
@@ -211,11 +215,11 @@ namespace Opm
                     break;
                 }
             }
-	    if (!found) {
-		OPM_THROW(std::runtime_error, "Undefined well name: " << compdats.compdat[kw].well_
-		      << " in COMPDAT");
-	    }
-	}
+            if (!found) {
+                OPM_THROW(std::runtime_error, "Undefined well name: " << compdats.compdat[kw].well_
+                      << " in COMPDAT");
+            }
+        }
         for (int w = 0; w < num_welspecs; ++w) {
             perf_data_.appendRow(wellperf_data[w].begin(), wellperf_data[w].end());
             if (well_data_[w].reference_bhp_depth == -1e100) {
@@ -230,7 +234,7 @@ namespace Opm
             }
         }
  
-	// Get WCONINJE data
+        // Get WCONINJE data
         injection_mixture_ = 0.0;
         if (parser.hasField("WCONINJE")) {
             const WCONINJE& wconinjes = parser.getWCONINJE();
@@ -308,7 +312,7 @@ namespace Opm
             injection_mixture_[Oil] = 1.0;
         }
 
-	// Get WCONPROD data
+        // Get WCONPROD data
         if (parser.hasField("WCONPROD")) {
             const WCONPROD& wconprods = parser.getWCONPROD();
             const int num_wconprods   = wconprods.wconprod.size();
@@ -368,10 +372,10 @@ namespace Opm
             }
         }
 
-	// Get WELTARG data
+        // Get WELTARG data
         if (parser.hasField("WELTARG")) {
             const WELTARG& weltargs = parser.getWELTARG();
-            const int num_weltargs  = weltargs.weltarg.size();	
+            const int num_weltargs  = weltargs.weltarg.size();  
             for (int kw=0; kw<num_weltargs; ++kw) {
                 std::string name = weltargs.weltarg[kw].well_;
                 std::string::size_type len = name.find('*');
@@ -388,6 +392,302 @@ namespace Opm
                 }
                 if (!well_found) {
                     OPM_THROW(std::runtime_error, "Undefined well name: " << weltargs.weltarg[kw].well_
+                          << " in WELTARG");
+                }
+            }
+        }
+
+        // Debug output.
+        std::cout << "\t WELL DATA" << std::endl;
+        for(int i=0; i< int(well_data_.size()); ++i) {
+            std::cout << i << ": " << well_data_[i].type << "  "
+                      << well_data_[i].control << "  " << well_data_[i].target
+                      << std::endl;
+        }
+
+        std::cout << "\n\t PERF DATA" << std::endl;
+        for(int i=0; i< int(perf_data_.size()); ++i) {
+            for(int j=0; j< int(perf_data_[i].size()); ++j) {
+                std::cout << i << ": " << perf_data_[i][j].cell << "  "
+                          << perf_data_[i][j].well_index << std::endl;
+            }
+        }
+
+        // Ensuring that they have the right size.
+        well_cell_pressure_.resize(grid.numCells(), -1e100);
+        well_cell_flux_.resize(grid.numCells(), 0.0);
+    }
+
+
+    inline void BlackoilWells::init(Opm::DeckConstPtr deck,
+                                    const Dune::CpGrid& grid,
+                                    const Opm::Rock<3>& rock)
+    {
+	if (!deck->hasKeyword("WELSPECS")) {
+	    OPM_MESSAGE("Missing keyword \"WELSPECS\" in deck, initializing no wells.");
+            return;
+	}
+	if (!deck->hasKeyword("COMPDAT")) {
+	    OPM_MESSAGE("Missing keyword \"COMPDAT\" in deck, initializing no wells.");
+            return;
+	}
+	if (!(deck->hasKeyword("WCONINJE") || deck->hasKeyword("WCONPROD")) ) {
+	    OPM_THROW(std::runtime_error, "Needed field is missing in file");
+	}
+        using namespace Opm;
+
+	// Get WELLSPECS data
+    Opm::DeckKeywordConstPtr welspecsKeyword = deck->getKeyword("WELSPECS");
+	const int num_welspecs = welspecsKeyword->size();
+	well_names_.reserve(num_welspecs);
+	well_data_.reserve(num_welspecs);
+	for (int i=0; i<num_welspecs; ++i) {
+	    well_names_.push_back(welspecsKeyword->getRecord(i)->getItem("WELL")->getString(0));
+	    WellData wd;
+	    well_data_.push_back(wd);
+            well_data_.back().reference_bhp_depth =
+                welspecsKeyword->getRecord(i)->getItem("REF_DEPTH")->getSIDouble(0);
+    }
+
+	// Get COMPDAT data   
+    Opm::DeckKeywordConstPtr compdatKeyword = deck->getKeyword("COMPDAT");
+	const int num_compdats  = compdatKeyword->size();
+    std::vector<std::vector<PerfData> > wellperf_data(num_welspecs);
+	for (int kw=0; kw<num_compdats; ++kw) {
+        Opm::DeckRecordConstPtr compdatRecord = compdatKeyword->getRecord(kw);
+	    std::string name = compdatRecord->getItem("WELL")->getString(0);
+	    std::string::size_type len = name.find('*');
+	    if (len != std::string::npos) {
+		name = name.substr(0, len);
+	    }
+
+	    // global_cell is a map from compressed cells to Cartesian grid cells 
+	    const std::vector<int>& global_cell = grid.globalCell();
+	    const std::array<int, 3>& cpgdim = grid.logicalCartesianSize();
+	    std::map<int,int> cartesian_to_compressed;
+	    for (int i=0; i<int(global_cell.size()); ++i) {
+		cartesian_to_compressed.insert(std::make_pair(global_cell[i], i));
+	    }
+	    bool found = false;
+	    for (int wix=0; wix<num_welspecs; ++wix) {
+		if (well_names_[wix].compare(0,len, name) == 0) { //equal
+		    int ix = compdatRecord->getItem("I")->getInt(0) - 1;
+		    int jy = compdatRecord->getItem("J")->getInt(0) - 1;
+		    int kz1 = compdatRecord->getItem("K1")->getInt(0) - 1;
+		    int kz2 = compdatRecord->getItem("K2")->getInt(0) - 1;
+            for (int kz = kz1; kz <= kz2; ++kz) {
+                int cart_grid_indx = ix + cpgdim[0]*(jy + cpgdim[1]*kz);
+                std::map<int, int>::const_iterator cgit = 
+                    cartesian_to_compressed.find(cart_grid_indx);
+                if (cgit == cartesian_to_compressed.end()) {
+                    OPM_THROW(std::runtime_error, "Cell with i,j,k indices " << ix << ' ' << jy << ' '
+                              << kz << " not found!");
+                }
+                int cell = cgit->second;
+                PerfData pd;
+                pd.cell = cell;
+                if (compdatRecord->getItem("CF")->getSIDouble(0) > 0.0) {
+                    pd.well_index = compdatRecord->getItem("CF")->getSIDouble(0);
+                } else {
+                    double radius = 0.5*compdatRecord->getItem("DIAMETER")->getSIDouble(0);
+                    if (radius <= 0.0) {
+                        radius = 0.5*unit::feet;
+                        OPM_MESSAGE("Warning: Well bore internal radius set to " << radius);
+                    }
+                    Dune::FieldVector<double, 3> cubical = getCubeDim(grid, cell);
+                    const Rock<3>::PermTensor permeability = rock.permeability(cell);  
+                    pd.well_index = computeWellIndex(radius, cubical, permeability,
+                                                     compdatRecord->getItem("SKIN")->getSIDouble(0));
+                }
+                wellperf_data[wix].push_back(pd);
+            }
+            found = true;
+            break;
+        }
+        }
+	    if (!found) {
+            OPM_THROW(std::runtime_error, "Undefined well name: " << compdatRecord->getItem("WELL")->getString(0)
+                      << " in COMPDAT");
+	    }
+	}
+        for (int w = 0; w < num_welspecs; ++w) {
+            perf_data_.appendRow(wellperf_data[w].begin(), wellperf_data[w].end());
+            if (well_data_[w].reference_bhp_depth == -1e100) {
+                // It was defaulted. Set reference depth to minimum perforation depth.
+                double min_depth = 1e100;
+                int num_wperfs = wellperf_data[w].size();
+                for (int perf = 0; perf < num_wperfs; ++perf) {
+                    double depth = grid.cellCentroid(wellperf_data[w][perf].cell)[2];
+                    min_depth = std::min(min_depth, depth);
+                }
+                well_data_[w].reference_bhp_depth = min_depth;
+            }
+        }
+ 
+	// Get WCONINJE data
+        injection_mixture_ = 0.0;
+        if (deck->hasKeyword("WCONINJE")) {
+            Opm::DeckKeywordConstPtr wconinjeKeyword = deck->getKeyword("WCONINJE");
+            const int num_wconinjes = wconinjeKeyword->size();
+            int injector_component = -1;
+            for (int kw=0; kw<num_wconinjes; ++kw) {
+                Opm::DeckRecordConstPtr wconinjeRecord = wconinjeKeyword->getRecord(kw);
+                std::string name = wconinjeRecord->getItem("WELL")->getString(0);
+                std::string::size_type len = name.find('*');
+                if (len != std::string::npos) {
+                    name = name.substr(0, len);
+                }
+
+                bool well_found = false;
+                for (int wix=0; wix<num_welspecs; ++wix) {
+                    if (well_names_[wix].compare(0,len, name) == 0) { //equal
+                        well_found = true;
+                        well_data_[wix].type = Injector;
+                        int m = inje_control_mode(wconinjeRecord->getItem("CMODE")->getString(0));
+                        switch(m) {
+                        case 0:  // RATE
+                            well_data_[wix].control = Rate;
+                            // TODO: convert rate to SI!
+                            well_data_[wix].target = wconinjeRecord->getItem("RATE")->getRawDouble(0);
+                            break;
+                        case 1:  // RESV
+                            well_data_[wix].control = Rate;
+                            // TODO: convert rate to SI!
+                            well_data_[wix].target = wconinjeRecord->getItem("RESV")->getRawDouble(0);
+                            break;
+                        case 2:  // BHP
+                            well_data_[wix].control = Pressure;
+                            well_data_[wix].target = wconinjeRecord->getItem("BHP")->getSIDouble(0);
+                            break;
+                        case 3:  // THP
+                            well_data_[wix].control = Pressure;
+                            well_data_[wix].target = wconinjeRecord->getItem("THP")->getSIDouble(0);
+                            break;
+                        default:
+                            OPM_THROW(std::runtime_error, "Unknown well control mode; WCONIJE  = "
+                                  << wconinjeRecord->getItem("CMODE")->getString(0)
+                                  << " in input file");
+                        }
+                        int itp = -1;
+                        if (wconinjeRecord->getItem("TYPE")->getString(0) == "WATER") {
+                            itp = Water;
+                        } else if (wconinjeRecord->getItem("TYPE")->getString(0) == "OIL") {
+                            itp = Oil;
+                        } else if (wconinjeRecord->getItem("TYPE")->getString(0) == "GAS") {
+                            itp = Gas;
+                        }
+                        if (itp == -1 || (injector_component != -1 && itp != injector_component)) {
+                            if (itp == -1) {
+                                OPM_THROW(std::runtime_error, "Error in injector specification, found no known fluid type.");
+                            } else {
+                                OPM_THROW(std::runtime_error, "Error in injector specification, we can only handle a single injection fluid.");
+                            }
+                        } else {
+                            injector_component = itp;
+                        }
+                    }
+                }
+                if (!well_found) {
+                    OPM_THROW(std::runtime_error, "Undefined well name: " << wconinjeRecord->getItem("WELL")->getString(0)
+                          << " in WCONINJE");
+                }
+            }
+            if (injector_component != -1) {
+                injection_mixture_[injector_component] = 1.0;
+            }
+        } else {
+            // No WCONINJE.
+            // This default is only invoked if production wells
+            // start injecting, (and only if there are no injection wells).
+            // In other words, only if we have a primary production type scenario.
+            // In this case we expect the flow to be very small, and not affect
+            // the simulation in any significant way.
+            injection_mixture_[Oil] = 1.0;
+        }
+
+	// Get WCONPROD data
+        if (deck->hasKeyword("WCONPROD")) {
+            Opm::DeckKeywordConstPtr wconprodKeyword = deck->getKeyword("WCONPROD");
+            const int num_wconprods = wconprodKeyword->size();
+            for (int kw=0; kw<num_wconprods; ++kw) {
+                Opm::DeckRecordConstPtr wconprodRecord = wconprodKeyword->getRecord(kw);
+                std::string name = wconprodRecord->getItem("WELL")->getString(0);
+                std::string::size_type len = name.find('*');
+                if (len != std::string::npos) {
+                    name = name.substr(0, len);
+                }
+
+                bool well_found = false;
+                for (int wix=0; wix<num_welspecs; ++wix) {
+                    if (well_names_[wix].compare(0,len, name) == 0) { //equal
+                        well_found = true;
+                        well_data_[wix].type = Producer;
+                        int m = prod_control_mode(wconprodRecord->getItem("CMODE")->getString(0));
+                        switch(m) {
+                        case 0:  // ORAT
+                            well_data_[wix].control = Rate;
+                            well_data_[wix].target = wconprodRecord->getItem("ORAT")->getSIDouble(0);
+                            break;
+                        case 1:  // WRAT
+                            well_data_[wix].control = Rate;
+                            well_data_[wix].target = wconprodRecord->getItem("WRAT")->getSIDouble(0);
+                            break;
+                        case 2:  // GRAT
+                            well_data_[wix].control = Rate;
+                            well_data_[wix].target = wconprodRecord->getItem("GRAT")->getSIDouble(0);
+                            break;
+                        case 3:  // LRAT
+                            well_data_[wix].control = Rate;
+                            well_data_[wix].target = wconprodRecord->getItem("LRAT")->getSIDouble(0);
+                            break;
+                        case 4:  // RESV 
+                            well_data_[wix].control = Rate;
+                            well_data_[wix].target = wconprodRecord->getItem("RESV")->getSIDouble(0);
+                            break;
+                        case 5:  // BHP
+                            well_data_[wix].control = Pressure; 
+                            well_data_[wix].target = wconprodRecord->getItem("BHP")->getSIDouble(0);
+                            break;
+                        case 6:  // THP 
+                            well_data_[wix].control = Pressure;
+                            well_data_[wix].target = wconprodRecord->getItem("THP")->getSIDouble(0);
+                            break;
+                        default:
+                            OPM_THROW(std::runtime_error, "Unknown well control mode; WCONPROD  = "
+                                      << wconprodRecord->getItem("CMODE")->getString(0)
+                                      << " in input file");
+                        }
+                    }
+                }
+                if (!well_found) {
+                    OPM_THROW(std::runtime_error, "Undefined well name: " << wconprodRecord->getItem("WELL")->getString(0)
+                          << " in WCONPROD");
+                }
+            }
+        }
+
+	// Get WELTARG data
+        if (deck->hasKeyword("WELTARG")) {
+            Opm::DeckKeywordConstPtr weltargKeyword = deck->getKeyword("WELTARG");
+            const int num_weltargs  = weltargKeyword->size();
+            for (int kw=0; kw<num_weltargs; ++kw) {
+                Opm::DeckRecordConstPtr weltargRecord = weltargKeyword->getRecord(kw);
+                std::string name = weltargRecord->getItem("WELL")->getString(0);
+                std::string::size_type len = name.find('*');
+                if (len != std::string::npos) {
+                    name = name.substr(0, len);
+                }
+                bool well_found = false;
+                for (int wix=0; wix<num_welspecs; ++wix) {
+                    if (well_names_[wix].compare(0,len, name) == 0) { //equal
+                        well_found = true;
+                        // TODO: convert to SI!
+                        well_data_[wix].target = weltargRecord->getItem("NEW_VALUE")->getRawDouble(0);
+                        break;
+                    }
+                }
+                if (!well_found) {
+                    OPM_THROW(std::runtime_error, "Undefined well name: " << weltargRecord->getItem("WELL")->getString(0)
                           << " in WELTARG");
                 }
             }
