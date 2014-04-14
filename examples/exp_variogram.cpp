@@ -172,11 +172,10 @@ try
         int jstart_1 = rj();
         double zstart_1 = rz();
         ch.chop(istart_1, istart_1 + ilen, jstart_1, jstart_1 + jlen, zstart_1, zstart_1 + zlen, false);
-	
-        Opm::EclipseGridParser subparser_1 = ch.subparser();
-        subparser_1.convertToSI();
+
+        Opm::DeckConstPtr subdeck_1 = ch.subDeck();
         Opm::SinglePhaseUpscaler upscaler_1;
-        upscaler_1.init(subparser_1, Opm::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
+        upscaler_1.init(subdeck_1, Opm::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
 			residual_tolerance, linsolver_verbosity, linsolver_type, false);
         Opm::SinglePhaseUpscaler::permtensor_t upscaled_K_1 = upscaler_1.upscaleSinglePhase();
         upscaled_K_1 *= (1.0/(Opm::prefix::milli*Opm::unit::darcy));
@@ -197,10 +196,9 @@ try
         }   
         ch.chop(istart_2, istart_2 + ilen, jstart_2, jstart_2 + jlen, zstart_2, zstart_2 + zlen, false);
 	
-        Opm::EclipseGridParser subparser_2 = ch.subparser();
-	subparser_2.convertToSI();
+        Opm::DeckConstPtr subdeck_2 = ch.subDeck();
         Opm::SinglePhaseUpscaler upscaler_2;
-        upscaler_2.init(subparser_2, Opm::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
+        upscaler_2.init(subdeck_2, Opm::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
 			residual_tolerance, linsolver_verbosity, linsolver_type, false);
         Opm::SinglePhaseUpscaler::permtensor_t upscaled_K_2 = upscaler_2.upscaleSinglePhase();
         upscaled_K_2 *= (1.0/(Opm::prefix::milli*Opm::unit::darcy));

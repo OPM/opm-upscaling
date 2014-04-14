@@ -35,11 +35,13 @@
 #include <config.h>
 
 #include <opm/core/io/eclipse/CornerpointChopper.hpp>
-#include <opm/core/io/eclipse/EclipseGridParser.hpp>
 #include <opm/core/io/eclipse/EclipseGridInspector.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 #include <opm/porsol/common/setupBoundaryConditions.hpp>
 #include <opm/core/utility/Units.hpp>
+
+#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 
 #include <ios>
 #include <iomanip>
@@ -118,8 +120,9 @@ try
 
 
     // Original x/y resolution in terms of coordinate values (not indices)
-    Opm::EclipseGridParser gridparser(gridfilename); // TODO: REFACTOR!!!! it is stupid to parse this again
-    Opm::EclipseGridInspector gridinspector(gridparser);
+    Opm::ParserPtr parser(new Opm::Parser);
+    Opm::DeckConstPtr deck(parser->parseFile(gridfilename)); // TODO: REFACTOR!!!! it is stupid to parse this again
+    Opm::EclipseGridInspector gridinspector(deck);
     std::array<double, 6> gridlimits=gridinspector.getGridLimits();
     double finegridxresolution = (gridlimits[1]-gridlimits[0])/dims[0];
     double finegridyresolution = (gridlimits[3]-gridlimits[2])/dims[1];
@@ -162,14 +165,15 @@ try
         for (int jidx_c=0; jidx_c < jres; ++jidx_c) {
             for (int iidx_c=0; iidx_c < ires; ++iidx_c) {
                 ch.chop(iidx_f[iidx_c], iidx_f[iidx_c+1],
-			jidx_f[jidx_c], jidx_f[jidx_c+1],
-			zcorn_c[zidx_c], zcorn_c[zidx_c+1],
-			false);
+                        jidx_f[jidx_c], jidx_f[jidx_c+1],
+                        zcorn_c[zidx_c], zcorn_c[zidx_c+1],
+                        false);
+
+                OPM_THROW(std::logic_error, "Sub-decks not are not implemented by opm-parser. Refactor the calling code!?");
 		try {
-		    Opm::EclipseGridParser subparser = ch.subparser();
-                    subparser.convertToSI(); // Because the upscaler expects SI units.
+		    Opm::DeckConstPtr subdeck = ch.subDeck();
 		    Opm::SinglePhaseUpscaler upscaler;
-		    upscaler.init(subparser, Opm::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
+		    upscaler.init(subdeck, Opm::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
 				  residual_tolerance, linsolver_verbosity, linsolver_type, false);
             
 		    Opm::SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();

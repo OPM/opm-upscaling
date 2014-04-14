@@ -128,7 +128,7 @@ namespace Opm
 
 
     template <class Traits>
-    inline void UpscalerBase<Traits>::init(const Opm::EclipseGridParser& parser,
+    inline void UpscalerBase<Traits>::init(Opm::DeckConstPtr deck,
                                            BoundaryConditionType bctype,
                                            double perm_threshold,
                                            double z_tolerance,
@@ -155,7 +155,7 @@ namespace Opm
         bool clip_z = (bctype_ == Periodic);
         bool unique_bids = (bctype_ == Linear || bctype_ == Periodic);
         std::string rock_list("no_list");
-	setupGridAndPropsEclipse(parser, z_tolerance,
+	setupGridAndPropsEclipse(deck, z_tolerance,
                                  periodic_ext, turn_normals, clip_z, unique_bids,
                                  perm_threshold, rock_list,
                                  useJ<ResProp>(), 1.0, 0.0,
