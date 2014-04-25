@@ -105,8 +105,8 @@ private:
     };
     void computeState(SubState& ss, double zBrine, double zCO2, double pressure) const;
     enum {
-        wPhase = FluidSystem::lPhaseIdx,
-        nPhase = FluidSystem::gPhaseIdx,
+        wPhase = FluidSystem::liquidPhaseIdx,
+        nPhase = FluidSystem::gasPhaseIdx,
 
         wComp = FluidSystem::BrineIdx,
         nComp = FluidSystem::CO2Idx    
