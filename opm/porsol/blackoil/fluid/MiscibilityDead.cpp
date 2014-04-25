@@ -48,36 +48,6 @@ namespace Opm
     //-------------------------------------------------------------------------
 
     /// Constructor
-    MiscibilityDead::MiscibilityDead(const table_t& pvd_table)
-    {
-        const int region_number = 0;
-        if (pvd_table.size() != 1) {
-            OPM_THROW(std::runtime_error, "More than one PVT-region");
-        }
-
-        // Copy data
-        const int sz = pvd_table[region_number][0].size();
-        std::vector<double> press(sz);
-        std::vector<double> B_inv(sz);
-        std::vector<double> visc(sz);
-        for (int i = 0; i < sz; ++i) {
-            press[i] = pvd_table[region_number][0][i];
-            B_inv[i] = 1.0 / pvd_table[region_number][1][i];
-            visc[i]  = pvd_table[region_number][2][i];
-        }
-        int samples = 1025;
-        buildUniformMonotoneTable(press, B_inv, samples, one_over_B_);
-        buildUniformMonotoneTable(press, visc, samples, viscosity_);
-
-        // Dumping the created tables.
-//         static int count = 0;
-//         std::ofstream os((std::string("dump-") + boost::lexical_cast<std::string>(count++)).c_str());
-//         os.precision(15);
-//         os << "1/B\n\n" << one_over_B_
-//            << "\n\nvisc\n\n" << viscosity_ << std::endl;
-    }
-
-    /// Constructor
     MiscibilityDead::MiscibilityDead(const Opm::PvdgTable& pvdgTable)
     {
         // Copy data

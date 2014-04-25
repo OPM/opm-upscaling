@@ -23,7 +23,6 @@
 
 #include <opm/porsol/blackoil/fluid/FluidMatrixInteractionBlackoil.hpp>
 #include <opm/porsol/blackoil/fluid/FluidStateBlackoil.hpp>
-#include <opm/core/io/eclipse/EclipseGridParser.hpp>
 #include <dune/common/fvector.hh>
 #include <vector>
 
@@ -43,17 +42,6 @@ namespace Opm
     public:
         typedef FluidStateBlackoil FluidState;
         typedef BlackoilFluidData FluidData;
-
-        void init(const Opm::EclipseGridParser& parser)
-        {
-            fmi_params_.init(parser);
-            // FluidSystemBlackoil<>::init(parser);
-            pvt_.init(parser);
-            const std::vector<double>& dens = parser.getDENSITY().densities_[0];
-            surface_densities_[Oil] = dens[0];
-            surface_densities_[Water] = dens[1];
-            surface_densities_[Gas] = dens[2];
-        }
 
         void init(Opm::DeckConstPtr deck)
         {

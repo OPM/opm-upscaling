@@ -20,7 +20,6 @@
 #include "config.h"
 
 #include "BlackoilPVT.hpp"
-#include <opm/core/io/eclipse/EclipseGridParser.hpp>
 #include <opm/core/utility/Units.hpp>
 #include "MiscibilityDead.hpp"
 #include "MiscibilityLiveOil.hpp"
@@ -41,49 +40,7 @@ using namespace Opm;
 
 namespace Opm
 {
-    void BlackoilPVT::init(const Opm::EclipseGridParser& parser)
-    {
-        region_number_ = 0;
 
-        // Surface densities. Accounting for different orders in eclipse and our code.
-        if (parser.hasField("DENSITY")) {
-            const int region_number = 0;
-            enum { ECL_oil = 0, ECL_water = 1, ECL_gas = 2 };
-            const std::vector<double>& d = parser.getDENSITY().densities_[region_number];
-            densities_[Aqua]   = d[ECL_water];
-            densities_[Vapour] = d[ECL_gas];
-            densities_[Liquid] = d[ECL_oil];
-        } else {
-            OPM_THROW(std::runtime_error, "Input is missing DENSITY\n");
-        }
-
-        // Water PVT
-        if (parser.hasField("PVTW")) {
-            water_props_.reset(new MiscibilityWater(parser.getPVTW().pvtw_));
-        } else {
-            water_props_.reset(new MiscibilityWater(0.5*Opm::prefix::centi*Opm::unit::Poise)); // Eclipse 100 default 
-        }
-
-        // Oil PVT
-        if (parser.hasField("PVDO")) {
-            oil_props_.reset(new MiscibilityDead(parser.getPVDO().pvdo_));
-        } else if (parser.hasField("PVTO")) {
-            oil_props_.reset(new MiscibilityLiveOil(parser.getPVTO().pvto_));
-        } else if (parser.hasField("PVCDO")) {
-            oil_props_.reset(new MiscibilityWater(parser.getPVCDO().pvcdo_));
-        } else {
-            OPM_THROW(std::runtime_error, "Input is missing PVDO and PVTO\n");
-        }
-
-        // Gas PVT
-        if (parser.hasField("PVDG")) {
-            gas_props_.reset(new MiscibilityDead(parser.getPVDG().pvdg_));
-        } else if (parser.hasField("PVTG")) {
-            gas_props_.reset(new MiscibilityLiveGas(parser.getPVTG().pvtg_));
-        } else {
-            OPM_THROW(std::runtime_error, "Input is missing PVDG and PVTG\n");
-        }
-    }
 
     void BlackoilPVT::init(Opm::DeckConstPtr deck)
     {

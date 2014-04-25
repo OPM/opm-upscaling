@@ -39,19 +39,6 @@ namespace Opm
     {
     }
 
-    template <int dim>
-    void Rock<dim>::init(const Opm::EclipseGridParser& parser,
-                         const std::vector<int>& global_cell,
-                         const double perm_threshold)
-    {
-        // This code is mostly copied from ReservoirPropertyCommon::init(...).
-        static_assert(dim == 3, "");
-
-        permfield_valid_.assign(global_cell.size(), false);
-
-        assignPorosity    (parser, global_cell);
-        assignPermeability(parser, global_cell, perm_threshold);
-    }
 
     template <int dim>
     void Rock<dim>::init(Opm::DeckConstPtr deck,
@@ -122,71 +109,7 @@ namespace Opm
     // ------ Private methods ------
 
 
-    template <int dim>
-    void Rock<dim>::assignPorosity(const Opm::EclipseGridParser& parser,
-                                   const std::vector<int>& global_cell)
-    {
-        porosity_.assign(global_cell.size(), 1.0);
 
-        if (parser.hasField("PORO")) {
-            const std::vector<double>& poro = parser.getFloatingPointValue("PORO");
-
-            for (int c = 0; c < int(porosity_.size()); ++c) {
-                porosity_[c] = poro[global_cell[c]];
-            }
-        }
-    }
-
-
-    template <int dim>
-    void Rock<dim>::assignPermeability(const Opm::EclipseGridParser& parser,
-                                       const std::vector<int>& global_cell,
-                                       double perm_threshold)
-    {
-        Opm::EclipseGridInspector insp(parser);
-        std::array<int, 3> dims = insp.gridSize();
-        int num_global_cells = dims[0]*dims[1]*dims[2];
-        assert (num_global_cells > 0);
-
-        permeability_.assign(dim * dim * global_cell.size(), 0.0);
-
-        std::vector<const std::vector<double>*> tensor;
-        tensor.reserve(10);
-
-        const std::vector<double> zero(num_global_cells, 0.0);
-        tensor.push_back(&zero);
-
-        static_assert(dim == 3, "");
-        std::array<int,9> kmap;
-        permeability_kind_ = fillTensor(parser, tensor, kmap);
-
-        // Assign permeability values only if such values are
-        // given in the input deck represented by 'parser'.  In
-        // other words: Don't set any (arbitrary) default values.
-        // It is infinitely better to experience a reproducible
-        // crash than subtle errors resulting from a (poorly
-        // chosen) default value...
-        //
-        if (tensor.size() > 1) {
-            const int nc  = global_cell.size();
-            int       off = 0;
-
-            for (int c = 0; c < nc; ++c, off += dim*dim) {
-                SharedPermTensor K(dim, dim, &permeability_[off]);
-                int       kix  = 0;
-                const int glob = global_cell[c];
-
-                for (int i = 0; i < dim; ++i) {
-                    for (int j = 0; j < dim; ++j, ++kix) {
-                        K(i,j) = (*tensor[kmap[kix]])[glob];
-                    }
-                    K(i,i) = std::max(K(i,i), perm_threshold);
-                }
-
-                permfield_valid_[c] = std::vector<unsigned char>::value_type(1);
-            }
-        }
-    }
 
     template <int dim>
     void Rock<dim>::assignPorosity(Opm::DeckConstPtr deck,
