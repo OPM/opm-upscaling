@@ -50,6 +50,7 @@
 #include <numeric> // for std::accumulate
 #include <sys/utsname.h>
 
+#include <opm/upscaling/ParserAdditions.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 #include <opm/core/io/eclipse/EclipseGridInspector.hpp>
 
@@ -159,6 +160,7 @@ int main(int varnum, char** vararg) try {
     // (this pointer trick is necessary for the try-catch-clause to work)
     
    Opm::ParserPtr parser(new Opm::Parser());
+   Opm::addNonStandardUpscalingKeywords(parser);
    Opm::DeckConstPtr deck(parser->parseFile(ECLIPSEFILENAME));
 
     Opm::EclipseGridInspector eclInspector(deck);

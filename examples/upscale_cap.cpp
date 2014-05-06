@@ -66,6 +66,7 @@
 
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
+#include <opm/upscaling/ParserAdditions.hpp>
 
 #include <dune/common/version.hh>
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
@@ -226,6 +227,7 @@ try
 
    cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... " << endl;
    Opm::ParserPtr parser(new Opm::Parser());
+   Opm::addNonStandardUpscalingKeywords(parser);
    Opm::DeckConstPtr deck(parser->parseFile(ECLIPSEFILENAME));
    
    // Check that we have the information we need from the eclipse file:  

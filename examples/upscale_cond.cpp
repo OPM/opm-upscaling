@@ -70,6 +70,7 @@
 
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
+#include <opm/upscaling/ParserAdditions.hpp>
  
 using namespace Opm;
 using namespace std;
@@ -335,6 +336,7 @@ try
    if (isMaster) cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... ";
    flush(cout);   start = clock();
    Opm::ParserPtr parser(new Opm::Parser());
+   Opm::addNonStandardUpscalingKeywords(parser);
    Opm::DeckConstPtr deck(parser->parseFile(ECLIPSEFILENAME));
 
    finish = clock();   timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;

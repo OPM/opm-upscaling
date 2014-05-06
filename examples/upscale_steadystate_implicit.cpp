@@ -41,6 +41,7 @@
 #include <opm/porsol/common/SimulatorTraits.hpp>
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
+#include <opm/upscaling/ParserAdditions.hpp>
 #include <sys/utsname.h>
 #include <iostream>
 
@@ -190,6 +191,7 @@ try
     Opm::parameter::ParameterGroup param(argc, argv);
     std::string gridfilename = param.get<std::string>("gridfilename");
     Opm::ParserPtr parser(new Opm::Parser());
+    Opm::addNonStandardUpscalingKeywords(parser);
     Opm::DeckConstPtr deck(parser->parseFile(gridfilename));
 
     // Check that we have the information we need from the eclipse file:  
