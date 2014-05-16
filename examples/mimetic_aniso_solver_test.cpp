@@ -53,8 +53,9 @@
 
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/CpGrid.hpp>
-#include <opm/core/io/eclipse/EclipseGridParser.hpp>
 #include <opm/core/io/eclipse/EclipseGridInspector.hpp>
+
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 
 #include <opm/porsol/common/fortran.hpp>
 #include <opm/porsol/common/blas_lapack.hpp>
@@ -66,6 +67,9 @@
 #include <opm/porsol/mimetic/MimeticIPAnisoRelpermEvaluator.hpp>
 #include <opm/porsol/mimetic/IncompFlowSolverHybrid.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
+
+#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 
 
 template <int dim, class Interface>
@@ -117,22 +121,22 @@ void test_evaluator(const Interface& g)
 }
 
 
-void build_grid(const Opm::EclipseGridParser& parser,
+void build_grid(Opm::DeckConstPtr deck,
                 const double z_tol, Dune::CpGrid& grid,
                 std::array<int,3>& cartDims)
 {
-    Opm::EclipseGridInspector insp(parser);
+    Opm::EclipseGridInspector insp(deck);
 
     grdecl g;
     cartDims[0] = g.dims[0] = insp.gridSize()[0];
     cartDims[1] = g.dims[1] = insp.gridSize()[1];
     cartDims[2] = g.dims[2] = insp.gridSize()[2];
 
-    g.coord = &parser.getFloatingPointValue("COORD")[0];
-    g.zcorn = &parser.getFloatingPointValue("ZCORN")[0];
+    g.coord = &deck->getKeyword("COORD")->getSIDoubleData()[0];
+    g.zcorn = &deck->getKeyword("ZCORN")->getSIDoubleData()[0];
 
-    if (parser.hasField("ACTNUM")) {
-        g.actnum = &parser.getIntegerValue("ACTNUM")[0];
+    if (deck->hasKeyword("ACTNUM")) {
+        g.actnum = &deck->getKeyword("ACTNUM")->getIntData()[0];
         grid.processEclipseFormat(g, z_tol, false, false);
     } else {
         std::vector<int> dflt_actnum(g.dims[0] * g.dims[1] * g.dims[2], 1);
@@ -227,10 +231,11 @@ try
     // Make a grid
     Dune::CpGrid grid;
 
-    Opm::EclipseGridParser parser(param.get<std::string>("filename"));
+    Opm::ParserPtr parser(new Opm::Parser());
+    Opm::DeckConstPtr deck(parser->parseFile(param.get<std::string>("filename")));
     double z_tol = param.getDefault<double>("z_tolerance", 0.0);
     std::array<int,3> cartDims;
-    build_grid(parser, z_tol, grid, cartDims);
+    build_grid(deck, z_tol, grid, cartDims);
 
     // Make the grid interface
     Opm::GridInterfaceEuler<Dune::CpGrid> g(grid);
@@ -238,7 +243,7 @@ try
     // Reservoir properties.
     typedef ReservoirPropertyCapillaryAnisotropicRelperm<3> RP;
     RP res_prop;
-    res_prop.init(parser, grid.globalCell());
+    res_prop.init(deck, grid.globalCell());
 
     assign_permeability<3>(res_prop, g.numberOfCells(), 0.1*Opm::unit::darcy);
     test_flowsolver<3>(g, res_prop);

@@ -23,6 +23,9 @@
 #include <opm/core/io/eclipse/EclipseGridParser.hpp>
 #include <opm/core/utility/UniformTableLinear.hpp>
 #include <opm/core/utility/buildUniformMonotoneTable.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Utility/SgofTable.hpp>
+#include <opm/parser/eclipse/Utility/SwofTable.hpp>
 #include "BlackoilDefs.hpp"
 #include <iostream>
 #include <stdexcept>
@@ -56,6 +59,34 @@ public:
         const std::vector<double>& krg = sgof_table[0][1];
         const std::vector<double>& krog = sgof_table[0][2];
         const std::vector<double>& pcog = sgof_table[0][3];
+
+        // Create tables for krw, krow, krg and krog.
+        int samples = 200;
+        buildUniformMonotoneTable(sw, krw,  samples, krw_);
+        buildUniformMonotoneTable(sw, krow, samples, krow_);
+        buildUniformMonotoneTable(sg, krg,  samples, krg_);
+        buildUniformMonotoneTable(sg, krog, samples, krog_);
+        krocw_ = krow[0]; // At connate water -> ecl. SWOF
+
+        // Create tables for pcow and pcog.
+        buildUniformMonotoneTable(sw, pcow, samples, pcow_);
+        buildUniformMonotoneTable(sg, pcog, samples, pcog_);
+    }
+
+    void init(Opm::DeckConstPtr deck)
+    {
+        // Extract input data.
+        SwofTable swofTable(deck->getKeyword("SWOF"));
+        SgofTable sgofTable(deck->getKeyword("SGOF"));
+
+        const std::vector<double>& sw = swofTable.getSwColumn();
+        const std::vector<double>& krw = swofTable.getKrwColumn();
+        const std::vector<double>& krow = swofTable.getKrowColumn();
+        const std::vector<double>& pcow = swofTable.getPcowColumn();
+        const std::vector<double>& sg = sgofTable.getSgColumn();
+        const std::vector<double>& krg = sgofTable.getKrgColumn();
+        const std::vector<double>& krog = sgofTable.getKrogColumn();
+        const std::vector<double>& pcog = sgofTable.getPcogColumn();
 
         // Create tables for krw, krow, krg and krog.
         int samples = 200;

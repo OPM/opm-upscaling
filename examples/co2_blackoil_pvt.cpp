@@ -33,10 +33,10 @@ try
     if (argc == 2) temperature = std::atof(argv[1]);
 
     Opm::BlackoilCo2PVT boPvt;
-    Opm::EclipseGridParser ep;
+    Opm::DeckConstPtr deck; // <- uninitalized pointer!
     Opm::time::StopWatch clock;
   clock.start();
-    boPvt.init(ep);
+    boPvt.init(deck);
 
     boPvt.generateBlackOilTables(temperature);
   clock.stop();

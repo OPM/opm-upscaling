@@ -33,14 +33,16 @@
   along with OpenRS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef OPENRS_SETUPGRIDANDPROPS_HEADER
-#define OPENRS_SETUPGRIDANDPROPS_HEADER
+#ifndef OPM_SETUPGRIDANDPROPS_HEADER
+#define OPM_SETUPGRIDANDPROPS_HEADER
 
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/core/utility/Units.hpp>
 #include <dune/grid/CpGrid.hpp>
 #include <dune/grid/sgrid.hh>
 #include <opm/porsol/common/ReservoirPropertyCapillary.hpp>
+#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <boost/filesystem.hpp>
 
 namespace Opm
@@ -77,17 +79,22 @@ namespace Opm
             res_prop.init(grid.size(0));
         } else if (fileformat == "eclipse") {
             std::string ecl_file = param.get<std::string>("filename");
-            Opm::EclipseGridParser parser(ecl_file);
+
+            Opm::ParserPtr parser(new Opm::Parser());
+            Opm::DeckConstPtr deck(parser->parseFile(ecl_file));
             double z_tolerance = param.getDefault<double>("z_tolerance", 0.0);
             bool periodic_extension = param.getDefault<bool>("periodic_extension", false);
             bool turn_normals = param.getDefault<bool>("turn_normals", false);
-            grid.processEclipseFormat(parser, z_tolerance, periodic_extension, turn_normals);
+            grid.processEclipseFormat(deck, z_tolerance, periodic_extension, turn_normals);
             // Save EGRID file in case we are writing ECL output.
             if (param.getDefault("output_ecl", false)) {
+                OPM_THROW(std::runtime_error, "Saving to EGRID files is not yet implemented");
+                /*
                 boost::filesystem::path ecl_path(ecl_file);
                 const std::vector<int>& globalCell = grid.globalCell();
                 ecl_path.replace_extension(".EGRID");
                 parser.saveEGRID(ecl_path.string() , (int) globalCell.size() , &globalCell[0]);
+                */
             }
             double perm_threshold_md = param.getDefault("perm_threshold_md", 0.0);
             double perm_threshold = Opm::unit::convert::from(perm_threshold_md, Opm::prefix::milli*Opm::unit::darcy);
@@ -105,7 +112,7 @@ namespace Opm
                 double v2 = param.getDefault("viscosity2", 0.003);
                 res_prop.setViscosities(v1, v2);
             }
-            res_prop.init(parser, grid.globalCell(), perm_threshold, rl_ptr,
+            res_prop.init(deck, grid.globalCell(), perm_threshold, rl_ptr,
                           use_j, sigma, theta);
         } else if (fileformat == "cartesian") {
             std::array<int, 3> dims = {{ param.getDefault<int>("nx", 1),
@@ -149,6 +156,32 @@ namespace Opm
         grid.processEclipseFormat(parser, z_tolerance, periodic_extension, turn_normals, clip_z);
         const std::string* rl_ptr = (rock_list == "no_list") ? 0 : &rock_list;
         res_prop.init(parser, grid.globalCell(), perm_threshold, rl_ptr, use_jfunction_scaling, sigma, theta);
+        if (unique_bids) {
+            grid.setUniqueBoundaryIds(true);
+        }
+    }
+
+    /// @brief
+    /// @todo Doc me!
+    /// @param
+    template <template <int> class ResProp>
+    inline void setupGridAndPropsEclipse(Opm::DeckConstPtr deck,
+                                         double z_tolerance,
+                                         bool periodic_extension,
+                                         bool turn_normals,
+                                         bool clip_z,
+                                         bool unique_bids,
+                                         double perm_threshold,
+                                         const std::string& rock_list,
+                                         bool use_jfunction_scaling,
+                                         double sigma,
+                                         double theta,
+                                         Dune::CpGrid& grid,
+                                         ResProp<3>& res_prop)
+    {
+        grid.processEclipseFormat(deck, z_tolerance, periodic_extension, turn_normals, clip_z);
+        const std::string* rl_ptr = (rock_list == "no_list") ? 0 : &rock_list;
+        res_prop.init(deck, grid.globalCell(), perm_threshold, rl_ptr, use_jfunction_scaling, sigma, theta);
         if (unique_bids) {
             grid.setUniqueBoundaryIds(true);
         }

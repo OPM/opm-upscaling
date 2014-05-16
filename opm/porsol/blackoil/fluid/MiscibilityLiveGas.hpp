@@ -36,6 +36,7 @@
      */
 
 #include "MiscibilityProps.hpp"
+#include <opm/parser/eclipse/Utility/PvtgTable.hpp>
 
 namespace Opm
 {
@@ -44,7 +45,8 @@ namespace Opm
     public:
 	typedef std::vector<std::vector<std::vector<double> > > table_t;
 
-	MiscibilityLiveGas(const table_t& pvto);
+    MiscibilityLiveGas(const table_t& pvto);
+    MiscibilityLiveGas(const Opm::PvtgTable& pvtgTable);
 	virtual ~MiscibilityLiveGas();
 
         virtual double getViscosity(int region, double press, const surfvol_t& surfvol) const;

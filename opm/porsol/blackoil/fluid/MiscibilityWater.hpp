@@ -36,6 +36,8 @@
 
 #include "MiscibilityProps.hpp"
 #include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/parser/eclipse/Utility/PvtwTable.hpp>
+#include <opm/parser/eclipse/Utility/PvcdoTable.hpp>
 
 // Forward declaration.
 class PVTW;
@@ -47,12 +49,12 @@ namespace Opm
     public:
         typedef std::vector<std::vector<double> > table_t;
 
-	MiscibilityWater(const table_t& pvtw)
+        MiscibilityWater(const table_t& pvtw)
         {
-	    const int region_number = 0;
-	    if (pvtw.size() != 1) {
-		OPM_THROW(std::runtime_error, "More than one PVD-region");
-	    }
+            const int region_number = 0;
+            if (pvtw.size() != 1) {
+                OPM_THROW(std::runtime_error, "More than one PVD-region");
+            }
             ref_press_ = pvtw[region_number][0];
             ref_B_     = pvtw[region_number][1];
             comp_      = pvtw[region_number][2];
@@ -62,7 +64,30 @@ namespace Opm
             }
         }
 
-	MiscibilityWater(double visc)
+        MiscibilityWater(const PvtwTable& pvtw)
+        {
+            ref_press_ = pvtw.getPressureColumn()[0];
+            ref_B_     = pvtw.getFormationFactorColumn()[0];
+            comp_      = pvtw.getCompressibilityColumn()[0];
+            viscosity_ = pvtw.getViscosityColumn()[0];
+            if (pvtw.getViscosibilityColumn()[0] != 0.0) {
+                OPM_THROW(std::runtime_error, "MiscibilityWater does not support 'viscosibility'.");
+            }
+        }
+
+        // WTF?? we initialize a class for water from a table for oil.
+        MiscibilityWater(const PvcdoTable& pvcdo)
+        {
+            ref_press_ = pvcdo.getPressureColumn()[0];
+            ref_B_     = pvcdo.getFormationFactorColumn()[0];
+            comp_      = pvcdo.getCompressibilityColumn()[0];
+            viscosity_ = pvcdo.getViscosityColumn()[0];
+            if (pvcdo.getViscosibilityColumn()[0] != 0.0) {
+                OPM_THROW(std::runtime_error, "MiscibilityWater does not support 'viscosibility'.");
+            }
+        }
+
+        MiscibilityWater(double visc)
             : ref_press_(0.0),
               ref_B_(1.0),
               comp_(0.0),
