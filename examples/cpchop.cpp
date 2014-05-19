@@ -487,10 +487,10 @@ try
 	    if (dips) {
 		Opm::DeckConstPtr subdeck = ch.subDeck();
 		std::vector<int>  griddims(3);
-        Opm::DeckRecordConstPtr specgridRecord(subdeck->getKeyword("SPECGRID")->getRecord(0));
-        griddims[0] = specgridRecord->getItem("NX")->getInt(0);
-        griddims[1] = specgridRecord->getItem("NY")->getInt(0);
-        griddims[2] = specgridRecord->getItem("NZ")->getInt(0);
+		Opm::DeckRecordConstPtr specgridRecord(subdeck->getKeyword("SPECGRID")->getRecord(0));
+		griddims[0] = specgridRecord->getItem("NX")->getInt(0);
+		griddims[1] = specgridRecord->getItem("NY")->getInt(0);
+		griddims[2] = specgridRecord->getItem("NZ")->getInt(0);
 
 		std::vector<double> xdips_subsample, ydips_subsample;
 
@@ -528,10 +528,10 @@ try
 		Opm::DeckConstPtr subdeck = ch.subDeck();
 		Opm::EclipseGridInspector subinspector(subdeck);
 		std::vector<int>  griddims(3);
-        Opm::DeckRecordConstPtr specgridRecord(subdeck->getKeyword("SPECGRID")->getRecord(0));
-        griddims[0] = specgridRecord->getItem("NX")->getInt(0);
-        griddims[1] = specgridRecord->getItem("NY")->getInt(0);
-        griddims[2] = specgridRecord->getItem("NZ")->getInt(0);
+		Opm::DeckRecordConstPtr specgridRecord(subdeck->getKeyword("SPECGRID")->getRecord(0));
+		griddims[0] = specgridRecord->getItem("NX")->getInt(0);
+		griddims[1] = specgridRecord->getItem("NY")->getInt(0);
+		griddims[2] = specgridRecord->getItem("NZ")->getInt(0);
 
 		int number_of_subsamplecells = griddims[0] * griddims[1] * griddims[2];
 
