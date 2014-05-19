@@ -9,6 +9,8 @@
 //! \brief Elasticity helper class - template implementations
 //!
 //==============================================================================
+#ifndef OPM_ELASTICITY_IMPL_HPP
+#define OPM_ELASTICITY_IMPL_HPP
 
 #include <opm/elasticity/shapefunctions.hpp>
 
@@ -96,3 +98,5 @@ void Elasticity<GridType>::getStressVector(Dune::FieldVector<ctype,comp>& sigma,
   sigma = Dune::FMatrixHelp::mult(C,Dune::FMatrixHelp::mult(B,v)+eps0);
 }
 }}
+
+#endif

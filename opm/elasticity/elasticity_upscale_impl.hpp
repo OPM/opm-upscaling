@@ -9,7 +9,13 @@
 //! \brief Elasticity upscale class - template implementations
 //!
 //==============================================================================
+#ifndef OPM_ELASTICITY_UPSCALE_IMPL_HPP
+#define OPM_ELASTICITY_UPSCALE_IMPL_HPP
 
+#include <iostream>
+
+namespace Opm {
+namespace Elasticity {
   template<class GridType>
 std::vector<BoundaryGrid::Vertex> ElasticityUpscale<GridType>::extractFace(Direction dir, ctype coord)
 {
@@ -978,3 +984,7 @@ void ElasticityUpscale<GridType>::solve(int loadcase)
     std::cerr << "exception thrown " << e << std::endl;
   }
 }
+
+}} // namespace Opm, Elasticity
+
+#endif

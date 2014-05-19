@@ -37,7 +37,6 @@
 
 #include <dune/istl/paamg/amg.hh>
 
-#include <iostream>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
@@ -445,9 +444,9 @@ class ElasticityUpscale
     //! \brief Verbose output
     bool verbose;
 };
-#include "elasticity_upscale_impl.hpp"
 
-}
-}
+}} // namespace Opm, Elasticity
+
+#include "elasticity_upscale_impl.hpp"
 
 #endif
