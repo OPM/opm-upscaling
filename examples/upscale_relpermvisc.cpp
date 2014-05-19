@@ -81,6 +81,7 @@
 
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
+#include <opm/upscaling/ParserAdditions.hpp>
 
 #include <dune/common/version.hh>
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
@@ -375,28 +376,31 @@ try
     if (isMaster) cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... ";
     flush(cout);   start = clock();
  
-    Opm::EclipseGridParser eclParser(ECLIPSEFILENAME,false);
+    Opm::ParserPtr parser(new Opm::Parser());
+    Opm::addNonStandardUpscalingKeywords(parser);
+    Opm::DeckConstPtr deck(parser->parseFile(ECLIPSEFILENAME));
+
     finish = clock();   timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
     if (isMaster) cout << " (" << timeused <<" secs)" << endl;
   
     // Check that we have the information we need from the eclipse file: 
-    if (! (eclParser.hasField("SPECGRID") && eclParser.hasField("COORD") && eclParser.hasField("ZCORN") 
-           && eclParser.hasField("PORO") && eclParser.hasField("PERMX") && eclParser.hasField("SATNUM"))) { 
+    if (! (deck->hasKeyword("SPECGRID") && deck->hasKeyword("COORD") && deck->hasKeyword("ZCORN") 
+           && deck->hasKeyword("PORO") && deck->hasKeyword("PERMX") && deck->hasKeyword("SATNUM"))) { 
         cerr << "Error: Did not find SPECGRID, COORD and ZCORN in Eclipse file " << ECLIPSEFILENAME << endl; 
         usage(); 
         exit(1); 
     } 
     
-    vector<double> poros  = eclParser.getFloatingPointValue("PORO"); 
-    vector<double> permxs = eclParser.getFloatingPointValue("PERMX"); 
+    vector<double> poros  = deck->getKeyword("PORO")->getSIDoubleData(); 
+    vector<double> permxs = deck->getKeyword("PERMX")->getSIDoubleData(); 
  
     // Load anisotropic (only diagonal supported) input if present in grid
     vector<double> permys, permzs;
     
-    if (eclParser.hasField("PERMY") && eclParser.hasField("PERMZ")) {
+    if (deck->hasKeyword("PERMY") && deck->hasKeyword("PERMZ")) {
         anisotropic_input = true;
-        permys = eclParser.getFloatingPointValue("PERMY");
-        permzs = eclParser.getFloatingPointValue("PERMZ");
+        permys = deck->getKeyword("PERMY")->getSIDoubleData();
+        permzs = deck->getKeyword("PERMZ")->getSIDoubleData();
         if (isMaster) cout << "Info: PERMY and PERMZ present, going into anisotropic input mode, no J-functions\n"; 
         if (isMaster) cout << "      Options -relPermCurve and -jFunctionCurve is meaningless.\n"; 
     } 
@@ -405,11 +409,11 @@ try
     /* Initialize a default satnums-vector with only "ones" (meaning only one rocktype) */ 
     vector<int> satnums(poros.size(), 1); 
     
-    if (eclParser.hasField("SATNUM")) { 
-        satnums = eclParser.getIntegerValue("SATNUM"); 
+    if (deck->hasKeyword("SATNUM")) { 
+        satnums = deck->getKeyword("SATNUM")->getIntData(); 
     } 
-    else if (eclParser.hasField("ROCKTYPE")) { 
-        satnums = eclParser.getIntegerValue("ROCKTYPE"); 
+    else if (deck->hasKeyword("ROCKTYPE")) { 
+        satnums = deck->getKeyword("ROCKTYPE")->getIntData(); 
     } 
     else { 
         if (isMaster) cout << "Warning: SATNUM or ROCKTYPE not found in input file, assuming only one rocktype" << endl; 
@@ -825,8 +829,7 @@ try
     int linsolver_verbosity = atoi(options["linsolver_verbosity"].c_str());
     int linsolver_type = atoi(options["linsolver_type"].c_str());
     bool twodim_hack = false;
-    eclParser.convertToSI();
-    upscaler.init(eclParser, boundaryCondition,
+    upscaler.init(deck, boundaryCondition,
                   Opm::unit::convert::from(minPerm, Opm::prefix::milli*Opm::unit::darcy),
                   ztol, linsolver_tolerance, linsolver_verbosity, linsolver_type, twodim_hack);
  

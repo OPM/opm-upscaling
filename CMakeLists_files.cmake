@@ -133,6 +133,7 @@ list (APPEND PUBLIC_HEADER_FILES
 	opm/elasticity/seqlu.hpp
 	opm/elasticity/shapefunctions.hpp
 	opm/elasticity/uzawa_solver.hpp
+	opm/upscaling/ParserAdditions.hpp
 	opm/upscaling/SinglePhaseUpscaler.hpp
 	opm/upscaling/SteadyStateUpscaler.hpp
 	opm/upscaling/SteadyStateUpscaler_impl.hpp

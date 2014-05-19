@@ -70,6 +70,7 @@
 
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
+#include <opm/upscaling/ParserAdditions.hpp>
  
 using namespace Opm;
 using namespace std;
@@ -334,22 +335,25 @@ try
 
    if (isMaster) cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... ";
    flush(cout);   start = clock();
-   Opm::EclipseGridParser eclParser(ECLIPSEFILENAME, false);
+   Opm::ParserPtr parser(new Opm::Parser());
+   Opm::addNonStandardUpscalingKeywords(parser);
+   Opm::DeckConstPtr deck(parser->parseFile(ECLIPSEFILENAME));
+
    finish = clock();   timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
    if (isMaster) cout << " (" << timeused <<" secs)" << endl;
 
    // Check that we have the information we need from the eclipse file:
-   if (! (eclParser.hasField("SPECGRID") && eclParser.hasField("COORD") && eclParser.hasField("ZCORN")
-          && eclParser.hasField("PORO") && eclParser.hasField("PERMX") && eclParser.hasField("SATNUM"))) {
+   if (! (deck->hasKeyword("SPECGRID") && deck->hasKeyword("COORD") && deck->hasKeyword("ZCORN")
+          && deck->hasKeyword("PORO") && deck->hasKeyword("PERMX") && deck->hasKeyword("SATNUM"))) {
        if (isMaster) cerr << "Error: Did not find SPECGRID, COORD and ZCORN in Eclipse file " << ECLIPSEFILENAME << endl;
        usageandexit();
    }
 
    const int points                = atoi(options["points"].c_str());
 
-   vector<int> satnums   = eclParser.getIntegerValue("SATNUM");
-   vector<double> poros  = eclParser.getFloatingPointValue("PORO");
-   vector<double> permxs = eclParser.getFloatingPointValue("PERMX");
+   vector<int> satnums   = deck->getKeyword("SATNUM")->getIntData();
+   vector<double> poros  = deck->getKeyword("PORO")->getSIDoubleData();
+   vector<double> permxs = deck->getKeyword("PERMX")->getSIDoubleData();
    const double minPerm = atof(options["minPerm"].c_str()); 
    const double minPoro = atof(options["minPoro"].c_str());
 
@@ -452,15 +456,18 @@ try
      (crop top and bottom). These modifications ruin the computations for 
      fixed and linear boundary conditions.
    */
-   vector<int>  griddims = eclParser.getSPECGRID().dimensions;
+   Opm::DeckRecordConstPtr specgridRecord = deck->getKeyword("SPECGRID")->getRecord(0);
+   vector<int>  griddims(3);
+   griddims[0] = specgridRecord->getItem("NX")->getInt(0);
+   griddims[1] = specgridRecord->getItem("NY")->getInt(0);
+   griddims[2] = specgridRecord->getItem("NZ")->getInt(0);
    SinglePhaseUpscaler upscaler;
    double ztol = 0.0;
    double linsolver_tolerance = atof(options["linsolver_tolerance"].c_str());
    int linsolver_verbosity    = atoi(options["linsolver_verbosity"].c_str());
    int linsolver_type         = atoi(options["linsolver_type"].c_str());
    bool twodim_hack = false;
-   eclParser.convertToSI();
-   upscaler.init(eclParser, boundaryCondition,
+   upscaler.init(deck, boundaryCondition,
                  Opm::unit::convert::from(minPerm, Opm::prefix::milli*Opm::unit::darcy),
                  ztol, linsolver_tolerance, linsolver_verbosity, linsolver_type, twodim_hack);
 

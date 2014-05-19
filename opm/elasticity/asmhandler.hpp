@@ -20,8 +20,6 @@
 #include <opm/elasticity/mpc.hh>
 #include <opm/elasticity/matrixops.hpp>
 
-#include <iostream>
-
 namespace Opm {
 namespace Elasticity {
 
@@ -230,9 +228,9 @@ class ASMHandler {
     ASMHandler& operator=(const ASMHandler&) {}
 };
 
-#include "asmhandler_impl.hpp"
+}
+}
 
-}
-}
+#include "asmhandler_impl.hpp"
 
 #endif

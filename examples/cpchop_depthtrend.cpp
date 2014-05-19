@@ -162,10 +162,9 @@ try
 
         try { /* The upscaling may fail to converge on icky grids, lets just pass by those */
             if (upscale) {
-                Opm::EclipseGridParser subparser = ch.subparser();
-                subparser.convertToSI();
+                Opm::DeckConstPtr subdeck = ch.subDeck();
                 Opm::SinglePhaseUpscaler upscaler;
-                upscaler.init(subparser, Opm::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
+                upscaler.init(subdeck, Opm::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
                               residual_tolerance, linsolver_verbosity, linsolver_type, false);
                 
                 Opm::SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
@@ -183,7 +182,6 @@ try
         catch (...) {
             std::cerr << "Warning: Upscaling chopped subsample at z=" << zstart << "failed, proceeding to next subsample\n";
         }
-        
     }
      
     if (upscale) {

@@ -9,9 +9,14 @@
 //! \brief Class handling finite element assembly - template implementations
 //!
 //==============================================================================
+#ifndef ASMHANDLER_IMPL_HPP_
+#define ASMHANDLER_IMPL_HPP_
 
 #include <dune/common/version.hh>
 #include <iostream>
+
+namespace Opm {
+namespace Elasticity {
 
   template<class GridType>
 void ASMHandler<GridType>::initForAssembly()
@@ -420,3 +425,7 @@ void ASMHandler<GridType>::determineAdjacencyPattern()
     help.log(cell, "\t\t... still processing ... cell ");
   }
 }
+
+}} // namespace Opm, Elasticity
+
+#endif

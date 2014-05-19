@@ -66,6 +66,7 @@
 
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
+#include <opm/upscaling/ParserAdditions.hpp>
 
 #include <dune/common/version.hh>
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
@@ -225,20 +226,26 @@ try
    eclipsefile.close(); 
 
    cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... " << endl;
-   Opm::EclipseGridParser eclParser(ECLIPSEFILENAME, false);
+   Opm::ParserPtr parser(new Opm::Parser());
+   Opm::addNonStandardUpscalingKeywords(parser);
+   Opm::DeckConstPtr deck(parser->parseFile(ECLIPSEFILENAME));
    
    // Check that we have the information we need from the eclipse file:  
-   if (! (eclParser.hasField("SPECGRID") && eclParser.hasField("COORD") && eclParser.hasField("ZCORN")  
-          && eclParser.hasField("PORO") && eclParser.hasField("PERMX") && eclParser.hasField("SATNUM"))) {  
+   if (! (deck->hasKeyword("SPECGRID") && deck->hasKeyword("COORD") && deck->hasKeyword("ZCORN")  
+          && deck->hasKeyword("PORO") && deck->hasKeyword("PERMX") && deck->hasKeyword("SATNUM"))) {  
        cerr << "Error: Did not find SPECGRID, COORD and ZCORN in Eclipse file " << ECLIPSEFILENAME << endl;  
        usageandexit();  
    }  
    
-   vector<int>   satnums = eclParser.getIntegerValue("SATNUM");  
-   vector<double>  poros = eclParser.getFloatingPointValue("PORO");  
-   vector<double> permxs = eclParser.getFloatingPointValue("PERMX");  
-   vector<int>  griddims = eclParser.getSPECGRID().dimensions;
-    
+   vector<int>   satnums = deck->getKeyword("SATNUM")->getIntData();  
+   vector<double>  poros = deck->getKeyword("PORO")->getRawDoubleData();
+   vector<double> permxs = deck->getKeyword("PERMX")->getRawDoubleData();
+   vector<int>  griddims(3);
+   Opm::DeckRecordConstPtr specgridRecord(deck->getKeyword("SPECGRID")->getRecord(0));
+   griddims[0] = specgridRecord->getItem("NX")->getInt(0);
+   griddims[1] = specgridRecord->getItem("NY")->getInt(0);
+   griddims[2] = specgridRecord->getItem("NZ")->getInt(0);
+
    unsigned int maxSatnum = 0;
    const double maxPermContrast = atof(options["maxPermContrast"].c_str());
    const double minPerm = atof(options["minPerm"].c_str());
@@ -397,8 +404,7 @@ try
    // Construct an object for single-phase upscaling, since we need to get some
    // information from the grid.
    SinglePhaseUpscaler upscaler;
-   eclParser.convertToSI();
-   upscaler.init(eclParser, SinglePhaseUpscaler::Fixed,
+   upscaler.init(deck, SinglePhaseUpscaler::Fixed,
                  Opm::unit::convert::from(minPerm, Opm::prefix::milli*Opm::unit::darcy),
                  0.0, 1e-8, 0, 1, false);  // options on this line are noops for upscale_cap
 

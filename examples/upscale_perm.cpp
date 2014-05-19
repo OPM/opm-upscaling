@@ -53,6 +53,7 @@
 #include <sys/utsname.h>
 
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
+#include <opm/upscaling/ParserAdditions.hpp>
 
 #include <dune/common/version.hh>
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
@@ -190,22 +191,16 @@ int upscale(int varnum, char** vararg) {
      */
     cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... ";
     flush(cout);   start = clock();
-    Opm::EclipseGridParser * eclParser_p;
-    try {
-        eclParser_p = new Opm::EclipseGridParser(ECLIPSEFILENAME);
-    }
-    catch (...) {
-        cout << "Error: Filename " << ECLIPSEFILENAME << " does not look like an eclipse grid file." << endl;
-        usage();
-        exit(1);
-    }
-    Opm::EclipseGridParser& eclParser = *eclParser_p;
+
+    Opm::ParserPtr parser(new Opm::Parser());
+    Opm::addNonStandardUpscalingKeywords(parser);
+    Opm::DeckConstPtr deck(parser->parseFile(ECLIPSEFILENAME));
 
     finish = clock();   timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
     cout << " (" << timeused <<" secs)" << endl;
  
     // Check that we have the information we need from the eclipse file, we will check PERM-fields later
-    if (! (eclParser.hasField("SPECGRID") && eclParser.hasField("COORD") && eclParser.hasField("ZCORN"))) {  
+    if (! (deck->hasKeyword("SPECGRID") && deck->hasKeyword("COORD") && deck->hasKeyword("ZCORN"))) {  
         cerr << "Error: Did not find SPECGRID, COORD and ZCORN in Eclipse file " << ECLIPSEFILENAME << endl;  
         usage();  
         exit(1);  
@@ -241,7 +236,7 @@ int upscale(int varnum, char** vararg) {
     if (isFixed || isLinear)  {
         cout << "Tesselating non-periodic grid ...";
         start = clock();
-        upscaler_nonperiodic.init(eclParser, 
+        upscaler_nonperiodic.init(deck, 
                                   isFixed ? SinglePhaseUpscaler::Fixed : SinglePhaseUpscaler::Linear,
                                   minPerm, ztol,  linsolver_tolerance, linsolver_verbosity, linsolver_type, 
                                   twodim_hack, linsolver_maxit, linsolver_prolongate_factor, smooth_steps);
@@ -252,7 +247,7 @@ int upscale(int varnum, char** vararg) {
     if (isPeriodic) {
         cout << "Tesselating periodic grid ...  ";
         start = clock();
-        upscaler_periodic.init(eclParser, SinglePhaseUpscaler::Periodic, minPerm,
+        upscaler_periodic.init(deck, SinglePhaseUpscaler::Periodic, minPerm,
                                ztol,  linsolver_tolerance, linsolver_verbosity, linsolver_type, twodim_hack,
                                linsolver_maxit, linsolver_prolongate_factor, smooth_steps);
         finish = clock();
@@ -270,7 +265,7 @@ int upscale(int varnum, char** vararg) {
      * in terms of cpu-resources (compared to permeability upscaling).
      */
     double upscaledPorosity = 0.0;
-    if (eclParser.hasField("PORO")) {
+    if (deck->hasKeyword("PORO")) {
         if (isPeriodic) {
             upscaledPorosity = upscaler_periodic.upscalePorosity();
         } else {

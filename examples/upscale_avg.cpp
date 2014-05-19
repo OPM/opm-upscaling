@@ -50,6 +50,7 @@
 #include <numeric> // for std::accumulate
 #include <sys/utsname.h>
 
+#include <opm/upscaling/ParserAdditions.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 #include <opm/core/io/eclipse/EclipseGridInspector.hpp>
 
@@ -158,22 +159,24 @@ int main(int varnum, char** vararg) try {
     // eclParser_p is here a pointer to an object of type Opm::EclipseGridParser
     // (this pointer trick is necessary for the try-catch-clause to work)
     
-    Opm::EclipseGridParser eclParser(ECLIPSEFILENAME, false);
+   Opm::ParserPtr parser(new Opm::Parser());
+   Opm::addNonStandardUpscalingKeywords(parser);
+   Opm::DeckConstPtr deck(parser->parseFile(ECLIPSEFILENAME));
 
-    Opm::EclipseGridInspector eclInspector(eclParser);
+    Opm::EclipseGridInspector eclInspector(deck);
 
     finish = clock();   timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
     cout << " (" << timeused <<" secs)" << endl;
     
     // Check that we have the information we need from the eclipse file, we will check PERM-fields later
-    if (! (eclParser.hasField("SPECGRID") && eclParser.hasField("COORD") && eclParser.hasField("ZCORN"))) {  
+    if (! (deck->hasKeyword("SPECGRID") && deck->hasKeyword("COORD") && deck->hasKeyword("ZCORN"))) {  
         cerr << "Error: Did not find SPECGRID, COORD and ZCORN in Eclipse file " << ECLIPSEFILENAME << endl;  
         usage();  
         exit(1);  
     }
 
    SinglePhaseUpscaler upscaler;
-   upscaler.init(eclParser, SinglePhaseUpscaler::Fixed,
+   upscaler.init(deck, SinglePhaseUpscaler::Fixed,
                  Opm::unit::convert::from(1e-9, Opm::prefix::milli*Opm::unit::darcy),
                  0.0, 1e-8, 0, 1, false);
 
@@ -181,9 +184,9 @@ int main(int varnum, char** vararg) try {
     bool use_actnum = false;
     vector<int> actnum;
     if (atoi(options["use_actnum"].c_str())>0) {
-        if (eclParser.hasField("ACTNUM")) {
+        if (deck->hasKeyword("ACTNUM")) {
             use_actnum = true;
-            actnum = eclParser.getIntegerValue("ACTNUM");
+            actnum = deck->getKeyword("ACTNUM")->getIntData();
             cout << actnum[0] << " " << actnum[1] << endl;
         }
         else {
@@ -198,28 +201,31 @@ int main(int varnum, char** vararg) try {
     cout << "Statistics for filename: " << ECLIPSEFILENAME << endl;
     cout << "-----------------------------------------------------" << endl;
     bool doporosity = false;
-    if (eclParser.hasField("PORO")) {
+    if (deck->hasKeyword("PORO")) {
         doporosity = true;
     }
     bool dontg = false;
-    if (eclParser.hasField("NTG")) {
+    if (deck->hasKeyword("NTG")) {
         // Ntg only used together with PORO
-        if (eclParser.hasField("PORO")) dontg = true;
+        if (deck->hasKeyword("PORO")) dontg = true;
     }    
 
     bool doperm = false;
-    if (eclParser.hasField("PERMX")) {
+    if (deck->hasKeyword("PERMX")) {
         doperm = true;
-        if (eclParser.hasField("PERMY") && eclParser.hasField("PERMZ")) {
+        if (deck->hasKeyword("PERMY") && deck->hasKeyword("PERMZ")) {
             anisotropic_input = true;
             cout << "Info: PERMY and PERMZ present in data file." << endl;
         }
     }
-    
-    
 
     // Global number of cells (includes inactive cells)
-    vector<int>  griddims = eclParser.getSPECGRID().dimensions;
+    Opm::DeckRecordConstPtr specgridRecord = deck->getKeyword("SPECGRID")->getRecord(0);
+    vector<int>  griddims(3);
+    griddims[0] = specgridRecord->getItem("NX")->getInt(0);
+    griddims[1] = specgridRecord->getItem("NY")->getInt(0);
+    griddims[2] = specgridRecord->getItem("NZ")->getInt(0);
+
     int num_eclipse_cells = griddims[0] * griddims[1] * griddims[2];
 
 
@@ -247,16 +253,16 @@ int main(int varnum, char** vararg) try {
     vector<double> poros, ntgs;
     vector<double> permxs, permys, permzs;
     if (doporosity) {
-        poros = eclParser.getFloatingPointValue("PORO");
+        poros = deck->getKeyword("PORO")->getRawDoubleData();
     }
     if (dontg) {
-        ntgs = eclParser.getFloatingPointValue("NTG");
+        ntgs = deck->getKeyword("NTG")->getRawDoubleData();
     }
     if (doperm) {
-        permxs = eclParser.getFloatingPointValue("PERMX");
+        permxs = deck->getKeyword("PERMX")->getRawDoubleData();
         if (anisotropic_input) {
-            permys = eclParser.getFloatingPointValue("PERMY");
-            permzs = eclParser.getFloatingPointValue("PERMZ");
+            permys = deck->getKeyword("PERMY")->getRawDoubleData();
+            permzs = deck->getKeyword("PERMZ")->getRawDoubleData();
         }
         
     }
@@ -403,14 +409,14 @@ int main(int varnum, char** vararg) try {
     // Then do statistics on rocktype by rocktype basis    
     bool dosatnums = false;
     vector<int> satnums;
-    if (eclParser.hasField("SATNUM")) {
+    if (deck->hasKeyword("SATNUM")) {
         dosatnums = true;
-        satnums = eclParser.getIntegerValue("SATNUM");
+        satnums = deck->getKeyword("SATNUM")->getIntData();
     } // If SATNUM was not present, maybe ROCKTYPE is there, 
     // if so, we will use it as SATNUM.
-    else if (eclParser.hasField("ROCKTYPE")) {
+    else if (deck->hasKeyword("ROCKTYPE")) {
         dosatnums = true;
-        satnums = eclParser.getIntegerValue("ROCKTYPE");
+        satnums = deck->getKeyword("ROCKTYPE")->getIntData();
     }
 
 

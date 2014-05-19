@@ -78,6 +78,7 @@
 
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
+#include <opm/upscaling/ParserAdditions.hpp>
 
 using namespace Opm;
 using namespace std;
@@ -384,33 +385,35 @@ try
 
    if (isMaster) cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... ";
    flush(cout);   start = clock();
-   Opm::EclipseGridParser eclParser(ECLIPSEFILENAME, false);
+   Opm::ParserPtr parser(new Opm::Parser());
+   Opm::addNonStandardUpscalingKeywords(parser);
+   Opm::DeckConstPtr deck(parser->parseFile(ECLIPSEFILENAME));
    finish = clock();   timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
    if (isMaster) cout << " (" << timeused <<" secs)" << endl;
 
    // Check that we have the information we need from the eclipse file:  
-   if (! (eclParser.hasField("SPECGRID") && eclParser.hasField("COORD") && eclParser.hasField("ZCORN")  
-          && eclParser.hasField("PORO") && eclParser.hasField("PERMX"))) {
+   if (! (deck->hasKeyword("SPECGRID") && deck->hasKeyword("COORD") && deck->hasKeyword("ZCORN")  
+          && deck->hasKeyword("PORO") && deck->hasKeyword("PERMX"))) {
        if (isMaster) cerr << "Error: Did not find SPECGRID, COORD, ZCORN, PORO and PERMX in Eclipse file " << ECLIPSEFILENAME << endl;  
        usageandexit();  
    }  
 
-   vector<double>  poros = eclParser.getFloatingPointValue("PORO");  
-   vector<double> permxs = eclParser.getFloatingPointValue("PERMX");  
-   vector<double> zcorns = eclParser.getFloatingPointValue("ZCORN");
-   vector<int>  griddims = eclParser.getSPECGRID().dimensions;
-   int x_res = griddims[0];
-   int y_res = griddims[1];
-   int z_res = griddims[2];
+   vector<double>  poros = deck->getKeyword("PORO")->getSIDoubleData();  
+   vector<double> permxs = deck->getKeyword("PERMX")->getSIDoubleData();  
+   vector<double> zcorns = deck->getKeyword("ZCORN")->getSIDoubleData();
 
-   
+   Opm::DeckRecordConstPtr specgridRecord = deck->getKeyword("SPECGRID")->getRecord(0);
+   int x_res = specgridRecord->getItem("NX")->getInt(0);
+   int y_res = specgridRecord->getItem("NY")->getInt(0);
+   int z_res = specgridRecord->getItem("NZ")->getInt(0);
+
    // Load anisotropic (only diagonal supported) input if present in grid
    vector<double> permys, permzs;
    
-   if (eclParser.hasField("PERMY") && eclParser.hasField("PERMZ")) {
+   if (deck->hasKeyword("PERMY") && deck->hasKeyword("PERMZ")) {
        anisotropic_input = true;
-       permys = eclParser.getFloatingPointValue("PERMY");
-       permzs = eclParser.getFloatingPointValue("PERMZ");
+       permys = deck->getKeyword("PERMY")->getSIDoubleData();
+       permzs = deck->getKeyword("PERMZ")->getSIDoubleData();
        if (isMaster) cout << "Info: PERMY and PERMZ present, going into anisotropic input mode, no J-functions\n"; 
        if (isMaster) cout << "      Options -relPermCurve and -jFunctionCurve is meaningless.\n"; 
    } 
@@ -419,11 +422,11 @@ try
    /* Initialize a default satnums-vector with only "ones" (meaning only one rocktype) */ 
    vector<int> satnums(poros.size(), 1); 
    
-   if (eclParser.hasField("SATNUM")) { 
-       satnums = eclParser.getIntegerValue("SATNUM"); 
+   if (deck->hasKeyword("SATNUM")) { 
+       satnums = deck->getKeyword("SATNUM")->getIntData(); 
    } 
-   else if (eclParser.hasField("ROCKTYPE")) { 
-       satnums = eclParser.getIntegerValue("ROCKTYPE"); 
+   else if (deck->hasKeyword("ROCKTYPE")) { 
+       satnums = deck->getKeyword("ROCKTYPE")->getIntData(); 
    } 
    else { 
        if (isMaster) cout << "Warning: SATNUM or ROCKTYPE not found in input file, assuming only one rocktype" << endl; 
@@ -944,8 +947,7 @@ try
    int smooth_steps = atoi(options["linsolver_smooth_steps"].c_str());
    double linsolver_prolongate_factor = atof(options["linsolver_prolongate_factor"].c_str());
    bool twodim_hack = false;
-   eclParser.convertToSI();
-   upscaler.init(eclParser, boundaryCondition,
+   upscaler.init(deck, boundaryCondition,
                  Opm::unit::convert::from(minPerm, Opm::prefix::milli*Opm::unit::darcy),
                  ztol, linsolver_tolerance,
                  linsolver_verbosity, linsolver_type, twodim_hack,

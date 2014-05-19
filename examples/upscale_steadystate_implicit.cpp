@@ -41,6 +41,7 @@
 #include <opm/porsol/common/SimulatorTraits.hpp>
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
+#include <opm/upscaling/ParserAdditions.hpp>
 #include <sys/utsname.h>
 #include <iostream>
 
@@ -189,11 +190,13 @@ try
     // Initialize.
     Opm::parameter::ParameterGroup param(argc, argv);
     std::string gridfilename = param.get<std::string>("gridfilename");
-    Opm::EclipseGridParser eclparser(gridfilename, false);
+    Opm::ParserPtr parser(new Opm::Parser());
+    Opm::addNonStandardUpscalingKeywords(parser);
+    Opm::DeckConstPtr deck(parser->parseFile(gridfilename));
 
     // Check that we have the information we need from the eclipse file:  
-    if (! (eclparser.hasField("SPECGRID") && eclparser.hasField("COORD") && eclparser.hasField("ZCORN")  
-           && eclparser.hasField("PORO") && eclparser.hasField("PERMX"))) {
+    if (! (deck->hasKeyword("SPECGRID") && deck->hasKeyword("COORD") && deck->hasKeyword("ZCORN")  
+           && deck->hasKeyword("PORO") && deck->hasKeyword("PERMX"))) {
         std::cerr << "Error: Did not find SPECGRID, COORD, ZCORN, PORO and PERMX in Eclipse file " << gridfilename << std::endl;  
         usageandexit();  
     }  
@@ -262,15 +265,15 @@ try
     std::vector<std::string> rockfiles;
     std::vector<std::vector<double> > rocksatendpoints_ = getExtremeSats(rock_list,rockfiles);
 
-    std::vector<double>  poros = eclparser.getFloatingPointValue("PORO");  
+    std::vector<double>  poros = deck->getKeyword("PORO")->getSIDoubleData();  
     // Anisotropic relperm not yet implemented in steadystate_implicit
     //bool anisorocks = param.getDefault("anisotropicrocks", false);
     std::vector<int> satnums(poros.size(), 1); 
-    if (eclparser.hasField("SATNUM")) { 
-        satnums = eclparser.getIntegerValue("SATNUM"); 
+    if (deck->hasKeyword("SATNUM")) { 
+        satnums = deck->getKeyword("SATNUM")->getIntData(); 
     } 
-    else if (eclparser.hasField("ROCKTYPE")) { 
-        satnums = eclparser.getIntegerValue("ROCKTYPE"); 
+    else if (deck->hasKeyword("ROCKTYPE")) { 
+        satnums = deck->getKeyword("ROCKTYPE")->getIntData(); 
     } 
     else { 
         std::cout << "Warning: SATNUM or ROCKTYPE not found in input file, assuming only one rocktype" << std::endl; 
@@ -284,7 +287,7 @@ try
         usageandexit();
     }
     Opm::SinglePhaseUpscaler spupscaler; // needed to access porosities and cell volumes
-    spupscaler.init(eclparser, Opm::SinglePhaseUpscaler::Fixed,
+    spupscaler.init(deck, Opm::SinglePhaseUpscaler::Fixed,
                     0.0,0.0, linsolver_tolerance, linsolver_verbosity, linsolver_type, false, linsolver_maxit,
                     linsolver_prolongate_factor, linsolver_smooth_steps);
     std::vector<double>  cellPoreVolumes; 

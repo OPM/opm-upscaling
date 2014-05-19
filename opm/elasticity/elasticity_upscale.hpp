@@ -13,7 +13,6 @@
 #define ELASTICITY_UPSCALE_HPP_
 
 #include <dune/common/fmatrix.hh>
-#include <opm/core/io/eclipse/EclipseGridParser.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <dune/grid/common/mcmgmapper.hh>
 #include <dune/geometry/quadraturerules.hh>
@@ -37,6 +36,9 @@
 #include <opm/elasticity/uzawa_solver.hpp>
 
 #include <dune/istl/paamg/amg.hh>
+
+#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 
 namespace Opm {
 namespace Elasticity {
@@ -442,9 +444,9 @@ class ElasticityUpscale
     //! \brief Verbose output
     bool verbose;
 };
-#include "elasticity_upscale_impl.hpp"
 
-}
-}
+}} // namespace Opm, Elasticity
+
+#include "elasticity_upscale_impl.hpp"
 
 #endif
