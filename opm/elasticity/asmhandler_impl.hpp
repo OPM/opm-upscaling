@@ -20,9 +20,11 @@ void ASMHandler<GridType>::initForAssembly()
   preprocess();
   determineAdjacencyPattern();
 
-  // workaround what looks to be a bug in bcrs matrix
+#if !DUNE_VERSION_NEWER(DUNE_ISTL, 2, 3)
+  // workaround a bug in bcrs matrix
   A.setBuildMode(Matrix::random);
   A.endrowsizes();
+#endif
 
   MatrixOps::fromAdjacency(A,adjacencyPattern,
                            adjacencyPattern.size(),adjacencyPattern.size());
