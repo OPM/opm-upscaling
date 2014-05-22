@@ -139,32 +139,6 @@ namespace Opm
     /// @todo Doc me!
     /// @param
     template <template <int> class ResProp>
-    inline void setupGridAndPropsEclipse(const Opm::EclipseGridParser& parser,
-                                         double z_tolerance,
-                                         bool periodic_extension,
-                                         bool turn_normals,
-                                         bool clip_z,
-                                         bool unique_bids,
-                                         double perm_threshold,
-                                         const std::string& rock_list,
-                                         bool use_jfunction_scaling,
-                                         double sigma,
-                                         double theta,
-                                         Dune::CpGrid& grid,
-                                         ResProp<3>& res_prop)
-    {
-        grid.processEclipseFormat(parser, z_tolerance, periodic_extension, turn_normals, clip_z);
-        const std::string* rl_ptr = (rock_list == "no_list") ? 0 : &rock_list;
-        res_prop.init(parser, grid.globalCell(), perm_threshold, rl_ptr, use_jfunction_scaling, sigma, theta);
-        if (unique_bids) {
-            grid.setUniqueBoundaryIds(true);
-        }
-    }
-
-    /// @brief
-    /// @todo Doc me!
-    /// @param
-    template <template <int> class ResProp>
     inline void setupGridAndPropsEclipse(Opm::DeckConstPtr deck,
                                          double z_tolerance,
                                          bool periodic_extension,

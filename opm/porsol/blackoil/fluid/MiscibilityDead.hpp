@@ -45,8 +45,6 @@ namespace Opm
     class MiscibilityDead : public MiscibilityProps
     {
     public:
-    typedef std::vector<std::vector<std::vector<double> > > table_t;
-    MiscibilityDead(const table_t& pvd_table);
 
         MiscibilityDead(const PvdoTable& pvdoTable);
         MiscibilityDead(const PvdgTable& pvdgTable);

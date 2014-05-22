@@ -22,14 +22,8 @@
 
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/utility/SparseTable.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <vector>
-
-// Forward declaration.
-namespace Opm
-{
-    class EclipseGridParser;
-}
-
 
 namespace Opm
 {
@@ -41,7 +35,7 @@ namespace Opm
     class Wells
     {
     public:
-        void init(const Opm::EclipseGridParser& parser);
+        void init(Opm::DeckConstPtr deck);
 
         // Well-centric interface.
         int numWells() const;
@@ -76,7 +70,7 @@ namespace Opm
 
     // ------------ Method implementations --------------
 
-    inline void Wells::init(const Opm::EclipseGridParser& parser)
+    inline void Wells::init(Opm::DeckConstPtr deck)
     {
     }
 

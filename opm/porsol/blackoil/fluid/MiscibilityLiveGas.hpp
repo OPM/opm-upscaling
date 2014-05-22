@@ -43,9 +43,6 @@ namespace Opm
     class MiscibilityLiveGas : public MiscibilityProps
     {
     public:
-	typedef std::vector<std::vector<std::vector<double> > > table_t;
-
-    MiscibilityLiveGas(const table_t& pvto);
     MiscibilityLiveGas(const Opm::PvtgTable& pvtgTable);
 	virtual ~MiscibilityLiveGas();
 

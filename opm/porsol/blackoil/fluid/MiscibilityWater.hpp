@@ -49,21 +49,6 @@ namespace Opm
     public:
         typedef std::vector<std::vector<double> > table_t;
 
-        MiscibilityWater(const table_t& pvtw)
-        {
-            const int region_number = 0;
-            if (pvtw.size() != 1) {
-                OPM_THROW(std::runtime_error, "More than one PVD-region");
-            }
-            ref_press_ = pvtw[region_number][0];
-            ref_B_     = pvtw[region_number][1];
-            comp_      = pvtw[region_number][2];
-            viscosity_ = pvtw[region_number][3];
-            if (pvtw[region_number].size() > 4 && pvtw[region_number][4] != 0.0) {
-                OPM_THROW(std::runtime_error, "MiscibilityWater does not support 'viscosibility'.");
-            }
-        }
-
         MiscibilityWater(const PvtwTable& pvtw)
         {
             ref_press_ = pvtw.getPressureColumn()[0];
