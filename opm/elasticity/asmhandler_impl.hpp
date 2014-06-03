@@ -25,12 +25,6 @@ void ASMHandler<GridType>::initForAssembly()
   preprocess();
   determineAdjacencyPattern();
 
-#if !DUNE_VERSION_NEWER(DUNE_ISTL, 2, 3)
-  // workaround a bug in bcrs matrix
-  A.setBuildMode(Matrix::random);
-  A.endrowsizes();
-#endif
-
   MatrixOps::fromAdjacency(A,adjacencyPattern,
                            adjacencyPattern.size(),adjacencyPattern.size());
   b.resize(adjacencyPattern.size());
@@ -125,13 +119,8 @@ void ASMHandler<GridType>::extractValues(Dune::FieldVector<double,comp>& v,
   const LeafIndexSet& set = gv.leafView().indexSet();
   Dune::GeometryType gt = it->type();
 
-#if DUNE_VERSION_NEWER(DUNE_GRID, 2, 3)
   const Dune::template ReferenceElement<double,dim> &ref =
                       Dune::ReferenceElements<double,dim>::general(gt);
-#else
-  const Dune::template GenericReferenceElement<double,dim> &ref =
-                      Dune::GenericReferenceElements<double,dim>::general(gt);
-#endif
   int vertexsize = ref.size(dim);
   int l=0;
   for (int i=0;i<vertexsize;++i) {
@@ -399,13 +388,8 @@ void ASMHandler<GridType>::determineAdjacencyPattern()
   for (LeafIterator it = gv.leafView().template begin<0>(); it != itend; ++it, ++cell) {
     Dune::GeometryType gt = it->type();
 
-#if DUNE_VERSION_NEWER(DUNE_GRID, 2, 3)
     const Dune::template ReferenceElement<double,dim>& ref =
       Dune::ReferenceElements<double,dim>::general(gt);
-#else
-    const Dune::template GenericReferenceElement<double,dim>& ref =
-      Dune::GenericReferenceElements<double,dim>::general(gt);
-#endif
 
     int vertexsize = ref.size(dim);
     for (int i=0; i < vertexsize; i++) {
