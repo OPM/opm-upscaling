@@ -281,7 +281,6 @@ int run(Params& p)
     } else
       grid.readEclipseFormat(p.file,p.ctol,false);
 
-    typedef typename GridType::ctype ctype;
     ElasticityUpscale<GridType, AMG> upscale(grid, p.ctol, p.Emin, p.file,
                                              p.rocklist, p.verbose);
 
