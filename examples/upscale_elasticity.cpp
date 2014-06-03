@@ -396,7 +396,7 @@ int run(Params& p)
     }
 
     if (!p.vtufile.empty()) {
-      Dune::VTKWriter<typename GridType::LeafGridView> vtkwriter(grid.leafView());
+      Dune::VTKWriter<typename GridType::LeafGridView> vtkwriter(grid.leafGridView());
 
       for (int i=0;i<6;++i) {
         std::stringstream str;

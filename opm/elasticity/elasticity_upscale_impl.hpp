@@ -29,13 +29,13 @@ IMPL_FUNC(std::vector<BoundaryGrid::Vertex>,
           extractFace(Direction dir, ctype coord))
 {
   std::vector<BoundaryGrid::Vertex> result;
-  const LeafVertexIterator itend = gv.leafView().template end<dim>();
+  const LeafVertexIterator itend = gv.leafGridView().template end<dim>();
 
   // make a mapper for codim dim entities in the leaf grid 
   Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridType,
                                             Dune::MCMGVertexLayout> mapper(gv);
   // iterate over vertices and find slaves
-  LeafVertexIterator start = gv.leafView().template begin<dim>();
+  LeafVertexIterator start = gv.leafGridView().template begin<dim>();
   for (LeafVertexIterator it = start; it != itend; ++it) {
     if (isOnPlane(dir,it->geometry().corner(0),coord)) {
       BoundaryGrid::Vertex v;
@@ -60,7 +60,7 @@ IMPL_FUNC(BoundaryGrid, extractMasterFace(Direction dir,
   static const int V2[3][4] = {{1,3,5,7},
                                {2,3,6,7},
                                {4,5,6,7}};
-  const LeafIndexSet& set = gv.leafView().indexSet();
+  const LeafIndexSet& set = gv.leafGridView().indexSet();
 
   int c = 0;
   int i = log2(dir);
@@ -68,8 +68,8 @@ IMPL_FUNC(BoundaryGrid, extractMasterFace(Direction dir,
   // we first group nodes into this map through the coordinate of lower left 
   // vertex. we then split this up into pillars for easy processing later
   std::map<double, std::vector<BoundaryGrid::Quad> > nodeMap;
-  for (LeafIterator cell  = gv.leafView().template begin<0>(); 
-                    cell != gv.leafView().template end<0>(); ++cell, ++c) {
+  for (LeafIterator cell  = gv.leafGridView().template begin<0>(); 
+                    cell != gv.leafGridView().template end<0>(); ++cell, ++c) {
     std::vector<BoundaryGrid::Vertex> verts;
     int idx=0; 
     if (side == LEFT)
@@ -142,10 +142,10 @@ IMPL_FUNC(void, findBoundaries(double* min, double* max))
 {
   max[0] = max[1] = max[2] = -1e5;
   min[0] = min[1] = min[2] = 1e5;
-  const LeafVertexIterator itend = gv.leafView().template end<dim>();
+  const LeafVertexIterator itend = gv.leafGridView().template end<dim>();
 
   // iterate over vertices and find slaves
-  LeafVertexIterator start = gv.leafView().template begin<dim>();
+  LeafVertexIterator start = gv.leafGridView().template begin<dim>();
   for (LeafVertexIterator it = start; it != itend; ++it) {
     for (int i=0;i<3;++i) {
       min[i] = std::min(min[i],it->geometry().corner(0)[i]);
@@ -366,14 +366,14 @@ IMPL_FUNC(void, fixPoint(Direction dir,
                          const NodeValue& value))
 {
   typedef typename GridType::LeafGridView::template Codim<dim>::Iterator VertexLeafIterator;
-  const VertexLeafIterator itend = gv.leafView().template end<dim>();
+  const VertexLeafIterator itend = gv.leafGridView().template end<dim>();
 
   // make a mapper for codim 0 entities in the leaf grid 
   Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridType,
                                             Dune::MCMGVertexLayout> mapper(gv);
 
   // iterate over vertices
-  for (VertexLeafIterator it = gv.leafView().template begin<dim>(); it != itend; ++it) {
+  for (VertexLeafIterator it = gv.leafGridView().template begin<dim>(); it != itend; ++it) {
     if (isOnPoint(it->geometry().corner(0),coord)) {
       int indexi = mapper.map(*it);
       A.updateFixedNode(indexi,std::make_pair(dir,value));
@@ -397,14 +397,14 @@ IMPL_FUNC(void, fixLine(Direction dir,
                         const NodeValue& value))
 {
   typedef typename GridType::LeafGridView::template Codim<dim>::Iterator VertexLeafIterator;
-  const VertexLeafIterator itend = gv.leafView().template end<dim>();
+  const VertexLeafIterator itend = gv.leafGridView().template end<dim>();
 
   // make a mapper for codim 0 entities in the leaf grid 
   Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridType,
                                             Dune::MCMGVertexLayout> mapper(gv);
 
   // iterate over vertices
-  for (VertexLeafIterator it = gv.leafView().template begin<dim>(); it != itend; ++it) {
+  for (VertexLeafIterator it = gv.leafGridView().template begin<dim>(); it != itend; ++it) {
     if (isOnLine(dir,it->geometry().corner(0),x,y)) {
       int indexi = mapper.map(*it);
       A.updateFixedNode(indexi,std::make_pair(XYZ,value));
@@ -467,7 +467,7 @@ IMPL_FUNC(void, assemble(int loadcase, bool matrix))
         EP = &ES;
 
       for (size_t k=0;k<color[i][j].size();++k) {
-        LeafIterator it = gv.leafView().template begin<0>();
+        LeafIterator it = gv.leafGridView().template begin<0>();
         for (int l=0;l<color[i][j][k];++l)
           ++it;
         materials[color[i][j][k]]->getConstitutiveMatrix(C);
@@ -526,7 +526,7 @@ IMPL_FUNC(template<int comp> void,
 
   static const int bfunc = 4+(dim-2)*4;
 
-  const LeafIterator itend = gv.leafView().template end<0>();
+  const LeafIterator itend = gv.leafGridView().template end<0>();
 
   Dune::FieldMatrix<ctype,comp,comp> C;
   Dune::FieldVector<ctype,comp> eps0;
@@ -535,7 +535,7 @@ IMPL_FUNC(template<int comp> void,
   int m=0;
   sigma = 0;
   double volume=0;
-  for (LeafIterator it = gv.leafView().template begin<0>(); it != itend; ++it) {
+  for (LeafIterator it = gv.leafGridView().template begin<0>(); it != itend; ++it) {
     materials[m++]->getConstitutiveMatrix(C);
     // determine geometry type of the current element and get the matching reference element
     Dune::GeometryType gt = it->type();

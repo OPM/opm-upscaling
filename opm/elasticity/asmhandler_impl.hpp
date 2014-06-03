@@ -90,7 +90,7 @@ void ASMHandler<GridType>::addElement(
 {
   if (!b2)
     b2 = &b;
-  const LeafIndexSet& set = gv.leafView().indexSet();
+  const LeafIndexSet& set = gv.leafGridView().indexSet();
   for (int i=0;i<esize/dim;++i) {
     int index1 = set.subIndex(*cell,i,dim);
     fixIt it = fixedNodes.find(index1);
@@ -116,7 +116,7 @@ void ASMHandler<GridType>::extractValues(Dune::FieldVector<double,comp>& v,
                                          const LeafIterator& it)
 {
   v = 0;
-  const LeafIndexSet& set = gv.leafView().indexSet();
+  const LeafIndexSet& set = gv.leafGridView().indexSet();
   Dune::GeometryType gt = it->type();
 
   const Dune::template ReferenceElement<double,dim> &ref =
@@ -355,7 +355,7 @@ void ASMHandler<GridType>::nodeAdjacency(const LeafIterator& it,
 {
   if (row == -1)
     return;
-  const LeafIndexSet& set = gv.leafView().indexSet();
+  const LeafIndexSet& set = gv.leafGridView().indexSet();
   for (int j=0;j<vertexsize;++j) {
     int indexj = set.subIndex(*it,j,dim);
     for (int l=0;l<dim;++l) {
@@ -380,12 +380,12 @@ void ASMHandler<GridType>::determineAdjacencyPattern()
   std::cout << "\tsetting up sparsity pattern..." << std::endl;
   LoggerHelper help(gv.size(0), 5, 50000);
 
-  const LeafIndexSet& set = gv.leafView().indexSet();
-  LeafIterator itend = gv.leafView().template end<0>();
+  const LeafIndexSet& set = gv.leafGridView().indexSet();
+  LeafIterator itend = gv.leafGridView().template end<0>();
 
   // iterate over cells
   int cell=0;
-  for (LeafIterator it = gv.leafView().template begin<0>(); it != itend; ++it, ++cell) {
+  for (LeafIterator it = gv.leafGridView().template begin<0>(); it != itend; ++it, ++cell) {
     Dune::GeometryType gt = it->type();
 
     const Dune::template ReferenceElement<double,dim>& ref =
