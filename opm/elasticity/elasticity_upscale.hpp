@@ -19,15 +19,17 @@
 #include <dune/istl/ilu.hh>
 #include <dune/istl/solvers.hh>
 #include <dune/istl/preconditioners.hh>
-#include <opm/elasticity/seqlu.hpp>
 #include <dune/grid/CpGrid.hpp>
 #include <opm/elasticity/shapefunctions.hpp>
 
 #include <opm/elasticity/asmhandler.hpp>
 #include <opm/elasticity/boundarygrid.hh>
 #include <opm/elasticity/elasticity.hpp>
+#include <opm/elasticity/elasticity_preconditioners.hpp>
 #include <opm/elasticity/logutils.hpp>
 #include <opm/elasticity/materials.hh>
+#include <opm/elasticity/matrixops.hpp>
+#include <opm/elasticity/meshcolorizer.hpp>
 #include <opm/elasticity/mpc.hh>
 #include <opm/elasticity/mortar_schur.hpp>
 #include <opm/elasticity/mortar_utils.hpp>
@@ -35,14 +37,11 @@
 #include <opm/elasticity/mortar_schur_precond.hpp>
 #include <opm/elasticity/uzawa_solver.hpp>
 
-#include <dune/istl/paamg/amg.hh>
-
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 namespace Opm {
 namespace Elasticity {
-
 
 //! \brief An enumeration of available linear solver classes
 enum Solver {
@@ -50,15 +49,34 @@ enum Solver {
   ITERATIVE 
 };
 
-//! \brief An enumeration of the available preconditioners
 enum Preconditioner {
-  SCHURAMG,
-  SCHURDIAG
+  AMG,
+  FASTAMG,
+  SCHWARZ,
+  TWOLEVEL,
+  UNDETERMINED
+};
+
+//! \brief An enumeration of the available preconditioners for multiplier block
+enum MultiplierPreconditioner {
+  SIMPLE,        //!< diagonal approximation of A
+  SCHUR,         //!< schur + primary preconditioner
+  SCHURAMG,      //!< schur + amg
+  SCHURSCHWARZ,  //!< schur + schwarz+lu
+  SCHURTWOLEVEL  //!< schur + twolevel
+};
+
+//! \brief Smoother used in the AMG
+enum Smoother {
+  SMOOTH_SSOR    = 0,
+  SMOOTH_SCHWARZ = 1,
+  SMOOTH_JACOBI  = 2,
+  SMOOTH_ILU     = 4
 };
 
 struct LinSolParams {
   //! \brief The linear solver to employ
-  Opm::Elasticity::Solver type;
+  Solver type;
 
   //! \brief Number of iterations in GMRES before restart
   int restart;
@@ -84,8 +102,17 @@ struct LinSolParams {
   //! \brief Number of cells in z to collapse in each cell
   int zcells;
 
+  //! \brief Give a report at end of solution phase
+  bool report;
+
+  //! \brief Smoother type used in the AMG
+  Smoother smoother;
+
+  //! \brief Preconditioner for elasticity block
+  Preconditioner pre;
+
   //! \brief Preconditioner for mortar block
-  Opm::Elasticity::Preconditioner mortarpre;
+  MultiplierPreconditioner mortarpre;
 
   //! \brief Parse command line parameters
   //! \param[in] param The parameter group to parse
@@ -93,9 +120,9 @@ struct LinSolParams {
   {
     std::string solver = param.getDefault<std::string>("linsolver_type","iterative");
     if (solver == "iterative")
-      type = Opm::Elasticity::ITERATIVE;
+      type = ITERATIVE;
     else
-      type = Opm::Elasticity::DIRECT;
+      type = DIRECT;
     restart = param.getDefault<int>("linsolver_restart", 1000);
     tol    = param.getDefault<double>("ltol",1.e-8);
     maxit   = param.getDefault<int>("linsolver_maxit", 10000);
@@ -103,14 +130,50 @@ struct LinSolParams {
     steps[1] = param.getDefault<int>("linsolver_poststeps", 2);
     coarsen_target = param.getDefault<int>("linsolver_coarsen", 5000);
     symmetric = param.getDefault<bool>("linsolver_symmetric", true);
-    solver = param.getDefault<std::string>("linsolver_mortarpre","schuramg");
-    if (solver == "schuramg")
-      mortarpre = Opm::Elasticity::SCHURAMG;
-    else
-      mortarpre = Opm::Elasticity::SCHURDIAG;
-    uzawa = param.getDefault<bool>("linsolver_uzawa", false);
+    report = param.getDefault<bool>("linsolver_report", false);
+    solver = param.getDefault<std::string>("linsolver_pre","");
 
+    if (solver == "") // set default based on aspect ratio heuristic
+      solver="heuristic";
+
+    if (solver == "schwarz")
+      pre = SCHWARZ;
+    else if (solver == "fastamg")
+      pre = FASTAMG;
+    else if (solver == "twolevel")
+      pre = TWOLEVEL;
+    else if (solver == "heuristic")
+      pre = UNDETERMINED;
+    else
+      pre = AMG;
+
+    solver = param.getDefault<std::string>("linsolver_mortarpre","schur");
+    if (solver == "simple")
+      mortarpre = SIMPLE;
+    else if (solver == "amg")
+      mortarpre = SCHURAMG;
+    else if (solver == "schwarz")
+      mortarpre = SCHURSCHWARZ;
+    else if (solver == "twolevel")
+      mortarpre = SCHURTWOLEVEL;
+    else
+      mortarpre = SCHUR;
+
+    uzawa = param.getDefault<bool>("linsolver_uzawa", false);
     zcells = param.getDefault<int>("linsolver_zcells", 2);
+
+    solver = param.getDefault<std::string>("linsolver_smoother","ssor");
+    if (solver == "schwarz")
+      smoother = SMOOTH_SCHWARZ;
+    else if (solver == "ilu")
+      smoother = SMOOTH_ILU;
+    else if (solver == "jacobi")
+      smoother = SMOOTH_JACOBI;
+    else {
+      if (solver != "ssor")
+        std::cerr << "WARNING: Invalid smoother specified, falling back to SSOR" << std::endl;
+      smoother = SMOOTH_SSOR;
+    }
 
     if (symmetric)
       steps[1] = steps[0];
@@ -118,7 +181,7 @@ struct LinSolParams {
 };
 
 //! \brief The main driver class
-  template<class GridType>
+  template<class GridType, class PC>
 class ElasticityUpscale
 {
   public:
@@ -140,6 +203,12 @@ class ElasticityUpscale
     //! \brief An iterator over grid cells
     typedef typename GridType::LeafGridView::template Codim<0>::Iterator LeafIterator;
 
+    //! \brief Our preconditioner type
+    typedef typename PC::type PCType;
+
+    //! \brief A pointer to our preconditioner
+    typedef std::shared_ptr<typename PC::type> PCPtr;
+
     //! \brief The linear operator
     ASMHandler<GridType> A;
 
@@ -148,8 +217,13 @@ class ElasticityUpscale
     //! \brief The load vectors
     Vector b[6];
 
-    //! \brief Vector holding the volume fractions for materials
+    //! \brief Vector holding the volume fractions for materials (grouped by SATNUM)
     std::vector<double> volumeFractions;
+    //! \brief Are volume fractions grouped by SATNUM?
+    bool bySat; 
+
+    //! \brief Upscaled density
+    double upscaledRho;
 
     //! \brief Main constructor
     //! \param[in] gv_ The grid to operate on
@@ -161,40 +235,13 @@ class ElasticityUpscale
     ElasticityUpscale(const GridType& gv_, ctype tol_, ctype Escale_, 
                       const std::string& file, const std::string& rocklist,
                       bool verbose_)
-      :  A(gv_), gv(gv_), tol(tol_), Escale(Escale_), E(gv_), verbose(verbose_)
+      :  A(gv_), gv(gv_), tol(tol_), Escale(Escale_), E(gv_), verbose(verbose_),
+         color(gv_)
     {
       if (rocklist.empty())
         loadMaterialsFromGrid(file);
       else
         loadMaterialsFromRocklist(file,rocklist);
-      solver = 0;
-      op = 0;
-      mpre = 0;
-      upre = 0;
-      op2 = 0;
-      meval = 0;
-      lpre = 0;
-    }
-
-    //! \brief The destructor
-    ~ElasticityUpscale()
-    {
-      // sort the pointers so unique can do its job
-      std::sort(materials.begin(),materials.end());
-      // this reorders the vector so we only get one entry per pointer
-      std::vector<Material*>::iterator itend = std::unique(materials.begin(),materials.end());
-      // now delete the pointers
-      for (std::vector<Material*>::iterator it  = materials.begin();
-                                            it != itend; ++it)
-        delete *it;
-
-      delete solver;
-      delete op;
-      delete op2;
-      delete meval;
-      delete upre;
-      delete lpre;
-      delete mpre;
     }
 
     //! \brief Find boundary coordinates
@@ -285,7 +332,7 @@ class ElasticityUpscale
     bool isOnPoint(GlobalCoordinate coord, GlobalCoordinate point);
 
     //! \brief Vector holding material parameters for each active grid cell
-    std::vector<Material*> materials;
+    std::vector< std::shared_ptr<Material> > materials;
 
     //! \brief Extract the vertices on a given face
     //! \param[in] dir The direction of the face normal
@@ -374,13 +421,6 @@ class ElasticityUpscale
     void loadMaterialsFromRocklist(const std::string& file,
                                    const std::string& rocklist);
 
-    //! \brief Setup AMG preconditioner
-    //! \param[in] pre The number of pre-smoothing steps
-    //! \param[in] post The number of post-smoothing steps
-    //! \param[in] target The coarsening target
-    //! \param[in] zcells The wanted number of cells to collapse in z per level
-    void setupAMG(int pre, int post, int target, int zcells);
-
     //! \brief Master grids
     std::vector<BoundaryGrid> master;
 
@@ -394,28 +434,11 @@ class ElasticityUpscale
     Matrix P; //!< Preconditioner for multiplier block
 
     //! \brief Linear solver
-    Dune::InverseOperator<Vector, Vector>* solver;
-
-    //! \brief The smoother used in the AMG
-    typedef Dune::SeqSSOR<Matrix, Vector, Vector> Smoother;
-
-    //! \brief The coupling metric used in the AMG
-    typedef Dune::Amg::RowSum CouplingMetric;
-
-    //! \brief The coupling criterion used in the AMG
-    typedef Dune::Amg::SymmetricCriterion<Matrix, CouplingMetric> CritBase;
-
-    //! \brief The coarsening criterion used in the AMG
-    typedef Dune::Amg::CoarsenCriterion<CritBase> Criterion;
-
-    //! \brief A linear operator
-    typedef Dune::MatrixAdapter<Matrix,Vector,Vector> Operator;
-
-    //! \brief A preconditioner for an elasticity operator
-    typedef Dune::Amg::AMG<Operator, Vector, Smoother> ElasticityAMG;
+    typedef std::shared_ptr<Dune::InverseOperator<Vector, Vector> > SolverPtr;
+    std::vector<SolverPtr> tsolver;
 
     //! \brief Matrix adaptor for the elasticity block
-    Operator* op;
+    std::shared_ptr<Operator> op;
 
     //! \brief Preconditioner for multiplier block
     typedef MortarBlockEvaluator<Dune::Preconditioner<Vector, Vector> > SchurPreconditioner;
@@ -424,25 +447,33 @@ class ElasticityUpscale
     typedef MortarBlockEvaluator<Dune::InverseOperator<Vector, Vector> > SchurEvaluator;
 
     //! \brief Outer evaluator, used with uzawa
-    SchurEvaluator* op2;
+    std::shared_ptr<SchurEvaluator> op2;
 
     //! \brief The preconditioner for the elasticity operator
-    ElasticityAMG* upre;
+    std::vector<PCPtr> upre;
 
+    //! \brief An LU solve as a preconditioner
+    typedef Dune::InverseOperator2Preconditioner<LUSolver,
+                                        Dune::SolverCategory::sequential> SeqLU;
     //! \brief The preconditioner for the multiplier block (used with uzawa)
-    SeqLU<Matrix, Vector, Vector>* lpre;
+    std::shared_ptr<SeqLU> lpre;
+    std::shared_ptr<LUSolver> lprep;
 
     //! \brief Preconditioner for the Mortar system
-    MortarSchurPre<ElasticityAMG>* mpre;
+    typedef std::shared_ptr< MortarSchurPre<PCType> > MortarAmgPtr;
+    std::vector<MortarAmgPtr> tmpre;
 
     //! \brief Evaluator for the Mortar system
-    MortarEvaluator* meval;
+    std::shared_ptr<MortarEvaluator> meval;
 
     //! \brief Elasticity helper class
     Elasticity<GridType> E;
 
     //! \brief Verbose output
     bool verbose;
+
+    //! \brief Mesh colorizer used with multithreaded assembly
+    MeshColorizer<GridType> color;
 };
 
 }} // namespace Opm, Elasticity

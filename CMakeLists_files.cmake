@@ -27,17 +27,6 @@
 #                       only. Don't expect these files to build.
 
 # originally generated with the command:
-# find opm -name '*.c*' -printf '\t%p\n' | sort
-list (APPEND MAIN_SOURCE_FILES
-	opm/elasticity/boundarygrid.cpp
-	opm/elasticity/dynmatrixev.cpp
-	opm/elasticity/material.cpp
-	opm/elasticity/materials.cpp
-	opm/elasticity/matrixops.cpp
-	opm/elasticity/mpc.cpp
-	)
-
-# originally generated with the command:
 # find tests -name '*.cpp' -a ! -wholename '*/not-unit/*' -printf '\t%p\n' | sort
 list (APPEND TEST_SOURCE_FILES
 	)
@@ -71,7 +60,6 @@ list (APPEND EXAMPLE_SOURCE_FILES
 	examples/upscale_avg.cpp
 	examples/upscale_cap.cpp
 	examples/upscale_cond.cpp
-	examples/upscale_elasticity.cpp
 	examples/upscale_perm.cpp
 	examples/upscale_relperm.cpp
 	examples/upscale_relpermvisc.cpp
@@ -101,7 +89,6 @@ list (APPEND PROGRAM_SOURCE_FILES
 	examples/upscale_avg.cpp
 	examples/upscale_cap.cpp
 	examples/upscale_cond.cpp
-	examples/upscale_elasticity.cpp
 	examples/upscale_perm.cpp
 	examples/upscale_relperm.cpp
 	examples/upscale_relpermvisc.cpp
@@ -112,27 +99,6 @@ list (APPEND PROGRAM_SOURCE_FILES
 # originally generated with the command:
 # find opm -name '*.h*' -a ! -name '*-pch.hpp' -printf '\t%p\n' | sort
 list (APPEND PUBLIC_HEADER_FILES
-	opm/elasticity/applier.hpp
-	opm/elasticity/asmhandler.hpp
-	opm/elasticity/asmhandler_impl.hpp
-	opm/elasticity/boundarygrid.hh
-	opm/elasticity/dynmatrixev.hh
-	opm/elasticity/elasticity.hpp
-	opm/elasticity/elasticity_impl.hpp
-	opm/elasticity/elasticity_upscale.hpp
-	opm/elasticity/elasticity_upscale_impl.hpp
-	opm/elasticity/logutils.hpp
-	opm/elasticity/material.hh
-	opm/elasticity/materials.hh
-	opm/elasticity/matrixops.hpp
-	opm/elasticity/mortar_evaluator.hpp
-	opm/elasticity/mortar_schur.hpp
-	opm/elasticity/mortar_schur_precond.hpp
-	opm/elasticity/mortar_utils.hpp
-	opm/elasticity/mpc.hh
-	opm/elasticity/seqlu.hpp
-	opm/elasticity/shapefunctions.hpp
-	opm/elasticity/uzawa_solver.hpp
 	opm/upscaling/ParserAdditions.hpp
 	opm/upscaling/SinglePhaseUpscaler.hpp
 	opm/upscaling/SteadyStateUpscaler.hpp

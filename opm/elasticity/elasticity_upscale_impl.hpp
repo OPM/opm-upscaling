@@ -14,19 +14,28 @@
 
 #include <iostream>
 
+#ifdef HAVE_OPENMP
+#include <omp.h>
+#endif
+
 namespace Opm {
 namespace Elasticity {
-  template<class GridType>
-std::vector<BoundaryGrid::Vertex> ElasticityUpscale<GridType>::extractFace(Direction dir, ctype coord)
+
+#undef IMPL_FUNC
+#define IMPL_FUNC(A,B) template<class GridType, class PC> \
+                         A ElasticityUpscale<GridType, PC>::B
+
+IMPL_FUNC(std::vector<BoundaryGrid::Vertex>, 
+          extractFace(Direction dir, ctype coord))
 {
   std::vector<BoundaryGrid::Vertex> result;
-  const LeafVertexIterator itend = gv.leafView().template end<dim>();
+  const LeafVertexIterator itend = gv.leafGridView().template end<dim>();
 
   // make a mapper for codim dim entities in the leaf grid 
   Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridType,
                                             Dune::MCMGVertexLayout> mapper(gv);
   // iterate over vertices and find slaves
-  LeafVertexIterator start = gv.leafView().template begin<dim>();
+  LeafVertexIterator start = gv.leafGridView().template begin<dim>();
   for (LeafVertexIterator it = start; it != itend; ++it) {
     if (isOnPlane(dir,it->geometry().corner(0),coord)) {
       BoundaryGrid::Vertex v;
@@ -39,10 +48,11 @@ std::vector<BoundaryGrid::Vertex> ElasticityUpscale<GridType>::extractFace(Direc
   return result;
 }
 
-  template<class GridType>
-BoundaryGrid ElasticityUpscale<GridType>::extractMasterFace(Direction dir,
-                                                            ctype coord,
-                                                            SIDE side, bool dc)
+
+IMPL_FUNC(BoundaryGrid, extractMasterFace(Direction dir,
+                                          ctype coord,
+                                          SIDE side,
+                                          bool dc))
 {
   static const int V1[3][4] = {{0,2,4,6},
                                {0,1,4,5},
@@ -50,7 +60,7 @@ BoundaryGrid ElasticityUpscale<GridType>::extractMasterFace(Direction dir,
   static const int V2[3][4] = {{1,3,5,7},
                                {2,3,6,7},
                                {4,5,6,7}};
-  const LeafIndexSet& set = gv.leafView().indexSet();
+  const LeafIndexSet& set = gv.leafGridView().indexSet();
 
   int c = 0;
   int i = log2(dir);
@@ -58,8 +68,8 @@ BoundaryGrid ElasticityUpscale<GridType>::extractMasterFace(Direction dir,
   // we first group nodes into this map through the coordinate of lower left 
   // vertex. we then split this up into pillars for easy processing later
   std::map<double, std::vector<BoundaryGrid::Quad> > nodeMap;
-  for (LeafIterator cell  = gv.leafView().template begin<0>(); 
-                    cell != gv.leafView().template end<0>(); ++cell, ++c) {
+  for (LeafIterator cell  = gv.leafGridView().template begin<0>(); 
+                    cell != gv.leafGridView().template end<0>(); ++cell, ++c) {
     std::vector<BoundaryGrid::Vertex> verts;
     int idx=0; 
     if (side == LEFT)
@@ -117,9 +127,7 @@ BoundaryGrid ElasticityUpscale<GridType>::extractMasterFace(Direction dir,
   return result;
 }
 
-  template<class GridType>
-void ElasticityUpscale<GridType>::determineSideFaces(const double* min, 
-                                                     const double* max)
+IMPL_FUNC(void, determineSideFaces(const double* min, const double* max))
 {
   master.push_back(extractMasterFace(X,min[0]));
   master.push_back(extractMasterFace(Y,min[1]));
@@ -130,16 +138,14 @@ void ElasticityUpscale<GridType>::determineSideFaces(const double* min,
   slave.push_back(extractFace(Z,max[2]));
 }
 
-  template<class GridType>
-void ElasticityUpscale<GridType>::findBoundaries(double* min, 
-                                                 double* max)
+IMPL_FUNC(void, findBoundaries(double* min, double* max))
 {
   max[0] = max[1] = max[2] = -1e5;
   min[0] = min[1] = min[2] = 1e5;
-  const LeafVertexIterator itend = gv.leafView().template end<dim>();
+  const LeafVertexIterator itend = gv.leafGridView().template end<dim>();
 
   // iterate over vertices and find slaves
-  LeafVertexIterator start = gv.leafView().template begin<dim>();
+  LeafVertexIterator start = gv.leafGridView().template begin<dim>();
   for (LeafVertexIterator it = start; it != itend; ++it) {
     for (int i=0;i<3;++i) {
       min[i] = std::min(min[i],it->geometry().corner(0)[i]);
@@ -148,10 +154,8 @@ void ElasticityUpscale<GridType>::findBoundaries(double* min,
   }
 }
 
-
-  template<class GridType>
-void ElasticityUpscale<GridType>::addMPC(Direction dir, int slave,
-                                         const BoundaryGrid::Vertex& m)
+IMPL_FUNC(void, addMPC(Direction dir, int slave,
+                       const BoundaryGrid::Vertex& m))
 {
   MPC* mpc = new MPC(slave,log2(dir)+1);
   if (m.i > -1) { // we matched a node exactly
@@ -164,11 +168,10 @@ void ElasticityUpscale<GridType>::addMPC(Direction dir, int slave,
   A.addMPC(mpc);
 }
 
-  template<class GridType>
-void ElasticityUpscale<GridType>::periodicPlane(Direction plane,
-                                                Direction dir, 
-                             const std::vector<BoundaryGrid::Vertex>& slave,
-                                                const BoundaryGrid& master)
+IMPL_FUNC(void, periodicPlane(Direction plane,
+                              Direction dir, 
+                              const std::vector<BoundaryGrid::Vertex>& slave,
+                              const BoundaryGrid& master))
 {
   for (size_t i=0;i<slave.size();++i) {
     BoundaryGrid::Vertex coord;
@@ -224,11 +227,10 @@ static std::vector< std::vector<int> > renumber(const BoundaryGrid& b,
   return nodes;
 }
 
-  template<class GridType>
-int ElasticityUpscale<GridType>::addBBlockMortar(const BoundaryGrid& b1,
-                                                 const BoundaryGrid& interface,
-                                                 int dir, int n1, int n2,
-                                                 int colofs)
+IMPL_FUNC(int, addBBlockMortar(const BoundaryGrid& b1,
+                               const BoundaryGrid& interface,
+                               int dir, int n1, int n2,
+                               int colofs))
 {
   // renumber the linear grid to the real multiplier grid
   int totalEqns;
@@ -242,7 +244,7 @@ int ElasticityUpscale<GridType>::addBBlockMortar(const BoundaryGrid& b1,
     for (size_t q=0;q<b1.colSize(p);++q) {
       for (size_t i=0;i<4;++i) {
         for (size_t d=0;d<3;++d) {
-          MPC* mpc = A.getMPC(b1.getQuad(p,q).v[i].i,d);
+          const MPC* mpc = A.getMPC(b1.getQuad(p,q).v[i].i,d);
           if (mpc) {
             for (size_t n=0;n<mpc->getNoMaster();++n) {
               int dof = A.getEquationForDof(mpc->getMaster(n).node,d);
@@ -272,12 +274,11 @@ int ElasticityUpscale<GridType>::addBBlockMortar(const BoundaryGrid& b1,
   return 3*totalEqns;
 }
 
-  template<class GridType>
-void ElasticityUpscale<GridType>::assembleBBlockMortar(const BoundaryGrid& b1,
-                                                       const BoundaryGrid& interface,
-                                                       int dir, int n1,
-                                                       int n2, int colofs,
-                                                       double alpha)
+IMPL_FUNC(void, assembleBBlockMortar(const BoundaryGrid& b1,
+                                     const BoundaryGrid& interface,
+                                     int dir, int n1,
+                                     int n2, int colofs,
+                                     double alpha))
 {
   // get a set of P1 shape functions for the displacements
   P1ShapeFunctionSet<ctype,ctype,2> ubasis = 
@@ -303,36 +304,47 @@ void ElasticityUpscale<GridType>::assembleBBlockMortar(const BoundaryGrid& b1,
   typename Dune::QuadratureRule<ctype,2>::const_iterator r;
   Dune::DynamicMatrix<ctype> E(ubasis.n,(n1+1)*(n2+1),0.0);
   LoggerHelper help(interface.size(), 5, 1000);
-  for (size_t p=0;p<interface.size();++p) {
-    const BoundaryGrid::Quad& qi(interface[p]);
-    HexGeometry<2,2,GridType> lg(qi);
-    for (size_t q=0;q<b1.colSize(p);++q) {
-      const BoundaryGrid::Quad& qu = b1.getQuad(p,q);
-      HexGeometry<2,2,GridType> hex(qu,gv,dir);
-      E = 0;
-      for (r = rule.begin(); r != rule.end();++r) {
-        ctype detJ = hex.integrationElement(r->position());
-        if (detJ < 0)
-          assert(0);
+  for (int g=0;g<5;++g) {
+    for (int p=help.group(g).first;p<help.group(g).second;++p) {
+      const BoundaryGrid::Quad& qi(interface[p]);
+      HexGeometry<2,2,GridType> lg(qi);
+      for (size_t q=0;q<b1.colSize(p);++q) {
+        const BoundaryGrid::Quad& qu = b1.getQuad(p,q);
+        HexGeometry<2,2,GridType> hex(qu,gv,dir);
+        E = 0;
+        for (r = rule.begin(); r != rule.end();++r) {
+          ctype detJ = hex.integrationElement(r->position());
+          if (detJ < 0)
+            assert(0);
 
-        typename HexGeometry<2,2,GridType>::LocalCoordinate loc = 
-                                        lg.local(hex.global(r->position()));
-        assert(loc[0] <= 1.0+1.e-4 && loc[0] >= 0.0 && loc[1] <= 1.0+1.e-4 && loc[1] >= 0.0);
-        for (int i=0;i<ubasis.n;++i) {
-          for (int j=0;j<lbasis.size();++j) {
-            E[i][j] += ubasis[i].evaluateFunction(r->position())*
-                       lbasis[j].evaluateFunction(loc)*detJ*r->weight();
+          typename HexGeometry<2,2,GridType>::LocalCoordinate loc =
+                                          lg.local(hex.global(r->position()));
+          assert(loc[0] <= 1.0+1.e-4 && loc[0] >= 0.0 && loc[1] <= 1.0+1.e-4 && loc[1] >= 0.0);
+          for (int i=0;i<ubasis.n;++i) {
+            for (int j=0;j<lbasis.size();++j) {
+              E[i][j] += ubasis[i].evaluateFunction(r->position())*
+                         lbasis[j].evaluateFunction(loc)*detJ*r->weight();
+            }
           }
         }
-      }
 
-      // and assemble element contributions
-      for (int d=0;d<3;++d) {
-        for (int i=0;i<4;++i) {
-          MPC* mpc = A.getMPC(qu.v[i].i,d);
-          if (mpc) {
-            for (size_t n=0;n<mpc->getNoMaster();++n) {
-              int indexi = A.getEquationForDof(mpc->getMaster(n).node,d);
+        // and assemble element contributions
+        for (int d=0;d<3;++d) {
+          for (int i=0;i<4;++i) {
+            const MPC* mpc = A.getMPC(qu.v[i].i,d);
+            if (mpc) {
+              for (size_t n=0;n<mpc->getNoMaster();++n) {
+                int indexi = A.getEquationForDof(mpc->getMaster(n).node,d);
+                if (indexi > -1) {
+                  for (size_t j=0;j<lnodes[p].size();++j) {
+                    int indexj = lnodes[p][j]*3+d;
+                    if (indexj > -1)
+                      B[indexi][indexj+colofs] += alpha*E[i][j];
+                  }
+                }
+              }
+            } else {
+              int indexi = A.getEquationForDof(qu.v[i].i,d);
               if (indexi > -1) {
                 for (size_t j=0;j<lnodes[p].size();++j) {
                   int indexj = lnodes[p][j]*3+d;
@@ -341,37 +353,27 @@ void ElasticityUpscale<GridType>::assembleBBlockMortar(const BoundaryGrid& b1,
                 }
               }
             }
-          } else {
-            int indexi = A.getEquationForDof(qu.v[i].i,d);
-            if (indexi > -1) {
-              for (size_t j=0;j<lnodes[p].size();++j) {
-                int indexj = lnodes[p][j]*3+d;
-                if (indexj > -1)
-                  B[indexi][indexj+colofs] += alpha*E[i][j];
-              }
-            }
           }
         }
       }
     }
-    help.log(p, "\t\t\t... still processing ... pillar ");
+    help.log(g, "\t\t\t... still processing ... pillar ");
   }
 }
 
-  template<class GridType>
-void ElasticityUpscale<GridType>::fixPoint(Direction dir,
-                                           GlobalCoordinate coord,
-                                           const NodeValue& value)
+IMPL_FUNC(void, fixPoint(Direction dir,
+                         GlobalCoordinate coord,
+                         const NodeValue& value))
 {
   typedef typename GridType::LeafGridView::template Codim<dim>::Iterator VertexLeafIterator;
-  const VertexLeafIterator itend = gv.leafView().template end<dim>();
+  const VertexLeafIterator itend = gv.leafGridView().template end<dim>();
 
   // make a mapper for codim 0 entities in the leaf grid 
   Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridType,
                                             Dune::MCMGVertexLayout> mapper(gv);
 
   // iterate over vertices
-  for (VertexLeafIterator it = gv.leafView().template begin<dim>(); it != itend; ++it) {
+  for (VertexLeafIterator it = gv.leafGridView().template begin<dim>(); it != itend; ++it) {
     if (isOnPoint(it->geometry().corner(0),coord)) {
       int indexi = mapper.map(*it);
       A.updateFixedNode(indexi,std::make_pair(dir,value));
@@ -379,10 +381,9 @@ void ElasticityUpscale<GridType>::fixPoint(Direction dir,
   }
 }
 
-  template<class GridType>
-bool ElasticityUpscale<GridType>::isOnPlane(Direction plane,
-                                            GlobalCoordinate coord,
-                                            ctype value)
+IMPL_FUNC(bool, isOnPlane(Direction plane,
+                          GlobalCoordinate coord,
+                          ctype value))
 {
   if (plane < X || plane > Z)
     return false;
@@ -391,20 +392,19 @@ bool ElasticityUpscale<GridType>::isOnPlane(Direction plane,
   return delta < tol;
 }
 
-  template<class GridType>
-void ElasticityUpscale<GridType>::fixLine(Direction dir,
-                                          ctype x, ctype y,
-                                          const NodeValue& value)
+IMPL_FUNC(void, fixLine(Direction dir,
+                        ctype x, ctype y,
+                        const NodeValue& value))
 {
   typedef typename GridType::LeafGridView::template Codim<dim>::Iterator VertexLeafIterator;
-  const VertexLeafIterator itend = gv.leafView().template end<dim>();
+  const VertexLeafIterator itend = gv.leafGridView().template end<dim>();
 
   // make a mapper for codim 0 entities in the leaf grid 
   Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridType,
                                             Dune::MCMGVertexLayout> mapper(gv);
 
   // iterate over vertices
-  for (VertexLeafIterator it = gv.leafView().template begin<dim>(); it != itend; ++it) {
+  for (VertexLeafIterator it = gv.leafGridView().template begin<dim>(); it != itend; ++it) {
     if (isOnLine(dir,it->geometry().corner(0),x,y)) {
       int indexi = mapper.map(*it);
       A.updateFixedNode(indexi,std::make_pair(XYZ,value));
@@ -412,10 +412,9 @@ void ElasticityUpscale<GridType>::fixLine(Direction dir,
   }
 }
 
-  template<class GridType>
-bool ElasticityUpscale<GridType>::isOnLine(Direction dir,
-                                           GlobalCoordinate coord,
-                                           ctype x, ctype y)
+IMPL_FUNC(bool, isOnLine(Direction dir,
+                         GlobalCoordinate coord,
+                         ctype x, ctype y))
 {
   if (dir < X || dir > Z)
     return false;
@@ -431,101 +430,103 @@ bool ElasticityUpscale<GridType>::isOnLine(Direction dir,
   return true;
 }
 
-  template<class GridType>
-bool ElasticityUpscale<GridType>::isOnPoint(GlobalCoordinate coord,
-                                            GlobalCoordinate point)
+IMPL_FUNC(bool, isOnPoint(GlobalCoordinate coord,
+                          GlobalCoordinate point))
 {
   GlobalCoordinate delta = point-coord;
   return delta.one_norm() < tol;
 }
 
-  template<class GridType>
-void ElasticityUpscale<GridType>::assemble(int loadcase, bool matrix)
+IMPL_FUNC(void, assemble(int loadcase, bool matrix))
 {
   const int comp = 3+(dim-2)*3;
   static const int bfunc = 4+(dim-2)*4;
 
-  const LeafIterator itend = gv.leafView().template end<0>();
-
-  Dune::FieldMatrix<ctype,comp,comp> C;
-  Dune::FieldMatrix<ctype,dim*bfunc,dim*bfunc> K;
-  Dune::FieldVector<ctype,dim*bfunc> ES;
-  Dune::FieldVector<ctype,dim*bfunc>* EP=0;
   Dune::FieldVector<ctype,comp> eps0;
   eps0 = 0;
   if (loadcase > -1) {
-    EP = &ES;
     eps0[loadcase] = 1;
-    A.getLoadVector() = 0;
     b[loadcase] = 0;
   }
-  int m=0;
-  Dune::FieldMatrix<ctype,dim*bfunc,dim*bfunc>* KP=0;
-  if (matrix) {
-    KP = &K;
+  if (matrix)
     A.getOperator() = 0;
-  }
 
-  LoggerHelper help(gv.size(0), 5, 50000);
-  for (LeafIterator it = gv.leafView().template begin<0>(); it != itend; ++it) {
-    materials[m++]->getConstitutiveMatrix(C);
-    // determine geometry type of the current element and get the matching reference element
-    Dune::GeometryType gt = it->type();
+  for (int i=0;i<2;++i) {
+    if (color[1].size() && matrix)
+      std::cout << "\tprocessing " << (i==0?"red ":"black ") << "elements" << std::endl;
+#pragma omp parallel for schedule(static)
+    for (size_t j=0;j<color[i].size();++j) {
+      Dune::FieldMatrix<ctype,comp,comp> C;
+      Dune::FieldMatrix<ctype,dim*bfunc,dim*bfunc> K;
+      Dune::FieldMatrix<ctype,dim*bfunc,dim*bfunc>* KP=0;
+      Dune::FieldVector<ctype,dim*bfunc> ES;
+      Dune::FieldVector<ctype,dim*bfunc>* EP=0;
+      if (matrix)
+        KP = &K;
+      if (loadcase > -1)
+        EP = &ES;
 
-    Dune::FieldMatrix<ctype,dim*bfunc,dim*bfunc> Aq;
-    K = 0;
-    ES = 0;
+      for (size_t k=0;k<color[i][j].size();++k) {
+        LeafIterator it = gv.leafGridView().template begin<0>();
+        for (int l=0;l<color[i][j][k];++l)
+          ++it;
+        materials[color[i][j][k]]->getConstitutiveMatrix(C);
+        // determine geometry type of the current element and get the matching reference element
+        Dune::GeometryType gt = it->type();
 
-    // get a quadrature rule of order two for the given geometry type
-    const Dune::QuadratureRule<ctype,dim>& rule = Dune::QuadratureRules<ctype,dim>::rule(gt,2);
-    for (typename Dune::QuadratureRule<ctype,dim>::const_iterator r = rule.begin();
-        r != rule.end() ; ++r) {
-      // compute the jacobian inverse transposed to transform the gradients
-      Dune::FieldMatrix<ctype,dim,dim> jacInvTra =
-        it->geometry().jacobianInverseTransposed(r->position());
+        Dune::FieldMatrix<ctype,dim*bfunc,dim*bfunc> Aq;
+        K = 0;
+        ES = 0;
 
-      ctype detJ = it->geometry().integrationElement(r->position());
-      if (detJ <= 1.e-5 && verbose) {
-        std::cout << "cell " << m << " is (close to) degenerated, detJ " << detJ << std::endl;
-        double zdiff=0.0;
-        for (int i=0;i<4;++i)
-          zdiff = std::max(zdiff, it->geometry().corner(i+4)[2]-it->geometry().corner(i)[2]);
-        std::cout << "  - Consider setting ctol larger than " << zdiff << std::endl;
-      }
+        // get a quadrature rule of order two for the given geometry type
+        const Dune::QuadratureRule<ctype,dim>& rule = Dune::QuadratureRules<ctype,dim>::rule(gt,2);
+        for (typename Dune::QuadratureRule<ctype,dim>::const_iterator r = rule.begin();
+            r != rule.end() ; ++r) {
+          // compute the jacobian inverse transposed to transform the gradients
+          Dune::FieldMatrix<ctype,dim,dim> jacInvTra =
+            it->geometry().jacobianInverseTransposed(r->position());
 
-      Dune::FieldMatrix<ctype,comp,dim*bfunc> B;
-      E.getBmatrix(B,r->position(),jacInvTra);
+          ctype detJ = it->geometry().integrationElement(r->position());
+          if (detJ <= 1.e-5 && verbose) {
+            std::cout << "cell " << color[i][j][k] << " is (close to) degenerated, detJ " << detJ << std::endl;
+            double zdiff=0.0;
+            for (int i=0;i<4;++i)
+              zdiff = std::max(zdiff, it->geometry().corner(i+4)[2]-it->geometry().corner(i)[2]);
+            std::cout << " - Consider setting ctol larger than " << zdiff << std::endl;
+          }
 
-      if (matrix) {
-        E.getStiffnessMatrix(Aq,B,C,detJ*r->weight());
-        K += Aq;
-      }
+          Dune::FieldMatrix<ctype,comp,dim*bfunc> B;
+          E.getBmatrix(B,r->position(),jacInvTra);
 
-      // load vector
-      if (EP) {
-        Dune::FieldVector<ctype,dim*bfunc> temp;
-        temp = Dune::FMatrixHelp::multTransposed(B,Dune::FMatrixHelp::mult(C,eps0));
-        temp *= -detJ*r->weight();
-        ES += temp;
+          if (matrix) {
+            E.getStiffnessMatrix(Aq,B,C,detJ*r->weight());
+            K += Aq;
+          }
+
+          // load vector
+          if (EP) {
+            Dune::FieldVector<ctype,dim*bfunc> temp;
+            temp = Dune::FMatrixHelp::multTransposed(B,Dune::FMatrixHelp::mult(C,eps0));
+            temp *= -detJ*r->weight();
+            ES += temp;
+          }
+        }
+        A.addElement(KP,EP,it,(loadcase > -1)?&b[loadcase]:NULL);
       }
     }
-
-    A.addElement(KP,EP,it,(loadcase > -1)?&b[loadcase]:NULL);
-    help.log(m, "\t\t... still processing ... cell ");
   }
 }
 
-  template<class GridType>
-    template<int comp>
-void ElasticityUpscale<GridType>::averageStress(Dune::FieldVector<ctype,comp>& sigma,
-                                                const Vector& u, int loadcase)
+IMPL_FUNC(template<int comp> void,
+          averageStress(Dune::FieldVector<ctype,comp>& sigma,
+                        const Vector& u, int loadcase))
 {
   if (loadcase < 0 || loadcase > 5)
     return;
 
   static const int bfunc = 4+(dim-2)*4;
 
-  const LeafIterator itend = gv.leafView().template end<0>();
+  const LeafIterator itend = gv.leafGridView().template end<0>();
 
   Dune::FieldMatrix<ctype,comp,comp> C;
   Dune::FieldVector<ctype,comp> eps0;
@@ -534,7 +535,7 @@ void ElasticityUpscale<GridType>::averageStress(Dune::FieldVector<ctype,comp>& s
   int m=0;
   sigma = 0;
   double volume=0;
-  for (LeafIterator it = gv.leafView().template begin<0>(); it != itend; ++it) {
+  for (LeafIterator it = gv.leafGridView().template begin<0>(); it != itend; ++it) {
     materials[m++]->getConstitutiveMatrix(C);
     // determine geometry type of the current element and get the matching reference element
     Dune::GeometryType gt = it->type();
@@ -568,13 +569,17 @@ void ElasticityUpscale<GridType>::averageStress(Dune::FieldVector<ctype,comp>& s
     sigma /= Escale/Emin;
 }
 
-  template<class GridType>
-void ElasticityUpscale<GridType>::loadMaterialsFromGrid(const std::string& file)
+IMPL_FUNC(void, loadMaterialsFromGrid(const std::string& file))
 {
-  typedef std::map<std::pair<double,double>, Material*> MaterialMap;
+  typedef std::map<std::pair<double,double>,
+                   std::shared_ptr<Material> > MaterialMap;
   MaterialMap cache;
   std::vector<double> Emod;
   std::vector<double> Poiss;
+  std::vector<int> satnum;
+  std::vector<double> rho;
+  upscaledRho = -1;
+
   if (file == "uniform") {
     int cells = gv.size(0);
     Emod.insert(Emod.begin(),cells,100.f);
@@ -585,6 +590,12 @@ void ElasticityUpscale<GridType>::loadMaterialsFromGrid(const std::string& file)
     if (deck->hasKeyword("YOUNGMOD") && deck->hasKeyword("POISSONMOD")) {
       Emod = deck->getKeyword("YOUNGMOD")->getRawDoubleData();
       Poiss = deck->getKeyword("POISSONMOD")->getRawDoubleData();
+      std::vector<double>::const_iterator it = std::min_element(Poiss.begin(), Poiss.end());
+      if (*it < 0) {
+        std::cerr << "Auxetic material specified for cell " << it-Poiss.begin() << std::endl
+                  << "Emod: "<< Emod[it-Poiss.begin()] << " Poisson's ratio: " << *it << std::endl << "bailing..." << std::endl;
+        exit(1);
+      }
     } else if (deck->hasKeyword("LAMEMOD") && deck->hasKeyword("SHEARMOD")) {
       std::vector<double> lame = deck->getKeyword("LAMEMOD")->getRawDoubleData();
       std::vector<double> shear = deck->getKeyword("SHEARMOD")->getRawDoubleData();
@@ -593,6 +604,13 @@ void ElasticityUpscale<GridType>::loadMaterialsFromGrid(const std::string& file)
       for (size_t i=0;i<lame.size();++i) {
         Emod[i]  = shear[i]*(3*lame[i]+2*shear[i])/(lame[i]+shear[i]);
         Poiss[i] = 0.5*lame[i]/(lame[i]+shear[i]);
+      }
+      std::vector<double>::const_iterator it = std::min_element(Poiss.begin(), Poiss.end());
+      if (*it < 0) {
+        std::cerr << "Auxetic material specified for cell " << it-Poiss.begin() << std::endl
+                  << "Lamè modulus: " << lame[it-Poiss.begin()] << " Shearmodulus: " << shear[it-Poiss.begin()] << std::endl
+                  << "Emod: "<< Emod[it-Poiss.begin()] << " Poisson's ratio: " << *it << std::endl << "bailing..." << std::endl;
+        exit(1);
       }
     } else if (deck->hasKeyword("BULKMOD") && deck->hasKeyword("SHEARMOD")) {
       std::vector<double> bulk = deck->getKeyword("BULKMOD")->getRawDoubleData();
@@ -603,6 +621,13 @@ void ElasticityUpscale<GridType>::loadMaterialsFromGrid(const std::string& file)
         Emod[i]  = 9*bulk[i]*shear[i]/(3*bulk[i]+shear[i]);
         Poiss[i] = 0.5*(3*bulk[i]-2*shear[i])/(3*bulk[i]+shear[i]);
       }
+      std::vector<double>::const_iterator it = std::min_element(Poiss.begin(), Poiss.end());
+      if (*it < 0) {
+        std::cerr << "Auxetic material specified for cell " << it-Poiss.begin() << std::endl
+                  << "Bulkmodulus: " << bulk[it-Poiss.begin()] << " Shearmodulus: " << shear[it-Poiss.begin()] << std::endl
+                 << "Emod: "<< Emod[it-Poiss.begin()] << " Poisson's ratio: " << *it << std::endl << "bailing..." << std::endl;
+        exit(1);
+      }
     } else if (deck->hasKeyword("PERMX") && deck->hasKeyword("PORO")) {
       std::cerr << "WARNING: Using PERMX and PORO for elastic material properties" << std::endl;
       Emod = deck->getKeyword("PERMX")->getRawDoubleData();
@@ -611,6 +636,10 @@ void ElasticityUpscale<GridType>::loadMaterialsFromGrid(const std::string& file)
       std::cerr << "No material data found in eclipse file, aborting" << std::endl;
       exit(1);
     }
+    if (deck->hasKeyword("SATNUM"))
+      satnum = deck->getKeyword("SATNUM")->getIntData();
+    if (deck->hasKeyword("RHO"))
+      rho = deck->getKeyword("RHO")->getRawDoubleData();
   }
   // scale E modulus of materials
   if (Escale > 0) {
@@ -630,39 +659,57 @@ void ElasticityUpscale<GridType>::loadMaterialsFromGrid(const std::string& file)
   for (size_t i=0;i<cells.size();++i) {
     int k = cells[i];
     MaterialMap::iterator it;
-    if ((it = cache.find(std::make_pair(Emod[k],Poiss[k]))) != cache.end())
-    {
+    if ((it = cache.find(std::make_pair(Emod[k],Poiss[k]))) != cache.end()) {
       assert(gv.cellVolume(i) > 0);
-      volume[it->second] += gv.cellVolume(i);
+      volume[it->second.get()] += gv.cellVolume(i);
       materials.push_back(it->second);
-    }
-    else {
-      Material* mat = new Isotropic(j++,Emod[k],Poiss[k]);
+    } else {
+      std::shared_ptr<Material> mat(new Isotropic(j++,Emod[k],Poiss[k]));
       cache.insert(std::make_pair(std::make_pair(Emod[k],Poiss[k]),mat));
       assert(gv.cellVolume(i) > 0);
-      volume.insert(std::make_pair(mat,gv.cellVolume(i)));
+      volume.insert(std::make_pair(mat.get(),gv.cellVolume(i)));
       materials.push_back(mat);
     }
+    if (!satnum.empty()) {
+      if (satnum[k] > (int)volumeFractions.size())
+        volumeFractions.resize(satnum[k]);
+      volumeFractions[satnum[k]-1] += gv.cellVolume(i);
+    }
+    if (!rho.empty())
+      upscaledRho += gv.cellVolume(i)*rho[k];
   }
   std::cout << "Number of materials: " << cache.size() << std::endl;
-  // statistics
+
   double totalvolume=0;
   for (std::map<Material*,double>::iterator it  = volume.begin(); 
                                             it != volume.end(); ++it) 
     totalvolume += it->second;
 
-  int i=0;
-  for (MaterialMap::iterator it = cache.begin(); it != cache.end(); ++it, ++i) {
-    std::cout << "  Material" << i+1 << ": " << 100.f*volume[it->second]/totalvolume << '%' << std::endl;
-    volumeFractions.push_back(volume[it->second]/totalvolume);
+  // statistics
+  if (satnum.empty()) {
+    int i=0;
+    for (MaterialMap::iterator it = cache.begin(); it != cache.end(); ++it, ++i) {
+      std::cout << "  Material" << i+1 << ": " << 100.f*volume[it->second.get()]/totalvolume << '%' << std::endl;
+      volumeFractions.push_back(volume[it->second.get()]/totalvolume);
+    }
+    bySat = false;
+  } else {
+    for (size_t j=0; j < volumeFractions.size(); ++j) {
+      volumeFractions[j] /= totalvolume;
+      std::cout << "SATNUM " << j+1 << ": " << volumeFractions[j]*100 << '%' << std::endl;
+    }
+    bySat = true;
+  }
+  if (upscaledRho > 0) {
+    upscaledRho /= totalvolume;
+    std::cout << "Upscaled density: " << upscaledRho << std::endl;
   }
 }
 
-  template<class GridType>
-void ElasticityUpscale<GridType>::loadMaterialsFromRocklist(const std::string& file,
-                                                            const std::string& rocklist)
+IMPL_FUNC(void, loadMaterialsFromRocklist(const std::string& file,
+                                          const std::string& rocklist))
 {
-  std::vector<Material*> cache;
+  std::vector< std::shared_ptr<Material> > cache;
   // parse the rocklist
   std::ifstream f;
   f.open(rocklist.c_str());
@@ -671,25 +718,32 @@ void ElasticityUpscale<GridType>::loadMaterialsFromRocklist(const std::string& f
   for (int i=0;i<mats;++i) {
     std::string file;
     f >> file;
-    cache.push_back(Material::create(i+1,file));
+    cache.push_back(std::shared_ptr<Material>(Material::create(i+1,file)));
   }
 
   // scale E modulus of materials
   if (Escale > 0) {
     Emin=1e10;
     for (size_t i=0;i<cache.size();++i)
-      Emin = std::min(Emin,((Isotropic*)cache[i])->getE());
+      Emin = std::min(Emin,((Isotropic*)cache[i].get())->getE());
     for (size_t i=0;i<cache.size();++i) {
-      double E = ((Isotropic*)cache[i])->getE();
-      ((Isotropic*)cache[i])->setE(E*Escale/Emin);
+      double E = ((Isotropic*)cache[i].get())->getE();
+      ((Isotropic*)cache[i].get())->setE(E*Escale/Emin);
     }
   }
   std::vector<double> volume;
   volume.resize(cache.size());
   if (file == "uniform") {
-    for (int i=0;i<gv.size(0);++i)
-      materials.push_back(cache[0]);
-    volume[0] = 1;
+    if (cache.size() == 1) {
+      for (int i=0;i<gv.size(0);++i)
+        materials.push_back(cache[0]);
+      volume[0] = 1;
+    } else {
+      for (int i=0;i<gv.size(0);++i) {
+        materials.push_back(cache[i % cache.size()]);
+        volume[i % cache.size()] += gv.cellVolume(i);
+      }
+    }
   } else {
     Opm::ParserPtr parser(new Opm::Parser());
     Opm::DeckConstPtr deck(parser->parseFile(file));
@@ -709,14 +763,13 @@ void ElasticityUpscale<GridType>::loadMaterialsFromRocklist(const std::string& f
   // statistics
   double totalvolume = std::accumulate(volume.begin(),volume.end(),0.f);
   for (size_t i=0;i<cache.size();++i) {
-    std::cout << "  Material" << i+1 << ": " << 100.f*volume[i]/totalvolume << '%' << std::endl;
+    std::cout << " SATNUM " << i+1 << ": " << 100.f*volume[i]/totalvolume << '%' << std::endl;
     volumeFractions.push_back(volume[i]/totalvolume);
   }
+  bySat = true;
 }
 
-  template<class GridType>
-void ElasticityUpscale<GridType>::fixCorners(const double* min,
-                                             const double* max)
+IMPL_FUNC(void, fixCorners(const double* min, const double* max))
 {
   ctype c[8][3] = {{min[0],min[1],min[2]},
                    {max[0],min[1],min[2]},
@@ -733,9 +786,7 @@ void ElasticityUpscale<GridType>::fixCorners(const double* min,
   }
 }
 
-  template<class GridType>
-void ElasticityUpscale<GridType>::periodicBCs(const double* min, 
-                                              const double* max)
+IMPL_FUNC(void, periodicBCs(const double* min, const double* max))
 {
   // this method
   // 1. fixes the primal corner dofs
@@ -761,11 +812,10 @@ void ElasticityUpscale<GridType>::periodicBCs(const double* min,
   periodicPlane(Z,XYZ,slave[2],master[2]);
 }
 
-  template<class GridType>
-void ElasticityUpscale<GridType>::periodicBCsMortar(const double* min, 
-                                                    const double* max,
-                                                    int n1, int n2,
-                                                    int p1, int p2)
+IMPL_FUNC(void, periodicBCsMortar(const double* min, 
+                                  const double* max,
+                                  int n1, int n2,
+                                  int p1, int p2))
 {
   // this method
   // 1. fixes the primal corner dofs
@@ -837,69 +887,98 @@ void ElasticityUpscale<GridType>::periodicBCsMortar(const double* min,
   slave.clear();
 }
 
-  template<class GridType>
-void ElasticityUpscale<GridType>::setupAMG(int pre, int post,
-                                           int target, int zcells)
+ template<class M, class A>
+static void applyMortarBlock(int i, const Matrix& B, M& T,
+                             A& upre)
 {
-  Criterion crit;
-  ElasticityAMG::SmootherArgs args;
-  args.relaxationFactor = 1.0;
-  crit.setCoarsenTarget(target);
-  crit.setGamma(1);
-  crit.setNoPreSmoothSteps(pre);
-  crit.setNoPostSmoothSteps(post);
-  crit.setDefaultValuesIsotropic(3, zcells);
-
-  std::cout << "\t collapsing 2x2x" << zcells << " cells per level" << std::endl;
-  op = new Operator(A.getOperator());
-  upre = new ElasticityAMG(*op, crit, args);
-
-  /*
-  amg->addContext("Apre");
-  amg->setContext("Apre");
-  Vector x,y;
-  // this is done here to make sure we are in a single-threaded section
-  // will have to be redone when AMG is refactored upstream
-  amg->pre(x,y);
-  */
+  Vector v, v2;
+  v.resize(B.N());
+  v2.resize(B.N());
+  v = 0;
+  v2 = 0;
+  MortarBlockEvaluator<Dune::Preconditioner<Vector,Vector> > pre(upre, B);
+  v[i] = 1;
+  pre.apply(v, v2);
+  for (size_t j=0; j < B.M(); ++j)
+    T[j][i] = v2[j];
 }
 
-  template<class GridType>
-void ElasticityUpscale<GridType>::setupSolvers(const LinSolParams& params)
+IMPL_FUNC(void, setupSolvers(const LinSolParams& params))
 {
   int siz = A.getOperator().N(); // system size
+  int numsolvers = 1;
+#ifdef HAVE_OPENMP
+   numsolvers = omp_get_max_threads();
+#endif
+          
   if (params.type == ITERATIVE) {
-    setupAMG(params.steps[0], params.steps[1], params.coarsen_target,
-             params.zcells);
+    op.reset(new Operator(A.getOperator()));
+    bool copy;
+    upre.push_back(PC::setup(params.steps[0], params.steps[1],
+                             params.coarsen_target, params.zcells,
+                             op, gv, A, copy));
 
     // Mortar in use
     if (B.N()) {
       siz += B.M();
 
-      // schur system: B'*diag(A)^-1*B
-      if (params.mortarpre == SCHURAMG) {
-        Vector v, v2, v3;
-        v.resize(B.N());
-        v2.resize(B.N());
-        v = 0;
-        v2 = 0;
+      // schur system: B'*P^-1*B
+      if (params.mortarpre >= SCHUR) {
         Dune::DynamicMatrix<double> T(B.M(), B.M());
-        upre->pre(v, v);
         std::cout << "\tBuilding preconditioner for multipliers..." << std::endl;
-        MortarBlockEvaluator<Dune::Preconditioner<Vector,Vector> > pre(*upre, B);
-        LoggerHelper help(B.M(), 10, 100);
-        for (size_t i=0; i < B.M(); ++i) {
-          v[i] = 1;
-          pre.apply(v, v2);
-          for (size_t j=0; j < B.M(); ++j)
-            T[j][i] = v2[j];
+        LoggerHelper help(B.M(), 5, 100);
 
-          v[i] = 0;
-          help.log(i, "\t\t... still processing ... multiplier ");
+        std::vector< std::shared_ptr<Dune::Preconditioner<Vector,Vector> > > pc;
+        pc.resize(B.M());
+
+        if (params.mortarpre == SCHUR ||
+            (params.mortarpre == SCHURAMG &&
+             params.pre == AMG) ||
+            (params.mortarpre == SCHURSCHWARZ &&
+             params.pre == SCHWARZ) ||
+            (params.mortarpre == SCHURTWOLEVEL &&
+             params.pre == TWOLEVEL)) {
+          pc[0] = upre[0];
+          if (copy) {
+            for (size_t i=1;i<B.M();++i)
+              pc[i].reset(new PCType(*upre[0]));
+          }
+        } else if (params.mortarpre == SCHURAMG) {
+          std::shared_ptr<AMG1<SSORSmoother>::type> mpc;
+          pc[0] = mpc = AMG1<SSORSmoother>::setup(params.steps[0],
+                                                  params.steps[1],
+                                                  params.coarsen_target,
+                                                  params.zcells,
+                                                  op, gv, A, copy);
+          for (size_t i=1;i<B.M();++i)
+            pc[i].reset(new AMG1<SSORSmoother>::type(*mpc));
+        } else if (params.mortarpre == SCHURSCHWARZ) {
+          std::shared_ptr<Schwarz::type> mpc;
+          pc[0] = mpc = Schwarz::setup(params.steps[0],
+                                       params.steps[1],
+                                       params.coarsen_target,
+                                       params.zcells,
+                                       op, gv, A, copy);
+        } else if (params.mortarpre == SCHURTWOLEVEL) {
+          std::shared_ptr<AMG2Level<SSORSmoother>::type> mpc;
+          pc[0] = mpc = AMG2Level<SSORSmoother>::setup(params.steps[0],
+                                                       params.steps[1],
+                                                       params.coarsen_target,
+                                                       params.zcells,
+                                                       op, gv, A, copy);
+          for (size_t i=1;i<B.M();++i)
+            pc[i].reset(new AMG2Level<SSORSmoother>::type(*mpc));
         }
-        upre->post(v);
+        for (int t=0;t<5;++t) {
+#pragma omp parallel for schedule(static)
+          for (int i=help.group(t).first; i < help.group(t).second; ++i)
+            applyMortarBlock(i, B, T, *pc[copy?i:0]);
+
+          help.log(help.group(t).second,
+                   "\t\t... still processing ... multiplier ");
+        }
         P = MatrixOps::fromDense(T);
-      } else if (params.mortarpre == SCHURDIAG) {
+      } else if (params.mortarpre == SIMPLE) {
         Matrix D = MatrixOps::diagonal(A.getEqns());
 
         // scale by row sums
@@ -923,43 +1002,64 @@ void ElasticityUpscale<GridType>::setupSolvers(const LinSolParams& params)
       }
 
       if (params.uzawa) {
-        Dune::CGSolver<Vector>* innersolver = 
-                new Dune::CGSolver<Vector>(*op, *upre, params.tol,
-                                           params.maxit, verbose?2:0);
-        op2 = new SchurEvaluator(*innersolver, B);
-        lpre = new SeqLU<Matrix, Vector, Vector>(P);
-        Dune::CGSolver<Vector>* outersolver = 
-                new Dune::CGSolver<Vector>(*op2, *lpre, params.tol*10,
-                                           params.maxit, verbose?2:0);
-        solver = new UzawaSolver<Vector, Vector>(innersolver, outersolver, B);
+        std::shared_ptr<Dune::InverseOperator<Vector,Vector> > innersolver;
+
+        innersolver.reset(new Dune::CGSolver<Vector>(*op, *upre[0], params.tol,
+                                                     params.maxit,
+                                                     verbose?2:(params.report?1:0)));
+        op2.reset(new SchurEvaluator(*innersolver, B));
+        lprep.reset(new LUSolver(P));
+        lpre.reset(new SeqLU(*lprep));
+        std::shared_ptr<Dune::InverseOperator<Vector,Vector> > outersolver;
+        outersolver.reset(new Dune::CGSolver<Vector>(*op2, *lpre, params.tol*10,
+                                                     params.maxit,
+                                                     verbose?2:(params.report?1:0)));
+        tsolver.push_back(SolverPtr(new UzawaSolver<Vector, Vector>(innersolver, outersolver, B)));
       } else {
-        mpre = new MortarSchurPre<ElasticityAMG>(P, B, *upre, params.symmetric);
-        meval = new MortarEvaluator(A.getOperator(), B);
+        for (int i=0;i<numsolvers;++i) {
+          if (copy && i != 0)
+            upre.push_back(PCPtr(new PCType(*upre[0])));
+          tmpre.push_back(MortarAmgPtr(new MortarSchurPre<PCType>(P, B,
+                                                                *upre[copy?i:0],
+                                                            params.symmetric)));
+        }
+        meval.reset(new MortarEvaluator(A.getOperator(), B));
         if (params.symmetric) {
-          solver = new Dune::MINRESSolver<Vector>(*meval, *mpre, 
-                                                  params.tol, 
-                                                  params.maxit,
-                                                  verbose?2:0);
+          for (int i=0;i<numsolvers;++i)
+           tsolver.push_back(SolverPtr(new Dune::MINRESSolver<Vector>(*meval, *tmpre[i],
+                                                                      params.tol,
+                                                                      params.maxit,
+                                                                      verbose?2:(params.report?1:0))));
         } else {
-          solver = new Dune::RestartedGMResSolver<Vector>(*meval, *mpre, 
-                                                          params.tol,
-                                                          params.restart,
-                                                          params.maxit,
-                                                          verbose?2:0, true);
+          for (int i=0;i<numsolvers;++i)
+            tsolver.push_back(SolverPtr(new Dune::RestartedGMResSolver<Vector>(*meval, *tmpre[i],
+                                                                               params.tol,
+                                                                               params.restart,
+                                                                               params.maxit,
+                                                                               verbose?2:(params.report?1:0), true)));
         }
       }
     } else {
-      solver = new Dune::CGSolver<Vector>(*op, *upre, params.tol,
-                                          params.maxit, verbose?2:0);
+      for (int i=0;i<numsolvers;++i) {
+        if (copy && i != 0)
+          upre.push_back(PCPtr(new PCType(*upre[0])));
+        tsolver.push_back(SolverPtr(new Dune::CGSolver<Vector>(*op, *upre[copy?i:0],
+                                                               params.tol,
+                                                               params.maxit,
+                                                               verbose?2:(params.report?1:0))));
+      }
     }
   } else {
     if (B.N()) 
       A.getOperator() = MatrixOps::augment(A.getOperator(), B,
                                            0, A.getOperator().M(), true);
-#if HAVE_SUPERLU
-    solver = new Dune::SuperLU<Matrix>(A.getOperator(),verbose);
+#if HAVE_UMFPACK || HAVE_SUPERLU
+    tsolver.push_back(SolverPtr(new LUSolver(A.getOperator(),
+                                             verbose?2:(params.report?1:0))));
+    for (int i=1;i<numsolvers;++i)
+      tsolver.push_back(tsolver.front());
 #else
-    std::cerr << "SuperLU solver not enabled" << std::endl;
+    std::cerr << "No direct solver available" << std::endl;
     exit(1);
 #endif
     siz = A.getOperator().N();
@@ -969,15 +1069,18 @@ void ElasticityUpscale<GridType>::setupSolvers(const LinSolParams& params)
     b[i].resize(siz);
 }
 
-  template<class GridType>
-void ElasticityUpscale<GridType>::solve(int loadcase)
+IMPL_FUNC(void, solve(int loadcase))
 {
   try {
     Dune::InverseOperatorResult r;
     u[loadcase].resize(b[loadcase].size(), false);
     u[loadcase] = 0;
+    int solver=0;
+#ifdef HAVE_OPENMP
+    solver = omp_get_thread_num();
+#endif
 
-    solver->apply(u[loadcase], b[loadcase], r);
+    tsolver[solver]->apply(u[loadcase], b[loadcase], r);
 
     std::cout << "\tsolution norm: " << u[loadcase].two_norm() << std::endl;
   } catch (Dune::ISTLError& e) {

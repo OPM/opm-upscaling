@@ -95,7 +95,6 @@ endmacro (add_test_upscale_elasticity gridname method rows)
 # (the "tests" target is setup in OpmLibMain.cmake)
 add_dependencies (tests upscale_perm)
 add_dependencies (tests compare_upscaling_results)
-add_dependencies (tests upscale_elasticity)
 
 # Add tests for different models
 add_test_upscale_perm(PeriodicTilted p 3)
@@ -104,5 +103,9 @@ add_test_upscale_perm(27cellsIso flp 9)
 add_test_upscale_perm(EightCells fl 6)
 add_test_upscale_perm(Hummocky flp 9)
 
-add_test_upscale_elasticity(EightCells mpc)
-add_test_upscale_elasticity(EightCells mortar)
+if((DUNE_ISTL_VERSION_MAJOR GREATER 2) OR
+   (DUNE_ISTL_VERSION_MAJOR EQUAL 2 AND DUNE_ISTL_VERSION_MINOR GREATER 2))
+  add_dependencies (tests upscale_elasticity)
+  add_test_upscale_elasticity(EightCells mpc)
+  add_test_upscale_elasticity(EightCells mortar)
+endif()

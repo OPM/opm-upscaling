@@ -4,6 +4,7 @@
 # defines that must be present in config.h for our headers
 set (opm-upscaling_CONFIG_VAR
 	HAVE_SUPERLU
+	HAVE_OPENMP
 	)
 
 # dependencies

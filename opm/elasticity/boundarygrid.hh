@@ -324,8 +324,8 @@ class HexGeometry<2, cdim, GridImp>
     {
       Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridImp,
                                            Dune::MCMGVertexLayout> mapper(gv);
-      typename GridImp::LeafGridView::template Codim<3>::Iterator start=gv.leafView().template begin<3>();
-      const typename GridImp::LeafGridView::template Codim<3>::Iterator itend = gv.leafView().template end<3>();
+      typename GridImp::LeafGridView::template Codim<3>::Iterator start=gv.leafGridView().template begin<3>();
+      const typename GridImp::LeafGridView::template Codim<3>::Iterator itend = gv.leafGridView().template end<3>();
       for (int i=0;i<4;++i) {
         typename GridImp::LeafGridView::template Codim<3>::Iterator it=start;
         for (; it != itend; ++it) {
@@ -412,13 +412,8 @@ class HexGeometry<2, cdim, GridImp>
     LocalCoordinate local(const GlobalCoordinate& y) const
     {
       const ctype epsilon = 1e-10;
-#if DUNE_VERSION_NEWER(DUNE_GRID, 2, 3)
       const Dune::ReferenceElement< ctype , 2 > & refElement =
         Dune::ReferenceElements< ctype, 2 >::general(type());
-#else
-      const Dune::GenericReferenceElement< ctype , 2 > & refElement =
-        Dune::GenericReferenceElements< ctype, 2 >::general(type());
-#endif
       LocalCoordinate x = refElement.position(0,0);
       LocalCoordinate dx;
       do {

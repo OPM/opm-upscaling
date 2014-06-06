@@ -16,6 +16,7 @@
 #include <dune/istl/matrixmatrix.hh>
 #include <opm/elasticity/matrixops.hpp>
 #include <opm/elasticity/mortar_utils.hpp>
+#include <opm/elasticity/elasticity_preconditioners.hpp>
 
 namespace Opm {
 namespace Elasticity {
@@ -49,7 +50,7 @@ class MortarSchurPre : public Dune::Preconditioner<Vector,Vector> {
     MortarSchurPre(const Matrix& P_, const Matrix& B_,
                    PrecondElasticityBlock& Apre_, bool symmetric_=false) :
       Apre(Apre_), B(B_), N(B.N()), M(B.M()),
-      Lpre(P_, false), symmetric(symmetric_)
+      Lpre(P_, false, false), symmetric(symmetric_)
     {
     }
 
@@ -114,7 +115,7 @@ class MortarSchurPre : public Dune::Preconditioner<Vector,Vector> {
     int M;
 
     //! \brief Linear solver for the multiplier block
-    Dune::SuperLU<Matrix> Lpre;
+    LUSolver Lpre;
 
     //! \brief Whether or not to use a symmetric preconditioner
     bool symmetric; 
