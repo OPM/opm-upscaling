@@ -13,6 +13,7 @@
 # fortran_hook    Determine whether Fortran support is necessary or not
 #	sources_hook    Do special processing before sources are compiled
 #	tests_hook      Do special processing before tests are compiled
+#	files_hook      Do special processing before final targets are added
 
 # include special
 if (CMAKE_VERSION VERSION_LESS "2.8.3")
