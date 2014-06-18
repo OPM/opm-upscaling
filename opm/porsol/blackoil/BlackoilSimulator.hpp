@@ -493,7 +493,11 @@ output(const Grid& grid,
                                  &*sat.back().end());
     std::vector<double> mass_frac_flat(&*mass_frac.front().begin(),
                                        &*mass_frac.back().end());
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2, 3)
+    Dune::VTKWriter<typename Grid::LeafGridView> vtkwriter(grid.leafGridView());
+#else
     Dune::VTKWriter<typename Grid::LeafGridView> vtkwriter(grid.leafView());
+#endif
     vtkwriter.addCellData(cell_pressure_flat, "pressure", Fluid::numPhases);
     vtkwriter.addCellData(cell_velocity_flat, "velocity", Grid::dimension);
     vtkwriter.addCellData(z_flat, "z", Fluid::numComponents);

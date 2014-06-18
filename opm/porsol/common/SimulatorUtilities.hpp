@@ -38,6 +38,7 @@
 
 
 #include <opm/core/utility/ErrorMacros.hpp>
+#include <dune/common/version.hh>
 #include <dune/common/fvector.hh>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 #include <vector>
@@ -266,7 +267,11 @@ namespace Opm
         }
 
         // Write data.
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2, 3)
+        Dune::VTKWriter<typename GridInterface::GridType::LeafGridView> vtkwriter(ginterf.grid().leafGridView());
+#else
         Dune::VTKWriter<typename GridInterface::GridType::LeafGridView> vtkwriter(ginterf.grid().leafView());
+#endif
         vtkwriter.addCellData(saturation, "saturation");
         vtkwriter.addCellData(cell_pressure, "pressure");
         vtkwriter.addCellData(cap_pressure, "capillary pressure");
