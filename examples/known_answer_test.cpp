@@ -43,7 +43,18 @@
 
 
 #include <array>
+#include <dune/common/version.hh>
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,3)
+#include <dune/common/parallel/mpihelper.hh>
+#else
 #include <dune/common/mpihelper.hh>
+#endif
+
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2, 3)
+#define DUNE_GRID_EXPERIMENTAL_GRID_EXTENSIONS 1
+#include <dune/common/array.hh>
+#endif
+
 #include <opm/core/utility/Units.hpp>
 
 // #if HAVE_ALUGRID
@@ -302,7 +313,15 @@ try
 
     // ... or a YaspGrid.
     const int dim = 3;
+    typedef Dune::YaspGrid<dim> Grid;
+
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2, 3)
+    Dune::array<int, dim> dims;
+    std::bitset<dim> per(0);
+#else
+    Dune::FieldVector<bool, dim> per(false);
     Dune::FieldVector<int, dim> dims(1);
+#endif
     dims[0] = param.getDefault("nx", dims[0]);
     dims[1] = param.getDefault("ny", dims[1]);
     dims[2] = param.getDefault("nz", dims[2]);
@@ -310,8 +329,6 @@ try
     sz[0] = param.getDefault("dx", sz[0])*dims[0];
     sz[1] = param.getDefault("dy", sz[1])*dims[1];
     sz[2] = param.getDefault("dz", sz[2])*dims[2];
-    Dune::FieldVector<bool, dim> per(false);
-    typedef Dune::YaspGrid<dim> Grid;
     Grid grid(sz, dims, per, 0);
 
 

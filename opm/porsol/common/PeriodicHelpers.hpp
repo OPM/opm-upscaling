@@ -187,7 +187,11 @@ namespace Opm
 			    const std::array<bool, 2*GridInterface::Dimension>& is_periodic,
 			    double spatial_tolerance = 1e-6)
     {
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2, 3)
+        findPeriodicPartners(bfinfo, side_areas, g.grid().leafGridView(), is_periodic, spatial_tolerance);
+#else
         findPeriodicPartners(bfinfo, side_areas, g.grid().leafView(), is_periodic, spatial_tolerance);
+#endif
         int num_bdy = bfinfo.size();
         // This will likely change with boundarySegmentIndex() instead of boundaryId():
         int max_bid = num_bdy;

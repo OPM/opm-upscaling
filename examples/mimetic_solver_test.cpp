@@ -93,7 +93,6 @@ template<int dim, class GI, class RI>
 void test_flowsolver(const GI& g, const RI& r)
 {
     typedef typename GI::CellIterator                   CI;
-    typedef typename CI::FaceIterator                   FI;
     typedef Opm::BasicBoundaryConditions<true, false>  FBC;
     typedef Opm::IncompFlowSolverHybrid<GI, RI, FBC,
                                          Opm::MimeticIPEvaluator> FlowSolver;
@@ -134,7 +133,11 @@ void test_flowsolver(const GI& g, const RI& r)
     std::vector<double> cell_pressure;
     getCellPressure(cell_pressure, g, soln);
 
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2, 3)
+    Dune::VTKWriter<typename GI::GridType::LeafGridView> vtkwriter(g.grid().leafGridView());
+#else
     Dune::VTKWriter<typename GI::GridType::LeafGridView> vtkwriter(g.grid().leafView());
+#endif
     vtkwriter.addCellData(cell_velocity_flat, "velocity", dim);
     vtkwriter.addCellData(cell_pressure, "pressure");
     vtkwriter.write("testsolution-" + boost::lexical_cast<std::string>(0),
