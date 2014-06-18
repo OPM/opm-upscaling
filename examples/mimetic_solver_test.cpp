@@ -93,7 +93,6 @@ template<int dim, class GI, class RI>
 void test_flowsolver(const GI& g, const RI& r)
 {
     typedef typename GI::CellIterator                   CI;
-    typedef typename CI::FaceIterator                   FI;
     typedef Opm::BasicBoundaryConditions<true, false>  FBC;
     typedef Opm::IncompFlowSolverHybrid<GI, RI, FBC,
                                          Opm::MimeticIPEvaluator> FlowSolver;
