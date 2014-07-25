@@ -10,23 +10,6 @@
  *
  * ./extractproperties 300.0 500.0 300 15.0e6 40.0e6 200
  */
-
-
-class HiResDummy {
-public:
-
-    HiResDummy() {}
-
-    bool applies(double x, double y) const
-    { return false; }
-    
-    bool hiresWeight(double x, double y) const
-    { return 0.0; }
-    
-    bool at(double x, double y) const
-    { return 0.0; }
-};
-
 struct TabulatedDensityTraits {
     typedef double Scalar;
     static const char  *name;
@@ -36,7 +19,6 @@ struct TabulatedDensityTraits {
     static const int    numY = 200;
     static const Scalar yMin;
     static const Scalar yMax;
-    static const HiResDummy hires;
     static const Scalar vals[numX][numY];
 };
 
@@ -45,7 +27,6 @@ const double TabulatedDensityTraits::xMax = 5.000000000000000e+02;
 const double TabulatedDensityTraits::yMin = 1.500000000000000e+07;
 const double TabulatedDensityTraits::yMax = 4.000000000000000e+07;
 const char  *TabulatedDensityTraits::name = "density";
-const HiResDummy  TabulatedDensityTraits::hires;
 
 const double TabulatedDensityTraits::vals[300][200] = 
 {
@@ -12651,8 +12632,6 @@ const double TabulatedDensityTraits::vals[300][200] =
     }
 };
 
-typedef StaticTabulated2DFunction< TabulatedDensityTraits > TabulatedDensity;
-
 struct TabulatedEnthalpyTraits {
     typedef double Scalar;
     static const char  *name;
@@ -12662,7 +12641,6 @@ struct TabulatedEnthalpyTraits {
     static const int    numY = 200;
     static const Scalar yMin;
     static const Scalar yMax;
-    static const HiResDummy hires;
     static const Scalar vals[numX][numY];
 };
 
@@ -12671,7 +12649,6 @@ const double TabulatedEnthalpyTraits::xMax = 5.000000000000000e+02;
 const double TabulatedEnthalpyTraits::yMin = 1.500000000000000e+07;
 const double TabulatedEnthalpyTraits::yMax = 4.000000000000000e+07;
 const char  *TabulatedEnthalpyTraits::name = "enthalpy";
-const HiResDummy  TabulatedEnthalpyTraits::hires;
 
 const double TabulatedEnthalpyTraits::vals[300][200] = 
 {
@@ -25277,16 +25254,45 @@ const double TabulatedEnthalpyTraits::vals[300][200] =
     }
 };
 
-typedef StaticTabulated2DFunction< TabulatedEnthalpyTraits > TabulatedEnthalpy;
-
+typedef Opm::UniformTabulated2DFunction< double > TabulatedFunction;
 
 // this class collects all the tabulated quantities in one convenient place
 struct CO2Tables {
-   static const TabulatedEnthalpy   tabulatedEnthalpy;
-   static const TabulatedDensity    tabulatedDensity;
+   static TabulatedFunction   tabulatedEnthalpy;
+   static TabulatedFunction   tabulatedDensity;
    static const double brineSalinity;
 };
 
-const TabulatedEnthalpy CO2Tables::tabulatedEnthalpy;
-const TabulatedDensity CO2Tables::tabulatedDensity;
+TabulatedFunction CO2Tables::tabulatedEnthalpy;
+TabulatedFunction CO2Tables::tabulatedDensity;
 const double CO2Tables::brineSalinity = 1.000000000000000e-01;
+
+// initialize the static tables once. this is a bit hacky in so far as it uses some
+// advanced C++ features (static initializer functions)
+int initCO2Tables_()
+{
+    CO2Tables::tabulatedEnthalpy.resize(TabulatedEnthalpyTraits::xMin,
+                                        TabulatedEnthalpyTraits::xMax,
+                                        TabulatedEnthalpyTraits::numX,
+                                        TabulatedEnthalpyTraits::yMin,
+                                        TabulatedEnthalpyTraits::yMax,
+                                        TabulatedEnthalpyTraits::numY);
+
+    for (int i = 0; i < TabulatedEnthalpyTraits::numX; ++i)
+        for (int j = 0; j < TabulatedEnthalpyTraits::numY; ++j)
+            CO2Tables::tabulatedEnthalpy.setSamplePoint(i, j, TabulatedEnthalpyTraits::vals[i][j]);
+
+    CO2Tables::tabulatedDensity.resize(TabulatedDensityTraits::xMin,
+                                       TabulatedDensityTraits::xMax,
+                                       TabulatedDensityTraits::numX,
+                                       TabulatedDensityTraits::yMin,
+                                       TabulatedDensityTraits::yMax,
+                                       TabulatedDensityTraits::numY);
+
+    for (int i = 0; i < TabulatedDensityTraits::numX; ++i)
+        for (int j = 0; j < TabulatedDensityTraits::numY; ++j)
+            CO2Tables::tabulatedDensity.setSamplePoint(i, j, TabulatedDensityTraits::vals[i][j]);
+
+    return 0;
+}
+static int co2TablesInitDummy__ = initCO2Tables_();
