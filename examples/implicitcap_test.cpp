@@ -42,7 +42,13 @@
 #include "SimulatorTester.hpp"
 #include "SimulatorTesterFlexibleBC.hpp"
 #include <opm/porsol/common/SimulatorTraits.hpp>
+
+#include <dune/common/version.hh>
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
+#include <dune/common/parallel/mpihelper.hh>
+#else
 #include <dune/common/mpihelper.hh>
+#endif
 
 #ifdef USE_TBB
 #include <tbb/task_scheduler_init.h>
