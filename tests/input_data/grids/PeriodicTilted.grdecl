@@ -10,6 +10,13 @@
     -- 1 = PBED_SAND1 --
     -- 2 = PBED_SAND2 --
 
+RUNSPEC
+
+DIMENS
+20 20 17 /
+
+GRID
+
 SPECGRID
 20 20 17 1 F /
 

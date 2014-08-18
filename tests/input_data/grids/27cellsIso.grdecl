@@ -5,6 +5,12 @@
 -- Copyright 2010 Statoil ASA
 -- CC-BY-SA 3.0
 
+RUNSPEC
+
+DIMENS
+3 3 3 /
+
+GRID
 
 SPECGRID
 3 3 3 1 F /
