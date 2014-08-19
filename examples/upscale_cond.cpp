@@ -352,8 +352,8 @@ try
    const int points                = atoi(options["points"].c_str());
 
    vector<int> satnums   = deck->getKeyword("SATNUM")->getIntData();
-   vector<double> poros  = deck->getKeyword("PORO")->getSIDoubleData();
-   vector<double> permxs = deck->getKeyword("PERMX")->getSIDoubleData();
+   vector<double> poros  = deck->getKeyword("PORO")->getRawDoubleData();
+   vector<double> permxs = deck->getKeyword("PERMX")->getRawDoubleData();
    const double minPerm = atof(options["minPerm"].c_str()); 
    const double minPoro = atof(options["minPoro"].c_str());
 

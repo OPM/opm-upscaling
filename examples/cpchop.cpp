@@ -350,7 +350,7 @@ try
                 // Calculate minimum and maximum water volume in each cell based on input pc-curves per rock type
                 // Create single-phase upscaling object to get poro and perm values from the grid
                 Opm::DeckConstPtr subdeck = ch.subDeck();
-                std::vector<double>  perms = subdeck->getKeyword("PERMX")->getSIDoubleData();
+                std::vector<double>  perms = subdeck->getKeyword("PERMX")->getRawDoubleData();
                 Opm::SinglePhaseUpscaler upscaler;                
                 upscaler.init(subdeck, bctype, minpermSI,
                               residual_tolerance, linsolver_verbosity, linsolver_type, false);
