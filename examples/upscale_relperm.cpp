@@ -398,9 +398,9 @@ try
        usageandexit();  
    }  
 
-   vector<double>  poros = deck->getKeyword("PORO")->getSIDoubleData();  
-   vector<double> permxs = deck->getKeyword("PERMX")->getSIDoubleData();  
-   vector<double> zcorns = deck->getKeyword("ZCORN")->getSIDoubleData();
+   vector<double>  poros = deck->getKeyword("PORO")->getRawDoubleData();
+   vector<double> permxs = deck->getKeyword("PERMX")->getRawDoubleData();
+   vector<double> zcorns = deck->getKeyword("ZCORN")->getRawDoubleData();
 
    Opm::DeckRecordConstPtr specgridRecord = deck->getKeyword("SPECGRID")->getRecord(0);
    int x_res = specgridRecord->getItem("NX")->getInt(0);
@@ -412,8 +412,8 @@ try
    
    if (deck->hasKeyword("PERMY") && deck->hasKeyword("PERMZ")) {
        anisotropic_input = true;
-       permys = deck->getKeyword("PERMY")->getSIDoubleData();
-       permzs = deck->getKeyword("PERMZ")->getSIDoubleData();
+       permys = deck->getKeyword("PERMY")->getRawDoubleData();
+       permzs = deck->getKeyword("PERMZ")->getRawDoubleData();
        if (isMaster) cout << "Info: PERMY and PERMZ present, going into anisotropic input mode, no J-functions\n"; 
        if (isMaster) cout << "      Options -relPermCurve and -jFunctionCurve is meaningless.\n"; 
    } 
