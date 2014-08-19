@@ -101,7 +101,10 @@ try
 
     // upscaling of endpoints and capillary pressure
     // Conversion factor, multiply mD numbers with this to get m² numbers
-    const double milliDarcyToSqMetre = 9.869233e-16;
+    const double milliDarcyToSqMetre =
+        Opm::unit::convert::to(1.0*Opm::prefix::milli*Opm::unit::darcy,
+                               Opm::unit::square(Opm::unit::meter));
+
     // Input for surfaceTension is dynes/cm, SI units are Joules/square metre
     const double surfaceTension = param.getDefault("surfaceTension", 11.0) * 1e-3; // multiply with 10^-3 to obtain SI units 
 
