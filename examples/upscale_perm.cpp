@@ -218,7 +218,6 @@ int upscale(int varnum, char** vararg) {
      */
 
 
-    double ztol = 0.0; 
     double linsolver_tolerance = atof(options["linsolver_tolerance"].c_str());
     int linsolver_verbosity = atoi(options["linsolver_verbosity"].c_str());
     int linsolver_type = atoi(options["linsolver_type"].c_str());
@@ -238,7 +237,7 @@ int upscale(int varnum, char** vararg) {
         start = clock();
         upscaler_nonperiodic.init(deck, 
                                   isFixed ? SinglePhaseUpscaler::Fixed : SinglePhaseUpscaler::Linear,
-                                  minPerm, ztol,  linsolver_tolerance, linsolver_verbosity, linsolver_type, 
+                                  minPerm,  linsolver_tolerance, linsolver_verbosity, linsolver_type, 
                                   twodim_hack, linsolver_maxit, linsolver_prolongate_factor, smooth_steps);
         finish = clock();
         timeused_nonperiodic_tesselation = (double(finish)-double(start))/CLOCKS_PER_SEC;
@@ -248,7 +247,7 @@ int upscale(int varnum, char** vararg) {
         cout << "Tesselating periodic grid ...  ";
         start = clock();
         upscaler_periodic.init(deck, SinglePhaseUpscaler::Periodic, minPerm,
-                               ztol,  linsolver_tolerance, linsolver_verbosity, linsolver_type, twodim_hack,
+                               linsolver_tolerance, linsolver_verbosity, linsolver_type, twodim_hack,
                                linsolver_maxit, linsolver_prolongate_factor, smooth_steps);
         finish = clock();
         timeused_periodic_tesselation = (double(finish)-double(start))/CLOCKS_PER_SEC;

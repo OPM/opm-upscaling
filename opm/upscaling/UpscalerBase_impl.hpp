@@ -131,7 +131,6 @@ namespace Opm
     inline void UpscalerBase<Traits>::init(Opm::DeckConstPtr deck,
                                            BoundaryConditionType bctype,
                                            double perm_threshold,
-                                           double z_tolerance,
                                            double residual_tolerance,
                                            int linsolver_verbosity,
                                            int linsolver_type,
@@ -155,7 +154,7 @@ namespace Opm
         bool clip_z = (bctype_ == Periodic);
         bool unique_bids = (bctype_ == Linear || bctype_ == Periodic);
         std::string rock_list("no_list");
-	setupGridAndPropsEclipse(deck, z_tolerance,
+	setupGridAndPropsEclipse(deck,
                                  periodic_ext, turn_normals, clip_z, unique_bids,
                                  perm_threshold, rock_list,
                                  useJ<ResProp>(), 1.0, 0.0,

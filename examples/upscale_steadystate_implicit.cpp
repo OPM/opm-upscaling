@@ -288,7 +288,7 @@ try
     }
     Opm::SinglePhaseUpscaler spupscaler; // needed to access porosities and cell volumes
     spupscaler.init(deck, Opm::SinglePhaseUpscaler::Fixed,
-                    0.0,0.0, linsolver_tolerance, linsolver_verbosity, linsolver_type, false, linsolver_maxit,
+                    0.0, linsolver_tolerance, linsolver_verbosity, linsolver_type, false, linsolver_maxit,
                     linsolver_prolongate_factor, linsolver_smooth_steps);
     std::vector<double>  cellPoreVolumes; 
     cellPoreVolumes.resize(satnums.size(), 0.0);

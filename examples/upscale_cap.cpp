@@ -406,7 +406,7 @@ try
    SinglePhaseUpscaler upscaler;
    upscaler.init(deck, SinglePhaseUpscaler::Fixed,
                  Opm::unit::convert::from(minPerm, Opm::prefix::milli*Opm::unit::darcy),
-                 0.0, 1e-8, 0, 1, false);  // options on this line are noops for upscale_cap
+                 1e-8, 0, 1, false);  // options on this line are noops for upscale_cap
 
    vector<double> cellVolumes, cellPoreVolumes; 
    cellVolumes.resize(satnums.size(), 0.0);
