@@ -82,10 +82,12 @@ namespace Opm
 
             Opm::ParserPtr parser(new Opm::Parser());
             Opm::DeckConstPtr deck(parser->parseFile(ecl_file));
-            double z_tolerance = param.getDefault<double>("z_tolerance", 0.0);
+            if (param.has("z_tolerance")) {
+                std::cerr << "****** Warning: z_tolerance parameter is obsolete, use PINCH in deck input instead\n";
+            }
             bool periodic_extension = param.getDefault<bool>("periodic_extension", false);
             bool turn_normals = param.getDefault<bool>("turn_normals", false);
-            grid.processEclipseFormat(deck, z_tolerance, periodic_extension, turn_normals);
+            grid.processEclipseFormat(deck, periodic_extension, turn_normals);
             // Save EGRID file in case we are writing ECL output.
             if (param.getDefault("output_ecl", false)) {
                 OPM_THROW(std::runtime_error, "Saving to EGRID files is not yet implemented");
@@ -140,7 +142,6 @@ namespace Opm
     /// @param
     template <template <int> class ResProp>
     inline void setupGridAndPropsEclipse(Opm::DeckConstPtr deck,
-                                         double z_tolerance,
                                          bool periodic_extension,
                                          bool turn_normals,
                                          bool clip_z,
@@ -153,7 +154,7 @@ namespace Opm
                                          Dune::CpGrid& grid,
                                          ResProp<3>& res_prop)
     {
-        grid.processEclipseFormat(deck, z_tolerance, periodic_extension, turn_normals, clip_z);
+        grid.processEclipseFormat(deck, periodic_extension, turn_normals, clip_z);
         const std::string* rl_ptr = (rock_list == "no_list") ? 0 : &rock_list;
         res_prop.init(deck, grid.globalCell(), perm_threshold, rl_ptr, use_jfunction_scaling, sigma, theta);
         if (unique_bids) {
