@@ -87,7 +87,9 @@ try
 
     double minperm = param.getDefault("minperm", 1e-9);
     double minpermSI = Opm::unit::convert::from(minperm, Opm::prefix::milli*Opm::unit::darcy);
-    double z_tolerance = param.getDefault("z_tolerance", 0.0);
+    if (param.has("z_tolerance")) {
+        std::cerr << "****** Warning: z_tolerance parameter is obsolete, use PINCH in deck input instead\n";
+    }
     double residual_tolerance = param.getDefault("residual_tolerance", 1e-8);
     int linsolver_verbosity = param.getDefault("linsolver_verbosity", 0);
     int linsolver_type = param.getDefault("linsolver_type", 1);
@@ -175,7 +177,7 @@ try
 
         Opm::DeckConstPtr subdeck_1 = ch.subDeck();
         Opm::SinglePhaseUpscaler upscaler_1;
-        upscaler_1.init(subdeck_1, Opm::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
+        upscaler_1.init(subdeck_1, Opm::SinglePhaseUpscaler::Fixed, minpermSI,
 			residual_tolerance, linsolver_verbosity, linsolver_type, false);
         Opm::SinglePhaseUpscaler::permtensor_t upscaled_K_1 = upscaler_1.upscaleSinglePhase();
         upscaled_K_1 *= (1.0/(Opm::prefix::milli*Opm::unit::darcy));
@@ -198,7 +200,7 @@ try
 	
         Opm::DeckConstPtr subdeck_2 = ch.subDeck();
         Opm::SinglePhaseUpscaler upscaler_2;
-        upscaler_2.init(subdeck_2, Opm::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
+        upscaler_2.init(subdeck_2, Opm::SinglePhaseUpscaler::Fixed, minpermSI,
 			residual_tolerance, linsolver_verbosity, linsolver_type, false);
         Opm::SinglePhaseUpscaler::permtensor_t upscaled_K_2 = upscaler_2.upscaleSinglePhase();
         upscaled_K_2 *= (1.0/(Opm::prefix::milli*Opm::unit::darcy));

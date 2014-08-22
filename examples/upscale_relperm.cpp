@@ -939,7 +939,6 @@ try
    if (isMaster) cout << "Tesselating grid... ";
    flush(cout);   start = clock();
    SinglePhaseUpscaler upscaler;
-   double ztol = 0.0;
    double linsolver_tolerance = atof(options["linsolver_tolerance"].c_str());
    int linsolver_verbosity = atoi(options["linsolver_verbosity"].c_str());
    int linsolver_type = atoi(options["linsolver_type"].c_str());
@@ -949,7 +948,7 @@ try
    bool twodim_hack = false;
    upscaler.init(deck, boundaryCondition,
                  Opm::unit::convert::from(minPerm, Opm::prefix::milli*Opm::unit::darcy),
-                 ztol, linsolver_tolerance,
+                 linsolver_tolerance,
                  linsolver_verbosity, linsolver_type, twodim_hack,
                  linsolver_maxit, linsolver_prolongate_factor, smooth_steps);
 

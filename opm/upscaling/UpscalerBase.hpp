@@ -78,7 +78,6 @@ namespace Opm
 	void init(Opm::DeckConstPtr deck,
                   BoundaryConditionType bctype,
                   double perm_threshold,
-                  double z_tolerance = 0.0,
                   double residual_tolerance = 1e-8,
                   int linsolver_verbosity = 0,
                   int linsolver_type = 3,

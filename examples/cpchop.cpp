@@ -54,7 +54,7 @@ try
     if (argc == 1) {
         std::cout << "Usage: cpchop gridfilename=filename.grdecl [subsamples=10] [ilen=5] [jlen=5] " << std::endl;
         std::cout << "       [zlen=5] [imin=] [imax=] [jmin=] [jmax=] [upscale=true] [bc=fixed]" << std::endl;
-        std::cout << "       [resettoorigin=true] [seed=111] [z_tolerance=0.0] [minperm=1e-9] " << std::endl;
+        std::cout << "       [resettoorigin=true] [seed=111] [minperm=1e-9] " << std::endl;
         std::cout << "       [dips=false] [azimuthdisplacement=] [satnumvolumes=false] [mincellvolume=1e-9]" << std::endl;
         std::cout << "       [filebase=] [resultfile=] [endpoints=false] [cappres=false]" << std::endl;
         std::cout << "       [rock_list=] [anisotropicrocks=false]" << std::endl;
@@ -208,7 +208,9 @@ try
         }
     }
 
-    double z_tolerance = param.getDefault("z_tolerance", 0.0);
+    if (param.has("z_tolerance")) {
+        std::cerr << "****** Warning: z_tolerance parameter is obsolete, use PINCH in deck input instead\n";
+    }
     double residual_tolerance = param.getDefault("residual_tolerance", 1e-8);
     int linsolver_verbosity = param.getDefault("linsolver_verbosity", 0);
 #if DUNE_VERSION_NEWER(DUNE_ISTL, 2, 3) || defined(HAS_DUNE_FAST_AMG)
@@ -318,7 +320,7 @@ try
                 Opm::DeckConstPtr subdeck = ch.subDeck();
                 Opm::SinglePhaseUpscaler upscaler;
                 
-                upscaler.init(subdeck, bctype, minpermSI, z_tolerance,
+                upscaler.init(subdeck, bctype, minpermSI,
                               residual_tolerance, linsolver_verbosity, linsolver_type, false);
 
                 Opm::SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
@@ -350,7 +352,7 @@ try
                 Opm::DeckConstPtr subdeck = ch.subDeck();
                 std::vector<double>  perms = subdeck->getKeyword("PERMX")->getSIDoubleData();
                 Opm::SinglePhaseUpscaler upscaler;                
-                upscaler.init(subdeck, bctype, minpermSI, z_tolerance,
+                upscaler.init(subdeck, bctype, minpermSI,
                               residual_tolerance, linsolver_verbosity, linsolver_type, false);
                 std::vector<int>   satnums = subdeck->getKeyword("SATNUM")->getIntData();
                 std::vector<double>  poros = subdeck->getKeyword("PORO")->getSIDoubleData();

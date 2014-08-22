@@ -178,7 +178,7 @@ int main(int varnum, char** vararg) try {
    SinglePhaseUpscaler upscaler;
    upscaler.init(deck, SinglePhaseUpscaler::Fixed,
                  Opm::unit::convert::from(1e-9, Opm::prefix::milli*Opm::unit::darcy),
-                 0.0, 1e-8, 0, 1, false);
+                 1e-8, 0, 1, false);
 
 
     bool use_actnum = false;

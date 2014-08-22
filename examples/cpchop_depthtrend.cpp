@@ -63,7 +63,7 @@ try
    if (argc == 1) {
         std::cout << "Usage: cpchop_depthtrend gridfilename=filename.grdecl [zresolution=1] [zlen=1] [ilen=5] [jlen=5] " << std::endl;
         std::cout << "       [zlen=5] [imin=] [imax=] [jmin=] [jmax=] [upscale=true] [resettoorigin=true]" << std::endl;
-        std::cout << "       [seed=111] [z_tolerance=0.0] [minperm=1e-9] " << std::endl;
+        std::cout << "       [seed=111] [minperm=1e-9] " << std::endl;
         exit(1);
     }
 
@@ -97,7 +97,9 @@ try
     double minperm = param.getDefault("minperm", 1e-9);
     double minpermSI = Opm::unit::convert::from(minperm, Opm::prefix::milli*Opm::unit::darcy);
 
-    double z_tolerance = param.getDefault("z_tolerance", 0.0);
+    if (param.has("z_tolerance")) {
+        std::cerr << "****** Warning: z_tolerance parameter is obsolete, use PINCH in deck input instead\n";
+    }
     double residual_tolerance = param.getDefault("residual_tolerance", 1e-8);
     double linsolver_verbosity = param.getDefault("linsolver_verbosity", 0);
     double linsolver_type = param.getDefault("linsolver_type", 1);
@@ -164,7 +166,7 @@ try
             if (upscale) {
                 Opm::DeckConstPtr subdeck = ch.subDeck();
                 Opm::SinglePhaseUpscaler upscaler;
-                upscaler.init(subdeck, Opm::SinglePhaseUpscaler::Fixed, minpermSI, z_tolerance,
+                upscaler.init(subdeck, Opm::SinglePhaseUpscaler::Fixed, minpermSI,
                               residual_tolerance, linsolver_verbosity, linsolver_type, false);
                 
                 Opm::SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
