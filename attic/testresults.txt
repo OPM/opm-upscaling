@@ -320,6 +320,54 @@ real	0m25.907s
 user	0m25.119s
 sys	0m0.615s
 
+[again, August 22 2014, entirely new computer etc. etc.]
+
+
+[with linsolver_type=3, the default at this time, AMG/CG with fast
+Gauss-Seidel smoothing (or FastAMG)]
+
+156.108075001155 0 0 
+0 161.812984474918 0 
+0 0 31.2464615138554 
+
+real	0m9.657s
+user	0m9.352s
+sys	0m0.275s
+
+real	0m9.666s
+user	0m9.381s
+sys	0m0.279s
+
+[with linsolver_type=0, ILU/CG]
+
+156.108076377805 0 0 
+0 161.812980444566 0 
+0 0 31.2464680022645 
+
+real	0m10.497s
+user	0m10.305s
+sys	0m0.186s
+
+[with linsolver_type=1, AMG/CG]
+
+156.108075141632 0 0 
+0 161.812991081461 0 
+0 0 31.2464628977365 
+
+real	0m10.573s
+user	0m10.299s
+sys	0m0.274s
+
+[with linsolver_type=2, KAMG/CG]
+
+156.108075238238 0 0 
+0 161.812986647314 0 
+0 0 31.2464611988944 
+
+real	0m11.666s
+user	0m11.370s
+sys	0m0.298s
+
 
 -------------------8<------------------------------8<-------------------
 
