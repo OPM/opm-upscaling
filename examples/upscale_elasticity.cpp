@@ -159,6 +159,10 @@ void parseCommandLine(int argc, char** argv, Params& p)
   p.dip      = param.getDefault<double>("dip_angle", M_PI/2);
   p.azimuth  = param.getDefault<double>("azimuth_angle", 0.0);
   p.ctol     = param.getDefault<double>("ctol",1.e-6);
+#ifndef HAVE_OLD_CPGRID_API
+  if (p.ctol != 1e-6)
+    std::cerr << "WARNING: Use PINCH in input file to control nodal collapse!" << std::endl;
+#endif
   p.file     = param.get<std::string>("gridfilename");
   p.rocklist = param.getDefault<std::string>("rock_list","");
   p.vtufile  = param.getDefault<std::string>("vtufilename","");
@@ -279,7 +283,11 @@ int run(Params& p)
       cellsize[2] = p.max[2] > -1?p.max[2]/cells[2]:1.0;
       grid.createCartesian(cells,cellsize);
     } else
+#ifdef HAVE_OLD_CPGRID_API
       grid.readEclipseFormat(p.file,p.ctol,false);
+#else
+      grid.readEclipseFormat(p.file,false);
+#endif
 
     ElasticityUpscale<GridType, AMG> upscale(grid, p.ctol, p.Emin, p.file,
                                              p.rocklist, p.verbose);
