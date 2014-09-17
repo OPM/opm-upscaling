@@ -36,8 +36,6 @@
 
 #include "MiscibilityProps.hpp"
 #include <opm/core/utility/ErrorMacros.hpp>
-#include <opm/parser/eclipse/Utility/PvtwTable.hpp>
-#include <opm/parser/eclipse/Utility/PvcdoTable.hpp>
 
 // Forward declaration.
 class PVTW;
@@ -49,28 +47,19 @@ namespace Opm
     public:
         typedef std::vector<std::vector<double> > table_t;
 
-        MiscibilityWater(const PvtwTable& pvtw)
+        MiscibilityWater(DeckKeywordConstPtr pvtwKeyword)
         {
-            ref_press_ = pvtw.getPressureColumn()[0];
-            ref_B_     = pvtw.getFormationFactorColumn()[0];
-            comp_      = pvtw.getCompressibilityColumn()[0];
-            viscosity_ = pvtw.getViscosityColumn()[0];
-            if (pvtw.getViscosibilityColumn()[0] != 0.0) {
+            auto pvtwRecord = pvtwKeyword->getRecord(0);
+            ref_press_ = pvtwRecord->getItem("P_REF")->getSIDouble(0);
+            ref_B_     = pvtwRecord->getItem("WATER_VOL_FACTOR")->getSIDouble(0);
+            comp_      = pvtwRecord->getItem("WATER_COMPRESSIBILITY")->getSIDouble(0);
+            viscosity_ = pvtwRecord->getItem("WATER_VISCOSITY")->getSIDouble(0);
+
+            if (pvtwRecord->getItem("WATER_VISCOSIBILITY")->getSIDouble(0) != 0.0) {
                 OPM_THROW(std::runtime_error, "MiscibilityWater does not support 'viscosibility'.");
             }
         }
 
-        // WTF?? we initialize a class for water from a table for oil.
-        MiscibilityWater(const PvcdoTable& pvcdo)
-        {
-            ref_press_ = pvcdo.getPressureColumn()[0];
-            ref_B_     = pvcdo.getFormationFactorColumn()[0];
-            comp_      = pvcdo.getCompressibilityColumn()[0];
-            viscosity_ = pvcdo.getViscosityColumn()[0];
-            if (pvcdo.getViscosibilityColumn()[0] != 0.0) {
-                OPM_THROW(std::runtime_error, "MiscibilityWater does not support 'viscosibility'.");
-            }
-        }
 
         MiscibilityWater(double visc)
             : ref_press_(0.0),
@@ -78,6 +67,19 @@ namespace Opm
               comp_(0.0),
               viscosity_(visc)
         {
+        }
+
+        // WTF?? we initialize a class for water from a keyword for oil?
+        void initFromPvcdo(DeckKeywordConstPtr pvcdoKeyword)
+        {
+            auto pvcdoRecord = pvcdoKeyword->getRecord(0);
+            ref_press_ = pvcdoRecord->getItem("P_REF")->getSIDouble(0);
+            ref_B_     = pvcdoRecord->getItem("OIL_VOL_FACTOR")->getSIDouble(0);
+            comp_      = pvcdoRecord->getItem("OIL_COMPRESSIBILITY")->getSIDouble(0);
+            viscosity_ = pvcdoRecord->getItem("OIL_VISCOSITY")->getSIDouble(0);
+            if (pvcdoRecord->getItem("OIL_VISCOSIBILITY")->getSIDouble(0) != 0.0) {
+                OPM_THROW(std::runtime_error, "MiscibilityWater does not support 'viscosibility'.");
+            }
         }
 
 	virtual ~MiscibilityWater()

@@ -37,8 +37,7 @@
 
 #include "MiscibilityProps.hpp"
 #include <opm/core/utility/UniformTableLinear.hpp>
-#include <opm/parser/eclipse/Utility/PvdoTable.hpp>
-#include <opm/parser/eclipse/Utility/PvdgTable.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 namespace Opm
 {

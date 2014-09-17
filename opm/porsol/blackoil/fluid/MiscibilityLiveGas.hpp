@@ -36,7 +36,7 @@
      */
 
 #include "MiscibilityProps.hpp"
-#include <opm/parser/eclipse/Utility/PvtgTable.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 namespace Opm
 {
