@@ -34,7 +34,7 @@
 #include "MiscibilityLiveOil.hpp"
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/utility/linearInterpolation.hpp>
-#include <opm/parser/eclipse/Utility/PvtoTable.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 using namespace std;
 using namespace Opm;

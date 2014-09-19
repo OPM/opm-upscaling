@@ -29,12 +29,7 @@
 #include <opm/core/utility/linearInterpolation.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Utility/PvtgTable.hpp>
-#include <opm/parser/eclipse/Utility/PvtwTable.hpp>
-#include <opm/parser/eclipse/Utility/PvtoTable.hpp>
-#include <opm/parser/eclipse/Utility/PvdgTable.hpp>
-#include <opm/parser/eclipse/Utility/PvdoTable.hpp>
-#include <opm/parser/eclipse/Utility/PvcdoTable.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 using namespace Opm;
 
@@ -44,6 +39,7 @@ namespace Opm
 
     void BlackoilPVT::init(Opm::DeckConstPtr deck)
     {
+        const auto eclipseState = std::make_shared<EclipseState>(deck);
 	region_number_ = 0;
 
 	// Surface densities. Accounting for different orders in eclipse and our code.
@@ -59,33 +55,33 @@ namespace Opm
 
         // Water PVT
         if (deck->hasKeyword("PVTW")) {
-            PvtwTable pvtwTable(deck->getKeyword("PVTW"));
-            water_props_.reset(new MiscibilityWater(pvtwTable));
+            water_props_.reset(new MiscibilityWater(deck->getKeyword("PVTW")));
         } else {
             water_props_.reset(new MiscibilityWater(0.5*Opm::prefix::centi*Opm::unit::Poise)); // Eclipse 100 default 
         }
 
         // Oil PVT
-        if (deck->hasKeyword("PVDO")) {
-            PvdoTable pvdoTable(deck->getKeyword("PVDO"));
-            oil_props_.reset(new MiscibilityDead(pvdoTable));
-        } else if (deck->hasKeyword("PVTO")) {
-            PvtoTable pvtoTable(deck->getKeyword("PVTO"), /*tableIdx=*/0);
-            oil_props_.reset(new MiscibilityLiveOil(pvtoTable));
+        const auto& pvdoTables = eclipseState->getPvdoTables();
+        const auto& pvtoTables = eclipseState->getPvtoTables();
+        if (!pvdoTables.empty()) {
+            oil_props_.reset(new MiscibilityDead(pvdoTables[0]));
+        } else if (pvtoTables.empty()) {
+            oil_props_.reset(new MiscibilityLiveOil(pvtoTables[0]));
         } else if (deck->hasKeyword("PVCDO")) {
-            PvcdoTable pvcdoTable(deck->getKeyword("PVCDO"));
-            oil_props_.reset(new MiscibilityWater(pvcdoTable));
+            auto *misc_water = new MiscibilityWater(0);
+            misc_water->initFromPvcdo(deck->getKeyword("PVCDO"));
+            oil_props_.reset(misc_water);
         } else {
             OPM_THROW(std::runtime_error, "Input is missing PVDO and PVTO\n");
         }
 
 	// Gas PVT
-        if (deck->hasKeyword("PVDG")) {
-            PvdgTable pvdgTable(deck->getKeyword("PVDG"));
-            gas_props_.reset(new MiscibilityDead(pvdgTable));
-        } else if (deck->hasKeyword("PVTG")) {
-            PvtgTable pvtgTable(deck->getKeyword("PVTG"), /*tableIdx=*/0);
-            gas_props_.reset(new MiscibilityLiveGas(pvtgTable));
+        const auto& pvdgTables = eclipseState->getPvdgTables();
+        const auto& pvtgTables = eclipseState->getPvtgTables();
+        if (!pvdgTables.empty()) {
+            gas_props_.reset(new MiscibilityDead(pvdgTables[0]));
+        } else if (pvtgTables.empty()) {
+            gas_props_.reset(new MiscibilityLiveGas(pvtgTables[0]));
         } else {
 	    OPM_THROW(std::runtime_error, "Input is missing PVDG and PVTG\n");
         }

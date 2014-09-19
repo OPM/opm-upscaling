@@ -23,8 +23,7 @@
 #include <opm/core/utility/UniformTableLinear.hpp>
 #include <opm/core/utility/buildUniformMonotoneTable.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Utility/SgofTable.hpp>
-#include <opm/parser/eclipse/Utility/SwofTable.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include "BlackoilDefs.hpp"
 #include <iostream>
 #include <stdexcept>
@@ -43,9 +42,10 @@ public:
     typedef ScalarT Scalar;
     void init(Opm::DeckConstPtr deck)
     {
+        EclipseState eclipseState(deck);
         // Extract input data.
-        SwofTable swofTable(deck->getKeyword("SWOF"));
-        SgofTable sgofTable(deck->getKeyword("SGOF"));
+        const auto& swofTable = eclipseState.getSwofTables()[0];
+        const auto& sgofTable = eclipseState.getSgofTables()[0];
 
         const std::vector<double>& sw = swofTable.getSwColumn();
         const std::vector<double>& krw = swofTable.getKrwColumn();
