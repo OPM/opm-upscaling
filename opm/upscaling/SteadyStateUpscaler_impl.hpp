@@ -314,7 +314,33 @@ namespace Opm
     }
 
 
+    static inline double calc_frac_flow (
+            std::map< int, double >& frac_flow_by_bid,
+            const BCs& bcond,
+            const ResProp& res_prop,
+            GridInterface::CellIterator c,
+            CellIterator::FaceIterator f ) {
 
+        const SatBC& sc = bcond.satCond( f );
+
+        if( sc.isPeriodic() ) {
+            assert( sc.isDirichlet() );
+            return res_prop.fractionalFlow( c->index(), sc.saturation() );
+        }
+
+        assert( sc.saturationDifference() == 0.0 );
+        const int partner_bid = bcond.getPeriodicPartner( f->boundaryId() );
+        const auto it = frac_flow_by_bid.find( partner_bid );
+
+        // This is for the periodic case, so that we are sure all fractional flows have
+        // been set in frac_flow_by_bid.
+        if( it == frac_flow_by_bid.end() ) {
+            OPM_THROW(std::runtime_error, "Could not find periodic partner fractional flow. Face bid = " << f->boundaryId()
+                    << " and partner bid = " << partner_bid);
+        }
+
+        return it->second;
+    }
 
     template <class Traits>
     template <class FlowSol>
@@ -323,68 +349,56 @@ namespace Opm
                                                         const FlowSol& flow_solution,
                                                         const std::vector<double>& saturations) const
     {
-        typedef typename GridInterface::CellIterator CellIter;
-        typedef typename CellIter::FaceIterator FaceIter;
 
-	double side1_flux = 0.0;
-	double side2_flux = 0.0;
-	double side1_flux_oil = 0.0;
-	double side2_flux_oil = 0.0;
-        std::map<int, double> frac_flow_by_bid;
-        int num_cells = this->ginterf_.numberOfCells();
-        std::vector<double> cell_inflows_w(num_cells, 0.0);
-        std::vector<double> cell_outflows_w(num_cells, 0.0);
+        struct sideflux {
+            double water;
+            double oil;
 
-        // Two passes: First pass, deal with outflow, second pass, deal with inflow.
-        // This is for the periodic case, so that we are sure all fractional flows have
-        // been set in frac_flow_by_bid.
-        for (int pass = 0; pass < 2; ++pass) {
-            for (CellIter c = this->ginterf_.cellbegin(); c != this->ginterf_.cellend(); ++c) {
-                for (FaceIter f = c->facebegin(); f != c->faceend(); ++f) {
-                    if (f->boundary()) {
-                        double flux = flow_solution.outflux(f);
-                        const SatBC& sc = this->bcond_.satCond(f);
-                        if (flux < 0.0 && pass == 1) {
-                            // This is an inflow face.
-                            double frac_flow = 0.0;
-                            if (sc.isPeriodic()) {
-                                assert(sc.saturationDifference() == 0.0);
-                                int partner_bid = this->bcond_.getPeriodicPartner(f->boundaryId());
-                                std::map<int, double>::const_iterator it = frac_flow_by_bid.find(partner_bid);
-                                if (it == frac_flow_by_bid.end()) {
-                                    OPM_THROW(std::runtime_error, "Could not find periodic partner fractional flow. Face bid = " << f->boundaryId()
-                                          << " and partner bid = " << partner_bid);
-                                }
-                                frac_flow = it->second;
-                            } else {
-                                assert(sc.isDirichlet());
-                                frac_flow = this->res_prop_.fractionalFlow(c->index(), sc.saturation());
-                            }
-                            cell_inflows_w[c->index()] += flux*frac_flow;
-                            side1_flux += flux*frac_flow;
-                            side1_flux_oil += flux*(1.0 - frac_flow);
-                        } else if (flux >= 0.0 && pass == 0) {
-                            // This is an outflow face.
-                            double frac_flow = this->res_prop_.fractionalFlow(c->index(), saturations[c->index()]);
-                            if (sc.isPeriodic()) {
-                                frac_flow_by_bid[f->boundaryId()] = frac_flow;
-//                                 std::cout << "Inserted bid " << f->boundaryId() << std::endl;
-                            }
-                            cell_outflows_w[c->index()] += flux*frac_flow;
-                            side2_flux += flux*frac_flow;
-                            side2_flux_oil += flux*(1.0 - frac_flow);
-                        }
-                    }
-                }
+            sideflux& operator+=( const sideflux& other ) {
+                this->water += other.water;
+                this->oil += other.oil;
+                return *this;
+            }
+        };
+
+        std::map< int, double > frac_flow_by_bid;
+        // Two passes: First pass, deal with outflow
+        sideflux outflow;
+        for( auto c = this->ginterf_.cellbegin(); c != this->ginterf_.cellend(); ++c ) {
+            const double frac_flow = this->res_prop_.fractional_flow( c->index(), saturations[ c->index() ] );
+
+            for( auto f = c->facebegin(); f != c->faceend(); ++f ) {
+                if( !f->boundary() ) continue;
+
+                const double flux = flow_solution.outflux( f );
+                if( flux < 0.0 ) continue;
+
+                const SatBC& sc = this->bcond_.satCond( f );
+                if( sc.isPeriodic() ) frac_flow_by_bid[ f->boundaryId() ] = frac_flow;
+
+                outflow += { flux * frac_flow, flux * ( 1.0 - frac_flow ) };
             }
         }
-	water_inout = std::make_pair(side1_flux, side2_flux);
-	oil_inout = std::make_pair(side1_flux_oil, side2_flux_oil);
+
+        // second pass, deal with inflow.
+        sideflux inflow;
+        for( auto c = this->ginterf_.cellbegin(); c != this->ginterf_.cellend(); ++c ) {
+            for( auto f = c->facebegin(); f != c->faceend(); ++f ) {
+                if( !f->boundary() ) continue;
+
+                const double flux = flow_solution.outflux( f );
+                if( flux >= 0.0 ) continue;
+
+                const double frac_flow = calc_frac_flow( frac_flow_by_bid, this->bcond_, this->res_prop_, c, f );
+
+                inflow += { flux * frac_flow, flux * ( 1.0 - frac_flow ) };
+            }
+        }
+
+        water_inout = std::make_pair( in.water, out.water );
+        oil_inout = std::make_pair( in.oil, out.oil );
+
     }
-
-
-
-
 } // namespace Opm
 
 
