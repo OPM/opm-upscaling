@@ -65,7 +65,6 @@
 #include <sys/utsname.h>
 
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
-#include <opm/core/utility/Units.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 #include <opm/upscaling/ParserAdditions.hpp>
 
@@ -149,9 +148,7 @@ try
    options.insert(make_pair("linsolver_tolerance", "1e-12"));  // used for swir/swmax check in upscale_cap
 
    // Conversion factor, multiply mD numbers with this to get m² numbers
-   const double milliDarcyToSqMetre =
-       Opm::unit::convert::to(1.0*Opm::prefix::milli*Opm::unit::darcy,
-                              Opm::unit::square(Opm::unit::meter));
+   const double milliDarcyToSqMetre = 9.869233e-16;
    // Reference: http://www.spe.org/spe-site/spe/spe/papers/authors/Metric_Standard.pdf
 
 

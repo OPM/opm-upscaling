@@ -77,7 +77,6 @@
 #endif
 
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
-#include <opm/core/utility/Units.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 #include <opm/upscaling/ParserAdditions.hpp>
 
@@ -257,9 +256,7 @@ try
    options.insert(make_pair("linsolver_smooth_steps", "1")); // Number of pre and postsmoothing steps for AMG
 
    // Conversion factor, multiply mD numbers with this to get m² numbers
-   const double milliDarcyToSqMetre =
-       Opm::unit::convert::to(1.0*Opm::prefix::milli*Opm::unit::darcy,
-                              Opm::unit::square(Opm::unit::meter));
+   const double milliDarcyToSqMetre = 9.869233e-16;
    // Reference: http://www.spe.org/spe-site/spe/spe/papers/authors/Metric_Standard.pdf
 
    /* Check first if there is anything on the command line to look for */
@@ -401,9 +398,9 @@ try
        usageandexit();  
    }  
 
-   vector<double>  poros = deck->getKeyword("PORO")->getRawDoubleData();
-   vector<double> permxs = deck->getKeyword("PERMX")->getRawDoubleData();
-   vector<double> zcorns = deck->getKeyword("ZCORN")->getRawDoubleData();
+   vector<double>  poros = deck->getKeyword("PORO")->getSIDoubleData();  
+   vector<double> permxs = deck->getKeyword("PERMX")->getSIDoubleData();  
+   vector<double> zcorns = deck->getKeyword("ZCORN")->getSIDoubleData();
 
    Opm::DeckRecordConstPtr specgridRecord = deck->getKeyword("SPECGRID")->getRecord(0);
    int x_res = specgridRecord->getItem("NX")->getInt(0);
@@ -415,8 +412,8 @@ try
    
    if (deck->hasKeyword("PERMY") && deck->hasKeyword("PERMZ")) {
        anisotropic_input = true;
-       permys = deck->getKeyword("PERMY")->getRawDoubleData();
-       permzs = deck->getKeyword("PERMZ")->getRawDoubleData();
+       permys = deck->getKeyword("PERMY")->getSIDoubleData();
+       permzs = deck->getKeyword("PERMZ")->getSIDoubleData();
        if (isMaster) cout << "Info: PERMY and PERMZ present, going into anisotropic input mode, no J-functions\n"; 
        if (isMaster) cout << "      Options -relPermCurve and -jFunctionCurve is meaningless.\n"; 
    } 
