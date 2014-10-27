@@ -39,7 +39,7 @@ inline void addNonStandardUpscalingKeywords(Opm::ParserPtr parser)
         "{\"name\" : \"RHO\", \"sections\" : [], \"data\" : {\"value_type\" : \"DOUBLE\" }}\n";
 
     Json::JsonObject rhoJson(rhoJsonData);
-    Opm::ParserKeywordConstPtr rhoKeyword = Opm::ParserKeyword::createFromJson(rhoJson);
+    Opm::ParserKeywordConstPtr rhoKeyword = Opm::ParserKeyword::createFromJson(parser->getParserLog(), rhoJson);
     parser->addParserKeyword(rhoKeyword);
 }
 
