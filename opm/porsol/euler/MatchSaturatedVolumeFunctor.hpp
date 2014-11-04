@@ -40,6 +40,7 @@
 #include <boost/bind.hpp>
 #include <utility>
 #include <vector>
+#include <algorithm>
 
 
 namespace Opm

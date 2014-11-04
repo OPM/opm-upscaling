@@ -6,6 +6,9 @@
 #include <opm/porsol/common/LinearSolverISTL.hpp>
 #include <dune/istl/operators.hh>
 #include <dune/istl/solvers.hh>
+#include <dune/istl/bvector.hh>
+#include <dune/istl/bcrsmatrix.hh>
+#include <dune/istl/preconditioners.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>

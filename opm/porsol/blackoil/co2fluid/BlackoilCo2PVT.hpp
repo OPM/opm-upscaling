@@ -19,6 +19,7 @@
 
 #ifndef OPM_BLACKOILCO2PVT_HEADER_INCLUDED
 #define OPM_BLACKOILCO2PVT_HEADER_INCLUDED
+#define OPM_BLACKOILPVT_HEADER_INCLUDED
 
 #define OPM_DEPRECATED __attribute__((deprecated))
 #define OPM_DEPRECATED_MSG(msg) __attribute__((deprecated))
@@ -490,6 +491,7 @@ void BlackoilCo2PVT::computeState(BlackoilCo2PVT::SubState& ss, double zBrine, d
     
     
     
+typedef BlackoilCo2PVT BlackoilPVT;
 
 } // Opm
 

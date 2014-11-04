@@ -37,6 +37,7 @@
 #define OPENRS_SETUPBOUNDARYCONDITIONS_HEADER
 
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
+#include <opm/core/utility/Units.hpp>
 #include <opm/porsol/common/BoundaryConditions.hpp>
 #include <opm/porsol/common/PeriodicHelpers.hpp>
 

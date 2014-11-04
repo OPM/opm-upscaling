@@ -23,10 +23,11 @@
 
 #include <opm/porsol/mimetic/TpfaCompressibleAssembler.hpp>
 #include <opm/porsol/blackoil/BlackoilFluid.hpp>
+#include <opm/porsol/common/LinearSolverISTL.hpp>
+#include <opm/porsol/common/BoundaryConditions.hpp>
 
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/utility/SparseTable.hpp>
-#include <opm/porsol/common/LinearSolverISTL.hpp>
 
 #include <array>
 #include <iostream>

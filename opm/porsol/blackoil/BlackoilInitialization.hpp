@@ -21,6 +21,8 @@
 #define OPM_BLACKOILINITIALIZATION_HEADER_INCLUDED
 
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
+#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/core/utility/Units.hpp>
 
 #include <iostream>
 
