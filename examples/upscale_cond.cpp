@@ -69,6 +69,7 @@
 #endif
 
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
+#include <opm/core/utility/Units.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 #include <opm/upscaling/ParserAdditions.hpp>
  
@@ -235,7 +236,9 @@ try
    options.insert(make_pair("rock6satexp", "0"));
 
    // Conversion factor, multiply mD numbers with this to get m² numbers
-   const double milliDarcyToSqMetre = 9.869233e-16;
+   const double milliDarcyToSqMetre =
+       Opm::unit::convert::to(1.0*Opm::prefix::milli*Opm::unit::darcy,
+                              Opm::unit::square(Opm::unit::meter));
    // Reference: http://www.spe.org/spe-site/spe/spe/papers/authors/Metric_Standard.pdf
  
    /*
@@ -352,8 +355,8 @@ try
    const int points                = atoi(options["points"].c_str());
 
    vector<int> satnums   = deck->getKeyword("SATNUM")->getIntData();
-   vector<double> poros  = deck->getKeyword("PORO")->getSIDoubleData();
-   vector<double> permxs = deck->getKeyword("PERMX")->getSIDoubleData();
+   vector<double> poros  = deck->getKeyword("PORO")->getRawDoubleData();
+   vector<double> permxs = deck->getKeyword("PERMX")->getRawDoubleData();
    const double minPerm = atof(options["minPerm"].c_str()); 
    const double minPoro = atof(options["minPoro"].c_str());
 
