@@ -26,6 +26,7 @@
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
 #include <dune/common/parallel/mpihelper.hh>
 #else
+#include <dune/common/mpihelper.hh>
 #endif
 
 #include <opm/porsol/common/SimulatorUtilities.hpp>
@@ -41,7 +42,6 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 #include <dune/grid/CpGrid.hpp>
-#include <dune/common/mpihelper.hh>
 
 #include <iostream>
 
