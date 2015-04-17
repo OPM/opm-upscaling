@@ -35,18 +35,15 @@ Suggests: libopm-upscaling-doc
 Description: OPM upscaling library -- applications
  This module implements single-phase and steady-state upscaling methods.
 
-# Disabled until dune is bumped to 2.3.
-# No library built with 2.2.1 as elasticity code is excluded
-
-#Package: libopm-upscaling1
-#Section: libs
-#Pre-Depends: ${misc:Pre-Depends}, multiarch-support
-#Architecture: any
-#Multi-Arch: same
-#Depends: ${shlibs:Depends}, ${misc:Depends}
-#Provides: libopm-upscaling
-#Description: OPM upscaling library
-# This module implements single-phase and steady-state upscaling methods.
+Package: libopm-upscaling1
+Section: libs
+Pre-Depends: ${misc:Pre-Depends}, multiarch-support
+Architecture: any
+Multi-Arch: same
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Provides: libopm-upscaling
+Description: OPM upscaling library
+ This module implements single-phase and steady-state upscaling methods.
 
 Package: libopm-upscaling1-doc
 Section: doc
@@ -61,6 +58,6 @@ Section: debug
 Architecture: any
 Multi-Arch: foreign
 Provides: libopm-upscaling-dbg
-Depends: libopm-upscaling1 (= ${binary:Version}), ${misc:Depends}
+Depends: libopm-upscaling1 (= ${binary:Version}), libopm-upscaling1-bin (=${binary:Version}), ${misc:Depends}
 Description: OPM upscaling library -- debug symbols
  This module implements single-phase and steady-state upscaling methods.
