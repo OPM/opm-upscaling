@@ -27,7 +27,7 @@
 #ifndef OPM_BENCHMARK3_CO2TABLES_HH
 #define OPM_BENCHMARK3_CO2TABLES_HH
 
-#include <opm/material/UniformTabulated2DFunction.hpp>
+#include <opm/material/common/UniformTabulated2DFunction.hpp>
 
 #include <assert.h>
 
