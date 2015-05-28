@@ -25,8 +25,8 @@
 set(tol 1e-2)
 
 # Define some paths
-set(RESULT_PATH ${PROJECT_BINARY_DIR}/tests/results/)
-set(INPUT_DATA_PATH ${PROJECT_BINARY_DIR}/tests/input_data/)
+set(RESULT_PATH ${PROJECT_BINARY_DIR}/tests/results)
+set(INPUT_DATA_PATH ${PROJECT_BINARY_DIR}/tests/input_data)
 
 # Create directory to store upscaling results in
 file(MAKE_DIRECTORY ${RESULT_PATH})
@@ -45,21 +45,15 @@ file(MAKE_DIRECTORY ${RESULT_PATH})
 # and that upscale_perm_BC${bcs}_${gridname}.txt is found in ${INPUT_DATA_PATH}reference_solutions
 macro (add_test_upscale_perm gridname bcs rows)
   # Add test that runs upscale_perm and outputs the results to file
-  add_test(NAME run_upscale_perm_BC${bcs}_${gridname}
-           COMMAND upscale_perm
-           -bc ${bcs}
-           -output ${RESULT_PATH}upscale_perm_BC${bcs}_${gridname}.txt
-           ${INPUT_DATA_PATH}grids/${gridname}.grdecl)
-  # Add test that compare the results from the previous test with a reference solution
-  add_test(NAME compare_upscale_perm_BC${bcs}_${gridname}
-           COMMAND compare_upscaling_results
-           ${INPUT_DATA_PATH}reference_solutions/upscale_perm_BC${bcs}_${gridname}.txt
-           ${RESULT_PATH}upscale_perm_BC${bcs}_${gridname}.txt
-           ${tol}
-           ${rows} 3)
-  # Set dependency of the two tests
-  set_tests_properties(compare_upscale_perm_BC${bcs}_${gridname} PROPERTIES DEPENDS
-                       run_upscale_perm_BC${bcs}_${gridname})
+  opm_add_test(upscale_perm_BC${bcs}_${gridname} NO_COMPILE
+               EXE_NAME upscale_perm
+               DRIVER_ARGS ${INPUT_DATA_PATH} ${RESULT_PATH}
+                           ${CMAKE_BINARY_DIR}/bin
+                           upscale_perm_BC${bcs}_${gridname}
+                           ${tol} ${rows} 3
+               TEST_ARGS -bc ${bcs}
+                         -output ${RESULT_PATH}upscale_perm_BC${bcs}_${gridname}.txt
+                         ${INPUT_DATA_PATH}/grids/${gridname}.grdecl)
 endmacro (add_test_upscale_perm gridname bcs)
 
 ###########################################################################
@@ -74,27 +68,23 @@ endmacro (add_test_upscale_perm gridname bcs)
 # and that upscale_elasticity_${method}_${gridname}.txt is found in ${INPUT_DATA_PATH}reference_solutions
 macro (add_test_upscale_elasticity gridname method)
   # Add test that runs upscale_perm and outputs the results to file
-  add_test(NAME run_upscale_elasticity_${method}_${gridname}
-           COMMAND upscale_elasticity
-           output=${RESULT_PATH}upscale_elasticity_${method}_${gridname}.txt
-           gridfilename=${INPUT_DATA_PATH}grids/${gridname}.grdecl
-           method=${method})
-  # Add test that compare the results from the previous test with a reference solution
-  add_test(NAME compare_upscale_elasticity_${method}_${gridname}
-           COMMAND compare_upscaling_results
-           ${INPUT_DATA_PATH}reference_solutions/upscale_elasticity_${method}_${gridname}.txt
-           ${RESULT_PATH}upscale_elasticity_${method}_${gridname}.txt
-           ${tol}
-           6 6)
-  # Set dependency of the two tests
-  set_tests_properties(compare_upscale_elasticity_${method}_${gridname} PROPERTIES DEPENDS
-                       run_upscale_elasticity_${method}_${gridname})
+  opm_add_test(upscale_elasticity_${method}_${gridname} NO_COMPILE
+               EXE_NAME upscale_elasticity
+               DRIVER_ARGS ${INPUT_DATA_PATH} ${RESULT_PATH}
+                           ${CMAKE_BINARY_DIR}/bin
+                           upscale_elasticity_${method}_${gridname}
+                           ${tol} 6 6
+               TEST_ARGS output=${RESULT_PATH}/upscale_elasticity_${method}_${gridname}.txt
+                         gridfilename=${INPUT_DATA_PATH}/grids/${gridname}.grdecl
+                         method=${method})
 endmacro (add_test_upscale_elasticity gridname method rows)
 
 # Make sure that we build the helper executable before running tests
 # (the "tests" target is setup in OpmLibMain.cmake)
-add_dependencies (tests upscale_perm)
-add_dependencies (tests compare_upscaling_results)
+add_custom_target(test-suite)
+add_dependencies (test-suite datafiles upscale_perm)
+add_dependencies (test-suite compare_upscaling_results)
+opm_set_test_driver(${PROJECT_SOURCE_DIR}/tests/runtest.sh "")
 
 # Add tests for different models
 add_test_upscale_perm(PeriodicTilted p 3)
@@ -105,7 +95,7 @@ add_test_upscale_perm(Hummocky flp 9)
 
 if((DUNE_ISTL_VERSION_MAJOR GREATER 2) OR
    (DUNE_ISTL_VERSION_MAJOR EQUAL 2 AND DUNE_ISTL_VERSION_MINOR GREATER 2))
-  add_dependencies (tests upscale_elasticity)
+  add_dependencies (test-suite upscale_elasticity)
   add_test_upscale_elasticity(EightCells mpc)
   add_test_upscale_elasticity(EightCells mortar)
 endif()
