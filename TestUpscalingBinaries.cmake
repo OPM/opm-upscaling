@@ -25,8 +25,8 @@
 set(tol 1e-2)
 
 # Define some paths
-set(RESULT_PATH ${PROJECT_BINARY_DIR}/tests/results/)
-set(INPUT_DATA_PATH ${PROJECT_BINARY_DIR}/tests/input_data/)
+set(RESULT_PATH ${PROJECT_BINARY_DIR}/tests/results)
+set(INPUT_DATA_PATH ${PROJECT_BINARY_DIR}/tests/input_data)
 
 # Create directory to store upscaling results in
 file(MAKE_DIRECTORY ${RESULT_PATH})
@@ -45,18 +45,15 @@ file(MAKE_DIRECTORY ${RESULT_PATH})
 # and that upscale_perm_BC${bcs}_${gridname}.txt is found in ${INPUT_DATA_PATH}reference_solutions
 macro (add_test_upscale_perm gridname bcs rows)
   # Add test that runs upscale_perm and outputs the results to file
-  opm_add_test(run_upscale_perm_BC${bcs}_${gridname} NO_COMPILE
+  opm_add_test(upscale_perm_BC${bcs}_${gridname} NO_COMPILE
                EXE_NAME upscale_perm
+               DRIVER_ARGS ${INPUT_DATA_PATH} ${RESULT_PATH}
+                           ${CMAKE_BINARY_DIR}/bin
+                           upscale_perm_BC${bcs}_${gridname}
+                           ${tol} ${rows} 3
                TEST_ARGS -bc ${bcs}
                          -output ${RESULT_PATH}upscale_perm_BC${bcs}_${gridname}.txt
-                         ${INPUT_DATA_PATH}grids/${gridname}.grdecl)
-  # Add test that compare the results from the previous test with a reference solution
-  opm_add_test(compare_upscale_perm_BC${bcs}_${gridname} NO_COMPILE
-               EXE_NAME compare_upscaling_results
-               TEST_ARGS ${INPUT_DATA_PATH}reference_solutions/upscale_perm_BC${bcs}_${gridname}.txt
-                         ${RESULT_PATH}upscale_perm_BC${bcs}_${gridname}.txt
-                         ${tol} ${rows} 3
-               TEST_DEPENDS run_upscale_perm_BC${bcs}_${gridname})
+                         ${INPUT_DATA_PATH}/grids/${gridname}.grdecl)
 endmacro (add_test_upscale_perm gridname bcs)
 
 ###########################################################################
@@ -71,18 +68,15 @@ endmacro (add_test_upscale_perm gridname bcs)
 # and that upscale_elasticity_${method}_${gridname}.txt is found in ${INPUT_DATA_PATH}reference_solutions
 macro (add_test_upscale_elasticity gridname method)
   # Add test that runs upscale_perm and outputs the results to file
-  opm_add_test(run_upscale_elasticity_${method}_${gridname} NO_COMPILE
+  opm_add_test(upscale_elasticity_${method}_${gridname} NO_COMPILE
                EXE_NAME upscale_elasticity
-               TEST_ARGS output=${RESULT_PATH}upscale_elasticity_${method}_${gridname}.txt
-                         gridfilename=${INPUT_DATA_PATH}grids/${gridname}.grdecl
+               DRIVER_ARGS ${INPUT_DATA_PATH} ${RESULT_PATH}
+                           ${CMAKE_BINARY_DIR}/bin
+                           upscale_elasticity_${method}_${gridname}
+                           ${tol} 6 6
+               TEST_ARGS output=${RESULT_PATH}/upscale_elasticity_${method}_${gridname}.txt
+                         gridfilename=${INPUT_DATA_PATH}/grids/${gridname}.grdecl
                          method=${method})
-  # Add test that compare the results from the previous test with a reference solution
-  opm_add_test(compare_upscale_elasticity_${method}_${gridname} NO_COMPILE
-               EXE_NAME compare_upscaling_results
-               TEST_ARGS ${INPUT_DATA_PATH}reference_solutions/upscale_elasticity_${method}_${gridname}.txt
-                         ${RESULT_PATH}upscale_elasticity_${method}_${gridname}.txt
-                         ${tol} 6 6
-               TEST_DEPENDS run_upscale_elasticity_${method}_${gridname})
 endmacro (add_test_upscale_elasticity gridname method rows)
 
 # Make sure that we build the helper executable before running tests
@@ -90,6 +84,7 @@ endmacro (add_test_upscale_elasticity gridname method rows)
 add_custom_target(test-suite)
 add_dependencies (test-suite datafiles upscale_perm)
 add_dependencies (test-suite compare_upscaling_results)
+opm_set_test_driver(${PROJECT_SOURCE_DIR}/tests/runtest.sh "")
 
 # Add tests for different models
 add_test_upscale_perm(PeriodicTilted p 3)
