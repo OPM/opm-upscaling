@@ -52,7 +52,7 @@ macro (add_test_upscale_perm gridname bcs rows)
                            upscale_perm_BC${bcs}_${gridname}
                            ${tol} ${rows} 3
                TEST_ARGS -bc ${bcs}
-                         -output ${RESULT_PATH}upscale_perm_BC${bcs}_${gridname}.txt
+                         -output ${RESULT_PATH}/upscale_perm_BC${bcs}_${gridname}.txt
                          ${INPUT_DATA_PATH}/grids/${gridname}.grdecl)
 endmacro (add_test_upscale_perm gridname bcs)
 
