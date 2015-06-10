@@ -39,8 +39,7 @@ inline void addNonStandardUpscalingKeywords(Opm::ParserPtr parser)
         "{\"name\" : \"RHO\", \"sections\" : [], \"data\" : {\"value_type\" : \"DOUBLE\" }}\n";
 
     Json::JsonObject rhoJson(rhoJsonData);
-    Opm::ParserKeywordConstPtr rhoKeyword = Opm::ParserKeyword::createFromJson(rhoJson);
-    parser->addParserKeyword(rhoKeyword);
+    parser->addParserKeyword( std::make_shared<const ParserKeyword>( rhoJson ));
 }
 
 }
