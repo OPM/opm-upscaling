@@ -1631,7 +1631,7 @@ try
                    for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) {
                        sendbuffer[2+tensorElementCount+voigtIdx] = Phase2Perm[idx][voigtIdx];
                    }                   
-                   MPI_Send(sendbuffer, 2+tensorElementCount, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+                   MPI_Send(sendbuffer, 2+2*tensorElementCount, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
                }
                else {
                    double sendbuffer[2+tensorElementCount];
