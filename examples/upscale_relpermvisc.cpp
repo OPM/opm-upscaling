@@ -1394,8 +1394,8 @@ try
             for (int idx=0; idx < points; ++idx) {
                 if (node_vs_fracflowratiopoint[idx] != 0) {
                     // Receive data
-                    double recvbuffer[2+tensorElementCount];
-                    MPI_Recv(recvbuffer, 2+tensorElementCount, MPI_DOUBLE, 
+                    std::vector<double> recvbuffer(2+tensorElementCount);
+                    MPI_Recv(recvbuffer.data(), recvbuffer.size(), MPI_DOUBLE,
                              node_vs_fracflowratiopoint[idx], 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                     // Put received data into correct place.
                     WaterSaturation[(int)recvbuffer[0]] = recvbuffer[1];
@@ -1411,13 +1411,13 @@ try
             for (int idx=0; idx < points; ++idx) {
                 if (node_vs_fracflowratiopoint[idx] == mpi_rank) {
                     // Pack and send data. C-style.
-                    double sendbuffer[2+tensorElementCount];
+                    std::vector<double> sendbuffer(2+tensorElementCount);
                     sendbuffer[0] = (double)idx;
                     sendbuffer[1] = WaterSaturation[idx];
                     for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) {
                         sendbuffer[2+voigtIdx] = PhasePerm[phase][idx][voigtIdx];
                     }
-                    MPI_Send(sendbuffer, 2+tensorElementCount, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+                    MPI_Send(sendbuffer.data(), sendbuffer.size(), MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
                 }
             }
         }
