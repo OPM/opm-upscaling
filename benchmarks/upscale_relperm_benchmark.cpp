@@ -116,24 +116,14 @@
 #include <opm/core/utility/Units.hpp>
 
 // Choose model:
-//   - Debug: MODEL_TYPE 0  (1138 active cells, ~0 MB)
 //   - Small: MODEL_TYPE 1  (35751 active cells, ~5 MB)
-//   - Large: MODEL_TYPE 2  (175045 active cells, ~23 MB)
 #define MODEL_TYPE 1
 
 // Define tolerance to be used when comparing results.
 double tolerance = 1e-4;
 
 // Include eclipse grid file and reference solution by embedding hexadecimal input data files.
-#if MODEL_TYPE == 0
-char model_name[] = "Debug";
-unsigned char eclipseInput[] = {
-    #include <benchmarks/input/benchmark_tiny_grid.grdecl.gz.hex>
-};
-unsigned char resultString[] = {
-    #include <benchmarks/input/benchmark_tiny_upscaled_relperm.out.gz.hex>
-};
-#elif MODEL_TYPE == 1
+#if MODEL_TYPE == 1
 char model_name[] = "Small";
 unsigned char eclipseInput[] = {
     #include <benchmarks/input/benchmark20_grid.grdecl.gz.hex>
@@ -141,16 +131,8 @@ unsigned char eclipseInput[] = {
 unsigned char resultString[] = {
     #include <benchmarks/input/benchmark20_upscaled_relperm.out.gz.hex>
 };
-#elif MODEL_TYPE == 2
-char model_name[] = "Large";
-unsigned char eclipseInput[] = {
-    #include <benchmarks/input/benchmark75_grid.grdecl.gz.hex>
-};
-unsigned char resultString[] = {
-    #include <benchmarks/input/benchmark75_upscaled_relperm.out.gz.hex>
-};
 #else
-#error The macro 'MODEL_TYPE' is invalid. Possible values are 0-2.
+#error The macro 'MODEL_TYPE' is invalid. Possible values are 1-1.
 #endif
 
 // Include rock file by embedding hexadecimal input data file.
