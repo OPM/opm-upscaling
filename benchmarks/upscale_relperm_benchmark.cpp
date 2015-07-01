@@ -169,6 +169,8 @@ void usageandexit() {
     exit(1);
 }
 
+static const std::vector<size_t> voigt_idx_tab = {0,4,8,5,2,1,7,6,3};
+
 // Assumes that permtensor_t use C ordering.
 double getVoigtValue(const SinglePhaseUpscaler::permtensor_t& K, int voigt_idx)
 {
@@ -177,21 +179,12 @@ double getVoigtValue(const SinglePhaseUpscaler::permtensor_t& K, int voigt_idx)
                  "Function getVoigtValue() is only supported "
                  "for 3-by-3 tensors");
 #endif
-
-    switch (voigt_idx) {
-    case 0: return K.data()[0];
-    case 1: return K.data()[4];
-    case 2: return K.data()[8];
-    case 3: return K.data()[5];
-    case 4: return K.data()[2];
-    case 5: return K.data()[1];
-    case 6: return K.data()[7];
-    case 7: return K.data()[6];
-    case 8: return K.data()[3];
-    default:
-        std::cout << "Voigt index out of bounds (only 0-8 allowed)" << std::endl;
+    if (voigt_idx < 0 || voigt_idx > 8) {
+        std::cerr << "Voigt index out of bounds (only 0-8 allowed)" << std::endl;
         throw std::exception();
     }
+
+    return K.data()[voigt_idx_tab[voigt_idx]];
 }
 
 
@@ -204,20 +197,12 @@ void setVoigtValue(SinglePhaseUpscaler::permtensor_t& K, int voigt_idx, double v
                  "for 3-by-3 tensors.");
 #endif
 
-    switch (voigt_idx) {
-    case 0: K.data()[0] = val; break;
-    case 1: K.data()[4] = val; break;
-    case 2: K.data()[8] = val; break;
-    case 3: K.data()[5] = val; break;
-    case 4: K.data()[2] = val; break;
-    case 5: K.data()[1] = val; break;
-    case 6: K.data()[7] = val; break;
-    case 7: K.data()[6] = val; break;
-    case 8: K.data()[3] = val; break;
-    default:
-        std::cout << "Voigt index out of bounds (only 0-8 allowed)" << std::endl;
+    if (voigt_idx < 0 || voigt_idx > 8) {
+        std::cerr << "Voigt index out of bounds (only 0-8 allowed)" << std::endl;
         throw std::exception();
     }
+
+    K.data()[voigt_idx_tab[voigt_idx]] = val;
 }
 
 void inflate (const unsigned char* input, const int size, stringstream& output) {
