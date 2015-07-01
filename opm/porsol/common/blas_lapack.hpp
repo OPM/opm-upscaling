@@ -196,14 +196,7 @@ namespace Opm {
                           const int     m     , const int     n,
                           const double& a1    , const double* A, const int ldA,
                                                 const double* x, const int incX,
-                          const double& a2    ,       double* y, const int incY)
-        {
-            assert((transA[0] == 'N') || (transA[0] == 'T'));
-
-            DGEMV(F77_CHARACTER(transA[0]),
-                  &m, &n, &a1, A, &ldA, x, &incX, &a2, y, &incY);
-        }
-
+                          const double& a2    ,       double* y, const int incY);
 
         //--------------------------------------------------------------------------
         /// @brief GEneral Matrix Matrix product (Level 3 BLAS).
@@ -278,14 +271,7 @@ namespace Opm {
                           const int     m     , const int     n     , const int k  ,
                           const double& a1    , const double* A     , const int ldA,
                                                 const double* B     , const int ldB,
-                          const double& a2    ,       double* C     , const int ldC)
-        {
-            assert((transA[0] == 'N') || (transA[0] == 'T'));
-            assert((transB[0] == 'N') || (transB[0] == 'T'));
-
-            DGEMM(F77_CHARACTER(transA[0]), F77_CHARACTER(transB[0]),
-                  &m, &n, &k, &a1, A, &ldA, B, &ldB, &a2, C, &ldC);
-        }
+                          const double& a2    ,       double* C     , const int ldC);
 
 
         //--------------------------------------------------------------------------
@@ -303,16 +289,7 @@ namespace Opm {
         void SYRK<double>(const char*   uplo, const char*   trans,
                           const int     n   , const int     k    ,
                           const double& a1  , const double* A    , const int ldA,
-                          const double& a2  ,       double* C    , const int ldC)
-        {
-            assert((uplo[0]  == 'U') || (uplo[0]  == 'L'));
-            assert((trans[0] == 'N') || (trans[0] == 'T'));
-
-            DSYRK(F77_CHARACTER(uplo[0]), F77_CHARACTER(trans[0]),
-                  &n, &k, &a1, A, &ldA, &a2, C, &ldC);
-        }
-
-
+                          const double& a2  ,       double* C    , const int ldC);
 
         //--------------------------------------------------------------------------
         /// @brief TRiangular Matrix Matrix product (Level 2 BLAS)
@@ -331,18 +308,7 @@ namespace Opm {
                           const char*   transA, const char* diag,
                           const int     m     , const int   n   , const double& a,
                           const double* A     , const int   ldA ,
-                                double* B     , const int   ldB)
-        {
-            assert((side[0]   == 'L') || (side[0]   == 'R'));
-            assert((uplo[0]   == 'U') || (uplo[0]   == 'L'));
-            assert((transA[0] == 'N') || (transA[0] == 'T'));
-            assert((diag[0]   == 'N') || (diag[0]   == 'U'));
-
-            DTRMM(F77_CHARACTER(side[0])  , F77_CHARACTER(uplo[0]),
-                  F77_CHARACTER(transA[0]), F77_CHARACTER(diag[0]),
-                  &m, &n, &a, A, &ldA, B, &ldB);
-        }
-
+                                double* B     , const int   ldB);
 
         //--------------------------------------------------------------------------
         /// @brief GEneral matrix QR Factorization (LAPACK)
@@ -359,11 +325,7 @@ namespace Opm {
         void GEQRF<double>(const int     m    , const int     n   ,
                                  double* A    , const int     ld  ,
                                  double* tau  ,       double* work,
-                           const int     lwork,       int&    info)
-        {
-            DGEQRF(&m, &n, A, &ld, tau, work, &lwork, &info);
-        }
-
+                           const int     lwork,       int&    info);
 
         //--------------------------------------------------------------------------
         /// @brief ORthogonal matrix Generator from QR factorization (LAPACK).
@@ -380,11 +342,7 @@ namespace Opm {
         template<>
         void ORGQR<double>(const int     m   , const int n    , const int     k  ,
                                  double* A   , const int ld   , const double* tau,
-                                 double* work, const int lwork,       int&    info)
-        {
-            DORGQR(&m, &n, &k, A, &ld, tau, work, &lwork, &info);
-        }
-
+                                 double* work, const int lwork,       int&    info);
 
         //--------------------------------------------------------------------------
         /// @brief GEneral matrix TRiangular Factorization (LAPACK).
@@ -398,12 +356,7 @@ namespace Opm {
         ///    GEneral matrix TRiangular Factorization specialization for double.
         template<>
         void GETRF<double>(const int m, const int n , double* A,
-                           const int ld, int* ipiv, int& info)
-        {
-            DGETRF(&m, &n, A, &ld, ipiv, &info);
-        }
-
-
+                           const int ld, int* ipiv, int& info);
 
         //--------------------------------------------------------------------------
         /// @brief GEneral matrix TRiangular Inversion (LAPACK).
@@ -416,10 +369,7 @@ namespace Opm {
         /// @brief GEneral matrix TRiangular Inversion specialization for double.
         template<>
         void GETRI(const int  n   , double* A   , const int ld,
-                   const int* ipiv, double* work, int lwork, int& info)
-        {
-            DGETRI(&n, A, &ld, ipiv, work, &lwork, &info);
-        }
+                   const int* ipiv, double* work, int lwork, int& info);
     } // namespace BLAS_LAPACK
 } // namespace Opm
 
