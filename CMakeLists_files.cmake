@@ -68,6 +68,10 @@ list (APPEND EXAMPLE_SOURCE_FILES
 	tests/compare_upscaling_results.cpp
 	)
 
+list (APPEND ADDITIONAL_SOURCE_FILES
+  benchmarks/upscale_relperm_benchmark.cpp
+	   )
+
 # originally generated with the command:
 # find attic -name '*.c*' -printf '\t%p\n' | sort
 list (APPEND ATTIC_FILES
