@@ -119,10 +119,8 @@ namespace Opm
 
 
     namespace ImplicitCapillarityDetails {
-        void thresholdMobility(double& m, double threshold)
-        {
-            m = std::max(m, threshold);
-        }
+        void thresholdMobility(double& m, double threshold);
+
         // The matrix variant expects diagonal mobilities.
         template <class SomeMatrixType>
         void thresholdMobility(SomeMatrixType& m, double threshold)

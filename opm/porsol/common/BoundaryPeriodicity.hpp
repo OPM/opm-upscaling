@@ -79,33 +79,7 @@ namespace Opm
     /// @param[in] lower lower end of search interval [lower, upper)
     /// @param[in] upper upper end of search interval [lower, upper)
     /// @return true if a match was found, otherwise false
-    bool match(std::vector<BoundaryFaceInfo>& bfaces, int face, int lower, int upper)
-    {
-	const double area_tol = 1e-6;
-	const double centroid_tol = 1e-6;
-	int cp = bfaces[face].canon_pos;
-	int target_cp = (cp%2 == 0) ? cp + 1 : cp - 1;
-	Dune::FieldVector<double, 3> cent_this = bfaces[face].centroid;
-	for (int j = lower; j < upper; ++j) {
-	    if (bfaces[j].canon_pos == target_cp) {
-		if (fabs(bfaces[face].area - bfaces[j].area) <= area_tol) {
-		    Dune::FieldVector<double, 3> cent_other = bfaces[j].centroid;
-		    cent_other -= cent_this;
-		    double dist = cent_other.two_norm();
-		    if (dist <= centroid_tol) {
-			bfaces[face].partner_face_index = bfaces[j].face_index;
-			bfaces[face].partner_bid = bfaces[j].bid;
-			bfaces[j].partner_face_index = bfaces[face].face_index;
-			bfaces[j].partner_bid = bfaces[face].bid;
-			break;
-		    }
-		}
-	    }
-	}
-	return (bfaces[face].partner_face_index != -1);
-    }
-
-
+    bool match(std::vector<BoundaryFaceInfo>& bfaces, int face, int lower, int upper);
 
     /// @brief Common implementation for the various createPeriodic functions.
     template <class GridView>
