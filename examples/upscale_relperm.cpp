@@ -1263,14 +1263,14 @@ try
    for (int idx=0; idx < helper.points; ++idx) {
        helper.WaterSaturation.push_back(0.0);
        vector<double> tmp;
-       helper.PhasePerm.push_back(tmp);
+       helper.PhasePerm[0].push_back(tmp);
        for (int voigtIdx=0; voigtIdx < helper.tensorElementCount; ++voigtIdx) { 
-           helper.PhasePerm[idx].push_back(0.0); 
+           helper.PhasePerm[0][idx].push_back(0.0);
        } 
        if (helper.upscaleBothPhases){
-           helper.Phase2Perm.push_back(tmp);
+           helper.PhasePerm[1].push_back(tmp);
            for (int voigtIdx=0; voigtIdx < helper.tensorElementCount; ++voigtIdx) { 
-               helper.Phase2Perm[idx].push_back(0.0); 
+               helper.PhasePerm[1][idx].push_back(0.0);
            }            
        }
    }
@@ -1499,10 +1499,10 @@ try
            cout << Ptestvalue << "\t" << helper.WaterSaturation[pointidx];
            // Store and print phase-perm-result
            for (int voigtIdx=0; voigtIdx < helper.tensorElementCount; ++voigtIdx) {
-               helper.PhasePerm[pointidx][voigtIdx] = getVoigtValue(phasePermTensor, voigtIdx); 
+               helper.PhasePerm[0][pointidx][voigtIdx] = getVoigtValue(phasePermTensor, voigtIdx);
                cout << "\t" << getVoigtValue(phasePermTensor, voigtIdx);
                if (helper.upscaleBothPhases){
-                   helper.Phase2Perm[pointidx][voigtIdx] = getVoigtValue(phase2PermTensor, voigtIdx);
+                   helper.PhasePerm[1][pointidx][voigtIdx] = getVoigtValue(phase2PermTensor, voigtIdx);
                    cout << "\t" << getVoigtValue(phase2PermTensor, voigtIdx);
                }
            } 
@@ -1544,7 +1544,7 @@ try
            Matrix phasePermTensor = zeroMatrix;
            zero(phasePermTensor);
            for (int voigtIdx = 0; voigtIdx < helper.tensorElementCount; ++voigtIdx) {
-               setVoigtValue(phasePermTensor, voigtIdx, helper.PhasePerm[idx][voigtIdx]);
+               setVoigtValue(phasePermTensor, voigtIdx, helper.PhasePerm[0][idx][voigtIdx]);
            }
            //cout << phasePermTensor << endl;
            Matrix relPermTensor = zeroMatrix;
@@ -1570,7 +1570,7 @@ try
                Matrix phasePermTensor = zeroMatrix;
                zero(phasePermTensor);
                for (int voigtIdx = 0; voigtIdx < helper.tensorElementCount; ++voigtIdx) {
-                   setVoigtValue(phasePermTensor, voigtIdx, helper.Phase2Perm[idx][voigtIdx]);
+                   setVoigtValue(phasePermTensor, voigtIdx, helper.PhasePerm[1][idx][voigtIdx]);
                }
                //cout << phasePermTensor << endl;
                Matrix relPermTensor = zeroMatrix;

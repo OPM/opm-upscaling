@@ -26,6 +26,7 @@
 
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
+#include <array>
 #include <vector>
 
 namespace Opm {
@@ -53,8 +54,7 @@ namespace Opm {
       std::vector<int> node_vs_pressurepoint;      //!< Distribution of pressure points to MPI nodes.
       bool upscaleBothPhases;                      //!< Whether to upscale both phases.
       std::vector<double> WaterSaturation;         //!< Re-upscaled water saturation for the computed pressure points.
-      std::vector<std::vector<double>> PhasePerm;  //!< Phaseperm values per pressurepoint for first phase.
-      std::vector<std::vector<double>> Phase2Perm; //!< Phaseperm values per pressurepoint for second phase.
+      std::array<std::vector<std::vector<double>>,2> PhasePerm; //!< Permeability values per pressure point for each phase.
       SinglePhaseUpscaler::permtensor_t permTensor; //!< Tensor of upscaled results.
       SinglePhaseUpscaler::permtensor_t permTensorInv; //!< Inverted tensor of upscaled results.
       SinglePhaseUpscaler upscaler;                //!< The upscaler class.
