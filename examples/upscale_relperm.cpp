@@ -184,38 +184,38 @@ try
    /*
      Populate options-map with default values
    */
-   map<string,string> options;
-   options.insert(make_pair("bc",                 "f"     )); // Fixed boundary conditions 
-   options.insert(make_pair("points",             "30"   )); // Number of saturation points (uniformly distributed within saturation endpoints)
-   options.insert(make_pair("relPermCurve",       "2")); // Which column in the rock types are upscaled
-   options.insert(make_pair("upscaleBothPhases",  "true")); // Wheater to upscale for both phases in the same run. Default true.
-   options.insert(make_pair("jFunctionCurve",     "4")); // Which column in the rock type file is the J-function curve
-   options.insert(make_pair("surfaceTension",     "11")); // Surface tension given in dynes/cm
-   options.insert(make_pair("output",             "")); // If this is set, output goes to screen and to this file. 
-   options.insert(make_pair("gravity",            "0.0")); // default is no gravitational effects
-   options.insert(make_pair("waterDensity",       "1.0")); // default density of water, only applicable to gravity
-   options.insert(make_pair("oilDensity",         "0.6")); // ditto
-   options.insert(make_pair("interpolate",        "0"));    // default is not to interpolate
-   options.insert(make_pair("maxpoints",          "1000")); // maximal number of saturation points.
-   options.insert(make_pair("outputprecision",    "4")); // number of significant numbers to print
-   options.insert(make_pair("maxPermContrast",    "1e7")); // maximum allowed contrast in each single-phase computation
-   options.insert(make_pair("minPerm",            "1e-12")); // absolute minimum for allowed cell permeability
-   options.insert(make_pair("maxPerm",            "100000")); // maximal allowed cell permeability
-   options.insert(make_pair("minPoro",            "0.0001")); // this limit is necessary for pcmin/max computation
-   options.insert(make_pair("saturationThreshold","0.00001")); // accuracy threshold for saturation, we ignore Pc values that
-                                                              // give so small contributions near endpoints.
-   options.insert(make_pair("linsolver_tolerance", "1e-12"));  // residual tolerance for linear solver
-   options.insert(make_pair("linsolver_verbosity", "0"));     // verbosity level for linear solver
-   options.insert(make_pair("linsolver_max_iterations", "0"));         // Maximum number of iterations allow, specify 0 for default
-   options.insert(make_pair("linsolver_prolongate_factor", "1.0")); // Factor to scale the prolongate coarse grid correction,
-   options.insert(make_pair("linsolver_type",      "3"));     // type of linear solver: 0 = ILU/BiCGStab, 1 = AMG/CG, 2 = KAMG/CG, 3 = FastAMG/CG
-   options.insert(make_pair("fluids",              "ow")); // wheater upscaling for oil/water (ow) or gas/oil (go)
-   options.insert(make_pair("krowxswirr",          "-1")); // relative permeability in x direction of oil in corresponding oil/water system
-   options.insert(make_pair("krowyswirr",          "-1")); // relative permeability in y direction of oil in corresponding oil/water system
-   options.insert(make_pair("krowzswirr",          "-1")); // relative permeability in z direction of oil in corresponding oil/water system
-   options.insert(make_pair("doEclipseCheck",      "true")); // Check if minimum relpermvalues in input are zero (specify critical saturations)
-   options.insert(make_pair("critRelpermThresh",   "1e-6")); // Threshold for setting minimum relperm to 0 (thus specify critical saturations)
-   options.insert(make_pair("linsolver_smooth_steps", "1")); // Number of pre and postsmoothing steps for AMG
+   map<string,string> options =
+       {{"bc",                            "f"}, // Fixed boundary conditions
+        {"points",                       "30"}, // Number of saturation points (uniformly distributed within saturation endpoints)
+        {"relPermCurve",                  "2"}, // Which column in the rock types are upscaled
+        {"upscaleBothPhases",          "true"}, // Whether to upscale for both phases in the same run. Default true.
+        {"jFunctionCurve",                "4"}, // Which column in the rock type file is the J-function curve
+        {"surfaceTension",               "11"}, // Surface tension given in dynes/cm
+        {"output",                         ""}, // If this is set, output goes to screen and to this file.
+        {"gravity",                     "0.0"}, // default is no gravitational effects
+        {"waterDensity",                "1.0"}, // default density of water, only applicable to gravity
+        {"oilDensity",                  "0.6"}, // ditto
+        {"interpolate",                   "0"}, // default is not to interpolate
+        {"maxpoints",                  "1000"}, // maximal number of saturation points.
+        {"outputprecision",               "4"}, // number of significant numbers to print
+        {"maxPermContrast",             "1e7"}, // maximum allowed contrast in each single-phase computation
+        {"minPerm",                   "1e-12"}, // absolute minimum for allowed cell permeability
+        {"maxPerm",                  "100000"}, // maximal allowed cell permeability
+        {"minPoro",                  "0.0001"}, // this limit is necessary for pcmin/max computation
+        {"saturationThreshold",     "0.00001"}, // accuracy threshold for saturation, we ignore Pc values that
+                                                // give so small contributions near endpoints.
+        {"linsolver_tolerance",       "1e-12"}, // residual tolerance for linear solver
+        {"linsolver_verbosity",           "0"}, // verbosity level for linear solver
+        {"linsolver_max_iterations",      "0"}, // Maximum number of iterations allow, specify 0 for default
+        {"linsolver_type",                "3"}, // Type of linear solver: 0 = ILU0/CG, 1 = AMG/CG, 2 KAMG/CG, 3 FAST_AMG/CG
+        {"linsolver_prolongate_factor", "1.0"}, // Prolongation factor in AMG
+        {"linsolver_smooth_steps",        "1"}, // Number of smoothing steps in AMG
+        {"fluids",                       "ow"}, // Whether upscaling for oil/water (ow) or gas/oil (go)
+        {"krowxswirr",                   "-1"}, // Relative permeability in x direction of oil in corresponding oil/water system
+        {"krowyswirr",                   "-1"}, // Relative permeability in y direction of oil in corresponding oil/water system
+        {"krowzswirr",                   "-1"}, // Relative permeability in z direction of oil in corresponding oil/water system
+        {"doEclipseCheck",             "true"}, // Check if minimum relpermvalues in input are zero (specify critical saturations)
+        {"critRelpermThresh",          "1e-6"}};// Threshold for setting minimum relperm to 0 (thus specify critical saturations)
 
    // Conversion factor, multiply mD numbers with this to get m² numbers
    const double milliDarcyToSqMetre =
