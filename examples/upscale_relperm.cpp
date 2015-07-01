@@ -155,6 +155,41 @@ static void usageandexit() {
     exit(1);
 }
 
+//! \brief Parse command line arguments into string map.
+//! \param[in,out] options The map of options. Should be filled with default values on entry.
+//! \param[in] varnum Number of arguments
+//! \param[in] vararg The arguments
+//! \param[in] verbose Whether or not to print parsed command line arguments
+//! \returns index of input file if positive, negated index to offending argument on failure.
+static int parseCommandLine(std::map<std::string,std::string>& options,
+                            int varnum, char** vararg, bool verbose)
+{
+    int argeclindex = 0;
+    for (int argidx = 1; argidx < varnum; argidx += 2)  {
+        if (string(vararg[argidx]).substr(0,1) == "-")    {
+            string searchfor = string(vararg[argidx]).substr(1); // Chop off leading '-'
+            /* Check if it is a match */
+            if (options.count(searchfor) == 1) {
+                options[searchfor] = string(vararg[argidx+1]);
+                if (verbose)
+                    cout << "Parsed command line option: "
+                         << searchfor << " := " << vararg[argidx+1] << endl;
+                argeclindex = argidx + 2;
+            }
+            else
+                return -argidx;
+        }
+        else {
+            // if vararg[argidx] does not start in '-',
+            // assume we have found the position of the Eclipse-file.
+            argeclindex = argidx;
+            break; // out of for-loop,
+        }
+    }
+
+    return argeclindex;
+}
+
 int main(int varnum, char** vararg)
 try
 {
@@ -230,36 +265,14 @@ try
    }
 
 
-   /* Loop over all command line options in order to look 
-      for options. 
-
-      argidx loops over all the arguments here, and updates the
-      variable 'argeclindex' *if* it finds any legal options,
-      'argeclindex' is so that vararg[argeclindex] = the eclipse
-      filename. If options are illegal, argeclindex will be wrong, 
-      
+   /*
+      'argeclindex' is so that vararg[argeclindex] = the eclipse filename.
    */
-   int argeclindex = 0;
-   for (int argidx = 1; argidx < varnum; argidx += 2)  {
-       if (string(vararg[argidx]).substr(0,1) == "-")    {
-           string searchfor = string(vararg[argidx]).substr(1); // Chop off leading '-'
-           /* Check if it is a match */
-           if (options.count(searchfor) == 1) {
-               options[searchfor] = string(vararg[argidx+1]);
-               if (helper.isMaster) cout << "Parsed command line option: " << searchfor << " := " << vararg[argidx+1] << endl;
-               argeclindex = argidx + 2;
-           }
-           else {
-               if (helper.isMaster) cout << "Option -" << searchfor << " unrecognized." << endl;
-               usageandexit();
-           }
-       }
-       else { 
-           // if vararg[argidx] does not start in '-', 
-           // assume we have found the position of the Eclipse-file.
-           argeclindex = argidx;
-           break; // out of for-loop, 
-       }
+   int argeclindex = parseCommandLine(options, varnum, vararg, helper.isMaster);
+   if (argeclindex < 0) {
+       if (helper.isMaster)
+           cout << "Option -" << vararg[-argeclindex] << " unrecognized." << endl;
+        usageandexit();
    }
      
    // What fluid system are we dealing with? (oil/water or gas/oil)
