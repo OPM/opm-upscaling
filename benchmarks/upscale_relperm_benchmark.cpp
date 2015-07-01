@@ -1450,8 +1450,8 @@ int main(int varnum, char** vararg)
             if (node_vs_pressurepoint[idx] != 0) {
                 // Receive data
                 if (upscaleBothPhases) {
-                    double recvbuffer[2+2*tensorElementCount];
-                    MPI_Recv(recvbuffer, 2+2*tensorElementCount, MPI_DOUBLE,
+                    std::vector<double> recvbuffer(2+2*tensorElementCount);
+                    MPI_Recv(recvbuffer.data(), recvbuffer.size(), MPI_DOUBLE,
                              node_vs_pressurepoint[idx], 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                     // Put received data into correct place.
                     WaterSaturation[(int)recvbuffer[0]] = recvbuffer[1];
@@ -1463,8 +1463,8 @@ int main(int varnum, char** vararg)
                     }
                 }
                 else {
-                    double recvbuffer[2+tensorElementCount];
-                    MPI_Recv(recvbuffer, 2+tensorElementCount, MPI_DOUBLE,
+                    std::vector<double> recvbuffer(2+tensorElementCount);
+                    MPI_Recv(recvbuffer.data(), recvbuffer.size(), MPI_DOUBLE,
                              node_vs_pressurepoint[idx], 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                     // Put received data into correct place.
                     WaterSaturation[(int)recvbuffer[0]] = recvbuffer[1];
@@ -1480,7 +1480,7 @@ int main(int varnum, char** vararg)
             if (node_vs_pressurepoint[idx] == mpi_rank) {
                 // Pack and send data. C-style.
                 if (upscaleBothPhases) {
-                    double sendbuffer[2+2*tensorElementCount];
+                    std::vector<double> sendbuffer(2+2*tensorElementCount);
                     sendbuffer[0] = (double)idx;
                     sendbuffer[1] = WaterSaturation[idx];
                     for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) {
@@ -1489,16 +1489,16 @@ int main(int varnum, char** vararg)
                     for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) {
                         sendbuffer[2+tensorElementCount+voigtIdx] = Phase2Perm[idx][voigtIdx];
                     }
-                    MPI_Send(sendbuffer, 2+tensorElementCount, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+                    MPI_Send(sendbuffer.data(), sendbuffer.size(), MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
                 }
                 else {
-                    double sendbuffer[2+tensorElementCount];
+                    std::vector<double> sendbuffer(2+tensorElementCount);
                     sendbuffer[0] = (double)idx;
                     sendbuffer[1] = WaterSaturation[idx];
                     for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) {
                         sendbuffer[2+voigtIdx] = PhasePerm[idx][voigtIdx];
                     }
-                    MPI_Send(sendbuffer, 2+tensorElementCount, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+                    MPI_Send(sendbuffer.data(), sendbuffer.size(), MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
                 }
             }
         }
