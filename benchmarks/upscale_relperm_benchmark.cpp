@@ -1375,72 +1375,7 @@ try
     clock_t finish_upscale_wallclock = clock();
     timeused_upscale_wallclock = (double(finish_upscale_wallclock)-double(start_upscale_wallclock))/CLOCKS_PER_SEC;
 
-#ifdef HAVE_MPI
-    /* Step 8b: Transfer all computed data to master node.
-       Master node should post a receive for all values missing,
-       other nodes should post a send for all the values they have.
-    */
-    MPI_Barrier(MPI_COMM_WORLD); // Not strictly necessary.
-    if (helper.isMaster) {
-        // Loop over all values, receive data and put into local data structure
-        for (int idx=0; idx < points; ++idx) {
-            if (node_vs_pressurepoint[idx] != 0) {
-                // Receive data
-                if (helper.upscaleBothPhases) {
-                    std::vector<double> recvbuffer(2+2*helper.tensorElementCount);
-                    MPI_Recv(recvbuffer.data(), recvbuffer.size(), MPI_DOUBLE,
-                             node_vs_pressurepoint[idx], 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                    // Put received data into correct place.
-                    helper.WaterSaturation[(int)recvbuffer[0]] = recvbuffer[1];
-                    for (int voigtIdx=0; voigtIdx < helper.tensorElementCount; ++voigtIdx) {
-                        PhasePerm[(int)recvbuffer[0]][voigtIdx] = recvbuffer[2+voigtIdx];
-                    }
-                    for (int voigtIdx=0; voigtIdx < helper.tensorElementCount; ++voigtIdx) {
-                        Phase2Perm[(int)recvbuffer[0]][voigtIdx] = recvbuffer[2+helper.tensorElementCount+voigtIdx];
-                    }
-                }
-                else {
-                    std::vector<double> recvbuffer(2+helper.tensorElementCount);
-                    MPI_Recv(recvbuffer.data(), recvbuffer.size(), MPI_DOUBLE,
-                             node_vs_pressurepoint[idx], 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                    // Put received data into correct place.
-                    helper.WaterSaturation[(int)recvbuffer[0]] = recvbuffer[1];
-                    for (int voigtIdx=0; voigtIdx < helper.tensorElementCount; ++voigtIdx) {
-                        PhasePerm[(int)recvbuffer[0]][voigtIdx] = recvbuffer[2+voigtIdx];
-                    }
-                }
-            }
-        }
-    }
-    else {
-        for (int idx=0; idx < points; ++idx) {
-            if (node_vs_pressurepoint[idx] == mpi_rank) {
-                // Pack and send data. C-style.
-                if (helper.upscaleBothPhases) {
-                    std::vector<double> sendbuffer(2+2*helper.tensorElementCount);
-                    sendbuffer[0] = (double)idx;
-                    sendbuffer[1] = helper.WaterSaturation[idx];
-                    for (int voigtIdx=0; voigtIdx < helper.tensorElementCount; ++voigtIdx) {
-                        sendbuffer[2+voigtIdx] = PhasePerm[idx][voigtIdx];
-                    }
-                    for (int voigtIdx=0; voigtIdx < helper.tensorElementCount; ++voigtIdx) {
-                        sendbuffer[2+helper.tensorElementCount+voigtIdx] = Phase2Perm[idx][voigtIdx];
-                    }
-                    MPI_Send(sendbuffer.data(), sendbuffer.size(), MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
-                }
-                else {
-                    std::vector<double> sendbuffer(2+helper.tensorElementCount);
-                    sendbuffer[0] = (double)idx;
-                    sendbuffer[1] = helper.WaterSaturation[idx];
-                    for (int voigtIdx=0; voigtIdx < helper.tensorElementCount; ++voigtIdx) {
-                        sendbuffer[2+voigtIdx] = PhasePerm[idx][voigtIdx];
-                    }
-                    MPI_Send(sendbuffer.data(), sendbuffer.size(), MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
-                }
-            }
-        }
-    }
-#endif
+    helper.collectResults();
 
     // Average time pr. upscaling point:
 #ifdef HAVE_MPI
