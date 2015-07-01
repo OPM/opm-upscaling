@@ -173,28 +173,28 @@ try
     /*
       Populate options-map with default values
     */
-    map<string,string> options;
-    options.insert(make_pair("bc",                 "f"     )); // Boundary conditions, default is fixed. 
-    options.insert(make_pair("points",             "30"   )); // Number of saturation points (uniformly distributed within saturation endpoints)
-    options.insert(make_pair("outputWater",        ""));       // If set, where to write upscaled water permeabilities
-    options.insert(make_pair("outputOil",          ""));       // If set, where to write upscaled oil permeabilites
-    options.insert(make_pair("waterCurve",         "2"));      // column in stonefiles that represents rel.perm. for water
-    options.insert(make_pair("oilCurve",           "3"));      // column in stonefiles that represents rel.perm. for oil
-    options.insert(make_pair("waterViscosity",     "0.001"));  // viscosity of water in Pascal seconds.
-    options.insert(make_pair("oilViscosity",       "0.1"));    // viscosity of oil in Pascal seconds.
-    options.insert(make_pair("interpolate",        "0"));    // default is not to interpolate 
-    //options.insert(make_pair("outputprecision",    "8")); // number of decimals to print
-    options.insert(make_pair("minPerm",            "1e-12")); // perm values below this will be truncated upwards
-    options.insert(make_pair("maxPerm",            "100000")); // perm values below this will be truncated upwards
-    options.insert(make_pair("minPoro",            "0.0001")); // poro values below this will be truncated upwards
-    options.insert(make_pair("maxPermContrast",    "1e7")); // maximum allowed contrast in each single-phase computation
-    options.insert(make_pair("saturationThreshold", "0.00001")); // accuracy threshold for saturation, we ignore Pc values
-    // that give so small contributions to Sw near endpoints.
-    options.insert(make_pair("linsolver_tolerance", "1e-12"));  // residual tolerance for linear solver
-    options.insert(make_pair("linsolver_verbosity", "0"));     // verbosity level for linear solver
-    options.insert(make_pair("linsolver_type",      "3"));     // type of linear solver: 0 = ILU/BiCGStab, 1 = AMG/CG, 2 = KAMG/CG, 3 = FastAMG/CG
-    options.insert(make_pair("linsolver_prolongate_factor", "1.0")); // Factor to scale the prolongate coarse grid correction,
-    options.insert(make_pair("linsolver_smooth_steps", "1")); // Number of pre and postsmoothing steps for AMG
+    map<string,string> options =
+       {{"bc",                            "f"}, // Boundary conditions, default is fixed.
+        {"points",                       "30"}, // Number of saturation points (uniformly distributed within saturation endpoints)
+        {"outputWater",                    ""}, // If set, where to write upscaled water permeabilities
+        {"outputOil",                      ""}, // If set, where to write upscaled oil permeabilites
+        {"waterCurve",                    "2"}, // column in stonefiles that represents rel.perm. for water
+        {"oilCurve",                      "3"}, // column in stonefiles that represents rel.perm. for oil
+        {"waterViscosity",            "0.001"}, // viscosity of water in Pascal seconds.
+        {"oilViscosity",                "0.1"}, // viscosity of oil in Pascal seconds.
+        {"interpolate",                   "0"}, // default is not to interpolate
+     // {"outputprecision",               "8"}, // number of decimals to print
+        {"minPerm",                   "1e-12"}, // perm values below this will be truncated upwards
+        {"maxPerm",                  "100000"}, // perm values below this will be truncated upwards
+        {"minPoro",                  "0.0001"}, // poro values below this will be truncated upwards
+        {"maxPermContrast",             "1e7"}, // maximum allowed contrast in each single-phase computation
+        {"saturationThreshold",     "0.00001"}, // accuracy threshold for saturation, we ignore Pc values
+                                               // that give so small contributions to Sw near endpoints.
+        {"linsolver_tolerance",       "1e-12"}, // residual tolerance for linear solver
+        {"linsolver_verbosity",           "0"}, // verbosity level for linear solver
+        {"linsolver_type",                "3"}, // type of linear solver: 0 = ILU/BiCGStab, 1 = AMG/CG, 2 = KAMG/CG, 3 = FastAMG/CG
+        {"linsolver_prolongate_factor", "1.0"}, // Factor to scale the prolongate coarse grid correction,
+        {"linsolver_smooth_steps",        "1"}}; // Number of pre and postsmoothing steps for AMG
 
     /* Check first if there is anything on the command line to look for */
     if (varnum == 1) {
