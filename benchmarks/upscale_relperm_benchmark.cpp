@@ -112,6 +112,7 @@
 
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
+#include <opm/upscaling/RelPermUtils.hpp>
 
 #include <opm/core/utility/Units.hpp>
 
@@ -167,42 +168,6 @@ static void usageandexit() {
     MPI_Finalize();
 #endif
     exit(1);
-}
-
-static const std::vector<size_t> voigt_idx_tab = {0,4,8,5,2,1,7,6,3};
-
-// Assumes that permtensor_t use C ordering.
-double getVoigtValue(const SinglePhaseUpscaler::permtensor_t& K, int voigt_idx)
-{
-#if !defined(NDEBUG)
-    OPM_ERROR_IF(not ((K.numRows() == 3) && (K.numCols() == 3)),
-                 "Function getVoigtValue() is only supported "
-                 "for 3-by-3 tensors");
-#endif
-    if (voigt_idx < 0 || voigt_idx > 8) {
-        std::cerr << "Voigt index out of bounds (only 0-8 allowed)" << std::endl;
-        throw std::exception();
-    }
-
-    return K.data()[voigt_idx_tab[voigt_idx]];
-}
-
-
-// Assumes that permtensor_t use C ordering.
-void setVoigtValue(SinglePhaseUpscaler::permtensor_t& K, int voigt_idx, double val)
-{
-#if !defined(NDEBUG)
-    OPM_ERROR_IF(not ((K.numRows() == 3) && (K.numCols() == 3)),
-                 "Function setVoigtValue() is only supported "
-                 "for 3-by-3 tensors.");
-#endif
-
-    if (voigt_idx < 0 || voigt_idx > 8) {
-        std::cerr << "Voigt index out of bounds (only 0-8 allowed)" << std::endl;
-        throw std::exception();
-    }
-
-    K.data()[voigt_idx_tab[voigt_idx]] = val;
 }
 
 static void inflate (const unsigned char* input, const int size, stringstream& output) {

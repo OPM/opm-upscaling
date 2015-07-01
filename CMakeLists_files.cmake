@@ -31,6 +31,10 @@
 list (APPEND TEST_SOURCE_FILES
 	)
 
+list(APPEND MAIN_SOURCE_FILES
+	opm/upscaling/RelPermUtils.cpp
+	)
+
 # originally generated with the command:
 # find tests -name '*.xml' -a ! -wholename '*/not-unit/*' -printf '\t%p\n' | sort
 list (APPEND TEST_DATA_FILES
