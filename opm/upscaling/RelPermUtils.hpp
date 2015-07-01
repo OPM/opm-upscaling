@@ -84,6 +84,12 @@ namespace Opm {
 
       //! \brief Collect results from all MPI nodes.
       void collectResults();
+
+      //! \brief Calculate relperm values from phase permeabilities.
+      //! \param[in] phase The phase to calculate values for (0-indexed).
+      //! \return The phase permeability tensor values.
+      //! \details First index is voigt index, second index is pressure point.
+      std::vector<std::vector<double>> getRelPerm(int phase) const;
   };
 }
 

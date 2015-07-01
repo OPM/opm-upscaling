@@ -1394,90 +1394,10 @@ try
      * Step 8c: Make relperm values from phaseperms
      *          (only master node can do this)
      */
-
-    vector<vector <double> > RelPermValues; // voigtIdx is first index.
-    for (int voigtIdx=0; voigtIdx < helper.tensorElementCount; ++voigtIdx) {
-        vector<double> tmp;
-        RelPermValues.push_back(tmp);
-    }
-    if (helper.isMaster) {
-        // Loop over all pressure points
-        for (int idx=0; idx < helper.points; ++idx) {
-            Matrix phasePermTensor = zeroMatrix;
-            zero(phasePermTensor);
-            for (int voigtIdx = 0; voigtIdx < helper.tensorElementCount; ++voigtIdx) {
-                setVoigtValue(phasePermTensor, voigtIdx, helper.PhasePerm[0][idx][voigtIdx]);
-            }
-            //cout << phasePermTensor << endl;
-            Matrix relPermTensor = zeroMatrix;
-            // relPermTensor = phasePermTensor;
-            // relPermTensor *= permTensorInv;
-            prod(phasePermTensor, helper.permTensorInv, relPermTensor);
-            for (int voigtIdx = 0; voigtIdx < helper.tensorElementCount; ++voigtIdx) {
-                RelPermValues[voigtIdx].push_back(getVoigtValue(relPermTensor, voigtIdx));
-            }
-            //cout << relPermTensor << endl;
-        }
-    }
-
-    vector<vector <double> > RelPermValues2; // voigtIdx is first index.
-    if (helper.upscaleBothPhases) {
-        for (int voigtIdx=0; voigtIdx < helper.tensorElementCount; ++voigtIdx) {
-            vector<double> tmp;
-            RelPermValues2.push_back(tmp);
-        }
-        if (helper.isMaster) {
-            // Loop over all pressure points
-            for (int idx=0; idx < helper.points; ++idx) {
-                Matrix phasePermTensor = zeroMatrix;
-                zero(phasePermTensor);
-                for (int voigtIdx = 0; voigtIdx < helper.tensorElementCount; ++voigtIdx) {
-                    setVoigtValue(phasePermTensor, voigtIdx, helper.PhasePerm[1][idx][voigtIdx]);
-                }
-                //cout << phasePermTensor << endl;
-                Matrix relPermTensor = zeroMatrix;
-                // relPermTensor = phasePermTensor;
-                // relPermTensor *= permTensorInv;
-                prod(phasePermTensor, helper.permTensorInv, relPermTensor);
-                for (int voigtIdx = 0; voigtIdx < helper.tensorElementCount; ++voigtIdx) {
-                    RelPermValues2[voigtIdx].push_back(getVoigtValue(relPermTensor, voigtIdx));
-                }
-                //cout << relPermTensor << endl;
-            }
-        }
-    }
-
-    // If doEclipseCheck, critical saturation points should be specified by 0 relperm
-    // Numerical errors and maxpermcontrast violate this even if the input has specified
-    // these points
-    if (helper.isMaster) {
-        if (helper.doEclipseCheck) {
-            for (int voigtIdx = 0; voigtIdx < helper.tensorElementCount; ++voigtIdx) {
-                int minidx;
-                if (RelPermValues[voigtIdx][0] < RelPermValues[voigtIdx][helper.points-1]) minidx = 0; else minidx = helper.points-1;
-                if (RelPermValues[voigtIdx][minidx] < helper.critRelpThresh) {
-                    RelPermValues[voigtIdx][minidx] = 0.0;
-                }
-                else {
-                    cerr << "Minimum upscaled relperm value is " << RelPermValues[voigtIdx][minidx] << ", larger than critRelpermThresh." << endl
-                         << "(voigtidx = " << voigtIdx << ")" << endl;
-                    usageandexit();
-                }
-                if (helper.upscaleBothPhases) {
-                    if (RelPermValues2[voigtIdx][0] < RelPermValues2[voigtIdx][helper.points-1]) minidx = 0; else minidx = helper.points-1;
-                    if (RelPermValues2[voigtIdx][minidx] < helper.critRelpThresh) {
-                        RelPermValues2[voigtIdx][minidx] = 0.0;
-                    }
-                    else {
-                        cerr << "Minimum upscaled relperm value for phase 2 is " << RelPermValues2[voigtIdx][minidx] << endl
-                             << ", larger than critRelpermThresh.(voigtidx = " << voigtIdx << ")" << endl;
-                        usageandexit();
-                    }
-                }
-            }
-        }
-    }
-
+   std::array<vector<vector<double>>,2> RelPermValues;
+   RelPermValues[0] = helper.getRelPerm(0);
+   if (helper.upscaleBothPhases)
+       RelPermValues[1] = helper.getRelPerm(1);
 
     /*********************************************************************************
      *  Step 9 - Benchmark version

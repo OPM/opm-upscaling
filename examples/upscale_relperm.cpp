@@ -1532,89 +1532,10 @@ try
     * Step 8c: Make relperm values from phaseperms
     *          (only master node can do this)
     */
-   
-   vector<vector <double> > RelPermValues; // voigtIdx is first index.
-   for (int voigtIdx=0; voigtIdx < helper.tensorElementCount; ++voigtIdx) {
-       vector<double> tmp;
-       RelPermValues.push_back(tmp);
-   }
-   if (helper.isMaster) {
-       // Loop over all pressure points 
-       for (int idx=0; idx < helper.points; ++idx) {
-           Matrix phasePermTensor = zeroMatrix;
-           zero(phasePermTensor);
-           for (int voigtIdx = 0; voigtIdx < helper.tensorElementCount; ++voigtIdx) {
-               setVoigtValue(phasePermTensor, voigtIdx, helper.PhasePerm[0][idx][voigtIdx]);
-           }
-           //cout << phasePermTensor << endl;
-           Matrix relPermTensor = zeroMatrix;
-           // relPermTensor = phasePermTensor;
-           // relPermTensor *= permTensorInv;
-           prod(phasePermTensor, helper.permTensorInv, relPermTensor);
-           for (int voigtIdx = 0; voigtIdx < helper.tensorElementCount; ++voigtIdx) {
-               RelPermValues[voigtIdx].push_back(getVoigtValue(relPermTensor, voigtIdx));
-           }
-           //cout << relPermTensor << endl;
-       }
-   }
-
-   vector<vector <double> > RelPermValues2; // voigtIdx is first index.
-   if (helper.upscaleBothPhases) {
-       for (int voigtIdx=0; voigtIdx < helper.tensorElementCount; ++voigtIdx) {
-           vector<double> tmp;
-           RelPermValues2.push_back(tmp);
-       }
-       if (helper.isMaster) {
-           // Loop over all pressure points 
-           for (int idx=0; idx < helper.points; ++idx) {
-               Matrix phasePermTensor = zeroMatrix;
-               zero(phasePermTensor);
-               for (int voigtIdx = 0; voigtIdx < helper.tensorElementCount; ++voigtIdx) {
-                   setVoigtValue(phasePermTensor, voigtIdx, helper.PhasePerm[1][idx][voigtIdx]);
-               }
-               //cout << phasePermTensor << endl;
-               Matrix relPermTensor = zeroMatrix;
-               // relPermTensor = phasePermTensor;
-               // relPermTensor *= permTensorInv;
-               prod(phasePermTensor, helper.permTensorInv, relPermTensor);
-               for (int voigtIdx = 0; voigtIdx < helper.tensorElementCount; ++voigtIdx) {
-                   RelPermValues2[voigtIdx].push_back(getVoigtValue(relPermTensor, voigtIdx));
-               }
-               //cout << relPermTensor << endl;
-           }
-       }
-   }
-
-   // If doEclipseCheck, critical saturation points should be specified by 0 relperm
-   // Numerical errors and maxpermcontrast violate this even if the input has specified
-   // these points
-   if (helper.isMaster) {
-       if (helper.doEclipseCheck) {
-           for (int voigtIdx = 0; voigtIdx < helper.tensorElementCount; ++voigtIdx) {
-               int minidx;
-               if (RelPermValues[voigtIdx][0] < RelPermValues[voigtIdx][helper.points-1]) minidx = 0; else minidx = helper.points-1;
-               if (RelPermValues[voigtIdx][minidx] < helper.critRelpThresh) {
-                   RelPermValues[voigtIdx][minidx] = 0.0;
-               }
-               else {
-                   cerr << "Minimum upscaled relperm value is " << RelPermValues[voigtIdx][minidx] << ", larger than critRelpermThresh." << endl
-                        << "(voigtidx = " << voigtIdx << ")" << endl;
-                   usageandexit();
-               }
-               if (helper.upscaleBothPhases) {
-                   if (RelPermValues2[voigtIdx][0] < RelPermValues2[voigtIdx][helper.points-1]) minidx = 0; else minidx = helper.points-1;
-                   if (RelPermValues2[voigtIdx][minidx] < helper.critRelpThresh) {
-                       RelPermValues2[voigtIdx][minidx] = 0.0;
-                   }
-                   else {
-                       cerr << "Minimum upscaled relperm value for phase 2 is " << RelPermValues2[voigtIdx][minidx] << endl 
-                            << ", larger than critRelpermThresh.(voigtidx = " << voigtIdx << ")" << endl;
-                       usageandexit();
-                   }
-               }
-           }
-       }
-   }
+   std::array<vector<vector<double>>,2> RelPermValues;
+   RelPermValues[0] = helper.getRelPerm(0);
+   if (helper.upscaleBothPhases)
+       RelPermValues[1] = helper.getRelPerm(1);
 
    /*********************************************************************************
     *  Step 9
@@ -1769,18 +1690,18 @@ try
                Pvalues.push_back(PvaluesVsSaturation.evaluate(SatvaluesInterp[i]));
            }
            for (int voigtIdx = 0; voigtIdx < helper.tensorElementCount; ++voigtIdx) {
-               MonotCubicInterpolator RelPermVsSaturation(Satvalues, RelPermValues[voigtIdx]);
-               RelPermValues[voigtIdx].clear();
+               MonotCubicInterpolator RelPermVsSaturation(Satvalues, RelPermValues[0][voigtIdx]);
+               RelPermValues[0][voigtIdx].clear();
                for (int i=0; i < interpolationPoints; ++i) {
-                   RelPermValues[voigtIdx].push_back(RelPermVsSaturation.evaluate(SatvaluesInterp[i]));
+                   RelPermValues[0][voigtIdx].push_back(RelPermVsSaturation.evaluate(SatvaluesInterp[i]));
                }
            }
            if (helper.upscaleBothPhases) {
                for (int voigtIdx = 0; voigtIdx < helper.tensorElementCount; ++voigtIdx) {
-                   MonotCubicInterpolator RelPermVsSaturation(Satvalues, RelPermValues2[voigtIdx]);
-                   RelPermValues2[voigtIdx].clear();
+                   MonotCubicInterpolator RelPermVsSaturation(Satvalues, RelPermValues[1][voigtIdx]);
+                   RelPermValues[1][voigtIdx].clear();
                    for (int i=0; i < interpolationPoints; ++i) {
-                       RelPermValues2[voigtIdx].push_back(RelPermVsSaturation.evaluate(SatvaluesInterp[i]));
+                       RelPermValues[1][voigtIdx].push_back(RelPermVsSaturation.evaluate(SatvaluesInterp[i]));
                    }
                }
            }
@@ -1798,12 +1719,12 @@ try
            
            for (int voigtIdx = 0; voigtIdx < helper.tensorElementCount; ++voigtIdx) {
                outputtmp << showpoint << setw(fieldwidth) << setprecision(outputprecision) 
-                         << RelPermValues[voigtIdx][i]; 
+                         << RelPermValues[0][voigtIdx][i]; 
            } 
            if (helper.upscaleBothPhases) {
                for (int voigtIdx = 0; voigtIdx < helper.tensorElementCount; ++voigtIdx) {
                    outputtmp << showpoint << setw(fieldwidth) << setprecision(outputprecision) 
-                             << RelPermValues2[voigtIdx][i]; 
+                             << RelPermValues[1][voigtIdx][i]; 
                } 
            }
            outputtmp << endl; 
@@ -1845,8 +1766,8 @@ try
            }
            for (unsigned int i=0; i < Satvalues.size(); ++i) {
                swofx << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Satvalues[i]
-                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << RelPermValues[0][i]
-                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << RelPermValues2[0][i]
+                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << RelPermValues[0][0][i]
+                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << RelPermValues[1][0][i]
                      << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Pvalues[i]/100000.0 << endl;
            }
            swofx << "/" << endl;
@@ -1865,8 +1786,8 @@ try
            }
            for (unsigned int i=0; i < Satvalues.size(); ++i) {
                swofy << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Satvalues[i]
-                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << RelPermValues[1][i]
-                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << RelPermValues2[1][i]
+                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << RelPermValues[0][1][i]
+                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << RelPermValues[1][1][i]
                      << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Pvalues[i]/100000.0 << endl;
            }
            swofy << "/" << endl;
@@ -1885,8 +1806,8 @@ try
            }
            for (unsigned int i=0; i < Satvalues.size(); ++i) {
                swofz << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Satvalues[i]
-                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << RelPermValues[2][i]
-                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << RelPermValues2[2][i]
+                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << RelPermValues[0][2][i]
+                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << RelPermValues[1][2][i]
                      << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Pvalues[i]/100000.0 << endl;
            }
            swofz << "/" << endl;

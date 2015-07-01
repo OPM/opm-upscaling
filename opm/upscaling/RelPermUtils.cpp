@@ -130,4 +130,48 @@ void RelPermUpscaleHelper::collectResults()
 #endif
 }
 
+std::vector<std::vector<double>> RelPermUpscaleHelper::getRelPerm(int phase) const
+{
+    SinglePhaseUpscaler::permtensor_t zeroMatrix(3,3,(double*)0);
+    zero(zeroMatrix);
+    std::vector<std::vector<double>> RelPermValues;
+    if (isMaster) {
+        RelPermValues.resize(tensorElementCount);
+        // Loop over all pressure points
+        for (int idx=0; idx < points; ++idx) {
+            SinglePhaseUpscaler::permtensor_t phasePermTensor = zeroMatrix;
+            zero(phasePermTensor);
+            for (int voigtIdx = 0; voigtIdx < tensorElementCount; ++voigtIdx) {
+                setVoigtValue(phasePermTensor, voigtIdx, PhasePerm[phase][idx][voigtIdx]);
+            }
+            SinglePhaseUpscaler::permtensor_t relPermTensor = zeroMatrix;
+            prod(phasePermTensor, permTensorInv, relPermTensor);
+            for (int voigtIdx = 0; voigtIdx < tensorElementCount; ++voigtIdx) {
+                RelPermValues[voigtIdx].push_back(getVoigtValue(relPermTensor, voigtIdx));
+            }
+        }
+        // If doEclipseCheck, critical saturation points should be specified by 0 relperm
+        // Numerical errors and maxpermcontrast violate this even if the input has specified
+        // these points
+        if (doEclipseCheck) {
+            for (int voigtIdx = 0; voigtIdx < tensorElementCount; ++voigtIdx) {
+                int minidx;
+                if (RelPermValues[voigtIdx][0] < RelPermValues[voigtIdx][points-1]) minidx = 0; else minidx = points-1;
+                if (RelPermValues[voigtIdx][minidx] < critRelpThresh) {
+                    RelPermValues[voigtIdx][minidx] = 0.0;
+                }
+                else {
+                    std::stringstream str;
+                    str << "Minimum upscaled relperm value for phase " << phase+1 << " is "
+                        << RelPermValues[voigtIdx][minidx] << ", larger than critRelpermThresh." << std::endl
+                        << " (voigtidx = " << voigtIdx << ")";
+                    throw std::runtime_error(str.str());
+                }
+            }
+        }
+    }
+
+    return RelPermValues;
+}
+
 }
