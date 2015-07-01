@@ -21,6 +21,7 @@
 #include <opm/upscaling/RelPermUtils.hpp>
 #include <iostream>
 #include <exception>
+#include <sstream>
 
 namespace Opm {
 
