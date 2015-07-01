@@ -56,10 +56,7 @@ namespace Opm
     }
 
     template<>
-    bool useJ< ReservoirPropertyCapillary<3> >()
-    {
-        return true;
-    }
+    bool useJ< ReservoirPropertyCapillary<3> >();
 
     /// @brief
     /// @todo Doc me!
