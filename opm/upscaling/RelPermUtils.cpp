@@ -204,4 +204,137 @@ void RelPermUpscaleHelper::upscaleSinglePhasePermeability()
     }
 }
 
+void RelPermUpscaleHelper::sanityCheckInput(Opm::DeckConstPtr deck,
+                                            double minPerm,
+                                            double maxPerm,
+                                            double minPoro)
+
+{
+    // Check that we have the information we need from the eclipse file:
+    if (! (deck->hasKeyword("SPECGRID") && deck->hasKeyword("COORD") && deck->hasKeyword("ZCORN")
+           && deck->hasKeyword("PORO") && deck->hasKeyword("PERMX"))) {
+      throw std::runtime_error("Error: Did not find SPECGRID, COORD, ZCORN, PORO and PERMX in Eclipse file.");
+    }
+
+    poros    = deck->getKeyword("PORO")->getRawDoubleData();
+    perms[0] = deck->getKeyword("PERMX")->getRawDoubleData();
+    zcorns   = deck->getKeyword("ZCORN")->getRawDoubleData();
+
+    // Load anisotropic (only diagonal supported) input if present in grid
+    if (deck->hasKeyword("PERMY") && deck->hasKeyword("PERMZ")) {
+        anisotropic_input = true;
+        perms[1] = deck->getKeyword("PERMY")->getRawDoubleData();
+        perms[2] = deck->getKeyword("PERMZ")->getRawDoubleData();
+        if (isMaster)
+          std::cout << "Info: PERMY and PERMZ present, going into anisotropic input mode, no J-functions\n"
+                    << "      Options -relPermCurve and -jFunctionCurve is meaningless.\n";
+    }
+
+
+    /* Initialize a default satnums-vector with only "ones" (meaning only one rocktype) */
+    satnums.resize(poros.size(), 1);
+
+    if (deck->hasKeyword("SATNUM")) {
+        satnums = deck->getKeyword("SATNUM")->getIntData();
+    }
+    else {
+        if (isMaster)
+          std::cout << "SATNUM not found in input file, assuming only one rocktype" << std::endl;
+    }
+
+    /* Sanity check/fix on input for each cell:
+       - Check that SATNUM are set sensibly, that is => 0 and < 1000, error if not.
+       - Check that porosity is between 0 and 1, error if not.
+       Set to minPoro if zero or less than minPoro (due to pcmin/max computation)
+       - Check that permeability is zero or positive. Error if negative.
+       Set to minPerm if zero or less than minPerm.
+       - Check maximum number of SATNUM values (can be number of rock types present)
+    */
+    int cells_truncated_from_below_poro = 0;
+    int cells_truncated_from_below_permx = 0;
+    int cells_truncated_from_above_permx = 0;
+    auto it = std::find_if(satnums.begin(), satnums.end(), [](int a) { return a < 0; });
+    auto it2 = std::find_if(satnums.begin(), satnums.end(), [](int a) { return a > 1000;});
+    if (it != satnums.end() || it2 != satnums.end()) {
+        std::stringstream str;
+        str << "satnums[";
+        if (it == satnums.end())
+            str << it2-satnums.begin() << "] = " << *it2;
+        else
+            str << it-satnums.begin() << "] = " << *it;
+        str << ", not sane, quitting.";
+        throw std::runtime_error(str.str());
+    }
+
+    auto&& find_error_both  = [](double value) { return value < 0 || value > 1; };
+    auto it3 = std::find_if(poros.begin(), poros.end(), find_error_both);
+    if (it3 != poros.end()) {
+        std::stringstream str;
+        str << "poros[" << it3-poros.begin() <<"] = " << *it << ", not sane, quitting.";
+        throw std::runtime_error(str.str());
+    }
+    auto&& find_error_below = [](double value) { return value < 0; };
+    std::string name = "permx";
+    auto&& check_perm = [name,&find_error_below](const std::vector<double>& perm)
+                        {
+                            auto it = std::find_if(perm.begin(), perm.end(), find_error_below);
+                            if (it != perm.end()) {
+                                std::stringstream str;
+                                str << name <<"[" << it-perm.begin() <<"] = " << *it << ", not sane, quitting.";
+                                throw std::runtime_error(str.str());
+                            }
+                        };
+    check_perm(perms[0]);
+    if (anisotropic_input) {
+        name ="permy";
+        check_perm(perms[1]);
+        name ="permz";
+        check_perm(perms[2]);
+    }
+    std::transform(poros.begin(), poros.end(), poros.begin(),
+                   [minPoro,&cells_truncated_from_below_poro](double value)
+                   {
+                       if (value >= 0 && value < minPoro) { // Truncate porosity from below
+                           ++cells_truncated_from_below_poro;
+                           return minPoro;
+                       }
+                       return value;
+                   });
+
+    std::transform(perms[0].begin(), perms[0].end(), perms[0].begin(),
+                   [minPerm, maxPerm, &cells_truncated_from_below_permx,
+                    &cells_truncated_from_above_permx](double value)
+                   {
+                       if ((value >= 0) && (value < minPerm)) { // Truncate permeability from below
+                           ++cells_truncated_from_below_permx;
+                           return minPerm;
+                       }
+                       if (value > maxPerm) { // Truncate permeability from above
+                           ++cells_truncated_from_above_permx;
+                           return maxPerm;
+                       }
+
+                       return value;
+                   });
+
+    for (unsigned int i = 0; i < satnums.size(); ++i) {
+        // Explicitly handle "no rock" cells, set them to minimum perm and zero porosity.
+        if (satnums[i] == 0) {
+            perms[0][i] = minPerm;
+            if (anisotropic_input) {
+                perms[1][i] = minPerm;
+                perms[2][i] = minPerm;
+            }
+            poros[i] = 0; // zero poro is fine for these cells, as they are not
+            // used in pcmin/max computation.
+        }
+    }
+    if (isMaster && cells_truncated_from_below_poro > 0)
+        std::cout << "Cells with truncated porosity: " << cells_truncated_from_below_poro << std::endl;
+    if (isMaster && cells_truncated_from_below_permx > 0)
+        std::cout << "Cells with permx truncated from below: " << cells_truncated_from_below_permx << std::endl;
+    if (isMaster && cells_truncated_from_above_permx > 0)
+        std::cout << "Cells with permx truncated from above: " << cells_truncated_from_above_permx << std::endl;
+}
+
 }

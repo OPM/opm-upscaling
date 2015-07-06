@@ -95,6 +95,15 @@ namespace Opm {
 
       //! \brief Upscale single phase permeability
       void upscaleSinglePhasePermeability();
+
+      //! \brief Do sanity checks for input file.
+      //! \param[in] deck The deck to sanity check.
+      //! \param[in] minPerm Minimum permeability.
+      //! \param[in] maxPerm Maximum permeability.
+      //! \param[in] minPoro Minimum porosity.
+      //! \details Throws error string.
+      void sanityCheckInput(Opm::DeckConstPtr deck,
+                            double minPerm, double maxPerm, double minPoro);
   };
 }
 

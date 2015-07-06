@@ -336,127 +336,18 @@ try
     finish = clock();   timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
     if (helper.isMaster) cout << " (" << timeused <<" secs)" << endl;
 
-    start = clock();
-    // Check that we have the information we need from the eclipse file:
-    if (! (deck->hasKeyword("SPECGRID") && deck->hasKeyword("COORD") && deck->hasKeyword("ZCORN")
-           && deck->hasKeyword("PORO") && deck->hasKeyword("PERMX"))) {
-        if (helper.isMaster) cerr << "Error: Did not find SPECGRID, COORD, ZCORN, PORO and PERMX in Eclipse file." << endl;
-        usageandexit();
-    }
-
-    helper.poros    = deck->getKeyword("PORO")->getRawDoubleData();
-    helper.perms[0] = deck->getKeyword("PERMX")->getRawDoubleData();
-    helper.zcorns   = deck->getKeyword("ZCORN")->getRawDoubleData();
-
-    Opm::DeckRecordConstPtr specgridRecord(deck->getKeyword("SPECGRID")->getRecord(0));
-    int x_res = specgridRecord->getItem("NX")->getInt(0);
-    int y_res = specgridRecord->getItem("NY")->getInt(0);
-    int z_res = specgridRecord->getItem("NZ")->getInt(0);
-
-
-    // Load anisotropic (only diagonal supported) input if present in grid
-    if (deck->hasKeyword("PERMY") && deck->hasKeyword("PERMZ")) {
-        helper.anisotropic_input = true;
-        helper.perms[1] = deck->getKeyword("PERMY")->getRawDoubleData();
-        helper.perms[2] = deck->getKeyword("PERMZ")->getRawDoubleData();
-        if (helper.isMaster) cout << "Info: PERMY and PERMZ present, going into anisotropic input mode, no J-functions\n";
-        if (helper.isMaster) cout << "      Options -relPermCurve and -jFunctionCurve is meaningless.\n";
-    }
-
-
-    /* Initialize a default satnums-vector with only "ones" (meaning only one rocktype) */
-    helper.satnums.resize(helper.poros.size(), 1);
-
-    if (deck->hasKeyword("SATNUM")) {
-        helper.satnums = deck->getKeyword("SATNUM")->getIntData();
-    }
-    else {
-        if (helper.isMaster) cout << "SATNUM not found in input file, assuming only one rocktype" << endl;
-    }
-
-    int maxSatnum = 0;
     const double maxPermContrast = atof(options["maxPermContrast"].c_str());
     const double minPerm = atof(options["minPerm"].c_str());
     const double maxPerm = atof(options["maxPerm"].c_str());
     const double minPoro = atof(options["minPoro"].c_str());
     const double saturationThreshold = atof(options["saturationThreshold"].c_str());
-    double maxPermInInputFile = 0.0;
+    start = clock();
+    helper.sanityCheckInput(deck, minPerm, maxPerm, minPoro);
 
-    /* Sanity check/fix on input for each cell:
-       - Check that SATNUM are set sensibly, that is => 0 and < 1000, error if not.
-       - Check that porosity is between 0 and 1, error if not.
-       Set to minPoro if zero or less than minPoro (due to pcmin/max computation)
-       - Check that permeability is zero or positive. Error if negative.
-       Set to minPerm if zero or less than minPerm.
-       - Check maximum number of SATNUM values (can be number of rock types present)
-    */
-    int cells_truncated_from_below_poro = 0;
-    int cells_truncated_from_below_permx = 0;
-    int cells_truncated_from_above_permx = 0;
-    for (unsigned int i = 0; i < helper.satnums.size(); ++i) {
-        if (helper.satnums[i] < 0 || helper.satnums[i] > 1000) {
-            if (helper.isMaster) cerr << "helper.satnums[" << i << "] = " << helper.satnums[i] << ", not sane, quitting." << endl;
-            usageandexit();
-        }
-        if (helper.satnums[i] > maxSatnum) {
-            maxSatnum = helper.satnums[i];
-        }
-        if ((helper.poros[i] >= 0) && (helper.poros[i] < minPoro)) { // Truncate helper.porosity from below
-            helper.poros[i] = minPoro;
-            ++cells_truncated_from_below_poro;
-        }
-        if (helper.poros[i] < 0 || helper.poros[i] > 1) {
-            if (helper.isMaster) cerr << "helper.poros[" << i <<"] = " << helper.poros[i] << ", not sane, quitting." << endl;
-            usageandexit();
-        }
-        if (helper.perms[0][i] > maxPermInInputFile) {
-            maxPermInInputFile = helper.perms[0][i];
-        }
-        if ((helper.perms[0][i] >= 0) && (helper.perms[0][i] < minPerm)) { // Truncate permeability from below
-            helper.perms[0][i] = minPerm;
-            ++cells_truncated_from_below_permx;
-        }
-        if (helper.perms[0][i] > maxPerm) { // Truncate permeability from above
-            helper.perms[0][i] = maxPerm;
-            ++cells_truncated_from_above_permx;
-        }
-        if (helper.perms[0][i] < 0) {
-            if (helper.isMaster) cerr << "permx[" << i <<"] = " << helper.perms[0][i] << ", not sane, quitting." << endl;
-            usageandexit();
-        }
-        if (helper.anisotropic_input) {
-            if (helper.perms[1][i] < 0) {
-                if (helper.isMaster) cerr << "permy[" << i <<"] = " << helper.perms[1][i] << ", not sane, quitting." << endl;
-                usageandexit();
-            }
-            if (helper.perms[2][i] < 0) {
-                if (helper.isMaster) cerr << "permz[" << i <<"] = " << helper.perms[2][i] << ", not sane, quitting." << endl;
-                usageandexit();
-            }
-        }
-
-
-        // Explicitly handle "no rock" cells, set them to minimum perm and zero porosity.
-        if (helper.satnums[i] == 0) {
-            helper.perms[0][i] = minPerm;
-            if (helper.anisotropic_input) {
-                helper.perms[1][i] = minPerm;
-                helper.perms[2][i] = minPerm;
-            }
-            helper.poros[i] = 0; // zero poro is fine for these cells, as they are not
-            // used in pcmin/max computation.
-        }
-    }
-    if (cells_truncated_from_below_poro > 0) {
-        cout << "Cells with truncated porosity: " << cells_truncated_from_below_poro << endl;
-    }
-    if (cells_truncated_from_below_permx > 0) {
-        cout << "Cells with permx truncated from below: " << cells_truncated_from_below_permx << endl;
-    }
-    if (cells_truncated_from_above_permx > 0) {
-        cout << "Cells with permx truncated from above: " << cells_truncated_from_above_permx << endl;
-    }
-
+    Opm::DeckRecordConstPtr specgridRecord(deck->getKeyword("SPECGRID")->getRecord(0));
+    int x_res = specgridRecord->getItem("NX")->getInt(0);
+    int y_res = specgridRecord->getItem("NY")->getInt(0);
+    int z_res = specgridRecord->getItem("NZ")->getInt(0);
 
     /***************************************************************************
      * Step 3:
