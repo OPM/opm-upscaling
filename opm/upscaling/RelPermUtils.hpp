@@ -80,7 +80,9 @@ namespace Opm {
       MonotCubicInterpolator WaterSaturationVsCapPressure; //!< Water saturation as a function of capillary pressure.
       std::vector<double> pressurePoints; //!< Vector of capillary pressure points between Swor and Swir.
 
-      RelPermUpscaleHelper() : permTensor(3,3,nullptr) {}
+      //! \brief Default constructor.
+      RelPermUpscaleHelper() : permTensor(3,3,nullptr),
+                               permTensorInv(3,3,nullptr) {}
 
       //! \brief Collect results from all MPI nodes.
       void collectResults();
@@ -90,6 +92,9 @@ namespace Opm {
       //! \return The phase permeability tensor values.
       //! \details First index is voigt index, second index is pressure point.
       std::vector<std::vector<double>> getRelPerm(int phase) const;
+
+      //! \brief Upscale single phase permeability
+      void upscaleSinglePhasePermeability();
   };
 }
 

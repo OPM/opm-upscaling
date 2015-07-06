@@ -19,6 +19,7 @@
 
 #include <config.h>
 #include <opm/upscaling/RelPermUtils.hpp>
+#include <algorithm>
 #include <iostream>
 #include <exception>
 #include <sstream>
@@ -173,6 +174,34 @@ std::vector<std::vector<double>> RelPermUpscaleHelper::getRelPerm(int phase) con
     }
 
     return RelPermValues;
+}
+
+void RelPermUpscaleHelper::upscaleSinglePhasePermeability()
+{
+    if (isMaster) {
+        SinglePhaseUpscaler::permtensor_t cellperm(3,3,nullptr);
+        zero(cellperm);
+        const std::vector<int>& ecl_idx = upscaler.grid().globalCell();
+        for (unsigned int i = 0; i < ecl_idx.size(); ++i) {
+            unsigned int cell_idx = ecl_idx[i];
+            zero(cellperm);
+            if (! anisotropic_input) {
+                double kval = std::max(perms[0][cell_idx], minSinglePhasePerm);
+                cellperm(0,0) = kval;
+                cellperm(1,1) = kval;
+                cellperm(2,2) = kval;
+            }
+            else {
+                cellperm(0,0) = std::max(minSinglePhasePerm, perms[0][cell_idx]);
+                cellperm(1,1) = std::max(minSinglePhasePerm, perms[1][cell_idx]);
+                cellperm(2,2) = std::max(minSinglePhasePerm, perms[2][cell_idx]);
+            }
+            upscaler.setPermeability(i, cellperm);
+        }
+        permTensor = upscaler.upscaleSinglePhase();
+        permTensorInv = permTensor;
+        invert(permTensorInv);
+    }
 }
 
 }

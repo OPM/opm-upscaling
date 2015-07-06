@@ -1226,36 +1226,10 @@ try
     *
     * In an MPI-environment, this is only done on the master node.
     */
-   typedef SinglePhaseUpscaler::permtensor_t Matrix;
-   Matrix zeroMatrix(3,3,(double*)0);
-   zero(zeroMatrix);
-   zero(helper.permTensor);
-   
-   if (helper.isMaster) {
-       //cout << "Rank " << mpi_rank << " upscaling single-phase permeability..."; flush(cout);
-       Matrix cellperm = zeroMatrix;
-       for (unsigned int i = 0; i < ecl_idx.size(); ++i) {
-           unsigned int cell_idx = ecl_idx[i];
-           zero(cellperm);
-           if (! helper.anisotropic_input) {
-               double kval = max(helper.perms[0][cell_idx], helper.minSinglePhasePerm);
-               cellperm(0,0) = kval;
-               cellperm(1,1) = kval;
-               cellperm(2,2) = kval;
-           }
-           else {
-               cellperm(0,0) = max(helper.minSinglePhasePerm, helper.perms[0][cell_idx]);
-               cellperm(1,1) = max(helper.minSinglePhasePerm, helper.perms[1][cell_idx]);
-               cellperm(2,2) = max(helper.minSinglePhasePerm, helper.perms[2][cell_idx]);
-           }
-           helper.upscaler.setPermeability(i, cellperm);
-       }
-       helper.permTensor = helper.upscaler.upscaleSinglePhase();
-       helper.permTensorInv = helper.permTensor;
-       invert(helper.permTensorInv);
-   }
 
-  
+   helper.upscaleSinglePhasePermeability();
+   typedef SinglePhaseUpscaler::permtensor_t Matrix;
+
    /*****************************************************************
     * Step 8:
     * 
@@ -1433,7 +1407,8 @@ try
            if (helper.upscaleBothPhases) minPhase2Perm = max(maxPhase2Perm/maxPermContrast, minPerm);
 
            // Now remodel the phase permeabilities obeying minPhasePerm
-           Matrix cellperm = zeroMatrix;
+           Matrix cellperm(3,3,nullptr);
+           zero(cellperm);
            for (unsigned int i = 0; i < ecl_idx.size(); ++i) {
                unsigned int cell_idx = ecl_idx[i];
                zero(cellperm);
@@ -1467,7 +1442,7 @@ try
            // Now upscale phase permeability for phase 2
            Matrix phase2PermTensor;
            if (helper.upscaleBothPhases) {
-               cellperm = zeroMatrix;
+               zero(cellperm);
                for (unsigned int i = 0; i < ecl_idx.size(); ++i) {
                    unsigned int cell_idx = ecl_idx[i];
                    zero(cellperm);
