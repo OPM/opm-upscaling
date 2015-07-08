@@ -64,8 +64,8 @@ namespace Opm {
       std::vector<int> satnums;                    //!< Cell satnums.
       double minSinglePhasePerm;                   //!< Minimum single phase permability value.
       std::vector<MonotCubicInterpolator> InvJfunctions; //!< Inverse of the loaded J-functions.
-      std::vector<MonotCubicInterpolator> Krfunctions;  //!< Relperm-curves for phase 1 for each stone type
-      std::vector<MonotCubicInterpolator> Krfunctions2; //!< Relperm-curves for phase 2 for each stone type
+      //! \brief Relperm-curves for each (component->phase->stone type)
+      std::array<std::array<std::vector<MonotCubicInterpolator>,2>,3> Krfunctions;
       SinglePhaseUpscaler::BoundaryConditionType boundaryCondition; //!< Boundary conditions to use.
       std::vector<MonotCubicInterpolator> SwPcfunctions; //!< Holds Sw(Pc) for each rocktype.
       std::string saturationstring; //!< Fluid system type.

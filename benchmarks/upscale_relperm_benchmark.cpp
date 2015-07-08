@@ -378,8 +378,6 @@ try
 
     int stone_types = int(*(max_element(helper.satnums.begin(), helper.satnums.end())));
 
-    std::vector<MonotCubicInterpolator> Krxfunctions, Kryfunctions, Krzfunctions, Krxfunctions2, Kryfunctions2, Krzfunctions2;
-
     std::vector<string> JfunctionNames; // Placeholder for the names of the loaded J-functions.
 
     // This decides whether we are upscaling water or oil relative permeability
@@ -423,7 +421,7 @@ try
 
     MonotCubicInterpolator Jtmp(inputWaterSaturation, inputJfunction);
     for (int i=0; i < stone_types; ++i) {
-        helper.Krfunctions.push_back(MonotCubicInterpolator(inputWaterSaturation, inputRelPerm));
+        helper.Krfunctions[0][0].push_back(MonotCubicInterpolator(inputWaterSaturation, inputRelPerm));
         // Invert J-function
         if (Jtmp.isStrictlyMonotone()) {
             helper.InvJfunctions.push_back(MonotCubicInterpolator(Jtmp.get_fVector(), Jtmp.get_xVector()));
@@ -580,20 +578,20 @@ try
                 }
             }
             else {
-                double minrelp = helper.Krfunctions[i].getMinimumF().second;
+                double minrelp = helper.Krfunctions[0][i].getMinimumF().second;
                 if (minrelp == 0) ; // Do nothing
                 else if (minrelp < helper.critRelpThresh) {
                     // set to 0
                     vector<double> svec, kvec;
-                    svec = helper.Krfunctions[i].get_xVector();
-                    kvec = helper.Krfunctions[i].get_fVector();
+                    svec = helper.Krfunctions[0][i].get_xVector();
+                    kvec = helper.Krfunctions[0][i].get_fVector();
                     if (kvec[0] < helper.critRelpThresh) {
                         kvec[0] = 0.0;
                     }
                     else if (kvec[kvec.size()-1] < helper.critRelpThresh) {
                         kvec[kvec.size()-1] = 0.0;
                     }
-                    helper.Krfunctions[i] = MonotCubicInterpolator(svec, kvec);
+                    helper.Krfunctions[0][i] = MonotCubicInterpolator(svec, kvec);
                 }
                 else {
                     // Error message
@@ -602,16 +600,16 @@ try
                     usageandexit();
                 }
                 if (helper.upscaleBothPhases) {
-                    minrelp = helper.Krfunctions2[i].getMinimumF().second;
+                    minrelp = helper.Krfunctions[1][i].getMinimumF().second;
                     if (minrelp == 0) ;
                     else if (minrelp < helper.critRelpThresh) {
                         // set to 0
                         vector<double> svec, kvec;
-                        svec = helper.Krfunctions2[i].get_xVector();
-                        kvec = helper.Krfunctions2[i].get_fVector();
+                        svec = helper.Krfunctions[1][i].get_xVector();
+                        kvec = helper.Krfunctions[1][i].get_fVector();
                         if (kvec[0] < helper.critRelpThresh) kvec[0] = 0.0;
                         else if (kvec[kvec.size()-1] < helper.critRelpThresh) kvec[kvec.size()-1] = 0.0;
-                        helper.Krfunctions2[i] = MonotCubicInterpolator(svec, kvec);
+                        helper.Krfunctions[1][i] = MonotCubicInterpolator(svec, kvec);
                     }
                     else {
                         // Error message
@@ -1093,11 +1091,11 @@ try
                         // easily divide by zero here.  When water saturation is
                         // zero, we get 'inf', which is circumvented by the cutoff value.
                         cellPhasePerm =
-                            helper.Krfunctions[int(helper.satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
+                            helper.Krfunctions[0][0][int(helper.satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
                             helper.perms[0][cell_idx];
                         if (helper.upscaleBothPhases) {
                             cellPhase2Perm =
-                                helper.Krfunctions2[int(helper.satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
+                                helper.Krfunctions[0][1][int(helper.satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
                                 helper.perms[0][cell_idx];
                         }
                     }
@@ -1106,18 +1104,18 @@ try
                         //cout << PtestvalueCell << "\t" << helper.WaterSaturationCell << endl;
                         waterVolumeLF += WaterSaturationCell * helper.cellPoreVolumes[cell_idx];
 
-                        cellPhasePermDiag[0] = Krxfunctions[int(helper.satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
+                        cellPhasePermDiag[0] = helper.Krfunctions[0][0][int(helper.satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
                             helper.perms[0][cell_idx];
-                        cellPhasePermDiag[1] = Kryfunctions[int(helper.satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
+                        cellPhasePermDiag[1] = helper.Krfunctions[1][0][int(helper.satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
                             helper.perms[1][cell_idx];
-                        cellPhasePermDiag[2] = Krzfunctions[int(helper.satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
+                        cellPhasePermDiag[2] = helper.Krfunctions[2][0][int(helper.satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
                             helper.perms[2][cell_idx];
                         if (helper.upscaleBothPhases) {
-                            cellPhase2PermDiag[0] = Krxfunctions2[int(helper.satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
+                            cellPhase2PermDiag[0] = helper.Krfunctions[0][1][int(helper.satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
                                 helper.perms[0][cell_idx];
-                            cellPhase2PermDiag[1] = Kryfunctions2[int(helper.satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
+                            cellPhase2PermDiag[1] = helper.Krfunctions[1][1][int(helper.satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
                                 helper.perms[1][cell_idx];
-                            cellPhase2PermDiag[2] = Krzfunctions2[int(helper.satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
+                            cellPhase2PermDiag[2] = helper.Krfunctions[2][1][int(helper.satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
                                 helper.perms[2][cell_idx];
                         }
                     }

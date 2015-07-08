@@ -408,8 +408,6 @@ try
 
    int stone_types = int(*(max_element(helper.satnums.begin(), helper.satnums.end())));
    
-   std::vector<MonotCubicInterpolator> Krxfunctions, Kryfunctions, Krzfunctions, Krxfunctions2, Kryfunctions2, Krzfunctions2;
-
    std::vector<string> JfunctionNames; // Placeholder for the names of the loaded J-functions.
 
    // This decides whether we are upscaling water or oil relative permeability
@@ -460,11 +458,11 @@ try
                  helper.InvJfunctions.push_back(MonotCubicInterpolator(Jtmp.get_fVector(), Jtmp.get_xVector()));
                  JfunctionNames.push_back(ROCKFILENAME);
                  if (helper.upscaleBothPhases) {
-                     helper.Krfunctions.push_back(MonotCubicInterpolator(ROCKFILENAME, 1, 2));
-                     helper.Krfunctions2.push_back(MonotCubicInterpolator(ROCKFILENAME, 1, 3));
+                     helper.Krfunctions[0][0].push_back(MonotCubicInterpolator(ROCKFILENAME, 1, 2));
+                     helper.Krfunctions[0][1].push_back(MonotCubicInterpolator(ROCKFILENAME, 1, 3));
                  }
                  else {
-                     helper.Krfunctions.push_back(MonotCubicInterpolator(ROCKFILENAME, 1, relPermCurve));
+                     helper.Krfunctions[0][0].push_back(MonotCubicInterpolator(ROCKFILENAME, 1, relPermCurve));
                  }
              }
              else {
@@ -487,13 +485,13 @@ try
               if (Pctmp.isStrictlyMonotone()) {
                  helper.SwPcfunctions.push_back(MonotCubicInterpolator(Pctmp.get_fVector(), Pctmp.get_xVector()));
                  JfunctionNames.push_back(ROCKFILENAME);
-                 Krxfunctions.push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 3));
-                 Kryfunctions.push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 4));
-                 Krzfunctions.push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 5));
+                 helper.Krfunctions[0][0].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 3));
+                 helper.Krfunctions[1][0].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 4));
+                 helper.Krfunctions[2][0].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 5));
                  if (helper.upscaleBothPhases) {
-                     Krxfunctions2.push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 6));
-                     Kryfunctions2.push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 7));
-                     Krzfunctions2.push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 8));
+                     helper.Krfunctions[0][1].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 6));
+                     helper.Krfunctions[1][1].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 7));
+                     helper.Krfunctions[2][1].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 8));
                  }
               }
              else {
@@ -531,11 +529,11 @@ try
                    helper.InvJfunctions.push_back(MonotCubicInterpolator(Jtmp.get_fVector(), Jtmp.get_xVector()));
                    JfunctionNames.push_back(vararg[rockfileindex]);
                    if (helper.upscaleBothPhases) {
-                       helper.Krfunctions.push_back(MonotCubicInterpolator(vararg[rockfileindex], 1, 2));
-                       helper.Krfunctions2.push_back(MonotCubicInterpolator(vararg[rockfileindex], 1, 3));
+                       helper.Krfunctions[0][0].push_back(MonotCubicInterpolator(vararg[rockfileindex], 1, 2));
+                       helper.Krfunctions[0][1].push_back(MonotCubicInterpolator(vararg[rockfileindex], 1, 3));
                    }
                    else {
-                       helper.Krfunctions.push_back(MonotCubicInterpolator(vararg[rockfileindex], 1, relPermCurve));
+                       helper.Krfunctions[0][0].push_back(MonotCubicInterpolator(vararg[rockfileindex], 1, relPermCurve));
                    }
                }
            }
@@ -559,13 +557,13 @@ try
                for (int i=0; i < stone_types; ++i) { 
                    helper.SwPcfunctions.push_back(MonotCubicInterpolator(Pctmp.get_fVector(), Pctmp.get_xVector()));
                    JfunctionNames.push_back(ROCKFILENAME);
-                   Krxfunctions.push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 3));
-                   Kryfunctions.push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 4));
-                   Krzfunctions.push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 5));
+                   helper.Krfunctions[0][0].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 3));
+                   helper.Krfunctions[1][0].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 4));
+                   helper.Krfunctions[2][0].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 5));
                    if (helper.upscaleBothPhases) {
-                       Krxfunctions2.push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 6));
-                       Kryfunctions2.push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 7));
-                       Krzfunctions2.push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 8));
+                       helper.Krfunctions[0][1].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 6));
+                       helper.Krfunctions[1][1].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 7));
+                       helper.Krfunctions[2][1].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 8));
                    }
                }
            }
@@ -589,22 +587,22 @@ try
    if (helper.doEclipseCheck) {
        for (int i=0 ; i < numberofrockstocheck; ++i) {
            if (helper.anisotropic_input) {
-               double minrelpx = Krxfunctions[i].getMinimumF().second;
-               double minrelpy = Kryfunctions[i].getMinimumF().second;
-               double minrelpz = Krzfunctions[i].getMinimumF().second;
+               double minrelpx = helper.Krfunctions[0][0][i].getMinimumF().second;
+               double minrelpy = helper.Krfunctions[1][0][i].getMinimumF().second;
+               double minrelpz = helper.Krfunctions[2][0][i].getMinimumF().second;
                if (minrelpx == 0) ; // Do nothing
                else if (minrelpx < helper.critRelpThresh) {
                    // set to 0
                    vector<double> svec, kvec;
-                   svec = Krxfunctions[i].get_xVector();
-                   kvec = Krxfunctions[i].get_fVector();
+                   svec = helper.Krfunctions[0][0][i].get_xVector();
+                   kvec = helper.Krfunctions[0][0][i].get_fVector();
                    if (kvec[0] < helper.critRelpThresh) {
                        kvec[0] = 0.0;
                    }
                    else if (kvec[kvec.size()-1] < helper.critRelpThresh) {
                        kvec[kvec.size()-1] = 0.0;
                    }
-                   Krxfunctions[i] = MonotCubicInterpolator(svec, kvec);
+                   helper.Krfunctions[0][0][i] = MonotCubicInterpolator(svec, kvec);
                }
                else {
                    // Error message
@@ -617,15 +615,15 @@ try
                else if (minrelpy < helper.critRelpThresh) {
                    // set to 0
                    vector<double> svec, kvec;
-                   svec = Kryfunctions[i].get_xVector();
-                   kvec = Kryfunctions[i].get_fVector();
+                   svec = helper.Krfunctions[1][0][i].get_xVector();
+                   kvec = helper.Krfunctions[1][0][i].get_fVector();
                    if (kvec[0] < helper.critRelpThresh) {
                        kvec[0] = 0.0;
                    }
                    else if (kvec[kvec.size()-1] < helper.critRelpThresh) {
                        kvec[kvec.size()-1] = 0.0;
                    }
-                   Kryfunctions[i] = MonotCubicInterpolator(svec, kvec);
+                   helper.Krfunctions[1][0][i] = MonotCubicInterpolator(svec, kvec);
                }
                else {
                    // Error message
@@ -638,15 +636,15 @@ try
                else if (minrelpz < helper.critRelpThresh) {
                    // set to 0
                    vector<double> svec, kvec;
-                   svec = Krzfunctions[i].get_xVector();
-                   kvec = Krzfunctions[i].get_fVector();
+                   svec = helper.Krfunctions[2][0][i].get_xVector();
+                   kvec = helper.Krfunctions[2][0][i].get_fVector();
                    if (kvec[0] < helper.critRelpThresh) {
                        kvec[0] = 0.0;
                    }
                    else if (kvec[kvec.size()-1] < helper.critRelpThresh) {
                        kvec[kvec.size()-1] = 0.0;
                    }
-                   Krzfunctions[i] = MonotCubicInterpolator(svec, kvec);
+                   helper.Krfunctions[2][0][i] = MonotCubicInterpolator(svec, kvec);
                }
                else {
                    // Error message
@@ -656,22 +654,22 @@ try
                }
                //
                if (helper.upscaleBothPhases) {
-                   minrelpx = Krxfunctions2[i].getMinimumF().second;
-                   minrelpy = Kryfunctions2[i].getMinimumF().second;
-                   minrelpz = Krzfunctions2[i].getMinimumF().second;
+                   minrelpx = helper.Krfunctions[0][1][i].getMinimumF().second;
+                   minrelpy = helper.Krfunctions[1][1][i].getMinimumF().second;
+                   minrelpz = helper.Krfunctions[2][1][i].getMinimumF().second;
                    if (minrelpx == 0) ; // Do nothing
                    else if (minrelpx < helper.critRelpThresh) {
                        // set to 0
                        vector<double> svec, kvec;
-                       svec = Krxfunctions2[i].get_xVector();
-                       kvec = Krxfunctions2[i].get_fVector();
+                       svec = helper.Krfunctions[0][1][i].get_xVector();
+                       kvec = helper.Krfunctions[0][1][i].get_fVector();
                        if (kvec[0] < helper.critRelpThresh) {
                            kvec[0] = 0.0;
                        }
                        else if (kvec[kvec.size()-1] < helper.critRelpThresh) {
                            kvec[kvec.size()-1] = 0.0;
                        }
-                       Krxfunctions2[i] = MonotCubicInterpolator(svec, kvec);
+                       helper.Krfunctions[0][1][i] = MonotCubicInterpolator(svec, kvec);
                    }
                    else {
                        // Error message
@@ -684,15 +682,15 @@ try
                    else if (minrelpy < helper.critRelpThresh) {
                        // set to 0
                        vector<double> svec, kvec;
-                       svec = Kryfunctions2[i].get_xVector();
-                       kvec = Kryfunctions2[i].get_fVector();
+                       svec = helper.Krfunctions[1][1][i].get_xVector();
+                       kvec = helper.Krfunctions[1][1][i].get_fVector();
                        if (kvec[0] < helper.critRelpThresh) {
                            kvec[0] = 0.0;
                        }
                        else if (kvec[kvec.size()-1] < helper.critRelpThresh) {
                            kvec[kvec.size()-1] = 0.0;
                        }
-                       Kryfunctions2[i] = MonotCubicInterpolator(svec, kvec);
+                       helper.Krfunctions[1][1][i] = MonotCubicInterpolator(svec, kvec);
                    }
                    else {
                        // Error message
@@ -705,15 +703,15 @@ try
                    else if (minrelpz < helper.critRelpThresh) {
                        // set to 0
                        vector<double> svec, kvec;
-                       svec = Krzfunctions2[i].get_xVector();
-                       kvec = Krzfunctions2[i].get_fVector();
+                       svec = helper.Krfunctions[2][1][i].get_xVector();
+                       kvec = helper.Krfunctions[2][1][i].get_fVector();
                        if (kvec[0] < helper.critRelpThresh) {
                            kvec[0] = 0.0;
                        }
                        else if (kvec[kvec.size()-1] < helper.critRelpThresh) {
                            kvec[kvec.size()-1] = 0.0;
                        }
-                       Krzfunctions2[i] = MonotCubicInterpolator(svec, kvec);
+                       helper.Krfunctions[2][1][i] = MonotCubicInterpolator(svec, kvec);
                    }
                    else {
                        // Error message
@@ -725,20 +723,20 @@ try
                }                   
            }
            else {
-               double minrelp = helper.Krfunctions[i].getMinimumF().second;
+               double minrelp = helper.Krfunctions[0][0][i].getMinimumF().second;
                if (minrelp == 0) ; // Do nothing
                else if (minrelp < helper.critRelpThresh) {
                    // set to 0
                    vector<double> svec, kvec;
-                   svec = helper.Krfunctions[i].get_xVector();
-                   kvec = helper.Krfunctions[i].get_fVector();
+                   svec = helper.Krfunctions[0][0][i].get_xVector();
+                   kvec = helper.Krfunctions[0][0][i].get_fVector();
                    if (kvec[0] < helper.critRelpThresh) {
                        kvec[0] = 0.0;
                    }
                    else if (kvec[kvec.size()-1] < helper.critRelpThresh) {
                        kvec[kvec.size()-1] = 0.0;
                    }
-                   helper.Krfunctions[i] = MonotCubicInterpolator(svec, kvec);
+                   helper.Krfunctions[0][0][i] = MonotCubicInterpolator(svec, kvec);
                }
                else {
                    // Error message
@@ -747,16 +745,16 @@ try
                    usageandexit();
                }
                if (helper.upscaleBothPhases) {
-                   minrelp = helper.Krfunctions2[i].getMinimumF().second;
+                   minrelp = helper.Krfunctions[0][1][i].getMinimumF().second;
                    if (minrelp == 0) ;
                    else if (minrelp < helper.critRelpThresh) {
                        // set to 0
                        vector<double> svec, kvec;
-                       svec = helper.Krfunctions2[i].get_xVector();
-                       kvec = helper.Krfunctions2[i].get_fVector();
+                       svec = helper.Krfunctions[0][1][i].get_xVector();
+                       kvec = helper.Krfunctions[0][1][i].get_fVector();
                        if (kvec[0] < helper.critRelpThresh) kvec[0] = 0.0;
                        else if (kvec[kvec.size()-1] < helper.critRelpThresh) kvec[kvec.size()-1] = 0.0;
-                       helper.Krfunctions2[i] = MonotCubicInterpolator(svec, kvec);
+                       helper.Krfunctions[0][1][i] = MonotCubicInterpolator(svec, kvec);
                    }
                    else {
                        // Error message
@@ -1243,11 +1241,11 @@ try
                        // easily divide by zero here.  When water saturation is
                        // zero, we get 'inf', which is circumvented by the cutoff value.
                        cellPhasePerm = 
-                           helper.Krfunctions[int(helper.satnums[cell_idx])-1].evaluate(waterSaturationCell) *
+                           helper.Krfunctions[0][0][int(helper.satnums[cell_idx])-1].evaluate(waterSaturationCell) *
                            helper.perms[0][cell_idx];
                        if (helper.upscaleBothPhases) {
                            cellPhase2Perm = 
-                               helper.Krfunctions2[int(helper.satnums[cell_idx])-1].evaluate(waterSaturationCell) *
+                               helper.Krfunctions[0][1][int(helper.satnums[cell_idx])-1].evaluate(waterSaturationCell) *
                                helper.perms[0][cell_idx];
                        }
                    }
@@ -1256,18 +1254,18 @@ try
                        //cout << PtestvalueCell << "\t" << waterSaturationCell << endl;
                        waterVolumeLF += waterSaturationCell * helper.cellPoreVolumes[cell_idx];
                        
-                       cellPhasePermDiag[0] = Krxfunctions[int(helper.satnums[cell_idx])-1].evaluate(waterSaturationCell) *
+                       cellPhasePermDiag[0] = helper.Krfunctions[0][0][int(helper.satnums[cell_idx])-1].evaluate(waterSaturationCell) *
                            helper.perms[0][cell_idx];
-                       cellPhasePermDiag[1] = Kryfunctions[int(helper.satnums[cell_idx])-1].evaluate(waterSaturationCell) *
+                       cellPhasePermDiag[1] = helper.Krfunctions[1][0][int(helper.satnums[cell_idx])-1].evaluate(waterSaturationCell) *
                            helper.perms[1][cell_idx];
-                       cellPhasePermDiag[2] = Krzfunctions[int(helper.satnums[cell_idx])-1].evaluate(waterSaturationCell) *
+                       cellPhasePermDiag[2] = helper.Krfunctions[2][0][int(helper.satnums[cell_idx])-1].evaluate(waterSaturationCell) *
                            helper.perms[2][cell_idx];
                        if (helper.upscaleBothPhases) {
-                           cellPhase2PermDiag[0] = Krxfunctions2[int(helper.satnums[cell_idx])-1].evaluate(waterSaturationCell) *
+                           cellPhase2PermDiag[0] = helper.Krfunctions[0][1][int(helper.satnums[cell_idx])-1].evaluate(waterSaturationCell) *
                                helper.perms[0][cell_idx];
-                           cellPhase2PermDiag[1] = Kryfunctions2[int(helper.satnums[cell_idx])-1].evaluate(waterSaturationCell) *
+                           cellPhase2PermDiag[1] = helper.Krfunctions[1][1][int(helper.satnums[cell_idx])-1].evaluate(waterSaturationCell) *
                                helper.perms[1][cell_idx];
-                           cellPhase2PermDiag[2] = Krzfunctions2[int(helper.satnums[cell_idx])-1].evaluate(waterSaturationCell) *
+                           cellPhase2PermDiag[2] = helper.Krfunctions[2][1][int(helper.satnums[cell_idx])-1].evaluate(waterSaturationCell) *
                                helper.perms[2][cell_idx];
                        }
                    }
@@ -1452,7 +1450,7 @@ try
        }
        else { // anisotropic input, not J-functions that are supplied on command line (but vector JfunctionNames is still used)
            for (int i=0; i < stone_types ; ++i) {
-               outputtmp << "# Stone " << i+1 << ": " << JfunctionNames[i] << " (" << Krxfunctions[i].getSize() << " points)" <<  endl;
+               outputtmp << "# Stone " << i+1 << ": " << JfunctionNames[i] << " (" << helper.Krfunctions[0][0][i].getSize() << " points)" <<  endl;
            }
        }
            
