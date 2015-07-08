@@ -337,4 +337,46 @@ void RelPermUpscaleHelper::sanityCheckInput(Opm::DeckConstPtr deck,
         std::cout << "Cells with permx truncated from above: " << cells_truncated_from_above_permx << std::endl;
 }
 
+bool RelPermUpscaleHelper::checkCurve(MonotCubicInterpolator& func)
+{
+    double minrelp = func.getMinimumF().second;
+    if (minrelp == 0)
+        return true;
+    else if (minrelp < critRelpThresh) {
+        // set to 0
+        std::vector<double> svec = func.get_xVector();
+        std::vector<double> kvec = func.get_fVector();
+        if (kvec[0] < critRelpThresh) {
+            kvec[0] = 0.0;
+        }
+        else if (kvec[kvec.size()-1] < critRelpThresh) {
+            kvec[kvec.size()-1] = 0.0;
+        }
+        func = MonotCubicInterpolator(svec, kvec);
+        return true;
+    }
+    else
+        return false;
+}
+
+void RelPermUpscaleHelper::checkCriticalSaturations()
+{
+    for (size_t i=0 ; i < Krfunctions[0][0].size(); ++i) {
+        for (size_t j=0;j<(anisotropic_input?3:1);++j) {
+            for (size_t k=0;k<(upscaleBothPhases?2:1);++k) {
+                if (!checkCurve(Krfunctions[j][k][i])) {
+                    std::stringstream str;
+                    // Error message
+                    str << "Relperm curve for rock " << i
+                        << " does not specify critical saturation." << std::endl
+                        << "Minimum relperm value is "
+                        << Krfunctions[j][k][i].getMinimumF().second
+                        << ", critRelpermThresh is " << critRelpThresh;
+                    throw std::runtime_error(str.str());
+                }
+            }
+        }
+    }
+}
+
 }

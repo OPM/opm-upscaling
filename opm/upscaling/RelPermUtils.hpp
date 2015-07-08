@@ -104,6 +104,17 @@ namespace Opm {
       //! \details Throws error string.
       void sanityCheckInput(Opm::DeckConstPtr deck,
                             double minPerm, double maxPerm, double minPoro);
+
+      //! \brief Check that input relperm curevs specify critical saturations.
+      //! \param[in] num_rock Number of curves to check.
+      void checkCriticalSaturations();
+    private:
+      //! \brief Perform critical saturation check for a single curve.
+      //! \param[in,out] func Function to check for.
+      //! \details Checks that minimum relperm is larger than the threshold.
+      //!          If not func is set to a constant value of 0.
+      //! \return True if test passed, false otherwise.
+      bool checkCurve(MonotCubicInterpolator& func);
   };
 }
 
