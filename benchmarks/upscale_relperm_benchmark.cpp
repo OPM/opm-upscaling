@@ -325,9 +325,10 @@ try
     helper.sanityCheckInput(deck, minPerm, maxPerm, minPoro);
 
     Opm::DeckRecordConstPtr specgridRecord(deck->getKeyword("SPECGRID")->getRecord(0));
-    int x_res = specgridRecord->getItem("NX")->getInt(0);
-    int y_res = specgridRecord->getItem("NY")->getInt(0);
-    int z_res = specgridRecord->getItem("NZ")->getInt(0);
+    std::array<int,3> res;
+    res[0] = specgridRecord->getItem("NX")->getInt(0);
+    res[1] = specgridRecord->getItem("NY")->getInt(0);
+    res[2] = specgridRecord->getItem("NZ")->getInt(0);
 
     /***************************************************************************
      * Step 3:
@@ -448,8 +449,8 @@ try
         // height of model is calculated as the average of the z-values at the top layer
         // This calculation makes assumption on the indexing of cells in the grid, going from bottom to top.
         double modelHeight = 0;
-        for (unsigned int zIdx = (4 * x_res * y_res * (2*z_res-1)); zIdx < helper.zcorns.size(); ++zIdx) {
-            modelHeight += helper.zcorns[zIdx] / (4*x_res*y_res);
+        for (unsigned int zIdx = (4 * res[0] * res[1] * (2*res[2]-1)); zIdx < helper.zcorns.size(); ++zIdx) {
+            modelHeight += helper.zcorns[zIdx] / (4*res[0]*res[1]);
         }
 
         // We assume that the spatial units in the grid file is in centimetres,
@@ -465,26 +466,26 @@ try
         for (unsigned int cellIdx = 0; cellIdx < helper.satnums.size(); ++cellIdx) {
             int i,j,k; // Position of cell in cell hierarchy
             vector<int> zIndices(8,0); // 8 corners with 8 heights
-            int horIdx = (cellIdx+1) - int(std::floor(((double)(cellIdx+1))/((double)(x_res*y_res))))*x_res*y_res; // index in the corresponding horizon
+            int horIdx = (cellIdx+1) - int(std::floor(((double)(cellIdx+1))/((double)(res[0]*res[1]))))*res[0]*res[1]; // index in the corresponding horizon
             if (horIdx == 0) {
-                horIdx = x_res*y_res;
+                horIdx = res[0]*res[1];
             }
-            i = horIdx - int(std::floor(((double)horIdx)/((double)x_res)))*x_res;
+            i = horIdx - int(std::floor(((double)horIdx)/((double)res[0])))*res[0];
             if (i == 0) {
-                i = x_res;
+                i = res[0];
             }
-            j = (horIdx-i)/x_res+1;
-            k = ((cellIdx+1)-x_res*(j-1)-1)/(x_res*y_res)+1;
-            int zBegin = 8*x_res*y_res*(k-1); // indices of Z-values of bottom
-            int level2 = 4*x_res*y_res; // number of z-values in one horizon
-            zIndices[0] = zBegin + 4*x_res*(j-1)+2*i-1;
-            zIndices[1] = zBegin + 4*x_res*(j-1)+2*i;
-            zIndices[2] = zBegin + 2*x_res*(2*j-1)+2*i;
-            zIndices[3] = zBegin + 2*x_res*(2*j-1)+2*i-1;
-            zIndices[4] = zBegin + level2 + 4*x_res*(j-1)+2*i-1;
-            zIndices[5] = zBegin + level2 + 4*x_res*(j-1)+2*i;
-            zIndices[6] = zBegin + level2 + 2*x_res*(2*j-1)+2*i;
-            zIndices[7] = zBegin + level2 + 2*x_res*(2*j-1)+2*i-1;
+            j = (horIdx-i)/res[0]+1;
+            k = ((cellIdx+1)-res[0]*(j-1)-1)/(res[0]*res[1])+1;
+            int zBegin = 8*res[0]*res[1]*(k-1); // indices of Z-values of bottom
+            int level2 = 4*res[0]*res[1]; // number of z-values in one horizon
+            zIndices[0] = zBegin + 4*res[0]*(j-1)+2*i-1;
+            zIndices[1] = zBegin + 4*res[0]*(j-1)+2*i;
+            zIndices[2] = zBegin + 2*res[0]*(2*j-1)+2*i;
+            zIndices[3] = zBegin + 2*res[0]*(2*j-1)+2*i-1;
+            zIndices[4] = zBegin + level2 + 4*res[0]*(j-1)+2*i-1;
+            zIndices[5] = zBegin + level2 + 4*res[0]*(j-1)+2*i;
+            zIndices[6] = zBegin + level2 + 2*res[0]*(2*j-1)+2*i;
+            zIndices[7] = zBegin + level2 + 2*res[0]*(2*j-1)+2*i-1;
 
             double cellDepth = 0;
             for (unsigned int corner = 0; corner < 8; ++corner) {
@@ -1166,8 +1167,8 @@ try
         outputtmp << "Part of the OPM project, http://www.opm-project.org\n";
 
         // Calculate approx model size
-        int nCellsTotal = x_res*y_res*z_res;
-        int model_size = (8*nCellsTotal + 2*nCellsTotal + (x_res+1)*(y_res+1)*2)*sizeof(double) + 2*nCellsTotal*sizeof(int);
+        int nCellsTotal = res[0]*res[1]*res[2];
+        int model_size = (8*nCellsTotal + 2*nCellsTotal + (res[0]+1)*(res[1]+1)*2)*sizeof(double) + 2*nCellsTotal*sizeof(int);
 
         outputtmp << dashed_line;
         outputtmp << "Model type :      " << model_name << endl;
