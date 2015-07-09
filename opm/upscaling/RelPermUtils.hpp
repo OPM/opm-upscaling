@@ -113,6 +113,16 @@ namespace Opm {
       //! \param[in] options Option structure.
       //! \details Uses the following options: bc
       void setupBoundaryConditions(std::map<std::string, std::string>& options);
+
+      //! \brief Tesselate grid
+      //! \param[in] deck The grid to tesselate.
+      //! \param[in] options Option structure.
+      //! \details Uses the following options: linsolver_tolerance,
+      //!          linsolver_verbosity, linsolver_type, linsolver_max_iterations,
+      //!          linsolver_smooth_steps, linsolver_prolongate_factor, minPerm
+      //! \return Time used for tesselation.
+      double tesselateGrid(Opm::DeckConstPtr deck,
+                           std::map<std::string,std::string>& options);
     private:
       //! \brief Perform critical saturation check for a single curve.
       //! \param[in,out] func Function to check for.

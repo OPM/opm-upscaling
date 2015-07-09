@@ -585,25 +585,8 @@ try
     *      constant times cell height times factor 10^-7 to obtain bars (same as p_c)
     */
 
-
-
-   if (helper.isMaster) cout << "Tesselating grid... ";
-   flush(cout);   start = clock();
    double linsolver_tolerance = atof(options["linsolver_tolerance"].c_str());
-   int linsolver_verbosity = atoi(options["linsolver_verbosity"].c_str());
-   int linsolver_type = atoi(options["linsolver_type"].c_str());
-   int linsolver_maxit = atoi(options["linsolver_max_iterations"].c_str()); 
-   int smooth_steps = atoi(options["linsolver_smooth_steps"].c_str());
-   double linsolver_prolongate_factor = atof(options["linsolver_prolongate_factor"].c_str());
-   bool twodim_hack = false;
-   helper.upscaler.init(deck, helper.boundaryCondition,
-                        Opm::unit::convert::from(minPerm, Opm::prefix::milli*Opm::unit::darcy),
-                        linsolver_tolerance,
-                        linsolver_verbosity, linsolver_type, twodim_hack,
-                        linsolver_maxit, linsolver_prolongate_factor, smooth_steps);
-
-   finish = clock();   timeused_tesselation = (double(finish)-double(start))/CLOCKS_PER_SEC;
-   if (helper.isMaster) cout << " (" << timeused_tesselation <<" secs)" << endl;
+   timeused_tesselation = helper.tesselateGrid(deck, options);
 
    vector<double> dP;
    double dPmin = +DBL_MAX;

@@ -394,4 +394,34 @@ void RelPermUpscaleHelper::setupBoundaryConditions(std::map<std::string,std::str
         throw std::runtime_error("Invalid boundary condition. Only one of the letters f, l or p are allowed.");
 }
 
+double RelPermUpscaleHelper::tesselateGrid(Opm::DeckConstPtr deck,
+                                         std::map<std::string,std::string>& options)
+{
+  double linsolver_tolerance = atof(options["linsolver_tolerance"].c_str());
+  int linsolver_verbosity = atoi(options["linsolver_verbosity"].c_str());
+  int linsolver_type = atoi(options["linsolver_type"].c_str());
+  int linsolver_maxit = atoi(options["linsolver_max_iterations"].c_str());
+  int smooth_steps = atoi(options["linsolver_smooth_steps"].c_str());
+  double linsolver_prolongate_factor = atof(options["linsolver_prolongate_factor"].c_str());
+  const double minPerm = atof(options["minPerm"].c_str());
+
+   if (isMaster)
+     std::cout << "Tesselating grid... ";
+
+   flush(std::cout);
+   clock_t start = clock();
+
+  upscaler.init(deck, boundaryCondition,
+                Opm::unit::convert::from(minPerm, Opm::prefix::milli*Opm::unit::darcy),
+                linsolver_tolerance, linsolver_verbosity, linsolver_type, false,
+                linsolver_maxit, linsolver_prolongate_factor, smooth_steps);
+
+   clock_t finish = clock();
+   double timeused_tesselation = (double(finish)-double(start))/CLOCKS_PER_SEC;
+   if (isMaster)
+     std::cout << " (" << timeused_tesselation <<" secs)" << std::endl;
+
+   return timeused_tesselation;
+}
+
 }
