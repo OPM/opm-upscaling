@@ -123,6 +123,14 @@ namespace Opm {
       //! \return Time used for tesselation.
       double tesselateGrid(Opm::DeckConstPtr deck,
                            std::map<std::string,std::string>& options);
+
+      //! \brief Find cell center pressure gradient for every cell.
+      //! \param[in] res The number of cells in each direction.
+      //! \param[in] options Option structure.
+      //! \details Uses the following options: gravity, waterDensity, oilDensity
+      //! \return Cell center pressure gradients.
+      std::vector<double> calculateCellPressureGradients(const std::array<int,3>& res,
+                                                         std::map<std::string,std::string>& options);
     private:
       //! \brief Perform critical saturation check for a single curve.
       //! \param[in,out] func Function to check for.

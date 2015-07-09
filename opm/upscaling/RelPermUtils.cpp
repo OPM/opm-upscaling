@@ -424,4 +424,65 @@ double RelPermUpscaleHelper::tesselateGrid(Opm::DeckConstPtr deck,
    return timeused_tesselation;
 }
 
+std::vector<double>
+        RelPermUpscaleHelper::calculateCellPressureGradients(const std::array<int,3>& res,
+                                                             std::map<std::string,std::string>& options)
+{
+    const double gravity            = atof(options["gravity"].c_str());
+    const double waterDensity       = atof(options["waterDensity"].c_str());
+    const double oilDensity         = atof(options["oilDensity"].c_str());
+
+    // height of model is calculated as the average of the z-values at the top layer
+    // This calculation makes assumption on the indexing of cells in the grid, going from bottom to top.
+    double modelHeight = 0;
+    for (size_t zIdx = (4 * res[0] * res[1] * (2*res[2]-1)); zIdx < zcorns.size(); ++zIdx)
+        modelHeight += zcorns[zIdx] / (4*res[0]*res[1]);
+
+    // We assume that the spatial units in the grid file is in centimetres,
+    // so we divide by 100 to get to metres.
+    modelHeight /= 100.0;
+
+    // Input water and oil density is given in g/cm3, we convert it to kg/m3 (SI)
+    // by multiplying with 1000.
+    double dRho = (waterDensity-oilDensity) * 1000; // SI unit (kg/m3)
+
+    // Calculating difference in capillary pressure for all cells
+    std::vector<double> dP(satnums.size(), 0);
+    for (size_t cellIdx = 0; cellIdx < satnums.size(); ++cellIdx) {
+        int i,j,k; // Position of cell in cell hierarchy
+        std::vector<int> zIndices(8,0); // 8 corners with 8 heights
+        int horIdx = (cellIdx+1) - int(std::floor(((double)(cellIdx+1))/((double)(res[0]*res[1]))))*res[0]*res[1]; // index in the corresponding horizon
+        if (horIdx == 0)
+            horIdx = res[0]*res[1];
+
+        i = horIdx - int(std::floor(((double)horIdx)/((double)res[0])))*res[0];
+
+        if (i == 0)
+            i = res[0];
+
+        j = (horIdx-i)/res[0]+1;
+        k = ((cellIdx+1)-res[0]*(j-1)-1)/(res[0]*res[1])+1;
+        int zBegin = 8*res[0]*res[1]*(k-1); // indices of Z-values of bottom
+        int level2 = 4*res[0]*res[1]; // number of z-values in one horizon
+        zIndices[0] = zBegin + 4*res[0]*(j-1)+2*i-1;
+        zIndices[1] = zBegin + 4*res[0]*(j-1)+2*i;
+        zIndices[2] = zBegin + 2*res[0]*(2*j-1)+2*i;
+        zIndices[3] = zBegin + 2*res[0]*(2*j-1)+2*i-1;
+        zIndices[4] = zBegin + level2 + 4*res[0]*(j-1)+2*i-1;
+        zIndices[5] = zBegin + level2 + 4*res[0]*(j-1)+2*i;
+        zIndices[6] = zBegin + level2 + 2*res[0]*(2*j-1)+2*i;
+        zIndices[7] = zBegin + level2 + 2*res[0]*(2*j-1)+2*i-1;
+
+        double cellDepth = 0;
+        for (size_t corner = 0; corner < 8; ++corner)
+            cellDepth += zcorns[zIndices[corner]-1] / 8.0;
+
+        // cellDepth is in cm, convert to m by dividing by 100
+        cellDepth /= 100.0;
+        dP[cellIdx] = dRho * gravity * (cellDepth-modelHeight/2.0);
+    }
+
+    return dP;
+}
+
 }
