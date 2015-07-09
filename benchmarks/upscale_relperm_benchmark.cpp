@@ -228,34 +228,37 @@ try
       Populate options-map with default values
     */
     map<string,string> options =
-        {{"bc",                       "f"}, // Fixed boundary conditions
-        {"points",                   "20"}, // Number of saturation points (uniformly distributed within saturation endpoints) [benchmark]
-        {"relPermCurve",              "2"}, // Which column in the rock types are upscaled
-        {"upscaleBothPhases",     "false"}, // Whether to upscale for both phases in the same run. Default true. [benchmark]
-        {"jFunctionCurve",            "3"}, // Which column in the rock type file is the J-function curve [benchmark]
-        {"surfaceTension",           "11"}, // Surface tension given in dynes/cm
-        {"output",                     ""}, // If this is set, output goes to screen and to this file.
-        {"gravity",                 "0.0"}, // default is no gravitational effects
-        {"waterDensity",            "1.0"}, // default density of water, only applicable to gravity
-        {"oilDensity",              "0.6"}, // ditto
-        {"interpolate",               "0"}, // default is not to interpolate
-        {"maxpoints",              "1000"}, // maximal number of saturation points.
-        {"outputprecision",          "20"}, // number of significant numbers to print [benchmark]
-        {"maxPermContrast",         "1e7"}, // maximum allowed contrast in each single-phase computation
-        {"minPerm",               "1e-12"}, // absolute minimum for allowed cell permeability
-        {"maxPerm",              "100000"}, // maximal allowed cell permeability
-        {"minPoro",              "0.0001"}, // this limit is necessary for pcmin/max computation
-        {"saturationThreshold", "0.00001"}, // accuracy threshold for saturation, we ignore Pc values that
-                                            // give so small contributions near endpoints.
-        {"linsolver_tolerance",   "1e-12"}, // residual tolerance for linear solver
-        {"linsolver_verbosity",       "0"}, // verbosity level for linear solver
-        {"linsolver_type",            "3"}, // type of linear solver: 0 = ILU0/CG, 1 = AMG/CG, 2 KAMG/CG, 3 FAST_AMG/CG
-        {"fluids",                   "ow"}, // wheater upscaling for oil/water (ow) or gas/oil (go)
-        {"krowxswirr",               "-1"}, // relative permeability in x direction of oil in corresponding oil/water system
-        {"krowyswirr",               "-1"}, // relative permeability in y direction of oil in corresponding oil/water system
-        {"krowzswirr",               "-1"}, // relative permeability in z direction of oil in corresponding oil/water system
-        {"doEclipseCheck",         "true"}, // Check if minimum relpermvalues in input are zero (specify critical saturations)
-        {"critRelpermThresh",      "1e-6"}};// Threshold for setting minimum relperm to 0 (thus specify critical saturations)
+        {{"bc",                          "f"}, // Fixed boundary conditions
+        {"points",                      "20"}, // Number of saturation points (uniformly distributed within saturation endpoints) [benchmark]
+        {"relPermCurve",                 "2"}, // Which column in the rock types are upscaled
+        {"upscaleBothPhases",        "false"}, // Whether to upscale for both phases in the same run. Default true. [benchmark]
+        {"jFunctionCurve",               "3"}, // Which column in the rock type file is the J-function curve [benchmark]
+        {"surfaceTension",              "11"}, // Surface tension given in dynes/cm
+        {"output",                        ""}, // If this is set, output goes to screen and to this file.
+        {"gravity",                    "0.0"}, // default is no gravitational effects
+        {"waterDensity",               "1.0"}, // default density of water, only applicable to gravity
+        {"oilDensity",                 "0.6"}, // ditto
+        {"interpolate",                  "0"}, // default is not to interpolate
+        {"maxpoints",                 "1000"}, // maximal number of saturation points.
+        {"outputprecision",             "20"}, // number of significant numbers to print [benchmark]
+        {"maxPermContrast",            "1e7"}, // maximum allowed contrast in each single-phase computation
+        {"minPerm",                  "1e-12"}, // absolute minimum for allowed cell permeability
+        {"maxPerm",                 "100000"}, // maximal allowed cell permeability
+        {"minPoro",                 "0.0001"}, // this limit is necessary for pcmin/max computation
+        {"saturationThreshold",    "0.00001"}, // accuracy threshold for saturation, we ignore Pc values that
+                                               // give so small contributions near endpoints.
+        {"linsolver_tolerance",      "1e-12"}, // residual tolerance for linear solver
+        {"linsolver_verbosity",          "0"}, // verbosity level for linear solver
+        {"linsolver_type",               "3"}, // type of linear solver: 0 = ILU0/CG, 1 = AMG/CG, 2 KAMG/CG, 3 FAST_AMG/CG
+        {"linsolver_max_iterations",     "0"}, // Maximum number of iterations allow, specify 0 for default
+        {"linsolver_prolongate_factor","1.0"}, // Prolongation factor in AMG
+        {"linsolver_smooth_steps",       "1"}, // Number of smoothing steps in AMG
+        {"fluids",                      "ow"}, // wheater upscaling for oil/water (ow) or gas/oil (go)
+        {"krowxswirr",                  "-1"}, // relative permeability in x direction of oil in corresponding oil/water system
+        {"krowyswirr",                  "-1"}, // relative permeability in y direction of oil in corresponding oil/water system
+        {"krowzswirr",                  "-1"}, // relative permeability in z direction of oil in corresponding oil/water system
+        {"doEclipseCheck",            "true"}, // Check if minimum relpermvalues in input are zero (specify critical saturations)
+        {"critRelpermThresh",         "1e-6"}};// Threshold for setting minimum relperm to 0 (thus specify critical saturations)
 
     // Conversion factor, multiply mD numbers with this to get m² numbers
     const double milliDarcyToSqMetre =
@@ -461,10 +464,14 @@ try
     double linsolver_tolerance = atof(options["linsolver_tolerance"].c_str());
     int linsolver_verbosity = atoi(options["linsolver_verbosity"].c_str());
     int linsolver_type = atoi(options["linsolver_type"].c_str());
+    int linsolver_maxit = atoi(options["linsolver_max_iterations"].c_str());
+    int smooth_steps = atoi(options["linsolver_smooth_steps"].c_str());
+    double linsolver_prolongate_factor = atof(options["linsolver_prolongate_factor"].c_str());
     bool twodim_hack = false;
     helper.upscaler.init(deck, helper.boundaryCondition,
                          Opm::unit::convert::from(minPerm, Opm::prefix::milli*Opm::unit::darcy),
-                         linsolver_tolerance, linsolver_verbosity, linsolver_type, twodim_hack);
+                         linsolver_tolerance, linsolver_verbosity, linsolver_type, twodim_hack,
+                         linsolver_maxit, linsolver_prolongate_factor, smooth_steps);
 
     finish = clock();   timeused_tesselation = (double(finish)-double(start))/CLOCKS_PER_SEC;
     if (helper.isMaster) cout << " (" << timeused_tesselation <<" secs)" << endl;
