@@ -208,9 +208,7 @@ try
 #ifdef HAVE_MPI
    const int mpi_nodecount = mpi.size();
 #endif
-   RelPermUpscaleHelper helper;
 
-   helper.isMaster = (mpi_rank == 0);
    if (varnum == 1) { /* If no arguments supplied ("upscale_relperm" is the first "argument") */
       usage();
       exit(1);
@@ -260,44 +258,28 @@ try
 
    /* Check first if there is anything on the command line to look for */
    if (varnum == 1) {
-      if (helper.isMaster) cout << "Error: No Eclipsefile or stonefiles found on command line." << endl;
+      if (mpi_rank == 0)
+        cout << "Error: No Eclipsefile or stonefiles found on command line." << endl;
       usageandexit();
    }
-
 
    /*
       'argeclindex' is so that vararg[argeclindex] = the eclipse filename.
    */
-   int argeclindex = parseCommandLine(options, varnum, vararg, helper.isMaster);
+   int argeclindex = parseCommandLine(options, varnum, vararg, mpi_rank == 0);
    if (argeclindex < 0) {
-       if (helper.isMaster)
+       if (mpi_rank == 0)
            cout << "Option -" << vararg[-argeclindex] << " unrecognized." << endl;
         usageandexit();
    }
-     
-   // What fluid system are we dealing with? (oil/water or gas/oil)
-   bool owsystem;
-   if (options["fluids"] == "ow" || options["fluids"] == "wo") {
-       owsystem=true;
-       helper.saturationstring = "Sw";
-   }
-   else if (options["fluids"] == "go" || options["fluids"] == "og") {
-       owsystem=false;
-       helper.saturationstring = "Sg";
-   }
-   else {
-       if (helper.isMaster) cerr << "Fluidsystem " << options["fluids"] << " not valid (-fluids option). Should be ow or go" << endl << endl;
-       usageandexit();
-   }
+
+   RelPermUpscaleHelper helper(mpi_rank, options);
+   bool owsystem = helper.saturationstring == "Sw";
 
    // argeclindex should now point to the eclipse file
    static char* ECLIPSEFILENAME(vararg[argeclindex]);
    argeclindex += 1; // argeclindex jumps to next input argument, now it points to the stone files.
 
-   // Boolean set to true if input permeability in eclipse-file has diagonal anisotropy.
-   // (full-tensor anisotropy will be ignored)
-   helper.anisotropic_input = false;
-   
    // argeclindex now points to the first J-function. This index is not
    // to be touched now.
    static int rockfileindex = argeclindex;

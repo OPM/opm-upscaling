@@ -62,6 +62,24 @@ void setVoigtValue(SinglePhaseUpscaler::permtensor_t& K, int voigt_idx, double v
     K.data()[voigt_idx_tab[voigt_idx]] = val;
 }
 
+RelPermUpscaleHelper::RelPermUpscaleHelper(int mpi_rank,
+                                           std::map<std::string,std::string>& options) :
+    isMaster(mpi_rank == 0),
+    anisotropic_input(false),
+    permTensor(3,3,nullptr),
+    permTensorInv(3,3,nullptr)
+{
+    if (options["fluids"] == "ow" || options["fluids"] == "wo")
+        saturationstring = "Sw";
+    else if (options["fluids"] == "go" || options["fluids"] == "og")
+        saturationstring = "Sg";
+    else {
+        std::stringstream str;
+        str << "Fluidsystem " << options["fluids"] << " not valid (-fluids option). Should be ow or go";
+        throw std::runtime_error(str.str());
+    }
+}
+
 void RelPermUpscaleHelper::collectResults()
 {
 #ifdef HAVE_MPI

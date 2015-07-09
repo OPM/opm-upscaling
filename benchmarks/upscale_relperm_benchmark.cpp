@@ -205,11 +205,8 @@ try
     MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &mpi_nodecount);
 #endif
-    RelPermUpscaleHelper helper;
-    helper.isMaster = (mpi_rank == 0);
-
     // Print start-up message
-    if (helper.isMaster)
+    if (mpi_rank == 0)
         cout << "Running benchmark version of upscale_relperm (model type: " << model_name << ") ..." << endl;
 
     // Suppress output in benchmark version (both cout and cerr):
@@ -266,25 +263,7 @@ try
                                Opm::unit::square(Opm::unit::meter));
     // Reference: http://www.spe.org/spe-site/spe/spe/papers/authors/Metric_Standard.pdf
 
-    // What fluid system are we dealing with? (oil/water or gas/oil)
-    bool owsystem;
-    if (options["fluids"] == "ow" || options["fluids"] == "wo") {
-        owsystem=true;
-        helper.saturationstring = "Sw";
-    }
-    else if (options["fluids"] == "go" || options["fluids"] == "og") {
-        owsystem=false;
-        helper.saturationstring = "Sg";
-    }
-    else {
-        if (helper.isMaster) cerr << "Fluidsystem " << options["fluids"] << " not valid (-fluids option). Should be ow or go" << endl << endl;
-        usageandexit();
-    }
-
-    // Boolean set to true if input permeability in eclipse-file has diagonal anisotropy.
-    // (full-tensor anisotropy will be ignored)
-    helper.anisotropic_input = false;
-
+    RelPermUpscaleHelper helper(mpi_rank, options);
     helper.setupBoundaryConditions(options);
 
     // If this number is 1 or higher, the output will be interpolated, if not

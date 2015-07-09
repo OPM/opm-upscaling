@@ -81,8 +81,10 @@ namespace Opm {
       std::vector<double> pressurePoints; //!< Vector of capillary pressure points between Swor and Swir.
 
       //! \brief Default constructor.
-      RelPermUpscaleHelper() : permTensor(3,3,nullptr),
-                               permTensorInv(3,3,nullptr) {}
+      //! \param[in] mpi_rank Rank of this process (for parallel simulations).
+      //! \param[in] options Options structure.
+      //! \details Uses the following options: fluids
+      RelPermUpscaleHelper(int mpi_rank, std::map<std::string,std::string>& options);
 
       //! \brief Collect results from all MPI nodes.
       void collectResults();
