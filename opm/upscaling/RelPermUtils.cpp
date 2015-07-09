@@ -379,4 +379,19 @@ void RelPermUpscaleHelper::checkCriticalSaturations()
     }
 }
 
+void RelPermUpscaleHelper::setupBoundaryConditions(std::map<std::string,std::string>& options)
+{
+    static const std::map<char, std::pair<SinglePhaseUpscaler::BoundaryConditionType, size_t>> bcmap =
+        {{'f', {SinglePhaseUpscaler::Fixed,    3}},
+         {'l', {SinglePhaseUpscaler::Linear,   9}},
+         {'p', {SinglePhaseUpscaler::Periodic, 9}}};
+
+    auto it = bcmap.find(options["bc"][0]);
+    if (it != bcmap.end()) {
+        boundaryCondition  = it->second.first;
+        tensorElementCount = it->second.second;
+    } else
+        throw std::runtime_error("Invalid boundary condition. Only one of the letters f, l or p are allowed.");
+}
+
 }

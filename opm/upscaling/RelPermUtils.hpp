@@ -108,6 +108,11 @@ namespace Opm {
       //! \brief Check that input relperm curevs specify critical saturations.
       //! \param[in] num_rock Number of curves to check.
       void checkCriticalSaturations();
+
+      //! \brief Setup requested boundary conditions.
+      //! \param[in] options Option structure.
+      //! \details Uses the following options: bc
+      void setupBoundaryConditions(std::map<std::string, std::string>& options);
     private:
       //! \brief Perform critical saturation check for a single curve.
       //! \param[in,out] func Function to check for.

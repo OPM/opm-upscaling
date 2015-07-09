@@ -311,26 +311,11 @@ try
     
    /* Check validity of boundary conditions chosen, and make booleans 
       for boundary conditions, this allows more readable code later. */
-   bool isFixed, isLinear, isPeriodic; 
-   if (options["bc"].substr(0,1) == "f") { 
-       isFixed = true; isLinear = false; isPeriodic = false; 
-       helper.boundaryCondition = SinglePhaseUpscaler::Fixed; // This refers to the mimetic namespace (Sintef)
-       helper.tensorElementCount = 3; // Diagonal
-   } 
-   else if (options["bc"].substr(0,1) == "l") { 
-       isLinear = true; isFixed = false; isPeriodic = false; 
-       helper.boundaryCondition = SinglePhaseUpscaler::Linear;
-       helper.tensorElementCount = 9; // Full-tensor
-   } 
-   else if (options["bc"].substr(0,1) == "p") { 
-       isPeriodic = true; isLinear = false; isFixed = false; 
-       helper.boundaryCondition = SinglePhaseUpscaler::Periodic;
-       helper.tensorElementCount = 9; // Symmetric.
-   } 
-   else { 
-       if (helper.isMaster) cout << "Invalid boundary condition. Only one of the letters f, l or p are allowed." << endl; 
-       usageandexit(); 
-   } 
+   helper.setupBoundaryConditions(options);
+
+   bool isFixed    = helper.boundaryCondition == SinglePhaseUpscaler::Fixed,
+        isLinear   = helper.boundaryCondition == SinglePhaseUpscaler::Linear,
+        isPeriodic = helper.boundaryCondition == SinglePhaseUpscaler::Periodic;
 
    // If this number is 1 or higher, the output will be interpolated, if not
    // the computed data is untouched.
