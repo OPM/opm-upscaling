@@ -350,10 +350,8 @@ try
    
 
    /* Check if at least one J-function is supplied on command line */
-   if (varnum <= rockfileindex) {
-       if (helper.isMaster) cerr << "Error: No J-functions found on command line." << endl;
-       usageandexit();
-   }
+   if (varnum <= rockfileindex)
+        throw std::runtime_error("Error: No J-functions found on command line.");
     
    /* Check validity of boundary conditions chosen, and make booleans 
       for boundary conditions, this allows more readable code later. */
@@ -383,8 +381,9 @@ try
    // Test if filename exists and is readable
    ifstream eclipsefile(ECLIPSEFILENAME, ios::in);
    if (eclipsefile.fail()) {
-       if (helper.isMaster) cerr << "Error: Filename " << ECLIPSEFILENAME << " not found or not readable." << endl;
-       usageandexit();
+        std::stringstream str;
+        str << "Error: Filename " << ECLIPSEFILENAME << " not found or not readable.";
+        throw str.str();
    }
    eclipsefile.close(); 
 
@@ -464,8 +463,9 @@ try
          // Check if rock file exists and is readable:
          ifstream rockfile(ROCKFILENAME, ios::in);
          if (rockfile.fail()) {
-            if (helper.isMaster) cerr << "Error: Filename " << ROCKFILENAME << " not found or not readable." << endl;
-            usageandexit();
+            std::stringstream str;
+            str << "Error: Filename " << ROCKFILENAME << " not found or not readable.";
+            throw std::runtime_error(str.str());
          }
          rockfile.close(); 
          
@@ -476,9 +476,10 @@ try
                  Jtmp = MonotCubicInterpolator(ROCKFILENAME, 1, jFunctionCurve); 
              }
              catch (const char * errormessage) {
-                 if (helper.isMaster) cerr << "Error: " << errormessage << endl;
-                 if (helper.isMaster) cerr << "Check filename and -jFunctionCurve" << endl;
-                 usageandexit();
+                 std::stringstream str;
+                 str << "Error: " << errormessage << endl
+                     << "Check filename and -jFunctionCurve" << endl;
+                 throw std::runtime_error(str.str());
              }
              
              // Invert J-function, now we get saturation as a function of pressure:
@@ -494,8 +495,9 @@ try
                  }
              }
              else {
-                 if (helper.isMaster) cerr << "Error: Jfunction " << i+1 << " in rock file " << ROCKFILENAME << " was not invertible." << endl;
-                 usageandexit();
+                 std::stringstream str;
+                 str << "Error: Jfunction " << i+1 << " in rock file " << ROCKFILENAME << " was not invertible.";
+                 throw std::runtime_error(str.str());
              }
          }
          else {  // If input is anisotropic, then we are in second mode with different input file format
@@ -504,9 +506,10 @@ try
                  Pctmp = MonotCubicInterpolator(ROCKFILENAME, 2, 1);
              }
              catch (const char * errormessage) {
-                 if (helper.isMaster) cerr << "Error: " << errormessage << endl;
-                 if (helper.isMaster) cerr << "Check filename and columns 1 and 2 (Pc and " << helper.saturationstring <<")" << endl;
-                 usageandexit();
+                 std::stringstream str;
+                 str << "Error: " << errormessage << endl
+                     << "Check filename and columns 1 and 2 (Pc and " << helper.saturationstring <<")";
+                 throw str.str();
              }
              
              // Invert Pc(Sw) curve into Sw(Pc):
@@ -523,8 +526,9 @@ try
                  }
               }
              else {
-                 if (helper.isMaster) cerr << "Error: Pc(" << helper.saturationstring << ") curve " << i+1 << " in rock file " << ROCKFILENAME << " was not invertible." << endl;
-                 usageandexit();
+                 std::stringstream str;
+                 str << "Error: Pc(" << helper.saturationstring << ") curve " << i+1 << " in rock file " << ROCKFILENAME << " was not invertible.";
+                 throw std::runtime_error(str.str());
              }
          }
       } 
@@ -537,8 +541,9 @@ try
        // Check if rock file exists and is readable:
        ifstream rockfile(ROCKFILENAME, ios::in);
        if (rockfile.fail()) {
-           if (helper.isMaster) cerr << "Error: Filename " << ROCKFILENAME << " not found or not readable." << endl;
-           usageandexit();
+           std::stringstream str;
+           str <<  "Error: Filename " << ROCKFILENAME << " not found or not readable.";
+           throw std::runtime_error(str.str());
        }
        rockfile.close(); 
        if (! helper.anisotropic_input) {
@@ -547,9 +552,10 @@ try
                Jtmp = MonotCubicInterpolator(ROCKFILENAME, 1, jFunctionCurve);
            }
            catch (const char * errormessage) {
-               if (helper.isMaster) cerr << "Error: " << errormessage << endl;
-               if (helper.isMaster) cerr << "Check filename and -jFunctionCurve" << endl;
-               usageandexit();
+               std::stringstream str;
+               str << "Error: " << errormessage << endl
+                   << "Check filename and -jFunctionCurve";
+               throw std::runtime_error(str.str());
            }
            if (Jtmp.isStrictlyMonotone()) {
                for (int i=0; i < stone_types; ++i) {
@@ -566,8 +572,9 @@ try
                }
            }
            else {
-               if (helper.isMaster) cerr << "Error: Jfunction " << 1 << " in rock file " << ROCKFILENAME << " was not invertible." << endl;
-               usageandexit();
+               std::stringstream str;
+               str << "Error: Jfunction " << 1 << " in rock file " << ROCKFILENAME << " was not invertible.";
+               throw std::runtime_error(str.str());
            }
        }
        else {
@@ -576,9 +583,10 @@ try
                Pctmp = MonotCubicInterpolator(ROCKFILENAME, 2, 1);
            }
            catch (const char * errormessage) {
-               if (helper.isMaster) cerr << "Error: " << errormessage << endl;
-               if (helper.isMaster) cerr << "Check filename and columns 1 and 2 (Pc and " << helper.saturationstring <<")" << endl;
-               usageandexit();
+               std::stringstream str;
+               str << "Error: " << errormessage << endl
+                   << "Check filename and columns 1 and 2 (Pc and " << helper.saturationstring <<")";
+               throw std::runtime_error(str.str());
            }
            // Invert Pc(Sw) curve into Sw(Pc):
            if (Pctmp.isStrictlyMonotone()) {
@@ -596,15 +604,14 @@ try
                }
            }
            else {
-               if (helper.isMaster) cerr << "Error: Pc(" << helper.saturationstring << ") curve " << 1 << " in rock file " << ROCKFILENAME << " was not invertible." << endl;
-               usageandexit();
+               std::stringstream str;
+               str << "Error: Pc(" << helper.saturationstring << ") curve " << 1 << " in rock file " << ROCKFILENAME << " was not invertible.";
+               throw std::runtime_error(str.str());
            }           
        }
    }
-   else {
-       if (helper.isMaster) cerr << "Error:  Wrong number of stone-functions provided. " << endl;
-       usageandexit();
-   }
+   else
+       throw std::runtime_error("Error:  Wrong number of stone-functions provided.");
    
    // Check if input relperm curves satisfy Eclipse requirement of specifying critical saturations
    helper.doEclipseCheck = (options["doEclipseCheck"] == "true");

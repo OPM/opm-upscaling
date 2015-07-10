@@ -381,10 +381,9 @@ try
         if (Jtmp.isStrictlyMonotone()) {
             helper.InvJfunctions.push_back(MonotCubicInterpolator(Jtmp.get_fVector(), Jtmp.get_xVector()));
         }
-        else {
-            if (helper.isMaster) cout << "Error: J-function curve not strictly monotone" << endl;
-            usageandexit();
-        }
+        else
+            throw std::runtime_error("Error: J-function curve not strictly monotone");
+
         JfunctionNames.push_back("stonefile_benchmark.txt");
     }
 
