@@ -68,7 +68,9 @@ RelPermUpscaleHelper::RelPermUpscaleHelper(int mpi_rank,
     anisotropic_input(false),
     permTensor(3,3,nullptr),
     permTensorInv(3,3,nullptr),
-    tesselatedCells(0)
+    tesselatedCells(0),
+    milliDarcyToSqMetre(Opm::unit::convert::to(1.0*Opm::prefix::milli*Opm::unit::darcy,
+                                               Opm::unit::square(Opm::unit::meter)))
 {
     if (options["fluids"] == "ow" || options["fluids"] == "wo")
         saturationstring = "Sw";
@@ -512,9 +514,7 @@ void RelPermUpscaleHelper::calculateMinMaxCapillaryPressure(double dPmin, double
     const double gravity         = atof(options["gravity"].c_str());
     double linsolver_tolerance   = atof(options["linsolver_tolerance"].c_str());
     const bool includeGravity    = (fabs(gravity) > DBL_MIN); // true for non-zero gravity
-    const double milliDarcyToSqMetre =
-                        Opm::unit::convert::to(1.0*Opm::prefix::milli*Opm::unit::darcy,
-                                               Opm::unit::square(Opm::unit::meter));
+
     if (maxPermContrast == 0)
         throw std::runtime_error("Illegal contrast value");
 
@@ -631,9 +631,6 @@ void RelPermUpscaleHelper::upscaleCapillaryPressure(std::map<std::string,std::st
     double Ptestvalue = Pcmax;
     std::stringstream errstr;
     const std::vector<int>& ecl_idx = upscaler.grid().globalCell();
-    const double milliDarcyToSqMetre =
-                        Opm::unit::convert::to(1.0*Opm::prefix::milli*Opm::unit::darcy,
-                                               Opm::unit::square(Opm::unit::meter));
 
     while (largestSaturationInterval > (Swor-Swir)/500.0) {
         if (Pcmax == Pcmin) {
@@ -720,9 +717,6 @@ std::tuple<double, double>
 {
     const double minPerm = atof(options["minPerm"].c_str());
     const double maxPermContrast = atof(options["maxPermContrast"].c_str());
-    const double milliDarcyToSqMetre =
-                        Opm::unit::convert::to(1.0*Opm::prefix::milli*Opm::unit::darcy,
-                                               Opm::unit::square(Opm::unit::meter));
 
      // Put correct number of zeros in, just to be able to access RelPerm[index] later
     WaterSaturation.resize(points);

@@ -314,12 +314,6 @@ try
         {"doEclipseCheck",             "true"}, // Check if minimum relpermvalues in input are zero (specify critical saturations)
         {"critRelpermThresh",          "1e-6"}};// Threshold for setting minimum relperm to 0 (thus specify critical saturations)
 
-   // Conversion factor, multiply mD numbers with this to get m² numbers
-   const double milliDarcyToSqMetre =
-       Opm::unit::convert::to(1.0*Opm::prefix::milli*Opm::unit::darcy,
-                              Opm::unit::square(Opm::unit::meter));
-   // Reference: http://www.spe.org/spe-site/spe/spe/papers/authors/Metric_Standard.pdf
-
    /* Check first if there is anything on the command line to look for */
    if (varnum == 1) {
       if (mpi_rank == 0)

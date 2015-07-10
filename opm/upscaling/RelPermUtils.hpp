@@ -167,6 +167,9 @@ namespace Opm {
       //!          If not func is set to a constant value of 0.
       //! \return True if test passed, false otherwise.
       bool checkCurve(MonotCubicInterpolator& func);
+
+      // Reference: http://www.spe.org/spe-site/spe/spe/papers/authors/Metric_Standard.pdf
+      const double milliDarcyToSqMetre; //!< Conversion factor, multiply mD numbers with this to get m² numbers.
   };
 }
 
