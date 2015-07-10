@@ -928,9 +928,9 @@ try
 
             if (! anisotropic_input) {
                 Pcmincandidate = InvJfunctions[int(satnums[cell_idx])-1].getMinimumX().first
-                    / sqrt(permxs[cell_idx] * milliDarcyToSqMetre / poros[cell_idx]) * surfaceTension;
+                    / sqrt(permxs[cell_idx] * milliDarcyToSqMetre / poros[cell_idx]);
                 Pcmaxcandidate = InvJfunctions[int(satnums[cell_idx])-1].getMaximumX().first
-                    / sqrt(permxs[cell_idx] * milliDarcyToSqMetre/poros[cell_idx]) * surfaceTension;
+                    / sqrt(permxs[cell_idx] * milliDarcyToSqMetre/poros[cell_idx]);
                 minSw = InvJfunctions[int(satnums[cell_idx])-1].getMinimumF().second;
                 maxSw = InvJfunctions[int(satnums[cell_idx])-1].getMaximumF().second;
             }
@@ -1074,7 +1074,7 @@ try
                     PtestvalueCell = Ptestvalue;
                 }
                 if (! anisotropic_input ) {
-                    double Jvalue = sqrt(permxs[cell_idx] * milliDarcyToSqMetre /poros[cell_idx]) * PtestvalueCell / surfaceTension;
+                    double Jvalue = sqrt(permxs[cell_idx] * milliDarcyToSqMetre /poros[cell_idx]) * PtestvalueCell;
                     //cout << "JvalueCell: " << Jvalue << endl;
                     waterSaturationCell
                         = InvJfunctions[int(satnums[cell_idx])-1].evaluate(Jvalue);
@@ -1284,7 +1284,7 @@ try
 
                     if (! anisotropic_input) {
 
-                        double Jvalue = sqrt(permxs[cell_idx] * milliDarcyToSqMetre/poros[cell_idx]) * PtestvalueCell / surfaceTension;
+                        double Jvalue = sqrt(permxs[cell_idx] * milliDarcyToSqMetre/poros[cell_idx]) * PtestvalueCell;
                         //cout << "JvalueCell: " << Jvalue << endl;
                         double waterSaturationCell
                             = InvJfunctions[int(satnums[cell_idx])-1].evaluate(Jvalue);
@@ -1617,7 +1617,13 @@ try
      * b: output
      */
 
-     vector<double>& Pvalues = pressurePoints;
+     vector<double> Pvalues = pressurePoints;
+     // Multiply all pressures with the surface tension (potentially) supplied
+     // at the command line. This multiplication has been postponed to here
+     // to avoid division by zero and to avoid special handling of negative
+     // capillary pressure in the code above.
+     std::transform(Pvalues.begin(), Pvalues.end(), Pvalues.begin(),
+                    std::bind1st(std::multiplies<double>(), surfaceTension));
 
     /*
      * Step 9a: Verify results
