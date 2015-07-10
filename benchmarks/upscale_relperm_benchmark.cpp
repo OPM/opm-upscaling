@@ -1617,6 +1617,7 @@ try
      * b: output
      */
 
+     vector<double>& Pvalues = pressurePoints;
 
     /*
      * Step 9a: Verify results
@@ -1673,7 +1674,7 @@ try
                     saturationsEqual = false;
                     break;
                 }
-                if (fabs(PvaluesReference[i] - PvaluesReference[i]) > tolerance) {
+                if (fabs(PvaluesReference[i] - Pvalues[i]) > tolerance*100) {
                     pressuresEqual = false;
                     break;
                 }
