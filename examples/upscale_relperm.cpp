@@ -85,7 +85,7 @@ using namespace Opm;
 using namespace std;
 
 
-void usage()
+static void usage()
 {
     cerr << "Usage: upscale_relperm <options> <eclipsefile> stoneA.txt stoneB.txt ..." << endl <<
         "where the options are:" << endl <<
@@ -150,7 +150,7 @@ void usage()
 }
 
 
-void usageandexit() {
+static void usageandexit() {
     usage();
     exit(1);
 }

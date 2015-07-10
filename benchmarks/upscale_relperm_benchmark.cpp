@@ -155,13 +155,13 @@ void dispVec(string name, vector<double> vec) {
     cout << "(size = " << vec.size() << endl;
 }
 
-void usage() // Benchmark version
+static void usage() // Benchmark version
 {
     cerr << "Usage: This is a benchmark version of upscale_relperm. This executable takes no input," << endl <<
             "the model and stone data is included at compiler time." << endl;
 }
 
-void usageandexit() {
+static void usageandexit() {
     usage();
 #ifdef HAVE_MPI
     MPI_Finalize();
@@ -205,7 +205,7 @@ void setVoigtValue(SinglePhaseUpscaler::permtensor_t& K, int voigt_idx, double v
     K.data()[voigt_idx_tab[voigt_idx]] = val;
 }
 
-void inflate (const unsigned char* input, const int size, stringstream& output) {
+static void inflate (const unsigned char* input, const int size, stringstream& output) {
     // read compressed data raw from .data segment into buffer
     stringstream compressed;
     std::copy (input, input+size, ostream_iterator <char> (compressed));
