@@ -457,161 +457,82 @@ try
    // Handle two command line input formats, either one J-function for all stone types
    // or one each. If there is only one stone type, both code blocks below are equivalent.
    
-   if (varnum == rockfileindex + stone_types) {
-      for (int i=0 ; i < stone_types; ++i) {
-         const char* ROCKFILENAME = vararg[rockfileindex+i];
-         // Check if rock file exists and is readable:
-         ifstream rockfile(ROCKFILENAME, ios::in);
-         if (rockfile.fail()) {
-            std::stringstream str;
-            str << "Error: Filename " << ROCKFILENAME << " not found or not readable.";
-            throw std::runtime_error(str.str());
-         }
-         rockfile.close(); 
-         
-         if (! helper.anisotropic_input) {
-             
-             MonotCubicInterpolator Jtmp;
-             try {
-                 Jtmp = MonotCubicInterpolator(ROCKFILENAME, 1, jFunctionCurve); 
-             }
-             catch (const char * errormessage) {
-                 std::stringstream str;
-                 str << "Error: " << errormessage << endl
-                     << "Check filename and -jFunctionCurve" << endl;
-                 throw std::runtime_error(str.str());
-             }
-             
-             // Invert J-function, now we get saturation as a function of pressure:
-             if (Jtmp.isStrictlyMonotone()) {
-                 helper.InvJfunctions.push_back(MonotCubicInterpolator(Jtmp.get_fVector(), Jtmp.get_xVector()));
-                 JfunctionNames.push_back(ROCKFILENAME);
-                 if (helper.upscaleBothPhases) {
-                     helper.Krfunctions[0][0].push_back(MonotCubicInterpolator(ROCKFILENAME, 1, 2));
-                     helper.Krfunctions[0][1].push_back(MonotCubicInterpolator(ROCKFILENAME, 1, 3));
-                 }
-                 else {
-                     helper.Krfunctions[0][0].push_back(MonotCubicInterpolator(ROCKFILENAME, 1, relPermCurve));
-                 }
-             }
-             else {
-                 std::stringstream str;
-                 str << "Error: Jfunction " << i+1 << " in rock file " << ROCKFILENAME << " was not invertible.";
-                 throw std::runtime_error(str.str());
-             }
-         }
-         else {  // If input is anisotropic, then we are in second mode with different input file format
-             MonotCubicInterpolator Pctmp;
-             try {
-                 Pctmp = MonotCubicInterpolator(ROCKFILENAME, 2, 1);
-             }
-             catch (const char * errormessage) {
-                 std::stringstream str;
-                 str << "Error: " << errormessage << endl
-                     << "Check filename and columns 1 and 2 (Pc and " << helper.saturationstring <<")";
-                 throw str.str();
-             }
-             
-             // Invert Pc(Sw) curve into Sw(Pc):
-              if (Pctmp.isStrictlyMonotone()) {
-                 helper.SwPcfunctions.push_back(MonotCubicInterpolator(Pctmp.get_fVector(), Pctmp.get_xVector()));
-                 JfunctionNames.push_back(ROCKFILENAME);
-                 helper.Krfunctions[0][0].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 3));
-                 helper.Krfunctions[1][0].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 4));
-                 helper.Krfunctions[2][0].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 5));
-                 if (helper.upscaleBothPhases) {
-                     helper.Krfunctions[0][1].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 6));
-                     helper.Krfunctions[1][1].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 7));
-                     helper.Krfunctions[2][1].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 8));
-                 }
-              }
-             else {
-                 std::stringstream str;
-                 str << "Error: Pc(" << helper.saturationstring << ") curve " << i+1 << " in rock file " << ROCKFILENAME << " was not invertible.";
-                 throw std::runtime_error(str.str());
-             }
-         }
-      } 
-   }
-   // The code below loads the same file once for every rock type in
-   // the file. This is stone_types-1 more than strictly necessary, so
-   // it could have been simplified.
-   else if (varnum == rockfileindex + 1) {
-       const char* ROCKFILENAME = vararg[rockfileindex];
-       // Check if rock file exists and is readable:
-       ifstream rockfile(ROCKFILENAME, ios::in);
-       if (rockfile.fail()) {
-           std::stringstream str;
-           str <<  "Error: Filename " << ROCKFILENAME << " not found or not readable.";
-           throw std::runtime_error(str.str());
-       }
-       rockfile.close(); 
-       if (! helper.anisotropic_input) {
-           MonotCubicInterpolator Jtmp; 
-           try {
-               Jtmp = MonotCubicInterpolator(ROCKFILENAME, 1, jFunctionCurve);
-           }
-           catch (const char * errormessage) {
-               std::stringstream str;
-               str << "Error: " << errormessage << endl
-                   << "Check filename and -jFunctionCurve";
-               throw std::runtime_error(str.str());
-           }
-           if (Jtmp.isStrictlyMonotone()) {
-               for (int i=0; i < stone_types; ++i) {
-                   // Invert J-function, now we get saturation as a function of pressure:
-                   helper.InvJfunctions.push_back(MonotCubicInterpolator(Jtmp.get_fVector(), Jtmp.get_xVector()));
-                   JfunctionNames.push_back(vararg[rockfileindex]);
-                   if (helper.upscaleBothPhases) {
-                       helper.Krfunctions[0][0].push_back(MonotCubicInterpolator(vararg[rockfileindex], 1, 2));
-                       helper.Krfunctions[0][1].push_back(MonotCubicInterpolator(vararg[rockfileindex], 1, 3));
-                   }
-                   else {
-                       helper.Krfunctions[0][0].push_back(MonotCubicInterpolator(vararg[rockfileindex], 1, relPermCurve));
-                   }
-               }
-           }
-           else {
-               std::stringstream str;
-               str << "Error: Jfunction " << 1 << " in rock file " << ROCKFILENAME << " was not invertible.";
-               throw std::runtime_error(str.str());
-           }
-       }
-       else {
-           MonotCubicInterpolator Pctmp;
-           try {
-               Pctmp = MonotCubicInterpolator(ROCKFILENAME, 2, 1);
-           }
-           catch (const char * errormessage) {
-               std::stringstream str;
-               str << "Error: " << errormessage << endl
-                   << "Check filename and columns 1 and 2 (Pc and " << helper.saturationstring <<")";
-               throw std::runtime_error(str.str());
-           }
-           // Invert Pc(Sw) curve into Sw(Pc):
-           if (Pctmp.isStrictlyMonotone()) {
-               for (int i=0; i < stone_types; ++i) { 
-                   helper.SwPcfunctions.push_back(MonotCubicInterpolator(Pctmp.get_fVector(), Pctmp.get_xVector()));
-                   JfunctionNames.push_back(ROCKFILENAME);
-                   helper.Krfunctions[0][0].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 3));
-                   helper.Krfunctions[1][0].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 4));
-                   helper.Krfunctions[2][0].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 5));
-                   if (helper.upscaleBothPhases) {
-                       helper.Krfunctions[0][1].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 6));
-                       helper.Krfunctions[1][1].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 7));
-                       helper.Krfunctions[2][1].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 8));
-                   }
-               }
-           }
-           else {
-               std::stringstream str;
-               str << "Error: Pc(" << helper.saturationstring << ") curve " << 1 << " in rock file " << ROCKFILENAME << " was not invertible.";
-               throw std::runtime_error(str.str());
-           }           
-       }
-   }
-   else
+   if (varnum != rockfileindex + stone_types && varnum != rockfileindex + 1)
        throw std::runtime_error("Error:  Wrong number of stone-functions provided.");
+
+   for (int i=0 ; i < stone_types; ++i) {
+      const char* ROCKFILENAME = vararg[rockfileindex+stone_types==varnum?rockfileindex+i:rockfileindex];
+      // Check if rock file exists and is readable:
+      ifstream rockfile(ROCKFILENAME, ios::in);
+      if (rockfile.fail()) {
+         std::stringstream str;
+         str << "Error: Filename " << ROCKFILENAME << " not found or not readable.";
+         throw std::runtime_error(str.str());
+      }
+      rockfile.close();
+
+      if (! helper.anisotropic_input) {
+         MonotCubicInterpolator Jtmp;
+         try {
+             Jtmp = MonotCubicInterpolator(ROCKFILENAME, 1, jFunctionCurve);
+         }
+         catch (const char * errormessage) {
+             std::stringstream str;
+             str << "Error: " << errormessage << endl
+                 << "Check filename and -jFunctionCurve" << endl;
+             throw std::runtime_error(str.str());
+         }
+         
+         // Invert J-function, now we get saturation as a function of pressure:
+         if (Jtmp.isStrictlyMonotone()) {
+             helper.InvJfunctions.push_back(MonotCubicInterpolator(Jtmp.get_fVector(), Jtmp.get_xVector()));
+             JfunctionNames.push_back(ROCKFILENAME);
+             if (helper.upscaleBothPhases) {
+                 helper.Krfunctions[0][0].push_back(MonotCubicInterpolator(ROCKFILENAME, 1, 2));
+                 helper.Krfunctions[0][1].push_back(MonotCubicInterpolator(ROCKFILENAME, 1, 3));
+             }
+             else {
+                 helper.Krfunctions[0][0].push_back(MonotCubicInterpolator(ROCKFILENAME, 1, relPermCurve));
+             }
+         }
+         else {
+             std::stringstream str;
+             str << "Error: Jfunction " << i+1 << " in rock file " << ROCKFILENAME << " was not invertible.";
+             throw std::runtime_error(str.str());
+         }
+      }
+      else {  // If input is anisotropic, then we are in second mode with different input file format
+         MonotCubicInterpolator Pctmp;
+         try {
+             Pctmp = MonotCubicInterpolator(ROCKFILENAME, 2, 1);
+         }
+         catch (const char * errormessage) {
+             std::stringstream str;
+             str << "Error: " << errormessage << endl
+                 << "Check filename and columns 1 and 2 (Pc and " << helper.saturationstring <<")";
+             throw str.str();
+         }
+
+         // Invert Pc(Sw) curve into Sw(Pc):
+         if (Pctmp.isStrictlyMonotone()) {
+             helper.SwPcfunctions.push_back(MonotCubicInterpolator(Pctmp.get_fVector(), Pctmp.get_xVector()));
+             JfunctionNames.push_back(ROCKFILENAME);
+             helper.Krfunctions[0][0].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 3));
+             helper.Krfunctions[1][0].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 4));
+             helper.Krfunctions[2][0].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 5));
+             if (helper.upscaleBothPhases) {
+                 helper.Krfunctions[0][1].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 6));
+                 helper.Krfunctions[1][1].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 7));
+                 helper.Krfunctions[2][1].push_back(MonotCubicInterpolator(ROCKFILENAME, 2, 8));
+             }
+         }
+         else {
+             std::stringstream str;
+             str << "Error: Pc(" << helper.saturationstring << ") curve " << i+1 << " in rock file " << ROCKFILENAME << " was not invertible.";
+             throw std::runtime_error(str.str());
+         }
+      }
+   }
    
    // Check if input relperm curves satisfy Eclipse requirement of specifying critical saturations
    helper.doEclipseCheck = (options["doEclipseCheck"] == "true");
