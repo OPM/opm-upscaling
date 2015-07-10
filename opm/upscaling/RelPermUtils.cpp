@@ -768,8 +768,7 @@ std::tuple<double, double>
 
             double Ptestvalue = pressurePoints[pointidx];
 
-            double maxPhasePerm = 0.0;
-            double maxPhase2Perm = 0.0;
+            std::array<double,2> maxPhasePerm({0.0, 0.0});
 
             std::vector<double> phasePermValues, phase2PermValues;
             std::vector<std::vector<double> > phasePermValuesDiag, phase2PermValuesDiag;
@@ -834,15 +833,15 @@ std::tuple<double, double>
 
                     phasePermValues[cell_idx] = cellPhasePerm;
                     phasePermValuesDiag[cell_idx] = cellPhasePermDiag;
-                    maxPhasePerm = std::max(maxPhasePerm, cellPhasePerm);
-                    maxPhasePerm = std::max(maxPhasePerm, *std::max_element(cellPhasePermDiag.begin(),
-                                                                            cellPhasePermDiag.end()));
+                    maxPhasePerm[0] = std::max(maxPhasePerm[0], cellPhasePerm);
+                    maxPhasePerm[0] = std::max(maxPhasePerm[0], *std::max_element(cellPhasePermDiag.begin(),
+                                                                                  cellPhasePermDiag.end()));
                     if (upscaleBothPhases) {
                         phase2PermValues[cell_idx] = cellPhase2Perm;
                         phase2PermValuesDiag[cell_idx] = cellPhase2PermDiag;
-                        maxPhase2Perm = std::max(maxPhase2Perm, cellPhase2Perm);
-                        maxPhase2Perm = std::max(maxPhase2Perm, *std::max_element(cellPhase2PermDiag.begin(),
-                                                                                  cellPhase2PermDiag.end()));
+                        maxPhasePerm[1] = std::max(maxPhasePerm[1], cellPhase2Perm);
+                        maxPhasePerm[1] = std::max(maxPhasePerm[1], *std::max_element(cellPhase2PermDiag.begin(),
+                                                                                      cellPhase2PermDiag.end()));
                     }
                 }
             }
@@ -850,10 +849,10 @@ std::tuple<double, double>
 
             // We have both a fixed bottom limit, as well as a possible higher limit determined
             // by a maximum allowable permeability.
-            double minPhasePerm = std::max(maxPhasePerm/maxPermContrast, minPerm);
+            double minPhasePerm = std::max(maxPhasePerm[0]/maxPermContrast, minPerm);
             double minPhase2Perm;
             if (upscaleBothPhases)
-                minPhase2Perm = std::max(maxPhase2Perm/maxPermContrast, minPerm);
+                minPhase2Perm = std::max(maxPhasePerm[1]/maxPermContrast, minPerm);
 
             // Now remodel the phase permeabilities obeying minPhasePerm
             SinglePhaseUpscaler::permtensor_t cellperm(3,3,nullptr);
