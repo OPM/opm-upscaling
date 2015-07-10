@@ -713,4 +713,257 @@ void RelPermUpscaleHelper::upscaleCapillaryPressure(std::map<std::string,std::st
     }
 }
 
+std::tuple<double, double>
+    RelPermUpscaleHelper::upscalePermeability(std::map<std::string,std::string>& options,
+                                              const std::vector<double>& dP,
+                                              int mpi_rank)
+{
+    const double minPerm = atof(options["minPerm"].c_str());
+    const double maxPermContrast = atof(options["maxPermContrast"].c_str());
+    const double milliDarcyToSqMetre =
+                        Opm::unit::convert::to(1.0*Opm::prefix::milli*Opm::unit::darcy,
+                                               Opm::unit::square(Opm::unit::meter));
+
+     // Put correct number of zeros in, just to be able to access RelPerm[index] later
+    WaterSaturation.resize(points);
+    for (size_t i = 0; i < (upscaleBothPhases?2:1); ++i)
+        PhasePerm[i].resize(points, std::vector<double>(tensorElementCount));
+
+    // Make vector of capillary pressure points corresponding to uniformly distribued
+    // saturation points between Swor and Swir.
+    MonotCubicInterpolator CapPressureVsWaterSaturation(WaterSaturationVsCapPressure.get_fVector(),
+                                                        WaterSaturationVsCapPressure.get_xVector());
+
+    for (int pointidx = 1; pointidx <= points; ++pointidx) {
+        // pointidx=1 corresponds to Swir, pointidx=points to Swor.
+        double saturation = Swir + (Swor-Swir)/(points-1)*(pointidx-1);
+        pressurePoints.push_back(CapPressureVsWaterSaturation.evaluate(saturation));
+    }
+    // Preserve max and min pressures
+    pressurePoints.front() = Pcmax;
+    pressurePoints.back()  = Pcmin;
+
+    // Fill with zeros initially (in case of non-mpi)
+    node_vs_pressurepoint.resize(points);
+
+#if HAVE_MPI
+    // Distribute work load over mpi nodes.
+    for (int idx=0; idx < points; ++idx) {
+        // Ensure master node gets equal or less work than the other nodes, since
+        // master node also computes single phase perm.
+        node_vs_pressurepoint[idx] = (mpi_nodecount-1) - idx % mpi_nodecount;
+    }
+#endif
+
+    const std::vector<int>& ecl_idx = upscaler.grid().globalCell();
+    clock_t start_upscale_wallclock = clock();
+
+    double waterVolumeLF;
+    // Now loop through the vector of capillary pressure points that
+    // this node should compute.
+    for (int pointidx = 0; pointidx < points; ++pointidx) {
+
+        // Should "I" (mpi-wise) compute this pressure point?
+        if (node_vs_pressurepoint[pointidx] == mpi_rank) {
+
+            double Ptestvalue = pressurePoints[pointidx];
+
+            double accPhasePerm = 0.0;
+            double accPhase2Perm = 0.0;
+
+            double maxPhasePerm = 0.0;
+            double maxPhase2Perm = 0.0;
+
+            std::vector<double> phasePermValues, phase2PermValues;
+            std::vector<std::vector<double> > phasePermValuesDiag, phase2PermValuesDiag;
+            phasePermValues.resize(satnums.size());
+            phasePermValuesDiag.resize(satnums.size());
+            if (upscaleBothPhases) {
+                phase2PermValues.resize(satnums.size());
+                phase2PermValuesDiag.resize(satnums.size());
+            }
+            waterVolumeLF = 0.0;
+            for (size_t i = 0; i < ecl_idx.size(); ++i) {
+                unsigned int cell_idx = ecl_idx[i];
+                double cellPhasePerm = minPerm;
+                double cellPhase2Perm = minPerm;
+                std::vector<double>  cellPhasePermDiag, cellPhase2PermDiag;
+                cellPhasePermDiag.resize(3, minPerm);
+                if (upscaleBothPhases)
+                    cellPhase2PermDiag.resize(3, minPerm);
+
+                if (satnums[cell_idx] > 0) { // handle "no rock" cells with satnum zero
+                    double PtestvalueCell = Ptestvalue;
+                    if (!dP.empty())
+                        PtestvalueCell -= dP[cell_idx];
+
+                    if (!anisotropic_input) {
+                        double Jvalue = sqrt(perms[0][cell_idx] * milliDarcyToSqMetre/poros[cell_idx]) * PtestvalueCell;
+                        double WaterSaturationCell
+                            = InvJfunctions[int(satnums[cell_idx])-1].evaluate(Jvalue);
+                        waterVolumeLF += WaterSaturationCell * cellPoreVolumes[cell_idx];
+
+                        // Compute cell relative permeability. We use a lower cutoff-value as we
+                        // easily divide by zero here.  When water saturation is
+                        // zero, we get 'inf', which is circumvented by the cutoff value.
+                        cellPhasePerm =
+                            Krfunctions[0][0][int(satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
+                            perms[0][cell_idx];
+                        if (upscaleBothPhases) {
+                            cellPhase2Perm =
+                                Krfunctions[0][1][int(satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
+                                perms[0][cell_idx];
+                        }
+                    }
+                    else {
+                        double WaterSaturationCell = SwPcfunctions[int(satnums[cell_idx])-1].evaluate(PtestvalueCell);
+                        waterVolumeLF += WaterSaturationCell * cellPoreVolumes[cell_idx];
+
+                        cellPhasePermDiag[0] = Krfunctions[0][0][int(satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
+                            perms[0][cell_idx];
+                        cellPhasePermDiag[1] = Krfunctions[1][0][int(satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
+                            perms[1][cell_idx];
+                        cellPhasePermDiag[2] = Krfunctions[2][0][int(satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
+                            perms[2][cell_idx];
+                        if (upscaleBothPhases) {
+                            cellPhase2PermDiag[0] = Krfunctions[0][1][int(satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
+                                perms[0][cell_idx];
+                            cellPhase2PermDiag[1] = Krfunctions[1][1][int(satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
+                                perms[1][cell_idx];
+                            cellPhase2PermDiag[2] = Krfunctions[2][1][int(satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
+                                perms[2][cell_idx];
+                        }
+                    }
+
+                    phasePermValues[cell_idx] = cellPhasePerm;
+                    phasePermValuesDiag[cell_idx] = cellPhasePermDiag;
+                    maxPhasePerm = std::max(maxPhasePerm, cellPhasePerm);
+                    maxPhasePerm = std::max(maxPhasePerm, *std::max_element(cellPhasePermDiag.begin(),
+                                                                            cellPhasePermDiag.end()));
+                    if (upscaleBothPhases) {
+                        phase2PermValues[cell_idx] = cellPhase2Perm;
+                        phase2PermValuesDiag[cell_idx] = cellPhase2PermDiag;
+                        maxPhase2Perm = std::max(maxPhase2Perm, cellPhase2Perm);
+                        maxPhase2Perm = std::max(maxPhase2Perm, *std::max_element(cellPhase2PermDiag.begin(),
+                                                                                  cellPhase2PermDiag.end()));
+                    }
+                }
+            }
+            // Now we can determine the smallest permitted permeability we can calculate for
+
+            // We have both a fixed bottom limit, as well as a possible higher limit determined
+            // by a maximum allowable permeability.
+            double minPhasePerm = std::max(maxPhasePerm/maxPermContrast, minPerm);
+            double minPhase2Perm;
+            if (upscaleBothPhases)
+                minPhase2Perm = std::max(maxPhase2Perm/maxPermContrast, minPerm);
+
+            // Now remodel the phase permeabilities obeying minPhasePerm
+            SinglePhaseUpscaler::permtensor_t cellperm(3,3,nullptr);
+            zero(cellperm);
+            for (size_t i = 0; i < ecl_idx.size(); ++i) {
+                unsigned int cell_idx = ecl_idx[i];
+                zero(cellperm);
+                if (!anisotropic_input) {
+                    double cellPhasePerm = std::max(minPhasePerm, phasePermValues[cell_idx]);
+                    accPhasePerm += cellPhasePerm;
+                    double kval = std::max(minPhasePerm, cellPhasePerm);
+                    cellperm(0,0) = kval;
+                    cellperm(1,1) = kval;
+                    cellperm(2,2) = kval;
+                }
+                else { // anisotropic_input
+                    // Truncate values lower than minPhasePerm upwards.
+                    phasePermValuesDiag[cell_idx][0] = std::max(minPhasePerm, phasePermValuesDiag[cell_idx][0]);
+                    phasePermValuesDiag[cell_idx][1] = std::max(minPhasePerm, phasePermValuesDiag[cell_idx][1]);
+                    phasePermValuesDiag[cell_idx][2] = std::max(minPhasePerm, phasePermValuesDiag[cell_idx][2]);
+                    accPhasePerm += phasePermValuesDiag[cell_idx][0]; // not correct anyway
+                    cellperm(0,0) = phasePermValuesDiag[cell_idx][0];
+                    cellperm(1,1) = phasePermValuesDiag[cell_idx][1];
+                    cellperm(2,2) = phasePermValuesDiag[cell_idx][2];
+                }
+                upscaler.setPermeability(i, cellperm);
+            }
+
+            // Output average phase perm, this is just a reality check so that we are not way off.
+            //cout << ", Arith. mean phase perm = " << accPhasePerm/float(tesselatedCells) << " mD, ";
+
+            //  Call single-phase upscaling code
+            SinglePhaseUpscaler::permtensor_t phasePermTensor = upscaler.upscaleSinglePhase();
+
+            // Now upscale phase permeability for phase 2
+            SinglePhaseUpscaler::permtensor_t phase2PermTensor;
+            if (upscaleBothPhases) {
+                zero(cellperm);
+                for (size_t i = 0; i < ecl_idx.size(); ++i) {
+                    unsigned int cell_idx = ecl_idx[i];
+                    zero(cellperm);
+                    if (!anisotropic_input) {
+                        double cellPhase2Perm = std::max(minPhase2Perm, phase2PermValues[cell_idx]);
+                        accPhase2Perm += cellPhase2Perm;
+                        double kval = std::max(minPhase2Perm, cellPhase2Perm);
+                        cellperm(0,0) = kval;
+                        cellperm(1,1) = kval;
+                        cellperm(2,2) = kval;
+                    }
+                    else { // anisotropic_input
+                        // Truncate values lower than minPhasePerm upwards.
+                        phase2PermValuesDiag[cell_idx][0] = std::max(minPhase2Perm, phase2PermValuesDiag[cell_idx][0]);
+                        phase2PermValuesDiag[cell_idx][1] = std::max(minPhase2Perm, phase2PermValuesDiag[cell_idx][1]);
+                        phase2PermValuesDiag[cell_idx][2] = std::max(minPhase2Perm, phase2PermValuesDiag[cell_idx][2]);
+                        accPhase2Perm += phase2PermValuesDiag[cell_idx][0]; // not correct anyway
+                        cellperm(0,0) = phase2PermValuesDiag[cell_idx][0];
+                        cellperm(1,1) = phase2PermValuesDiag[cell_idx][1];
+                        cellperm(2,2) = phase2PermValuesDiag[cell_idx][2];
+                    }
+                    upscaler.setPermeability(i, cellperm);
+                }
+                phase2PermTensor = upscaler.upscaleSinglePhase();
+            }
+
+            // Here we recalculate the upscaled water saturation,
+            // although it is already known when we asked for the
+            // pressure point to compute for. Nonetheless, we
+            // recalculate here to avoid any minor roundoff-error and
+            // interpolation error (this means that the saturation
+            // points are not perfectly uniformly distributed)
+            WaterSaturation[pointidx] =  waterVolumeLF/poreVolume;
+
+
+#ifdef HAVE_MPI
+            std::cout << "Rank " << mpi_rank << ": ";
+#endif
+            std::cout << Ptestvalue << "\t" << WaterSaturation[pointidx];
+            // Store and print phase-perm-result
+            for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) {
+                PhasePerm[0][pointidx][voigtIdx] = getVoigtValue(phasePermTensor, voigtIdx);
+                std::cout << "\t" << getVoigtValue(phasePermTensor, voigtIdx);
+                if (upscaleBothPhases){
+                    PhasePerm[1][pointidx][voigtIdx] = getVoigtValue(phase2PermTensor, voigtIdx);
+                    std::cout << "\t" << getVoigtValue(phase2PermTensor, voigtIdx);
+                }
+            }
+            std::cout << std::endl;
+        }
+    }
+
+    clock_t finish_upscale_wallclock = clock();
+    double timeused_upscale_wallclock = (double(finish_upscale_wallclock)-double(start_upscale_wallclock))/CLOCKS_PER_SEC;
+
+    collectResults();
+
+    // Average time pr. upscaling point:
+#ifdef HAVE_MPI
+    // Sum the upscaling time used by all processes
+    double timeused_total;
+    MPI_Reduce(&timeused_upscale_wallclock, &timeused_total, 1, MPI_DOUBLE,
+               MPI_SUM, 0, MPI_COMM_WORLD);
+    double avg_upscaling_time_pr_point = timeused_total/(double)points;
+#else
+    double avg_upscaling_time_pr_point = timeused_upscale_wallclock / (double)points;
+#endif
+
+    return std::make_tuple(timeused_upscale_wallclock, avg_upscaling_time_pr_point);
+}
+
 }

@@ -27,6 +27,7 @@
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 #include <array>
+#include <tuple>
 #include <vector>
 
 namespace Opm {
@@ -149,6 +150,16 @@ namespace Opm {
       //! \details Uses the following options: saturationThreshold
       void upscaleCapillaryPressure(std::map<std::string,std::string>& options,
                                     const std::vector<double>& dP);
+
+      //! \brief Upscale permeabilities.
+      //! \param[in] options Options structure.
+      //! \param[in] dP Vector with cell pressure gradients. Pass empty vector for no gravity effects.
+      //! \param[in] mpi_rank MPI rank of this process.
+      //! \details Uses the following options:  minPerm, maxPermContrast
+      //! \return Tuple with (total time, time per point).
+      std::tuple<double,double> upscalePermeability(std::map<std::string,std::string>& options,
+                                                    const std::vector<double>& dP,
+                                                    int mpi_rank);
     private:
       //! \brief Perform critical saturation check for a single curve.
       //! \param[in,out] func Function to check for.
