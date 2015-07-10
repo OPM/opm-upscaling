@@ -768,9 +768,6 @@ std::tuple<double, double>
 
             double Ptestvalue = pressurePoints[pointidx];
 
-            double accPhasePerm = 0.0;
-            double accPhase2Perm = 0.0;
-
             double maxPhasePerm = 0.0;
             double maxPhase2Perm = 0.0;
 
@@ -866,7 +863,6 @@ std::tuple<double, double>
                 zero(cellperm);
                 if (!anisotropic_input) {
                     double cellPhasePerm = std::max(minPhasePerm, phasePermValues[cell_idx]);
-                    accPhasePerm += cellPhasePerm;
                     double kval = std::max(minPhasePerm, cellPhasePerm);
                     cellperm(0,0) = kval;
                     cellperm(1,1) = kval;
@@ -877,16 +873,12 @@ std::tuple<double, double>
                     phasePermValuesDiag[cell_idx][0] = std::max(minPhasePerm, phasePermValuesDiag[cell_idx][0]);
                     phasePermValuesDiag[cell_idx][1] = std::max(minPhasePerm, phasePermValuesDiag[cell_idx][1]);
                     phasePermValuesDiag[cell_idx][2] = std::max(minPhasePerm, phasePermValuesDiag[cell_idx][2]);
-                    accPhasePerm += phasePermValuesDiag[cell_idx][0]; // not correct anyway
                     cellperm(0,0) = phasePermValuesDiag[cell_idx][0];
                     cellperm(1,1) = phasePermValuesDiag[cell_idx][1];
                     cellperm(2,2) = phasePermValuesDiag[cell_idx][2];
                 }
                 upscaler.setPermeability(i, cellperm);
             }
-
-            // Output average phase perm, this is just a reality check so that we are not way off.
-            //cout << ", Arith. mean phase perm = " << accPhasePerm/float(tesselatedCells) << " mD, ";
 
             //  Call single-phase upscaling code
             SinglePhaseUpscaler::permtensor_t phasePermTensor = upscaler.upscaleSinglePhase();
@@ -900,7 +892,6 @@ std::tuple<double, double>
                     zero(cellperm);
                     if (!anisotropic_input) {
                         double cellPhase2Perm = std::max(minPhase2Perm, phase2PermValues[cell_idx]);
-                        accPhase2Perm += cellPhase2Perm;
                         double kval = std::max(minPhase2Perm, cellPhase2Perm);
                         cellperm(0,0) = kval;
                         cellperm(1,1) = kval;
@@ -911,7 +902,6 @@ std::tuple<double, double>
                         phase2PermValuesDiag[cell_idx][0] = std::max(minPhase2Perm, phase2PermValuesDiag[cell_idx][0]);
                         phase2PermValuesDiag[cell_idx][1] = std::max(minPhase2Perm, phase2PermValuesDiag[cell_idx][1]);
                         phase2PermValuesDiag[cell_idx][2] = std::max(minPhase2Perm, phase2PermValuesDiag[cell_idx][2]);
-                        accPhase2Perm += phase2PermValuesDiag[cell_idx][0]; // not correct anyway
                         cellperm(0,0) = phase2PermValuesDiag[cell_idx][0];
                         cellperm(1,1) = phase2PermValuesDiag[cell_idx][1];
                         cellperm(2,2) = phase2PermValuesDiag[cell_idx][2];
