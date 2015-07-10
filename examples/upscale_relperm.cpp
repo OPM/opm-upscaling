@@ -704,21 +704,10 @@ try
     *    c: Calculate relperm tensors from all the phase perm tensors.
     */
 
-   // Put correct number of zeros in, just to be able to access RelPerm[index] later 
-   for (int idx=0; idx < helper.points; ++idx) {
-       helper.WaterSaturation.push_back(0.0);
-       vector<double> tmp;
-       helper.PhasePerm[0].push_back(tmp);
-       for (int voigtIdx=0; voigtIdx < helper.tensorElementCount; ++voigtIdx) { 
-           helper.PhasePerm[0][idx].push_back(0.0);
-       } 
-       if (helper.upscaleBothPhases){
-           helper.PhasePerm[1].push_back(tmp);
-           for (int voigtIdx=0; voigtIdx < helper.tensorElementCount; ++voigtIdx) { 
-               helper.PhasePerm[1][idx].push_back(0.0);
-           }            
-       }
-   }
+    // Put correct number of zeros in, just to be able to access RelPerm[index] later
+    helper.WaterSaturation.resize(helper.points, 0.0);
+    for (size_t i = 0; i < (helper.upscaleBothPhases?2:1); ++i)
+        helper.PhasePerm[i].resize(helper.points, std::vector<double>(helper.tensorElementCount));
 
    // Make vector of capillary pressure points corresponding to uniformly distribued
    // saturation points between Swor and Swir.
@@ -733,9 +722,7 @@ try
    helper.pressurePoints[helper.pressurePoints.size()-1]=helper.Pcmin;
 
    // Fill with zeros initially (in case of non-mpi)
-   for (int idx=0; idx < helper.points; ++idx) {
-       helper.node_vs_pressurepoint.push_back(0);
-   }
+   helper.node_vs_pressurepoint.resize(helper.points);
    
 #if HAVE_MPI
    // Distribute work load over mpi nodes.
