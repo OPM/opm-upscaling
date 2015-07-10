@@ -142,6 +142,13 @@ namespace Opm {
       //!                                      gravity, linsolver_tolerance
       void calculateMinMaxCapillaryPressure(double dPmin, double dPmax,
                                             std::map<std::string,std::string>& options);
+
+      //! \brief Upscale capillary pressure.
+      //! \param[in] Options structure.
+      //! \param[in] dP Vector with cell pressure gradients. Pass empty vector for no gravity effects.
+      //! \details Uses the following options: saturationThreshold
+      void upscaleCapillaryPressure(std::map<std::string,std::string>& options,
+                                    const std::vector<double>& dP);
     private:
       //! \brief Perform critical saturation check for a single curve.
       //! \param[in,out] func Function to check for.

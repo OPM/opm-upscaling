@@ -452,99 +452,10 @@ try
      * will be used afterwards for accessing the tabulated values.
      */
 
+    helper.upscaleCapillaryPressure(options, dP);
 
-    double largestSaturationInterval = helper.Swor-helper.Swir;
-
-    double Ptestvalue = helper.Pcmax;
-
-    while (largestSaturationInterval > (helper.Swor-helper.Swir)/500.0) {
-        //       cout << Ptestvalue << endl;
-        if (helper.Pcmax == helper.Pcmin) {
-            // This is a dummy situation, we go through once and then
-            // we are finished (this will be triggered by zero permeability)
-            Ptestvalue = helper.Pcmin;
-            largestSaturationInterval = 0;
-        }
-        else if (helper.WaterSaturationVsCapPressure.getSize() == 0) {
-            /* No data values previously computed */
-            Ptestvalue = helper.Pcmax;
-        }
-        else if (helper.WaterSaturationVsCapPressure.getSize() == 1) {
-            /* If only one point has been computed, it was for Pcmax. So now
-               do Pcmin */
-            Ptestvalue = helper.Pcmin;
-        }
-        else {
-            /* Search for largest saturation interval in which there are no
-               computed saturation points (and estimate the capillary pressure
-               that will fall in the center of this saturation interval)
-            */
-            pair<double,double> SatDiff = helper.WaterSaturationVsCapPressure.getMissingX();
-            Ptestvalue = SatDiff.first;
-            largestSaturationInterval = SatDiff.second;
-        }
-
-        // Check for saneness of Ptestvalue:
-        if (std::isnan(Ptestvalue) || std::isinf(Ptestvalue)) {
-            if (helper.isMaster) cerr << "ERROR: Ptestvalue was inf or nan" << endl;
-            break; // Jump out of while-loop, just print out the results
-            // up to now and exit the program
-        }
-
-        double waterVolume = 0.0;
-        for (unsigned int i = 0; i < ecl_idx.size(); ++i) {
-            unsigned int cell_idx = ecl_idx[i];
-            double WaterSaturationCell = 0.0;
-            if (helper.satnums[cell_idx] > 0) { // handle "no rock" cells with satnum zero
-                double PtestvalueCell;
-                if (includeGravity) {
-                    PtestvalueCell = Ptestvalue - dP[cell_idx];
-                }
-                else {
-                    PtestvalueCell = Ptestvalue;
-                }
-                if (! helper.anisotropic_input ) {
-                    double Jvalue = sqrt(helper.perms[0][cell_idx] * milliDarcyToSqMetre /helper.poros[cell_idx]) * PtestvalueCell;
-                    //cout << "JvalueCell: " << Jvalue << endl;
-                    WaterSaturationCell
-                        = helper.InvJfunctions[int(helper.satnums[cell_idx])-1].evaluate(Jvalue);
-                }
-                else { // anisotropic_input, then we do not do J-function-scaling
-                    WaterSaturationCell = helper.SwPcfunctions[int(helper.satnums[cell_idx])-1].evaluate(PtestvalueCell);
-                    //cout << Ptestvalue << "\t" <<  helper.WaterSaturationCell << endl;
-                }
-            }
-            waterVolume += WaterSaturationCell  * helper.cellPoreVolumes[cell_idx];
-        }
-        helper.WaterSaturationVsCapPressure.addPair(Ptestvalue, waterVolume/helper.poreVolume);
-    }
-    //   cout << WaterSaturationVsCapPressure.toString();
-
-    // Now, it may happen that we have a large number of cells, and
-    // some cells with near zero poro and perm. This may cause that
-    // Pcmax has been estimated so high that it does not affect Sw
-    // within machine precision, and then we need to truncate the
-    // largest Pc values:
-    helper.WaterSaturationVsCapPressure.chopFlatEndpoints(saturationThreshold);
-
-    // Now we can also invert the upscaled water saturation
-    // (it should be monotonic)
-    if (!helper.WaterSaturationVsCapPressure.isStrictlyMonotone()) {
-        if (helper.isMaster) {
-            cerr << "Error: Upscaled water saturation not strictly monotone in capillary pressure." << endl;
-            cerr << "       Unphysical input data, exiting." << endl;
-            cerr << "       Trying to dump " << helper.saturationstring << " vs Pc to file swvspc_debug.txt for inspection" << endl;
-            ofstream outfile;
-            outfile.open("swvspc_debug.txt", ios::out | ios::trunc);
-            outfile << "# Pc      " << helper.saturationstring << endl;
-            outfile << helper.WaterSaturationVsCapPressure.toString();
-            outfile.close();
-        }
-        usageandexit();
-    }
     MonotCubicInterpolator CapPressureVsWaterSaturation(helper.WaterSaturationVsCapPressure.get_fVector(),
                                                         helper.WaterSaturationVsCapPressure.get_xVector());
-
 
     clock_t start_upscaling = clock();
 
@@ -632,7 +543,7 @@ try
         // Should "I" (mpi-wise) compute this pressure point?
         if (helper.node_vs_pressurepoint[pointidx] == mpi_rank) {
 
-            Ptestvalue = helper.pressurePoints[pointidx];
+            double Ptestvalue = helper.pressurePoints[pointidx];
 
             double accPhasePerm = 0.0;
             double accPhase2Perm = 0.0;

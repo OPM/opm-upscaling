@@ -623,4 +623,94 @@ void RelPermUpscaleHelper::calculateMinMaxCapillaryPressure(double dPmin, double
     }
 }
 
+void RelPermUpscaleHelper::upscaleCapillaryPressure(std::map<std::string,std::string>& options,
+                                                    const std::vector<double>& dP)
+{
+    const double saturationThreshold = atof(options["saturationThreshold"].c_str());
+    double largestSaturationInterval = Swor-Swir;
+    double Ptestvalue = Pcmax;
+    std::stringstream errstr;
+    const std::vector<int>& ecl_idx = upscaler.grid().globalCell();
+    const double milliDarcyToSqMetre =
+                        Opm::unit::convert::to(1.0*Opm::prefix::milli*Opm::unit::darcy,
+                                               Opm::unit::square(Opm::unit::meter));
+
+    while (largestSaturationInterval > (Swor-Swir)/500.0) {
+        if (Pcmax == Pcmin) {
+            // This is a dummy situation, we go through once and then
+            // we are finished (this will be triggered by zero permeability)
+            Ptestvalue = Pcmin;
+            largestSaturationInterval = 0;
+        }
+        else if (WaterSaturationVsCapPressure.getSize() == 0) {
+            /* No data values previously computed */
+            Ptestvalue = Pcmax;
+        }
+        else if (WaterSaturationVsCapPressure.getSize() == 1) {
+            /* If only one point has been computed, it was for Pcmax. So now
+               do Pcmin */
+            Ptestvalue = Pcmin;
+        }
+        else {
+            /* Search for largest saturation interval in which there are no
+               computed saturation points (and estimate the capillary pressure
+               that will fall in the center of this saturation interval)
+               */
+            std::pair<double,double> SatDiff = WaterSaturationVsCapPressure.getMissingX();
+            Ptestvalue = SatDiff.first;
+            largestSaturationInterval = SatDiff.second;
+        }
+
+        // Check for saneness of Ptestvalue:
+        if (std::isnan(Ptestvalue) || std::isinf(Ptestvalue)) {
+            errstr << "ERROR: Ptestvalue was inf or nan" << std::endl;
+            break; // Jump out of while-loop, just print out the results
+                   // up to now and exit the program
+        }
+
+        double waterVolume = 0.0;
+        for (size_t i = 0; i < ecl_idx.size(); ++i) {
+            unsigned int cell_idx = ecl_idx[i];
+            double waterSaturationCell = 0.0;
+            if (satnums[cell_idx] > 0) { // handle "no rock" cells with satnum zero
+                double PtestvalueCell = Ptestvalue;
+                if (!dP.empty())
+                    PtestvalueCell -= dP[cell_idx];
+
+                if (!anisotropic_input) {
+                    double Jvalue = sqrt(perms[0][cell_idx] * milliDarcyToSqMetre / poros[cell_idx]) * PtestvalueCell;
+                    waterSaturationCell = InvJfunctions[int(satnums[cell_idx])-1].evaluate(Jvalue);
+                }
+                else // anisotropic_input, then we do not do J-function-scaling
+                    waterSaturationCell = SwPcfunctions[int(satnums[cell_idx])-1].evaluate(PtestvalueCell);
+            }
+            waterVolume += waterSaturationCell  * cellPoreVolumes[cell_idx];
+        }
+        WaterSaturationVsCapPressure.addPair(Ptestvalue, waterVolume/poreVolume);
+    }
+
+    // Now, it may happen that we have a large number of cells, and
+    // some cells with near zero poro and perm. This may cause that
+    // Pcmax has been estimated so high that it does not affect Sw
+    // within machine precision, and then we need to truncate the
+    // largest Pc values:
+    WaterSaturationVsCapPressure.chopFlatEndpoints(saturationThreshold);
+
+    // Now we can also invert the upscaled water saturation
+    // (it should be monotonic)
+    if (!WaterSaturationVsCapPressure.isStrictlyMonotone()) {
+        errstr <<  "Error: Upscaled water saturation not strictly monotone in capillary pressure." << std::endl
+               << "       Unphysical input data, exiting." << std::endl
+               << "       Trying to dump " << saturationstring << " vs Pc to file swvspc_debug.txt for inspection";
+        if (isMaster) {
+            std::ofstream outfile;
+            outfile.open("swvspc_debug.txt", std::ios::out | std::ios::trunc);
+            outfile << "# Pc      " << saturationstring << std::endl;
+            outfile << WaterSaturationVsCapPressure.toString();
+            outfile.close();
+        }
+        throw std::runtime_error(errstr.str());
+    }
+}
+
 }
