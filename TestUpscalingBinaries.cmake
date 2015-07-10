@@ -125,3 +125,9 @@ if((DUNE_ISTL_VERSION_MAJOR GREATER 2) OR
   add_test_upscale_elasticity(EightCells mpc)
   add_test_upscale_elasticity(EightCells mortar)
 endif()
+
+add_custom_target(clear_test_data ${CMAKE_COMMAND} -E remove_directory ${RESULT_PATH}
+                  COMMAND ${CMAKE_COMMAND} -E make_directory ${RESULT_PATH}
+                  COMMENT "Removing old test results")
+
+add_dependencies(check clear_test_data)
