@@ -85,7 +85,7 @@ namespace Opm {
       //! \param[in] mpi_rank Rank of this process (for parallel simulations).
       //! \param[in] options Options structure.
       //! \details Uses the following options: fluids
-      RelPermUpscaleHelper(int mpi_rank, std::map<std::string,std::string>& options);
+      RelPermUpscaleHelper(int mpi_rank, std::map<std::string,std::string>& options_);
 
       //! \brief Collect results from all MPI nodes.
       void collectResults();
@@ -109,13 +109,11 @@ namespace Opm {
                             double minPerm, double maxPerm, double minPoro);
 
       //! \brief Check that input relperm curevs specify critical saturations.
-      //! \param[in] num_rock Number of curves to check.
       void checkCriticalSaturations();
 
       //! \brief Setup requested boundary conditions.
-      //! \param[in] options Option structure.
       //! \details Uses the following options: bc
-      void setupBoundaryConditions(std::map<std::string, std::string>& options);
+      void setupBoundaryConditions();
 
       //! \brief Tesselate grid
       //! \param[in] deck The grid to tesselate.
@@ -124,34 +122,27 @@ namespace Opm {
       //!          linsolver_verbosity, linsolver_type, linsolver_max_iterations,
       //!          linsolver_smooth_steps, linsolver_prolongate_factor, minPerm
       //! \return Time used for tesselation.
-      double tesselateGrid(Opm::DeckConstPtr deck,
-                           std::map<std::string,std::string>& options);
+      double tesselateGrid(Opm::DeckConstPtr deck);
 
       //! \brief Find cell center pressure gradient for every cell.
       //! \param[in] res The number of cells in each direction.
-      //! \param[in] options Option structure.
       //! \details Uses the following options: gravity, waterDensity, oilDensity
-      void calculateCellPressureGradients(const std::array<int,3>& res,
-                                          std::map<std::string,std::string>& options);
+      void calculateCellPressureGradients(const std::array<int,3>& res);
 
       //! \brief Calculate minimum and maximum capillary pressures.
-      //! \param[in] options Option structure.
       //! \details Uses the following options: maxPermContrast, minPerm,
       //!                                      gravity, linsolver_tolerance
-      void calculateMinMaxCapillaryPressure(std::map<std::string,std::string>& options);
+      void calculateMinMaxCapillaryPressure();
 
       //! \brief Upscale capillary pressure.
-      //! \param[in] Options structure.
       //! \details Uses the following options: saturationThreshold
-      void upscaleCapillaryPressure(std::map<std::string,std::string>& options);
+      void upscaleCapillaryPressure();
 
       //! \brief Upscale permeabilities.
-      //! \param[in] options Options structure.
       //! \param[in] mpi_rank MPI rank of this process.
       //! \details Uses the following options:  minPerm, maxPermContrast
       //! \return Tuple with (total time, time per point).
-      std::tuple<double,double> upscalePermeability(std::map<std::string,std::string>& options,
-                                                    int mpi_rank);
+      std::tuple<double,double> upscalePermeability(int mpi_rank);
     private:
       //! \brief Perform critical saturation check for a single curve.
       //! \param[in,out] func Function to check for.
@@ -164,6 +155,7 @@ namespace Opm {
       const double milliDarcyToSqMetre; //!< Conversion factor, multiply mD numbers with this to get m² numbers.
 
       std::vector<double> dP; //!<  Cell center pressure gradients due to gravity effects.
+      std::map<std::string,std::string>& options; //!< Reference to options structure.
   };
 }
 

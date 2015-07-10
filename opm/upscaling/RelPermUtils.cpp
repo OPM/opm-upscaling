@@ -63,14 +63,15 @@ void setVoigtValue(SinglePhaseUpscaler::permtensor_t& K, int voigt_idx, double v
 }
 
 RelPermUpscaleHelper::RelPermUpscaleHelper(int mpi_rank,
-                                           std::map<std::string,std::string>& options) :
+                                           std::map<std::string,std::string>& options_) :
     isMaster(mpi_rank == 0),
     anisotropic_input(false),
     permTensor(3,3,nullptr),
     permTensorInv(3,3,nullptr),
     tesselatedCells(0),
     milliDarcyToSqMetre(Opm::unit::convert::to(1.0*Opm::prefix::milli*Opm::unit::darcy,
-                                               Opm::unit::square(Opm::unit::meter)))
+                                               Opm::unit::square(Opm::unit::meter))),
+    options(options_)
 {
     if (options["fluids"] == "ow" || options["fluids"] == "wo")
         saturationstring = "Sw";
@@ -400,7 +401,7 @@ void RelPermUpscaleHelper::checkCriticalSaturations()
     }
 }
 
-void RelPermUpscaleHelper::setupBoundaryConditions(std::map<std::string,std::string>& options)
+void RelPermUpscaleHelper::setupBoundaryConditions()
 {
     static const std::map<char, std::pair<SinglePhaseUpscaler::BoundaryConditionType, size_t>> bcmap =
         {{'f', {SinglePhaseUpscaler::Fixed,    3}},
@@ -415,8 +416,7 @@ void RelPermUpscaleHelper::setupBoundaryConditions(std::map<std::string,std::str
         throw std::runtime_error("Invalid boundary condition. Only one of the letters f, l or p are allowed.");
 }
 
-double RelPermUpscaleHelper::tesselateGrid(Opm::DeckConstPtr deck,
-                                         std::map<std::string,std::string>& options)
+double RelPermUpscaleHelper::tesselateGrid(Opm::DeckConstPtr deck)
 {
   double linsolver_tolerance = atof(options["linsolver_tolerance"].c_str());
   int linsolver_verbosity = atoi(options["linsolver_verbosity"].c_str());
@@ -445,8 +445,7 @@ double RelPermUpscaleHelper::tesselateGrid(Opm::DeckConstPtr deck,
    return timeused_tesselation;
 }
 
-void RelPermUpscaleHelper::calculateCellPressureGradients(const std::array<int,3>& res,
-                                                          std::map<std::string,std::string>& options)
+void RelPermUpscaleHelper::calculateCellPressureGradients(const std::array<int,3>& res)
 {
     const double gravity            = atof(options["gravity"].c_str());
     const double waterDensity       = atof(options["waterDensity"].c_str());
@@ -503,7 +502,7 @@ void RelPermUpscaleHelper::calculateCellPressureGradients(const std::array<int,3
     }
 }
 
-void RelPermUpscaleHelper::calculateMinMaxCapillaryPressure(std::map<std::string,std::string>& options)
+void RelPermUpscaleHelper::calculateMinMaxCapillaryPressure()
 {
     const double maxPermContrast = atof(options["maxPermContrast"].c_str());
     const double minPerm         = atof(options["minPerm"].c_str());
@@ -625,7 +624,7 @@ void RelPermUpscaleHelper::calculateMinMaxCapillaryPressure(std::map<std::string
     }
 }
 
-void RelPermUpscaleHelper::upscaleCapillaryPressure(std::map<std::string,std::string>& options)
+void RelPermUpscaleHelper::upscaleCapillaryPressure()
 {
     const double saturationThreshold = atof(options["saturationThreshold"].c_str());
     double largestSaturationInterval = Swor-Swir;
@@ -712,8 +711,7 @@ void RelPermUpscaleHelper::upscaleCapillaryPressure(std::map<std::string,std::st
 }
 
 std::tuple<double, double>
-    RelPermUpscaleHelper::upscalePermeability(std::map<std::string,std::string>& options,
-                                              int mpi_rank)
+    RelPermUpscaleHelper::upscalePermeability(int mpi_rank)
 {
     const double minPerm = atof(options["minPerm"].c_str());
     const double maxPermContrast = atof(options["maxPermContrast"].c_str());

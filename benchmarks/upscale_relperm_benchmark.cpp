@@ -247,7 +247,7 @@ try
         {"critRelpermThresh",         "1e-6"}};// Threshold for setting minimum relperm to 0 (thus specify critical saturations)
 
     RelPermUpscaleHelper helper(mpi_rank, options);
-    helper.setupBoundaryConditions(options);
+    helper.setupBoundaryConditions();
 
     // If this number is 1 or higher, the output will be interpolated, if not
     // the computed data is untouched.
@@ -394,11 +394,11 @@ try
      *      constant times cell height times factor 10^-7 to obtain bars (same as p_c)
      */
 
-    timeused_tesselation = helper.tesselateGrid(deck, options);
+    timeused_tesselation = helper.tesselateGrid(deck);
 
     /* If gravity is to be included, calculate z-values of every cell: */
     if (includeGravity)
-        helper.calculateCellPressureGradients(res, options);
+        helper.calculateCellPressureGradients(res);
 
     /******************************************************************************
      * Step 5:
@@ -409,7 +409,7 @@ try
      * ie. we do not want to extrapolate the J-functions (but we might
      * have to do that later in the computations).
      */
-    helper.calculateMinMaxCapillaryPressure(options);
+    helper.calculateMinMaxCapillaryPressure();
     const std::vector<int>& ecl_idx = helper.upscaler.grid().globalCell();
 
     /***************************************************************************
@@ -425,7 +425,7 @@ try
      * will be used afterwards for accessing the tabulated values.
      */
 
-    helper.upscaleCapillaryPressure(options);
+    helper.upscaleCapillaryPressure();
 
     clock_t start_upscaling = clock();
 
@@ -458,7 +458,7 @@ try
 
     double timeused_upscale_wallclock, avg_upscaling_time_pr_point;
     std::tie(timeused_upscale_wallclock, avg_upscaling_time_pr_point) =
-                helper.upscalePermeability(options, mpi_rank);
+                helper.upscalePermeability(mpi_rank);
 
     /*
      * Step 8c: Make relperm values from phaseperms

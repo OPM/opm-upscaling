@@ -349,7 +349,7 @@ try
     
    /* Check validity of boundary conditions chosen, and make booleans 
       for boundary conditions, this allows more readable code later. */
-   helper.setupBoundaryConditions(options);
+   helper.setupBoundaryConditions();
 
    bool isFixed    = helper.boundaryCondition == SinglePhaseUpscaler::Fixed,
         isLinear   = helper.boundaryCondition == SinglePhaseUpscaler::Linear,
@@ -550,11 +550,11 @@ try
     *      constant times cell height times factor 10^-7 to obtain bars (same as p_c)
     */
 
-   timeused_tesselation = helper.tesselateGrid(deck, options);
+   timeused_tesselation = helper.tesselateGrid(deck);
 
    /* If gravity is to be included, calculate z-values of every cell: */
    if (includeGravity)
-       helper.calculateCellPressureGradients(res, options);
+       helper.calculateCellPressureGradients(res);
 
    /******************************************************************************
     * Step 5:
@@ -569,7 +569,7 @@ try
     * the final output of results.
     */
 
-   helper.calculateMinMaxCapillaryPressure(options);
+   helper.calculateMinMaxCapillaryPressure();
    const std::vector<int>& ecl_idx = helper.upscaler.grid().globalCell();
 
    /***************************************************************************
@@ -585,7 +585,7 @@ try
     * will be used afterwards for accessing the tabulated values.
     */
 
-   helper.upscaleCapillaryPressure(options);
+   helper.upscaleCapillaryPressure();
    
    /*****************************************************************************
     * Step 7:
@@ -616,7 +616,7 @@ try
 
     double avg_upscaling_time_pr_point;
     std::tie(timeused_upscale_wallclock, avg_upscaling_time_pr_point) =
-                helper.upscalePermeability(options, mpi_rank);
+                helper.upscalePermeability(mpi_rank);
 
    /* 
     * Step 8c: Make relperm values from phaseperms
