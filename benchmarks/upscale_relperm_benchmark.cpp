@@ -144,16 +144,6 @@ using namespace Opm;
 using namespace std;
 namespace io = boost::iostreams;
 
-// Function for displaying a vector. Used for testing purposes
-void dispVec(string name, vector<double> vec) {
-    cout.precision(10);
-    cout << name << ": ";
-    for (vector<double>::iterator iter = vec.begin(); iter < vec.end(); ++iter) {
-        cout << *iter << " ";
-    }
-    cout << "(size = " << vec.size() << endl;
-}
-
 static void usage() // Benchmark version
 {
     cerr << "Usage: This is a benchmark version of upscale_relperm. This executable takes no input," << endl <<
