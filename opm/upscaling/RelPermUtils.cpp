@@ -770,13 +770,13 @@ std::tuple<double, double>
 
             std::array<double,2> maxPhasePerm({0.0, 0.0});
 
-            std::vector<double> phasePermValues, phase2PermValues;
-            std::vector<std::vector<double> > phasePermValuesDiag, phase2PermValuesDiag;
-            phasePermValues.resize(satnums.size());
-            phasePermValuesDiag.resize(satnums.size());
+            std::array<std::vector<double>,2> phasePermValues;
+            std::array<std::vector<std::vector<double>>,2> phasePermValuesDiag;
+            phasePermValues[0].resize(satnums.size());
+            phasePermValuesDiag[0].resize(satnums.size());
             if (upscaleBothPhases) {
-                phase2PermValues.resize(satnums.size());
-                phase2PermValuesDiag.resize(satnums.size());
+                phasePermValues[1].resize(satnums.size());
+                phasePermValuesDiag[1].resize(satnums.size());
             }
             std::array<double,2> minPhasePerm;
             waterVolumeLF = 0.0;
@@ -832,14 +832,14 @@ std::tuple<double, double>
                         }
                     }
 
-                    phasePermValues[cell_idx] = cellPhasePerm;
-                    phasePermValuesDiag[cell_idx] = cellPhasePermDiag;
+                    phasePermValues[0][cell_idx] = cellPhasePerm;
+                    phasePermValuesDiag[0][cell_idx] = cellPhasePermDiag;
                     maxPhasePerm[0] = std::max(maxPhasePerm[0], cellPhasePerm);
                     maxPhasePerm[0] = std::max(maxPhasePerm[0], *std::max_element(cellPhasePermDiag.begin(),
                                                                                   cellPhasePermDiag.end()));
                     if (upscaleBothPhases) {
-                        phase2PermValues[cell_idx] = cellPhase2Perm;
-                        phase2PermValuesDiag[cell_idx] = cellPhase2PermDiag;
+                        phasePermValues[1][cell_idx] = cellPhase2Perm;
+                        phasePermValuesDiag[1][cell_idx] = cellPhase2PermDiag;
                         maxPhasePerm[1] = std::max(maxPhasePerm[1], cellPhase2Perm);
                         maxPhasePerm[1] = std::max(maxPhasePerm[1], *std::max_element(cellPhase2PermDiag.begin(),
                                                                                       cellPhase2PermDiag.end()));
@@ -861,7 +861,7 @@ std::tuple<double, double>
                 unsigned int cell_idx = ecl_idx[i];
                 zero(cellperm);
                 if (!anisotropic_input) {
-                    double cellPhasePerm = std::max(minPhasePerm[0], phasePermValues[cell_idx]);
+                    double cellPhasePerm = std::max(minPhasePerm[0], phasePermValues[0][cell_idx]);
                     double kval = std::max(minPhasePerm[0], cellPhasePerm);
                     cellperm(0,0) = kval;
                     cellperm(1,1) = kval;
@@ -869,12 +869,12 @@ std::tuple<double, double>
                 }
                 else { // anisotropic_input
                     // Truncate values lower than minPhasePerm upwards.
-                    phasePermValuesDiag[cell_idx][0] = std::max(minPhasePerm[0], phasePermValuesDiag[cell_idx][0]);
-                    phasePermValuesDiag[cell_idx][1] = std::max(minPhasePerm[0], phasePermValuesDiag[cell_idx][1]);
-                    phasePermValuesDiag[cell_idx][2] = std::max(minPhasePerm[0], phasePermValuesDiag[cell_idx][2]);
-                    cellperm(0,0) = phasePermValuesDiag[cell_idx][0];
-                    cellperm(1,1) = phasePermValuesDiag[cell_idx][1];
-                    cellperm(2,2) = phasePermValuesDiag[cell_idx][2];
+                    phasePermValuesDiag[0][cell_idx][0] = std::max(minPhasePerm[0], phasePermValuesDiag[0][cell_idx][0]);
+                    phasePermValuesDiag[0][cell_idx][1] = std::max(minPhasePerm[0], phasePermValuesDiag[0][cell_idx][1]);
+                    phasePermValuesDiag[0][cell_idx][2] = std::max(minPhasePerm[0], phasePermValuesDiag[0][cell_idx][2]);
+                    cellperm(0,0) = phasePermValuesDiag[0][cell_idx][0];
+                    cellperm(1,1) = phasePermValuesDiag[0][cell_idx][1];
+                    cellperm(2,2) = phasePermValuesDiag[0][cell_idx][2];
                 }
                 upscaler.setPermeability(i, cellperm);
             }
@@ -890,7 +890,7 @@ std::tuple<double, double>
                     unsigned int cell_idx = ecl_idx[i];
                     zero(cellperm);
                     if (!anisotropic_input) {
-                        double cellPhase2Perm = std::max(minPhasePerm[1], phase2PermValues[cell_idx]);
+                        double cellPhase2Perm = std::max(minPhasePerm[1], phasePermValues[1][cell_idx]);
                         double kval = std::max(minPhasePerm[1], cellPhase2Perm);
                         cellperm(0,0) = kval;
                         cellperm(1,1) = kval;
@@ -898,12 +898,12 @@ std::tuple<double, double>
                     }
                     else { // anisotropic_input
                         // Truncate values lower than minPhasePerm upwards.
-                        phase2PermValuesDiag[cell_idx][0] = std::max(minPhasePerm[1], phase2PermValuesDiag[cell_idx][0]);
-                        phase2PermValuesDiag[cell_idx][1] = std::max(minPhasePerm[1], phase2PermValuesDiag[cell_idx][1]);
-                        phase2PermValuesDiag[cell_idx][2] = std::max(minPhasePerm[1], phase2PermValuesDiag[cell_idx][2]);
-                        cellperm(0,0) = phase2PermValuesDiag[cell_idx][0];
-                        cellperm(1,1) = phase2PermValuesDiag[cell_idx][1];
-                        cellperm(2,2) = phase2PermValuesDiag[cell_idx][2];
+                        phasePermValuesDiag[1][cell_idx][0] = std::max(minPhasePerm[1], phasePermValuesDiag[1][cell_idx][0]);
+                        phasePermValuesDiag[1][cell_idx][1] = std::max(minPhasePerm[1], phasePermValuesDiag[1][cell_idx][1]);
+                        phasePermValuesDiag[1][cell_idx][2] = std::max(minPhasePerm[1], phasePermValuesDiag[1][cell_idx][2]);
+                        cellperm(0,0) = phasePermValuesDiag[1][cell_idx][0];
+                        cellperm(1,1) = phasePermValuesDiag[1][cell_idx][1];
+                        cellperm(2,2) = phasePermValuesDiag[1][cell_idx][2];
                     }
                     upscaler.setPermeability(i, cellperm);
                 }
