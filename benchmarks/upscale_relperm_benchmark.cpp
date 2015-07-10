@@ -220,6 +220,7 @@ static void inflate (const unsigned char* input, const int size, stringstream& o
 }
 
 int main(int varnum, char** vararg)
+try
 {
 
     // Variables used for timing/profiling:
@@ -1775,4 +1776,8 @@ int main(int varnum, char** vararg)
 #endif
 
     return 0;
+}
+catch (const std::exception &e) {
+    std::cerr << e.what() << "\n";
+    usageandexit();
 }
