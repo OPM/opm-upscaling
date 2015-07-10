@@ -157,8 +157,8 @@ void dispVec(string name, vector<double> vec) {
 
 void usage() // Benchmark version
 {
-    cout << "Usage: This is a benchmark version of upscale_relperm. This executable takes no input," << endl <<
-        "the model and stone data is included at compiler time." << endl;
+    cerr << "Usage: This is a benchmark version of upscale_relperm. This executable takes no input," << endl <<
+            "the model and stone data is included at compiler time." << endl;
 }
 
 void usageandexit() {

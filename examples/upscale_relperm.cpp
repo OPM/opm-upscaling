@@ -87,7 +87,7 @@ using namespace std;
 
 void usage()
 {
-    cout << "Usage: upscale_relperm <options> <eclipsefile> stoneA.txt stoneB.txt ..." << endl << 
+    cerr << "Usage: upscale_relperm <options> <eclipsefile> stoneA.txt stoneB.txt ..." << endl <<
         "where the options are:" << endl <<
         "  -bc <string>                 -- which boundary conditions to use." << endl << 
         "                                  Possible values are f (fixed), l (linear)" << endl << 
@@ -2050,7 +2050,6 @@ try
    return 0;
 }
 catch (const std::exception &e) {
-    std::cerr << "Program threw an exception: " << e.what() << "\n";
+    std::cerr << e.what() << "\n";
     usageandexit();
 }
-
