@@ -67,8 +67,8 @@ RelPermUpscaleHelper::RelPermUpscaleHelper(int mpi_rank,
     isMaster(mpi_rank == 0),
     anisotropic_input(false),
     permTensor(3,3,nullptr),
-    permTensorInv(3,3,nullptr),
     tesselatedCells(0),
+    permTensorInv(3,3,nullptr),
     milliDarcyToSqMetre(Opm::unit::convert::to(1.0*Opm::prefix::milli*Opm::unit::darcy,
                                                Opm::unit::square(Opm::unit::meter))),
     options(options_)
@@ -82,6 +82,9 @@ RelPermUpscaleHelper::RelPermUpscaleHelper(int mpi_rank,
         str << "Fluidsystem " << options["fluids"] << " not valid (-fluids option). Should be ow or go";
         throw std::runtime_error(str.str());
     }
+
+    critRelpThresh = atof(options["critRelpermThresh"].c_str());
+    doEclipseCheck = (options["doEclipseCheck"] == "true");
 }
 
 void RelPermUpscaleHelper::collectResults()

@@ -371,10 +371,6 @@ try
         JfunctionNames.push_back("stonefile_benchmark.txt");
     }
 
-    // Check if input relperm curves satisfy Eclipse requirement of specifying critical saturations
-    helper.doEclipseCheck = (options["doEclipseCheck"] == "true");
-    helper.critRelpThresh = atof(options["critRelpermThresh"].c_str());
-
     if (helper.doEclipseCheck)
         helper.checkCriticalSaturations();
 
@@ -410,7 +406,6 @@ try
      * have to do that later in the computations).
      */
     helper.calculateMinMaxCapillaryPressure();
-    const std::vector<int>& ecl_idx = helper.upscaler.grid().globalCell();
 
     /***************************************************************************
      * Step 6:

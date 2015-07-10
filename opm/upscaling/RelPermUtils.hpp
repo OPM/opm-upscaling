@@ -49,36 +49,21 @@ namespace Opm {
       bool isMaster;                               //!< Whether this is the master MPI node or not.
       bool doEclipseCheck;                         //!< Whether to check that input relperm curves include relperm at critical saturation points.
       bool anisotropic_input;                      //!< Whether input eclipse file has diagonal anisotrophy.
-      double critRelpThresh;                       //!< Threshold for eclipse check of relative permeabilities.
       int points;                                  //!< Number of saturation points to upscale for.
       int tensorElementCount;                      //!< Number of independent elements in resulting tensor.
-      std::vector<int> node_vs_pressurepoint;      //!< Distribution of pressure points to MPI nodes.
       bool upscaleBothPhases;                      //!< Whether to upscale both phases.
       std::vector<double> WaterSaturation;         //!< Re-upscaled water saturation for the computed pressure points.
-      std::array<std::vector<std::vector<double>>,2> PhasePerm; //!< Permeability values per pressure point for each phase.
       SinglePhaseUpscaler::permtensor_t permTensor; //!< Tensor of upscaled results.
-      SinglePhaseUpscaler::permtensor_t permTensorInv; //!< Inverted tensor of upscaled results.
-      SinglePhaseUpscaler upscaler;                //!< The upscaler class.
-      std::array<std::vector<double>,3> perms;     //!< 'PERM' values from input file.
-      std::vector<double> poros;                   //!< Cell porosities
-      std::vector<double> zcorns;                  //!< Cell heights.
       std::vector<int> satnums;                    //!< Cell satnums.
-      double minSinglePhasePerm;                   //!< Minimum single phase permability value.
       std::vector<MonotCubicInterpolator> InvJfunctions; //!< Inverse of the loaded J-functions.
       //! \brief Relperm-curves for each (component->phase->stone type)
       std::array<std::array<std::vector<MonotCubicInterpolator>,2>,3> Krfunctions;
       SinglePhaseUpscaler::BoundaryConditionType boundaryCondition; //!< Boundary conditions to use.
       std::vector<MonotCubicInterpolator> SwPcfunctions; //!< Holds Sw(Pc) for each rocktype.
       std::string saturationstring; //!< Fluid system type.
-      double Swir; //!< Upscaled saturation ir.
-      double Swor; //!< Upscaled saturation max.
-      double Pcmin; //!< Minimum capillary pressure.
-      double Pcmax; //!< Maximum capillary pressure.
-      std::vector<double> cellPoreVolumes; //!< Pore volume for each grid cell.
       size_t tesselatedCells; //!< Number of "active" cells (Sintef interpretation of "active")
       double volume; //!< Total volume.
       double poreVolume; //!< Total pore volume.
-      MonotCubicInterpolator WaterSaturationVsCapPressure; //!< Water saturation as a function of capillary pressure.
       std::vector<double> pressurePoints; //!< Vector of capillary pressure points between Swor and Swir.
 
       //! \brief Default constructor.
@@ -150,6 +135,22 @@ namespace Opm {
       //!          If not func is set to a constant value of 0.
       //! \return True if test passed, false otherwise.
       bool checkCurve(MonotCubicInterpolator& func);
+
+      double Swir; //!< Upscaled saturation ir.
+      double Swor; //!< Upscaled saturation max.
+      double Pcmin; //!< Minimum capillary pressure.
+      double Pcmax; //!< Maximum capillary pressure.
+      double critRelpThresh; //!< Threshold for eclipse check of relative permeabilities.
+      std::vector<int> node_vs_pressurepoint; //!< Distribution of pressure points to MPI nodes.
+      std::array<std::vector<std::vector<double>>,2> PhasePerm; //!< Permeability values per pressure point for each phase.
+      SinglePhaseUpscaler::permtensor_t permTensorInv; //!< Inverted tensor of upscaled results.
+      SinglePhaseUpscaler upscaler; //!< The upscaler class.
+      std::array<std::vector<double>,3> perms; //!< 'PERM' values from input file.
+      std::vector<double> poros; //!< Cell porosities.
+      std::vector<double> zcorns; //!< Cell heights.
+      double minSinglePhasePerm; //!< Minimum single phase permability value.
+      std::vector<double> cellPoreVolumes; //!< Pore volume for each grid cell.
+      MonotCubicInterpolator WaterSaturationVsCapPressure; //!< Water saturation as a function of capillary pressure.
 
       // Reference: http://www.spe.org/spe-site/spe/spe/papers/authors/Metric_Standard.pdf
       const double milliDarcyToSqMetre; //!< Conversion factor, multiply mD numbers with this to get m² numbers.
