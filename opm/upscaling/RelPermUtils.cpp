@@ -758,7 +758,7 @@ std::tuple<double, double>
     const std::vector<int>& ecl_idx = upscaler.grid().globalCell();
     clock_t start_upscale_wallclock = clock();
 
-    double waterVolumeLF;
+    double waterVolumeLF = 0.0;
     // Now loop through the vector of capillary pressure points that
     // this node should compute.
     for (int pointidx = 0; pointidx < points; ++pointidx) {
@@ -769,145 +769,90 @@ std::tuple<double, double>
             double Ptestvalue = pressurePoints[pointidx];
 
             std::array<double,2> maxPhasePerm({0.0, 0.0});
-
             std::array<std::vector<double>,2> phasePermValues;
             std::array<std::vector<std::vector<double>>,2> phasePermValuesDiag;
-            phasePermValues[0].resize(satnums.size());
-            phasePermValuesDiag[0].resize(satnums.size());
-            if (upscaleBothPhases) {
-                phasePermValues[1].resize(satnums.size());
-                phasePermValuesDiag[1].resize(satnums.size());
-            }
             std::array<double,2> minPhasePerm;
-            waterVolumeLF = 0.0;
-            for (size_t i = 0; i < ecl_idx.size(); ++i) {
-                unsigned int cell_idx = ecl_idx[i];
-                double cellPhasePerm = minPerm;
-                double cellPhase2Perm = minPerm;
-                std::vector<double>  cellPhasePermDiag, cellPhase2PermDiag;
-                cellPhasePermDiag.resize(3, minPerm);
-                if (upscaleBothPhases)
-                    cellPhase2PermDiag.resize(3, minPerm);
+            std::array<SinglePhaseUpscaler::permtensor_t,2> phasePermTensor;
+            for (size_t p = 0; p < (upscaleBothPhases?2:1); ++p) {
+                waterVolumeLF = 0.0;
+                phasePermValues[p].resize(satnums.size());
+                phasePermValuesDiag[p].resize(satnums.size());
+                for (size_t i = 0; i < ecl_idx.size(); ++i) {
+                    unsigned int cell_idx = ecl_idx[i];
+                    double cellPhasePerm = minPerm;
+                    std::vector<double>  cellPhasePermDiag;
+                    cellPhasePermDiag.resize(3, minPerm);
 
-                if (satnums[cell_idx] > 0) { // handle "no rock" cells with satnum zero
-                    double PtestvalueCell = Ptestvalue;
-                    if (!dP.empty())
-                        PtestvalueCell -= dP[cell_idx];
+                    if (satnums[cell_idx] > 0) { // handle "no rock" cells with satnum zero
+                        double PtestvalueCell = Ptestvalue;
+                        if (!dP.empty())
+                            PtestvalueCell -= dP[cell_idx];
 
-                    if (!anisotropic_input) {
-                        double Jvalue = sqrt(perms[0][cell_idx] * milliDarcyToSqMetre/poros[cell_idx]) * PtestvalueCell;
-                        double WaterSaturationCell
-                            = InvJfunctions[int(satnums[cell_idx])-1].evaluate(Jvalue);
-                        waterVolumeLF += WaterSaturationCell * cellPoreVolumes[cell_idx];
+                        if (!anisotropic_input) {
+                            double Jvalue = sqrt(perms[0][cell_idx] * milliDarcyToSqMetre/poros[cell_idx]) * PtestvalueCell;
+                            double WaterSaturationCell
+                                = InvJfunctions[int(satnums[cell_idx])-1].evaluate(Jvalue);
+                            waterVolumeLF += WaterSaturationCell * cellPoreVolumes[cell_idx];
 
-                        // Compute cell relative permeability. We use a lower cutoff-value as we
-                        // easily divide by zero here.  When water saturation is
-                        // zero, we get 'inf', which is circumvented by the cutoff value.
-                        cellPhasePerm =
-                            Krfunctions[0][0][int(satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
-                            perms[0][cell_idx];
-                        if (upscaleBothPhases) {
-                            cellPhase2Perm =
-                                Krfunctions[0][1][int(satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
+                            // Compute cell relative permeability. We use a lower cutoff-value as we
+                            // easily divide by zero here.  When water saturation is
+                            // zero, we get 'inf', which is circumvented by the cutoff value.
+                            cellPhasePerm =
+                                Krfunctions[0][p][int(satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
                                 perms[0][cell_idx];
                         }
-                    }
-                    else {
-                        double WaterSaturationCell = SwPcfunctions[int(satnums[cell_idx])-1].evaluate(PtestvalueCell);
-                        waterVolumeLF += WaterSaturationCell * cellPoreVolumes[cell_idx];
+                        else {
+                            double WaterSaturationCell = SwPcfunctions[int(satnums[cell_idx])-1].evaluate(PtestvalueCell);
+                            waterVolumeLF += WaterSaturationCell * cellPoreVolumes[cell_idx];
 
-                        cellPhasePermDiag[0] = Krfunctions[0][0][int(satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
-                            perms[0][cell_idx];
-                        cellPhasePermDiag[1] = Krfunctions[1][0][int(satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
-                            perms[1][cell_idx];
-                        cellPhasePermDiag[2] = Krfunctions[2][0][int(satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
-                            perms[2][cell_idx];
-                        if (upscaleBothPhases) {
-                            cellPhase2PermDiag[0] = Krfunctions[0][1][int(satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
+                            cellPhasePermDiag[0] = Krfunctions[0][p][int(satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
                                 perms[0][cell_idx];
-                            cellPhase2PermDiag[1] = Krfunctions[1][1][int(satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
+                            cellPhasePermDiag[1] = Krfunctions[1][p][int(satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
                                 perms[1][cell_idx];
-                            cellPhase2PermDiag[2] = Krfunctions[2][1][int(satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
+                            cellPhasePermDiag[2] = Krfunctions[2][p][int(satnums[cell_idx])-1].evaluate(WaterSaturationCell) *
                                 perms[2][cell_idx];
                         }
-                    }
 
-                    phasePermValues[0][cell_idx] = cellPhasePerm;
-                    phasePermValuesDiag[0][cell_idx] = cellPhasePermDiag;
-                    maxPhasePerm[0] = std::max(maxPhasePerm[0], cellPhasePerm);
-                    maxPhasePerm[0] = std::max(maxPhasePerm[0], *std::max_element(cellPhasePermDiag.begin(),
-                                                                                  cellPhasePermDiag.end()));
-                    if (upscaleBothPhases) {
-                        phasePermValues[1][cell_idx] = cellPhase2Perm;
-                        phasePermValuesDiag[1][cell_idx] = cellPhase2PermDiag;
-                        maxPhasePerm[1] = std::max(maxPhasePerm[1], cellPhase2Perm);
-                        maxPhasePerm[1] = std::max(maxPhasePerm[1], *std::max_element(cellPhase2PermDiag.begin(),
-                                                                                      cellPhase2PermDiag.end()));
+                        phasePermValues[p][cell_idx] = cellPhasePerm;
+                        phasePermValuesDiag[p][cell_idx] = cellPhasePermDiag;
+                        maxPhasePerm[p] = std::max(maxPhasePerm[p], cellPhasePerm);
+                        maxPhasePerm[p] = std::max(maxPhasePerm[p], *std::max_element(cellPhasePermDiag.begin(),
+                                                                                      cellPhasePermDiag.end()));
                     }
                 }
-            }
-            // Now we can determine the smallest permitted permeability we can calculate for
 
-            // We have both a fixed bottom limit, as well as a possible higher limit determined
-            // by a maximum allowable permeability.
-            minPhasePerm[0] = std::max(maxPhasePerm[0]/maxPermContrast, minPerm);
-            if (upscaleBothPhases)
-                minPhasePerm[1] = std::max(maxPhasePerm[1]/maxPermContrast, minPerm);
+                // Now we can determine the smallest permitted permeability we can calculate for
+                // We have both a fixed bottom limit, as well as a possible higher limit determined
+                // by a maximum allowable permeability.
+                minPhasePerm[p] = std::max(maxPhasePerm[p]/maxPermContrast, minPerm);
 
-            // Now remodel the phase permeabilities obeying minPhasePerm
-            SinglePhaseUpscaler::permtensor_t cellperm(3,3,nullptr);
-            zero(cellperm);
-            for (size_t i = 0; i < ecl_idx.size(); ++i) {
-                unsigned int cell_idx = ecl_idx[i];
-                zero(cellperm);
-                if (!anisotropic_input) {
-                    double cellPhasePerm = std::max(minPhasePerm[0], phasePermValues[0][cell_idx]);
-                    double kval = std::max(minPhasePerm[0], cellPhasePerm);
-                    cellperm(0,0) = kval;
-                    cellperm(1,1) = kval;
-                    cellperm(2,2) = kval;
-                }
-                else { // anisotropic_input
-                    // Truncate values lower than minPhasePerm upwards.
-                    phasePermValuesDiag[0][cell_idx][0] = std::max(minPhasePerm[0], phasePermValuesDiag[0][cell_idx][0]);
-                    phasePermValuesDiag[0][cell_idx][1] = std::max(minPhasePerm[0], phasePermValuesDiag[0][cell_idx][1]);
-                    phasePermValuesDiag[0][cell_idx][2] = std::max(minPhasePerm[0], phasePermValuesDiag[0][cell_idx][2]);
-                    cellperm(0,0) = phasePermValuesDiag[0][cell_idx][0];
-                    cellperm(1,1) = phasePermValuesDiag[0][cell_idx][1];
-                    cellperm(2,2) = phasePermValuesDiag[0][cell_idx][2];
-                }
-                upscaler.setPermeability(i, cellperm);
-            }
-
-            //  Call single-phase upscaling code
-            SinglePhaseUpscaler::permtensor_t phasePermTensor = upscaler.upscaleSinglePhase();
-
-            // Now upscale phase permeability for phase 2
-            SinglePhaseUpscaler::permtensor_t phase2PermTensor;
-            if (upscaleBothPhases) {
+                // Now remodel the phase permeabilities obeying minPhasePerm
+                SinglePhaseUpscaler::permtensor_t cellperm(3,3,nullptr);
                 zero(cellperm);
                 for (size_t i = 0; i < ecl_idx.size(); ++i) {
                     unsigned int cell_idx = ecl_idx[i];
                     zero(cellperm);
                     if (!anisotropic_input) {
-                        double cellPhase2Perm = std::max(minPhasePerm[1], phasePermValues[1][cell_idx]);
-                        double kval = std::max(minPhasePerm[1], cellPhase2Perm);
+                        double cellPhasePerm = std::max(minPhasePerm[p], phasePermValues[p][cell_idx]);
+                        double kval = std::max(minPhasePerm[p], cellPhasePerm);
                         cellperm(0,0) = kval;
                         cellperm(1,1) = kval;
                         cellperm(2,2) = kval;
                     }
                     else { // anisotropic_input
                         // Truncate values lower than minPhasePerm upwards.
-                        phasePermValuesDiag[1][cell_idx][0] = std::max(minPhasePerm[1], phasePermValuesDiag[1][cell_idx][0]);
-                        phasePermValuesDiag[1][cell_idx][1] = std::max(minPhasePerm[1], phasePermValuesDiag[1][cell_idx][1]);
-                        phasePermValuesDiag[1][cell_idx][2] = std::max(minPhasePerm[1], phasePermValuesDiag[1][cell_idx][2]);
-                        cellperm(0,0) = phasePermValuesDiag[1][cell_idx][0];
-                        cellperm(1,1) = phasePermValuesDiag[1][cell_idx][1];
-                        cellperm(2,2) = phasePermValuesDiag[1][cell_idx][2];
+                        phasePermValuesDiag[p][cell_idx][0] = std::max(minPhasePerm[p], phasePermValuesDiag[p][cell_idx][0]);
+                        phasePermValuesDiag[p][cell_idx][1] = std::max(minPhasePerm[p], phasePermValuesDiag[p][cell_idx][1]);
+                        phasePermValuesDiag[p][cell_idx][2] = std::max(minPhasePerm[p], phasePermValuesDiag[p][cell_idx][2]);
+                        cellperm(0,0) = phasePermValuesDiag[p][cell_idx][0];
+                        cellperm(1,1) = phasePermValuesDiag[p][cell_idx][1];
+                        cellperm(2,2) = phasePermValuesDiag[p][cell_idx][2];
                     }
                     upscaler.setPermeability(i, cellperm);
                 }
-                phase2PermTensor = upscaler.upscaleSinglePhase();
+
+                //  Call single-phase upscaling code
+                phasePermTensor[p] = upscaler.upscaleSinglePhase();
             }
 
             // Here we recalculate the upscaled water saturation,
@@ -925,11 +870,9 @@ std::tuple<double, double>
             std::cout << Ptestvalue << "\t" << WaterSaturation[pointidx];
             // Store and print phase-perm-result
             for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) {
-                PhasePerm[0][pointidx][voigtIdx] = getVoigtValue(phasePermTensor, voigtIdx);
-                std::cout << "\t" << getVoigtValue(phasePermTensor, voigtIdx);
-                if (upscaleBothPhases){
-                    PhasePerm[1][pointidx][voigtIdx] = getVoigtValue(phase2PermTensor, voigtIdx);
-                    std::cout << "\t" << getVoigtValue(phase2PermTensor, voigtIdx);
+                for (size_t p = 0; p < (upscaleBothPhases?2:1); ++p) {
+                    PhasePerm[p][pointidx][voigtIdx] = getVoigtValue(phasePermTensor[p], voigtIdx);
+                    std::cout << "\t" << PhasePerm[p][pointidx][voigtIdx];
                 }
             }
             std::cout << std::endl;
