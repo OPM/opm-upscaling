@@ -133,6 +133,15 @@ namespace Opm {
       //! \return Cell center pressure gradients.
       std::vector<double> calculateCellPressureGradients(const std::array<int,3>& res,
                                                          std::map<std::string,std::string>& options);
+
+      //! \brief Calculate minimum and maximum capillary pressures.
+      //! \param[in] dPmin Minimum cell pressure gradient.
+      //! \param[in] dPmax Maximum cell pressure gradient.
+      //! \param[in] options Option structure.
+      //! \details Uses the following options: maxPermContrast, minPerm,
+      //!                                      gravity, linsolver_tolerance
+      void calculateMinMaxCapillaryPressure(double dPmin, double dPmax,
+                                            std::map<std::string,std::string>& options);
     private:
       //! \brief Perform critical saturation check for a single curve.
       //! \param[in,out] func Function to check for.

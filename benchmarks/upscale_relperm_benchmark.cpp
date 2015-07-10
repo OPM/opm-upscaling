@@ -414,7 +414,6 @@ try
      *      constant times cell height times factor 10^-7 to obtain bars (same as p_c)
      */
 
-    double linsolver_tolerance = atof(options["linsolver_tolerance"].c_str());
     timeused_tesselation = helper.tesselateGrid(deck, options);
 
     vector<double> dP;
@@ -437,127 +436,8 @@ try
      * ie. we do not want to extrapolate the J-functions (but we might
      * have to do that later in the computations).
      */
-
-
-    if (maxPermContrast == 0) {
-        if (helper.isMaster) cout << "Illegal contrast value" << endl;
-        usageandexit();
-    }
-
-    vector<double> cellVolumes;
-    cellVolumes.resize(helper.satnums.size(), 0.0);
-    helper.cellPoreVolumes.resize(helper.satnums.size(), 0.0);
-
-
-    /* Find minimium and maximum capillary pressure values in each
-       cell, and use the global min/max as the two initial pressure
-       points for computations.
-
-       Also find max single-phase permeability, used to obey the
-       maxPermContrast option.
-
-       Also find properly upscaled saturation endpoints, these are
-       printed out to stdout for reference during computations, but will
-       automatically appear as the lowest and highest saturation points
-       in finished output.
-    */
-    helper.tesselatedCells = 0; // for counting "active" cells (Sintef interpretation of "active")
-    helper.Pcmax = -DBL_MAX, helper.Pcmin = DBL_MAX;
-    double maxSinglePhasePerm = 0;
-    double Swirvolume = 0;
-    double Sworvolume = 0;
-    // cell_idx is the eclipse index.
+    helper.calculateMinMaxCapillaryPressure(dPmin, dPmax, options);
     const std::vector<int>& ecl_idx = helper.upscaler.grid().globalCell();
-    Dune::CpGrid::Codim<0>::LeafIterator c = helper.upscaler.grid().leafbegin<0>();
-    for (; c != helper.upscaler.grid().leafend<0>(); ++c) {
-        unsigned int cell_idx = ecl_idx[c->index()];
-        if (helper.satnums[cell_idx] > 0) { // Satnum zero is "no rock"
-
-            cellVolumes[cell_idx] = c->geometry().volume();
-            helper.cellPoreVolumes[cell_idx] = cellVolumes[cell_idx] * helper.poros[cell_idx];
-
-            double Pcmincandidate, Pcmaxcandidate, minSw, maxSw;
-
-            if (! helper.anisotropic_input) {
-                Pcmincandidate = helper.InvJfunctions[int(helper.satnums[cell_idx])-1].getMinimumX().first
-                    / sqrt(helper.perms[0][cell_idx] * milliDarcyToSqMetre / helper.poros[cell_idx]);
-                Pcmaxcandidate = helper.InvJfunctions[int(helper.satnums[cell_idx])-1].getMaximumX().first
-                    / sqrt(helper.perms[0][cell_idx] * milliDarcyToSqMetre/helper.poros[cell_idx]);
-                minSw = helper.InvJfunctions[int(helper.satnums[cell_idx])-1].getMinimumF().second;
-                maxSw = helper.InvJfunctions[int(helper.satnums[cell_idx])-1].getMaximumF().second;
-            }
-            else { // anisotropic input, we do not to J-function scaling
-                Pcmincandidate = helper.SwPcfunctions[int(helper.satnums[cell_idx])-1].getMinimumX().first;
-                Pcmaxcandidate = helper.SwPcfunctions[int(helper.satnums[cell_idx])-1].getMaximumX().first;
-
-                minSw = helper.SwPcfunctions[int(helper.satnums[cell_idx])-1].getMinimumF().second;
-                maxSw = helper.SwPcfunctions[int(helper.satnums[cell_idx])-1].getMaximumF().second;
-            }
-            helper.Pcmin = min(Pcmincandidate, helper.Pcmin);
-            helper.Pcmax = max(Pcmaxcandidate, helper.Pcmax);
-
-            maxSinglePhasePerm = max( maxSinglePhasePerm, helper.perms[0][cell_idx]);
-
-            //cout << "minSwc: " << minSw << endl;
-            //cout << "maxSwc: " << maxSw << endl;
-
-            // Add irreducible water saturation volume
-            Swirvolume += minSw * helper.cellPoreVolumes[cell_idx];
-            Sworvolume += maxSw * helper.cellPoreVolumes[cell_idx];
-        }
-        ++helper.tesselatedCells; // keep count.
-    }
-    helper.minSinglePhasePerm = max(maxSinglePhasePerm/maxPermContrast, minPerm);
-
-
-    if (includeGravity) {
-        helper.Pcmin = helper.Pcmin - dPmax;
-        helper.Pcmax = helper.Pcmax - dPmin;
-    }
-
-    if (helper.isMaster) cout << "Pcmin:    " << helper.Pcmin << endl;
-    if (helper.isMaster) cout << "Pcmax:    " << helper.Pcmax << endl;
-
-    if (helper.Pcmin > helper.Pcmax) {
-        if (helper.isMaster) cerr << "ERROR: No legal capillary pressures found for this system. Exiting..." << endl;
-        usageandexit();
-    }
-
-    // Total porevolume and total volume -> upscaled porosity:
-    helper.poreVolume = std::accumulate(helper.cellPoreVolumes.begin(),
-                                        helper.cellPoreVolumes.end(),
-                                        0.0);
-    helper.volume = std::accumulate(cellVolumes.begin(),
-                                    cellVolumes.end(),
-                                    0.0);
-
-    helper.Swir = Swirvolume/helper.poreVolume;
-    helper.Swor = Sworvolume/helper.poreVolume;
-
-    if (helper.isMaster) {
-        cout << "LF Pore volume:    " << helper.poreVolume << endl;
-        cout << "LF Volume:         " << helper.volume << endl;
-        cout << "Upscaled porosity: " << helper.poreVolume/helper.volume << endl;
-        cout << "Upscaled " << helper.saturationstring << "ir:     " << helper.Swir << endl;
-        cout << "Upscaled " << helper.saturationstring << "max:    " << helper.Swor << endl; //Swor=1-Swmax
-        cout << "Saturation points to be computed: " << helper.points << endl;
-    }
-
-    // Sometimes, if Swmax=1 or Swir=0 in the input tables, the upscaled
-    // values can be a little bit larger (within machine precision) and
-    // the check below fails. Hence, check if these values are within the
-    // the [0 1] interval within some precision (use linsolver_precision)
-    if (helper.Swor > 1.0 && helper.Swor - linsolver_tolerance < 1.0) {
-        helper.Swor = 1.0;
-    }
-    if (helper.Swir < 0.0 && helper.Swir + linsolver_tolerance > 0.0) {
-        helper.Swir = 0.0;
-    }
-    if (helper.Swir < 0 || helper.Swir > 1 || helper.Swor < 0 || helper.Swor > 1) {
-        if (helper.isMaster) cerr << "ERROR: " << helper.saturationstring << "ir/" << helper.saturationstring << "or unsensible. Check your input. Exiting";
-        usageandexit();
-    }
-
 
     /***************************************************************************
      * Step 6:
@@ -1055,7 +935,7 @@ try
             }
             for (int voigtIdx=0; voigtIdx<helper.tensorElementCount; ++voigtIdx) {
                 for (int i=0; i<helper.points; ++i) {
-                    if (fabs(RelPermValuesReference[voigtIdx][i] - RelPermValues[voigtIdx][i]) > tolerance) {
+                    if (fabs(RelPermValuesReference[voigtIdx][i] - RelPermValues[0][voigtIdx][i]) > tolerance) {
                         relpermsEqual = false;
                         break;
                     }

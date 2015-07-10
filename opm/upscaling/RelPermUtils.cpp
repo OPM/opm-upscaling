@@ -67,7 +67,8 @@ RelPermUpscaleHelper::RelPermUpscaleHelper(int mpi_rank,
     isMaster(mpi_rank == 0),
     anisotropic_input(false),
     permTensor(3,3,nullptr),
-    permTensorInv(3,3,nullptr)
+    permTensorInv(3,3,nullptr),
+    tesselatedCells(0)
 {
     if (options["fluids"] == "ow" || options["fluids"] == "wo")
         saturationstring = "Sw";
@@ -501,6 +502,125 @@ std::vector<double>
     }
 
     return dP;
+}
+
+void RelPermUpscaleHelper::calculateMinMaxCapillaryPressure(double dPmin, double dPmax,
+                                                            std::map<std::string,std::string>& options)
+{
+    const double maxPermContrast = atof(options["maxPermContrast"].c_str());
+    const double minPerm         = atof(options["minPerm"].c_str());
+    const double gravity         = atof(options["gravity"].c_str());
+    double linsolver_tolerance   = atof(options["linsolver_tolerance"].c_str());
+    const bool includeGravity    = (fabs(gravity) > DBL_MIN); // true for non-zero gravity
+    const double milliDarcyToSqMetre =
+                        Opm::unit::convert::to(1.0*Opm::prefix::milli*Opm::unit::darcy,
+                                               Opm::unit::square(Opm::unit::meter));
+    if (maxPermContrast == 0)
+        throw std::runtime_error("Illegal contrast value");
+
+    std::vector<double> cellVolumes(satnums.size(), 0.0);
+    cellPoreVolumes.resize(satnums.size(), 0.0);
+
+    /* Find minimium and maximum capillary pressure values in each
+       cell, and use the global min/max as the two initial pressure
+       points for computations.
+
+       Also find max single-phase permeability, used to obey the
+       maxPermContrast option.
+
+       Also find properly upscaled saturation endpoints, these are
+       printed out to stdout for reference during computations, but will
+       automatically appear as the lowest and highest saturation points
+       in finished output.
+    */
+    Pcmax = -DBL_MAX, Pcmin = DBL_MAX;
+    double maxSinglePhasePerm = 0;
+    double Swirvolume = 0;
+    double Sworvolume = 0;
+    // cell_idx is the eclipse index.
+    const std::vector<int>& ecl_idx = upscaler.grid().globalCell();
+    Dune::CpGrid::Codim<0>::LeafIterator c = upscaler.grid().leafbegin<0>();
+    for (; c != upscaler.grid().leafend<0>(); ++c) {
+        unsigned int cell_idx = ecl_idx[c->index()];
+        if (satnums[cell_idx] > 0) { // Satnum zero is "no rock"
+
+            cellVolumes[cell_idx] = c->geometry().volume();
+            cellPoreVolumes[cell_idx] = cellVolumes[cell_idx] * poros[cell_idx];
+
+            double Pcmincandidate, Pcmaxcandidate, minSw, maxSw;
+
+            if (! anisotropic_input) {
+                Pcmincandidate = InvJfunctions[int(satnums[cell_idx])-1].getMinimumX().first
+                    / sqrt(perms[0][cell_idx] * milliDarcyToSqMetre / poros[cell_idx]);
+                Pcmaxcandidate = InvJfunctions[int(satnums[cell_idx])-1].getMaximumX().first
+                    / sqrt(perms[0][cell_idx] * milliDarcyToSqMetre/poros[cell_idx]);
+                minSw = InvJfunctions[int(satnums[cell_idx])-1].getMinimumF().second;
+                maxSw = InvJfunctions[int(satnums[cell_idx])-1].getMaximumF().second;
+            }
+            else { // anisotropic input, we do not to J-function scaling
+                Pcmincandidate = SwPcfunctions[int(satnums[cell_idx])-1].getMinimumX().first;
+                Pcmaxcandidate = SwPcfunctions[int(satnums[cell_idx])-1].getMaximumX().first;
+
+                minSw = SwPcfunctions[int(satnums[cell_idx])-1].getMinimumF().second;
+                maxSw = SwPcfunctions[int(satnums[cell_idx])-1].getMaximumF().second;
+            }
+            Pcmin = std::min(Pcmincandidate, Pcmin);
+            Pcmax = std::max(Pcmaxcandidate, Pcmax);
+
+            maxSinglePhasePerm = std::max( maxSinglePhasePerm, perms[0][cell_idx]);
+
+            // Add irreducible water saturation volume
+            Swirvolume += minSw * cellPoreVolumes[cell_idx];
+            Sworvolume += maxSw * cellPoreVolumes[cell_idx];
+        }
+        ++tesselatedCells; // keep count.
+    }
+    minSinglePhasePerm = std::max(maxSinglePhasePerm/maxPermContrast, minPerm);
+
+    if (includeGravity) {
+        Pcmin -= dPmax;
+        Pcmax -= dPmin;
+    }
+
+    if (isMaster) {
+        std::cout << "Pcmin:    " << Pcmin << std::endl;
+        std::cout << "Pcmax:    " << Pcmax << std::endl;
+    }
+
+    if (Pcmin > Pcmax)
+        throw std::runtime_error("ERROR: No legal capillary pressures found for this system. Exiting...");
+
+    // Total porevolume and total volume -> upscaled porosity:
+    poreVolume = std::accumulate(cellPoreVolumes.begin(), cellPoreVolumes.end(), 0.0);
+    volume = std::accumulate(cellVolumes.begin(), cellVolumes.end(), 0.0);
+
+    Swir = Swirvolume/poreVolume;
+    Swor = Sworvolume/poreVolume;
+
+    if (isMaster) {
+        std::cout << "LF Pore volume:    " << poreVolume << std::endl;
+        std::cout << "LF Volume:         " << volume << std::endl;
+        std::cout << "Upscaled porosity: " << poreVolume/volume << std::endl;
+        std::cout << "Upscaled " << saturationstring << "ir:     " << Swir << std::endl;
+        std::cout << "Upscaled " << saturationstring << "max:    " << Swor << std::endl; //Swor=1-Swmax
+        std::cout << "Saturation points to be computed: " << points << std::endl;
+    }
+
+    // Sometimes, if Swmax=1 or Swir=0 in the input tables, the upscaled
+    // values can be a little bit larger (within machine precision) and
+    // the check below fails. Hence, check if these values are within the
+    // the [0 1] interval within some precision (use linsolver_precision)
+    if (Swor > 1.0 && Swor - linsolver_tolerance < 1.0) {
+        Swor = 1.0;
+    }
+    if (Swir < 0.0 && Swir + linsolver_tolerance > 0.0) {
+        Swir = 0.0;
+    }
+    if (Swir < 0 || Swir > 1 || Swor < 0 || Swor > 1) {
+        std::stringstream str;
+        str << "ERROR: " << saturationstring << "ir/" << saturationstring << "or unsensible. Check your input. Exiting";
+        throw std::runtime_error(str.str());
+    }
 }
 
 }
