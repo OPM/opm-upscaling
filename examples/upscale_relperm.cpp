@@ -190,6 +190,70 @@ static int parseCommandLine(std::map<std::string,std::string>& options,
     return argeclindex;
 }
 
+//! \brief Return eclipse-style output filename.
+//! \param[in] opfname Base output file name.
+//! \param[in] comp Component (X, Y, Z).
+//! \param[in] sat Fluid system type.
+//! \return Eclipse-style filename for requested component/fluid system combination.
+static std::string getEclipseOutputFile(const std::string& opfname, char comp, char sat)
+{
+    string fnbase = opfname.substr(0,opfname.find_first_of('.'));
+    return fnbase + "-" +comp + ".S" + sat + "OF";
+}
+
+
+//! \brief Write eclipse-style output file.
+//! \param[in] RelPermValues RelPerm values to write.
+//! \param[in] Satvalues Saturation values to write.
+//! \param[in] Pvalues Pressure values to write.
+//! \param[in] options Option structure.
+//! \param[in] component Component to write (0..2).
+//! \param[in] owsystem Fluid system type.
+  template<class Lazy>
+static void writeEclipseOutput(Lazy& RelPermValues,
+                               const std::vector<double>& Satvalues,
+                               const std::vector<double>& Pvalues,
+                               std::map<std::string,std::string>& options,
+                               int component, bool owsystem)
+{
+    std::stringstream swof;
+    char sat                  = (owsystem?'W':'G');
+    char comp                 = 'x'+component;
+    std::string krowstring = std::string("krow") + comp + "swirr";
+    double krowswirr = atof(options[krowstring].c_str());
+    const int outputprecision = atoi(options["outputprecision"].c_str());
+    const int fieldwidth      = outputprecision + 8;
+
+    // x-direction
+    swof << "-- This file is based on the results in " << endl
+         << "-- " << options["output"] << endl
+         << "-- for relperm in " << comp << "-direction." << endl
+         << "-- Pressure values (Pc) given in bars." << endl
+         << "--        S" << (char)std::tolower(sat) << "       Kr"
+                          << (char)std::tolower(sat) << comp << comp
+                          << "      Kro" << (char)std::tolower(sat) << comp << comp
+                          << "      Pc(bar)" << endl
+         << "--S" << sat << "OF" << endl;
+    if (krowswirr > 0) {
+        swof << showpoint << setw(fieldwidth) << setprecision(outputprecision) << 0
+             << showpoint << setw(fieldwidth) << setprecision(outputprecision) << 0
+             << showpoint << setw(fieldwidth) << setprecision(outputprecision) << krowswirr
+             << showpoint << setw(fieldwidth) << setprecision(outputprecision) << 0 << endl;
+    }
+    for (size_t i=0; i < Satvalues.size(); ++i) {
+        swof << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Satvalues[i]
+             << showpoint << setw(fieldwidth) << setprecision(outputprecision) << RelPermValues[0][component][i]
+             << showpoint << setw(fieldwidth) << setprecision(outputprecision) << RelPermValues[1][component][i]
+             << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Pvalues[i]/100000.0 << endl;
+    }
+    swof << "/" << endl;
+    std::ofstream file;
+    file.open(getEclipseOutputFile(options["output"], std::toupper(comp), sat),
+                                   std::ios::out | std::ios::trunc);
+    file << swof.str();
+    file.close();
+}
+
 int main(int varnum, char** vararg)
 try
 {
@@ -1213,96 +1277,13 @@ try
        
        // If both phases are upscaled and output is specyfied, create SWOF or SGOF files for Eclipse
        if (options["output"] != "" && helper.upscaleBothPhases) {
-           // krow(swirr)-values if given
-           double krowxswirr = atof(options["krowxswirr"].c_str());
-           double krowyswirr = atof(options["krowyswirr"].c_str());
-           double krowzswirr = atof(options["krowzswirr"].c_str());
-
-           stringstream swofx, swofy, swofz;
-           string satstringCap = ""; if (owsystem) satstringCap = "W"; else satstringCap = "G"; 
-           string satstring = ""; if (owsystem) satstring = "w"; else satstring = "g"; 
-           // x-direction
-           swofx << "-- This file is based on the results in " << endl 
-                 << "-- " << options["output"] << endl
-                 << "-- for relperm in x-direction." << endl
-                 << "-- Pressure values (Pc) given in bars." << endl
-                 << "--        S" << satstring << "       Kr" << satstring << "xx      Kro" << satstring << "xx      Pc(bar)" << endl
-                 << "--S" << satstringCap << "OF" << endl;
-           if (krowxswirr > 0){
-               swofx << showpoint << setw(fieldwidth) << setprecision(outputprecision) << 0
-                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << 0
-                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << krowxswirr
-                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << 0 << endl;
-           }
-           for (unsigned int i=0; i < Satvalues.size(); ++i) {
-               swofx << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Satvalues[i]
-                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << RelPermValues[0][0][i]
-                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << RelPermValues[1][0][i]
-                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Pvalues[i]/100000.0 << endl;
-           }
-           swofx << "/" << endl;
-           // y-direction
-           swofy << "-- This file is based on the results in " << endl 
-                 << "-- " << options["output"] << endl
-                 << "-- for relperm in y-direction." << endl
-                 << "-- Pressure values (Pc) given in bars." << endl
-                 << "--        S" << satstring << "       Kr" << satstring << "yy      Kro" << satstring << "yy      Pc(bar)" << endl
-                 << "--S" << satstringCap << "OF" << endl;
-           if (krowyswirr > 0){
-               swofy << showpoint << setw(fieldwidth) << setprecision(outputprecision) << 0
-                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << 0
-                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << krowyswirr
-                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << 0 << endl;
-           }
-           for (unsigned int i=0; i < Satvalues.size(); ++i) {
-               swofy << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Satvalues[i]
-                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << RelPermValues[0][1][i]
-                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << RelPermValues[1][1][i]
-                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Pvalues[i]/100000.0 << endl;
-           }
-           swofy << "/" << endl;
-           // z-direction
-           swofz << "-- This file is based on the results in " << endl 
-                 << "-- " << options["output"] << endl
-                 << "-- for relperm in z-direction." << endl
-                 << "-- Pressure values (Pc) given in bars." << endl
-                 << "--        S" << satstring << "       Kr" << satstring << "zz      Kro" << satstring << "zz      Pc(bar)" << endl
-                 << "--S" << satstringCap << "OF" << endl;
-           if (krowzswirr > 0){
-               swofz << showpoint << setw(fieldwidth) << setprecision(outputprecision) << 0
-                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << 0
-                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << krowzswirr
-                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << 0 << endl;
-           }
-           for (unsigned int i=0; i < Satvalues.size(); ++i) {
-               swofz << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Satvalues[i]
-                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << RelPermValues[0][2][i]
-                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << RelPermValues[1][2][i]
-                     << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Pvalues[i]/100000.0 << endl;
-           }
-           swofz << "/" << endl;
-           //cout << swofx.str() << endl;
-           //cout << swofy.str() << endl;
-           //cout << swofz.str() << endl;
-           ofstream xfile, yfile, zfile;
-           string opfname = options["output"];
-           string fnbase = opfname.substr(0,opfname.find_first_of('.'));
-           string xfilename = fnbase + "-x.S" + satstringCap + "OF";
-           string yfilename = fnbase + "-y.S" + satstringCap + "OF";
-           string zfilename = fnbase + "-z.S" + satstringCap + "OF";
-           
-           cout << "Writing Eclipse compatible files to " << xfilename << ", " << yfilename << " and " << zfilename << endl;
-           xfile.open(xfilename.c_str(), ios::out | ios::trunc);
-           xfile << swofx.str();
-           xfile.close();
-           yfile.open(yfilename.c_str(), ios::out | ios::trunc);
-           yfile << swofy.str();
-           yfile.close();
-           zfile.open(zfilename.c_str(), ios::out | ios::trunc);
-           zfile << swofz.str();
-           zfile.close();
+            cout << "Writing Eclipse compatible files to "
+                 << getEclipseOutputFile(options["output"],'X',owsystem?'W':'G')
+                 << ", " << getEclipseOutputFile(options["output"],'Y',owsystem?'W':'G')
+                 << " and " << getEclipseOutputFile(options["output"],'Z',owsystem?'W':'G')<< endl;
+            for (int comp=0;comp<3;++comp)
+                writeEclipseOutput(RelPermValues, Satvalues, Pvalues, options, comp, owsystem);
        }
-
    }
 
    return 0;
