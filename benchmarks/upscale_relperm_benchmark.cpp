@@ -113,6 +113,7 @@
 #include <opm/upscaling/RelPermUtils.hpp>
 
 #include <opm/core/utility/Units.hpp>
+#include <opm/material/common/Unused.hpp>
 
 // Choose model:
 //   - Small: MODEL_TYPE 1  (35751 active cells, ~5 MB)
@@ -178,7 +179,12 @@ try
 
     // Variables used for timing/profiling:
     clock_t start, finish;
-    double timeused = 0.0, timeused_tesselation = 0.0;
+    double timeused = 0.0;
+#ifdef HAVE_MPI
+    double timeused_tesselation = 0.0;
+#else
+    OPM_UNUSED double timeused_tesselation = 0.0;
+#endif
 
     clock_t global_start = clock(); // Timing used for benchmarking
 
@@ -248,14 +254,6 @@ try
 
     RelPermUpscaleHelper helper(mpi_rank, options);
     helper.setupBoundaryConditions();
-
-    // If this number is 1 or higher, the output will be interpolated, if not
-    // the computed data is untouched.
-    const int interpolationPoints = atoi(options["interpolate"].c_str());
-    bool doInterpolate = false;
-    if (interpolationPoints > 1) {
-        doInterpolate = true;
-    }
 
     /***********************************************************************
      * Step 2:
