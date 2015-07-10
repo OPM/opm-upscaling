@@ -445,9 +445,8 @@ double RelPermUpscaleHelper::tesselateGrid(Opm::DeckConstPtr deck,
    return timeused_tesselation;
 }
 
-std::vector<double>
-        RelPermUpscaleHelper::calculateCellPressureGradients(const std::array<int,3>& res,
-                                                             std::map<std::string,std::string>& options)
+void RelPermUpscaleHelper::calculateCellPressureGradients(const std::array<int,3>& res,
+                                                          std::map<std::string,std::string>& options)
 {
     const double gravity            = atof(options["gravity"].c_str());
     const double waterDensity       = atof(options["waterDensity"].c_str());
@@ -468,7 +467,7 @@ std::vector<double>
     double dRho = (waterDensity-oilDensity) * 1000; // SI unit (kg/m3)
 
     // Calculating difference in capillary pressure for all cells
-    std::vector<double> dP(satnums.size(), 0);
+    dP.resize(satnums.size(), 0);
     for (size_t cellIdx = 0; cellIdx < satnums.size(); ++cellIdx) {
         int i,j,k; // Position of cell in cell hierarchy
         std::vector<int> zIndices(8,0); // 8 corners with 8 heights
@@ -502,12 +501,9 @@ std::vector<double>
         cellDepth /= 100.0;
         dP[cellIdx] = dRho * gravity * (cellDepth-modelHeight/2.0);
     }
-
-    return dP;
 }
 
-void RelPermUpscaleHelper::calculateMinMaxCapillaryPressure(double dPmin, double dPmax,
-                                                            std::map<std::string,std::string>& options)
+void RelPermUpscaleHelper::calculateMinMaxCapillaryPressure(std::map<std::string,std::string>& options)
 {
     const double maxPermContrast = atof(options["maxPermContrast"].c_str());
     const double minPerm         = atof(options["minPerm"].c_str());
@@ -520,6 +516,12 @@ void RelPermUpscaleHelper::calculateMinMaxCapillaryPressure(double dPmin, double
 
     std::vector<double> cellVolumes(satnums.size(), 0.0);
     cellPoreVolumes.resize(satnums.size(), 0.0);
+
+    double dPmin = DBL_MAX, dPmax = -DBL_MAX;
+    if (!dP.empty()) {
+        dPmax = *std::max_element(dP.begin(), dP.end());
+        dPmin = *std::min_element(dP.begin(), dP.end());
+    }
 
     /* Find minimium and maximum capillary pressure values in each
        cell, and use the global min/max as the two initial pressure
@@ -623,8 +625,7 @@ void RelPermUpscaleHelper::calculateMinMaxCapillaryPressure(double dPmin, double
     }
 }
 
-void RelPermUpscaleHelper::upscaleCapillaryPressure(std::map<std::string,std::string>& options,
-                                                    const std::vector<double>& dP)
+void RelPermUpscaleHelper::upscaleCapillaryPressure(std::map<std::string,std::string>& options)
 {
     const double saturationThreshold = atof(options["saturationThreshold"].c_str());
     double largestSaturationInterval = Swor-Swir;
@@ -712,7 +713,6 @@ void RelPermUpscaleHelper::upscaleCapillaryPressure(std::map<std::string,std::st
 
 std::tuple<double, double>
     RelPermUpscaleHelper::upscalePermeability(std::map<std::string,std::string>& options,
-                                              const std::vector<double>& dP,
                                               int mpi_rank)
 {
     const double minPerm = atof(options["minPerm"].c_str());

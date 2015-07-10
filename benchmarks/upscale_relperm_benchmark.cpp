@@ -396,16 +396,9 @@ try
 
     timeused_tesselation = helper.tesselateGrid(deck, options);
 
-    vector<double> dP;
-    double dPmin = +DBL_MAX;
-    double dPmax = -DBL_MAX;
-
     /* If gravity is to be included, calculate z-values of every cell: */
-    if (includeGravity) {
-      dP = helper.calculateCellPressureGradients(res, options);
-      dPmin = *std::min_element(dP.begin(), dP.end());
-      dPmax = *std::max_element(dP.begin(), dP.end());
-    }
+    if (includeGravity)
+        helper.calculateCellPressureGradients(res, options);
 
     /******************************************************************************
      * Step 5:
@@ -416,7 +409,7 @@ try
      * ie. we do not want to extrapolate the J-functions (but we might
      * have to do that later in the computations).
      */
-    helper.calculateMinMaxCapillaryPressure(dPmin, dPmax, options);
+    helper.calculateMinMaxCapillaryPressure(options);
     const std::vector<int>& ecl_idx = helper.upscaler.grid().globalCell();
 
     /***************************************************************************
@@ -432,7 +425,7 @@ try
      * will be used afterwards for accessing the tabulated values.
      */
 
-    helper.upscaleCapillaryPressure(options, dP);
+    helper.upscaleCapillaryPressure(options);
 
     clock_t start_upscaling = clock();
 
@@ -465,7 +458,7 @@ try
 
     double timeused_upscale_wallclock, avg_upscaling_time_pr_point;
     std::tie(timeused_upscale_wallclock, avg_upscaling_time_pr_point) =
-                helper.upscalePermeability(options, dP, mpi_rank);
+                helper.upscalePermeability(options, mpi_rank);
 
     /*
      * Step 8c: Make relperm values from phaseperms

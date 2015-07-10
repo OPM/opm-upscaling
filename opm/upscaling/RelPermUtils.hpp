@@ -131,34 +131,26 @@ namespace Opm {
       //! \param[in] res The number of cells in each direction.
       //! \param[in] options Option structure.
       //! \details Uses the following options: gravity, waterDensity, oilDensity
-      //! \return Cell center pressure gradients.
-      std::vector<double> calculateCellPressureGradients(const std::array<int,3>& res,
-                                                         std::map<std::string,std::string>& options);
+      void calculateCellPressureGradients(const std::array<int,3>& res,
+                                          std::map<std::string,std::string>& options);
 
       //! \brief Calculate minimum and maximum capillary pressures.
-      //! \param[in] dPmin Minimum cell pressure gradient.
-      //! \param[in] dPmax Maximum cell pressure gradient.
       //! \param[in] options Option structure.
       //! \details Uses the following options: maxPermContrast, minPerm,
       //!                                      gravity, linsolver_tolerance
-      void calculateMinMaxCapillaryPressure(double dPmin, double dPmax,
-                                            std::map<std::string,std::string>& options);
+      void calculateMinMaxCapillaryPressure(std::map<std::string,std::string>& options);
 
       //! \brief Upscale capillary pressure.
       //! \param[in] Options structure.
-      //! \param[in] dP Vector with cell pressure gradients. Pass empty vector for no gravity effects.
       //! \details Uses the following options: saturationThreshold
-      void upscaleCapillaryPressure(std::map<std::string,std::string>& options,
-                                    const std::vector<double>& dP);
+      void upscaleCapillaryPressure(std::map<std::string,std::string>& options);
 
       //! \brief Upscale permeabilities.
       //! \param[in] options Options structure.
-      //! \param[in] dP Vector with cell pressure gradients. Pass empty vector for no gravity effects.
       //! \param[in] mpi_rank MPI rank of this process.
       //! \details Uses the following options:  minPerm, maxPermContrast
       //! \return Tuple with (total time, time per point).
       std::tuple<double,double> upscalePermeability(std::map<std::string,std::string>& options,
-                                                    const std::vector<double>& dP,
                                                     int mpi_rank);
     private:
       //! \brief Perform critical saturation check for a single curve.
@@ -170,6 +162,8 @@ namespace Opm {
 
       // Reference: http://www.spe.org/spe-site/spe/spe/papers/authors/Metric_Standard.pdf
       const double milliDarcyToSqMetre; //!< Conversion factor, multiply mD numbers with this to get m² numbers.
+
+      std::vector<double> dP; //!<  Cell center pressure gradients due to gravity effects.
   };
 }
 
