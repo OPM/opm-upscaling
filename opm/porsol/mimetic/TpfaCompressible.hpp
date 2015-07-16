@@ -23,7 +23,7 @@
 
 #include <opm/porsol/mimetic/TpfaCompressibleAssembler.hpp>
 #include <opm/porsol/blackoil/BlackoilFluid.hpp>
-#include <opm/porsol/common/LinearSolverISTL.hpp>
+#include <opm/core/linalg/LinearSolverIstl.hpp>
 #include <opm/porsol/common/BoundaryConditions.hpp>
 
 #include <opm/core/utility/ErrorMacros.hpp>
@@ -31,6 +31,7 @@
 
 #include <array>
 #include <iostream>
+#include <memory>
 
 namespace Opm
 {
@@ -79,7 +80,7 @@ namespace Opm
                 OPM_THROW(std::runtime_error, "Unhandled number of components: " << nc);
             }
             inflow_mixture_ = mix;
-            linsolver_.init(param);
+            linsolver_.reset(new LinearSolverIstl(param));
             flux_rel_tol_ = param.getDefault("flux_rel_tol", 1e-5);
             press_rel_tol_ = param.getDefault("press_rel_tol", 1e-5);
             max_num_iter_ = param.getDefault("max_num_iter", 15);
@@ -377,7 +378,7 @@ namespace Opm
         Opm::AllFluidData fp_;
         std::vector<double> poro_;
         PressureAssembler psolver_;
-        LinearSolverISTL linsolver_;
+        std::unique_ptr<LinearSolverIstl> linsolver_;
         std::vector<PressureAssembler::FlowBCTypes> bctypes_;
         std::vector<double> bcvalues_;
 
@@ -750,11 +751,11 @@ namespace Opm
                     }
 
                     // Solve system for dp, that is, we use residual as the rhs.
-                    LinearSolverISTL::LinearSolverResults result
-                        = linsolver_.solve(s.n, s.nnz, s.ia, s.ja, s.sa, &residual[0], s.x);
+                    LinearSolverIstl::LinearSolverReport result
+                        = linsolver_->solve(s.n, s.nnz, s.ia, s.ja, s.sa, &residual[0], s.x);
                     if (!result.converged) {
                         OPM_THROW(std::runtime_error, "Linear solver failed to converge in " << result.iterations << " iterations.\n"
-                              << "Residual reduction achieved is " << result.reduction << '\n');
+                              << "Residual reduction achieved is " << result.residual_reduction << '\n');
                     }
                     // Set x so that the call to computePressuresAndFluxes() will work.
                     // Recall that x now contains dp, and we want it to contain p - dp
@@ -784,10 +785,10 @@ namespace Opm
                     PressureAssembler::LinearSystem s;
                     psolver_.linearSystem(s);
                     // Solve system.
-                    LinearSolverISTL::LinearSolverResults res = linsolver_.solve(s.n, s.nnz, s.ia, s.ja, s.sa, s.b, s.x);
+                    LinearSolverIstl::LinearSolverReport res = linsolver_->solve(s.n, s.nnz, s.ia, s.ja, s.sa, s.b, s.x);
                     if (!res.converged) {
                         OPM_THROW(std::runtime_error, "Linear solver failed to converge in " << res.iterations << " iterations.\n"
-                              << "Residual reduction achieved is " << res.reduction << '\n');
+                              << "Residual reduction achieved is " << res.residual_reduction << '\n');
                     }
                 }
 
@@ -886,11 +887,11 @@ namespace Opm
                                          std::fabs(*std::min_element(residual.begin(), residual.end())));
 
                 // Solve system for dp, that is, we use residual as the rhs.
-                LinearSolverISTL::LinearSolverResults result
-                    = linsolver_.solve(s.n, s.nnz, s.ia, s.ja, s.sa, &residual[0], s.x);
+                LinearSolverIstl::LinearSolverReport result
+                    = linsolver_->solve(s.n, s.nnz, s.ia, s.ja, s.sa, &residual[0], s.x);
                 if (!result.converged) {
                     OPM_THROW(std::runtime_error, "Linear solver failed to converge in " << result.iterations << " iterations.\n"
-                          << "Residual reduction achieved is " << result.reduction << '\n');
+                          << "Residual reduction achieved is " << result.residual_reduction << '\n');
                 }
 
                 // Set x so that the call to computePressuresAndFluxes() will work.
