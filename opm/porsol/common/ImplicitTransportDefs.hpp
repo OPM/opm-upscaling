@@ -3,7 +3,7 @@
 #define OPENRS_IMPLICITTRANSPORTDEFS_HEADER
 
 #include <opm/porsol/common/ReservoirPropertyCapillary.hpp>
-#include <opm/porsol/common/LinearSolverISTL.hpp>
+#include <opm/core/linalg/LinearSolverIstl.hpp>
 #include <dune/istl/operators.hh>
 #include <dune/istl/solvers.hh>
 #include <dune/istl/bvector.hh>
@@ -18,6 +18,7 @@
 #include <opm/core/pressure/tpfa/trans_tpfa.h>
 #include <opm/core/transport/implicit/NormSupport.hpp>
 #include <opm/core/transport/implicit/ImplicitTransport.hpp>
+#include <memory>
 
 #if 0
 template <class Ostream, class Collection>
@@ -218,7 +219,7 @@ public:
         params.insertParameter("linsolver_type",
                                boost::lexical_cast<std::string>(1));
 
-        ls_.init(params);
+        ls_.reset(new LinearSolverIstl(params));
     }
 
     void
@@ -226,11 +227,11 @@ public:
           const double*     b,
           double*           x)
     {
-        ls_.solve(A->m, A->nnz, A->ia, A->ja, A->sa, b, x);
+        ls_->solve(A->m, A->nnz, A->ia, A->ja, A->sa, b, x);
     }
 
 private:
-    Opm::LinearSolverISTL ls_;
+    std::unique_ptr<Opm::LinearSolverIstl> ls_;
 };
 
 class TransportSource {
