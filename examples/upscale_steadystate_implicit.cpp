@@ -188,11 +188,12 @@ try
         usageandexit();
     }
     // Initialize.
+    Opm::ParseMode parseMode;
     Opm::parameter::ParameterGroup param(argc, argv);
     std::string gridfilename = param.get<std::string>("gridfilename");
     Opm::ParserPtr parser(new Opm::Parser());
     Opm::addNonStandardUpscalingKeywords(parser);
-    Opm::DeckConstPtr deck(parser->parseFile(gridfilename));
+    Opm::DeckConstPtr deck(parser->parseFile(gridfilename , parseMode));
 
     // Check that we have the information we need from the eclipse file:  
     if (! (deck->hasKeyword("SPECGRID") && deck->hasKeyword("COORD") && deck->hasKeyword("ZCORN")  

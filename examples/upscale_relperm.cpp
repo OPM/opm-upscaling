@@ -388,9 +388,10 @@ try
 
    if (isMaster) cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... ";
    flush(cout);   start = clock();
+   Opm::ParseMode parseMode;
    Opm::ParserPtr parser(new Opm::Parser());
    Opm::addNonStandardUpscalingKeywords(parser);
-   Opm::DeckConstPtr deck(parser->parseFile(ECLIPSEFILENAME));
+   Opm::DeckConstPtr deck(parser->parseFile(ECLIPSEFILENAME , parseMode));
    finish = clock();   timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
    if (isMaster) cout << " (" << timeused <<" secs)" << endl;
 

@@ -69,8 +69,9 @@ int main(int argc, char** argv) try {
 	param.displayUsage();
     }
 
+    Opm::ParseMode parseMode;
     Opm::ParserPtr parser(new Opm::Parser());
-    Opm::DeckConstPtr deck(parser->parseFile(gridfilename));
+    Opm::DeckConstPtr deck(parser->parseFile(gridfilename , parseMode));
     Opm::EclipseGridInspector gridinspector(deck);
     
     // Check that we have the information we need from the eclipse file, we will check PERM-fields later
