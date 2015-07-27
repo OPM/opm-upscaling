@@ -40,6 +40,7 @@
 #include <opm/porsol/common/setupBoundaryConditions.hpp>
 #include <opm/core/utility/Units.hpp>
 
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
@@ -121,9 +122,10 @@ try
     std::vector<double> permz;
 
 
+    Opm::ParseMode parseMode;
     // Original x/y resolution in terms of coordinate values (not indices)
     Opm::ParserPtr parser(new Opm::Parser);
-    Opm::DeckConstPtr deck(parser->parseFile(gridfilename)); // TODO: REFACTOR!!!! it is stupid to parse this again
+    Opm::DeckConstPtr deck(parser->parseFile(gridfilename , parseMode)); // TODO: REFACTOR!!!! it is stupid to parse this again
     Opm::EclipseGridInspector gridinspector(deck);
     std::array<double, 6> gridlimits=gridinspector.getGridLimits();
     double finegridxresolution = (gridlimits[1]-gridlimits[0])/dims[0];

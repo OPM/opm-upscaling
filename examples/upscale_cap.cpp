@@ -229,9 +229,10 @@ try
    eclipsefile.close(); 
 
    cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... " << endl;
+   Opm::ParseMode parseMode;
    Opm::ParserPtr parser(new Opm::Parser());
    Opm::addNonStandardUpscalingKeywords(parser);
-   Opm::DeckConstPtr deck(parser->parseFile(ECLIPSEFILENAME));
+   Opm::DeckConstPtr deck(parser->parseFile(ECLIPSEFILENAME , parseMode));
    
    // Check that we have the information we need from the eclipse file:  
    if (! (deck->hasKeyword("SPECGRID") && deck->hasKeyword("COORD") && deck->hasKeyword("ZCORN")  
