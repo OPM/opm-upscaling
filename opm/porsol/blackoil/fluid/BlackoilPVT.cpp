@@ -30,6 +30,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 
 using namespace Opm;
 
@@ -39,7 +40,8 @@ namespace Opm
 
     void BlackoilPVT::init(Opm::DeckConstPtr deck)
     {
-        const auto eclipseState = std::make_shared<EclipseState>(deck);
+        Opm::ParseMode parseMode;
+        const auto eclipseState = std::make_shared<EclipseState>(deck , parseMode);
 	region_number_ = 0;
 
 	// Surface densities. Accounting for different orders in eclipse and our code.

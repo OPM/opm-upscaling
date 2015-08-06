@@ -42,6 +42,7 @@
 #include <dune/grid/sgrid.hh>
 #include <opm/porsol/common/ReservoirPropertyCapillary.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <boost/filesystem.hpp>
 
@@ -77,8 +78,9 @@ namespace Opm
         } else if (fileformat == "eclipse") {
             std::string ecl_file = param.get<std::string>("filename");
 
+            Opm::ParseMode parseMode;
             Opm::ParserPtr parser(new Opm::Parser());
-            Opm::DeckConstPtr deck(parser->parseFile(ecl_file));
+            Opm::DeckConstPtr deck(parser->parseFile(ecl_file , parseMode));
             if (param.has("z_tolerance")) {
                 std::cerr << "****** Warning: z_tolerance parameter is obsolete, use PINCH in deck input instead\n";
             }
