@@ -271,7 +271,8 @@ try
     stringstream *gridstringstream(new stringstream(stringstream::in | stringstream::out));
     std::shared_ptr<std::istream> gridstream(gridstringstream);
     inflate (eclipseInput, sizeof (eclipseInput) / sizeof (eclipseInput[0]), *gridstringstream);
-    Opm::DeckConstPtr deck = parser->parseStream(gridstream);
+    Opm::ParseMode mode;
+    Opm::DeckConstPtr deck = parser->parseStream(gridstream, mode);
 
     finish = clock();   timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
     if (helper.isMaster) cout << " (" << timeused <<" secs)" << endl;
@@ -594,7 +595,7 @@ try
 #ifdef HAVE_MPI
         outputtmp << dashed_line;
         outputtmp << "MPI-nodes: " << mpi_nodecount << endl;
-        double speedup = (avg_upscaling_time_pr_point * (points + 1) + timeused_tesselation)/(timeused_upscale_wallclock + avg_upscaling_time_pr_point + timeused_tesselation);
+        double speedup = (avg_upscaling_time_pr_point * (helper.points + 1) + timeused_tesselation)/(timeused_upscale_wallclock + avg_upscaling_time_pr_point + timeused_tesselation);
         outputtmp << "Speedup:   " << speedup << endl;
 #endif
 

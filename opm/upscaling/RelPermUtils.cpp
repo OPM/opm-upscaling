@@ -94,6 +94,8 @@ void RelPermUpscaleHelper::collectResults()
       Master node should post a receive for all values missing,
       other nodes should post a send for all the values they have.
     */
+   int mpi_rank;
+   MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
    MPI_Barrier(MPI_COMM_WORLD); // Not strictly necessary.
    if (isMaster) {
        // Loop over all values, receive data and put into local data structure
@@ -107,10 +109,10 @@ void RelPermUpscaleHelper::collectResults()
                    // Put received data into correct place.
                    WaterSaturation[(int)recvbuffer[0]] = recvbuffer[1];
                    for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) {
-                       PhasePerm[(int)recvbuffer[0]][voigtIdx] = recvbuffer[2+voigtIdx];
+                       PhasePerm[0][(int)recvbuffer[0]][voigtIdx] = recvbuffer[2+voigtIdx];
                    }
                    for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) {
-                       Phase2Perm[(int)recvbuffer[0]][voigtIdx] = recvbuffer[2+tensorElementCount+voigtIdx];
+                       PhasePerm[1][(int)recvbuffer[0]][voigtIdx] = recvbuffer[2+tensorElementCount+voigtIdx];
                    }
                }
                else {
@@ -120,7 +122,7 @@ void RelPermUpscaleHelper::collectResults()
                    // Put received data into correct place.
                    WaterSaturation[(int)recvbuffer[0]] = recvbuffer[1];
                    for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) {
-                       PhasePerm[(int)recvbuffer[0]][voigtIdx] = recvbuffer[2+voigtIdx];
+                       PhasePerm[0][(int)recvbuffer[0]][voigtIdx] = recvbuffer[2+voigtIdx];
                    }
                }
            }
@@ -135,10 +137,10 @@ void RelPermUpscaleHelper::collectResults()
                    sendbuffer[0] = (double)idx;
                    sendbuffer[1] = WaterSaturation[idx];
                    for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) {
-                       sendbuffer[2+voigtIdx] = PhasePerm[idx][voigtIdx];
+                       sendbuffer[2+voigtIdx] = PhasePerm[0][idx][voigtIdx];
                    }
                    for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) {
-                       sendbuffer[2+tensorElementCount+voigtIdx] = Phase2Perm[idx][voigtIdx];
+                       sendbuffer[2+tensorElementCount+voigtIdx] = PhasePerm[1][idx][voigtIdx];
                    }
                    MPI_Send(sendbuffer.data(), sendbuffer.size(), MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
                }
@@ -147,7 +149,7 @@ void RelPermUpscaleHelper::collectResults()
                    sendbuffer[0] = (double)idx;
                    sendbuffer[1] = WaterSaturation[idx];
                    for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) {
-                       sendbuffer[2+voigtIdx] = PhasePerm[idx][voigtIdx];
+                       sendbuffer[2+voigtIdx] = PhasePerm[0][idx][voigtIdx];
                    }
                    MPI_Send(sendbuffer.data(), sendbuffer.size(), MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
                }
@@ -743,6 +745,8 @@ std::tuple<double, double>
 
 #if HAVE_MPI
     // Distribute work load over mpi nodes.
+    int mpi_nodecount;
+    MPI_Comm_size(MPI_COMM_WORLD, &mpi_nodecount);
     for (int idx=0; idx < points; ++idx) {
         // Ensure master node gets equal or less work than the other nodes, since
         // master node also computes single phase perm.
