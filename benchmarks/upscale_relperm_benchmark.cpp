@@ -594,7 +594,7 @@ try
 #ifdef HAVE_MPI
         outputtmp << dashed_line;
         outputtmp << "MPI-nodes: " << mpi_nodecount << endl;
-        double speedup = (avg_upscaling_time_pr_point * (points + 1) + timeused_tesselation)/(timeused_upscale_wallclock + avg_upscaling_time_pr_point + timeused_tesselation);
+        double speedup = (avg_upscaling_time_pr_point * (helper.points + 1) + timeused_tesselation)/(timeused_upscale_wallclock + avg_upscaling_time_pr_point + timeused_tesselation);
         outputtmp << "Speedup:   " << speedup << endl;
 #endif
 

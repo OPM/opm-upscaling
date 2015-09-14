@@ -676,7 +676,7 @@ try
        outputtmp << "#              MPI-nodes: " << mpi_nodecount << endl;
 
        // Single phase upscaling time is included here, in possibly a hairy way.
-       double speedup = (avg_upscaling_time_pr_point * (points + 1) + timeused_tesselation)/(timeused_upscale_wallclock + avg_upscaling_time_pr_point + timeused_tesselation);
+       double speedup = (avg_upscaling_time_pr_point * (helper.points + 1) + timeused_tesselation)/(timeused_upscale_wallclock + avg_upscaling_time_pr_point + timeused_tesselation);
        outputtmp << "#                Speedup: " << speedup << ", efficiency: " << speedup/mpi_nodecount << endl;
 #else
        outputtmp << ", " << avg_upscaling_time_pr_point << " secs avg for " << helper.points << " runs" << endl;
