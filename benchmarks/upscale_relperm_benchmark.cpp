@@ -271,7 +271,8 @@ try
     stringstream *gridstringstream(new stringstream(stringstream::in | stringstream::out));
     std::shared_ptr<std::istream> gridstream(gridstringstream);
     inflate (eclipseInput, sizeof (eclipseInput) / sizeof (eclipseInput[0]), *gridstringstream);
-    Opm::DeckConstPtr deck = parser->parseStream(gridstream);
+    Opm::ParseMode mode;
+    Opm::DeckConstPtr deck = parser->parseStream(gridstream, mode);
 
     finish = clock();   timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
     if (helper.isMaster) cout << " (" << timeused <<" secs)" << endl;
