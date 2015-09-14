@@ -82,6 +82,7 @@
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 #include <opm/upscaling/ParserAdditions.hpp>
+#include <opm/upscaling/RelPermUtils.hpp>
 
 #include <dune/common/version.hh>
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
@@ -145,47 +146,6 @@ void usageandexit() {
     exit(1);
 }
 
-// Assumes that permtensor_t use C ordering.
-double getVoigtValue(const SinglePhaseUpscaler::permtensor_t& K, int voigt_idx)
-{
-    assert(K.numRows() == 3 && K.numCols() == 3);
-    switch (voigt_idx) {
-    case 0: return K.data()[0];
-    case 1: return K.data()[4];
-    case 2: return K.data()[8];
-    case 3: return K.data()[5];
-    case 4: return K.data()[2];
-    case 5: return K.data()[1];
-    case 6: return K.data()[7];
-    case 7: return K.data()[6];
-    case 8: return K.data()[3];
-    default:
-        std::cout << "Voigt index out of bounds (only 0-8 allowed)" << std::endl;
-        throw std::exception();
-    }
-}
-
-
-// Assumes that permtensor_t use C ordering.
-void setVoigtValue(SinglePhaseUpscaler::permtensor_t& K, int voigt_idx, double val)
-{
-    assert(K.numRows() == 3 && K.numCols() == 3);
-    switch (voigt_idx) {
-    case 0: K.data()[0] = val; break;
-    case 1: K.data()[4] = val; break;
-    case 2: K.data()[8] = val; break;
-    case 3: K.data()[5] = val; break;
-    case 4: K.data()[2] = val; break;
-    case 5: K.data()[1] = val; break;
-    case 6: K.data()[7] = val; break;
-    case 7: K.data()[6] = val; break;
-    case 8: K.data()[3] = val; break;
-    default:
-        std::cout << "Voigt index out of bounds (only 0-8 allowed)" << std::endl;
-        throw std::exception();
-    }
-}
-
 int main(int varnum, char** vararg)
 try
 { 
@@ -213,28 +173,28 @@ try
     /*
       Populate options-map with default values
     */
-    map<string,string> options;
-    options.insert(make_pair("bc",                 "f"     )); // Boundary conditions, default is fixed. 
-    options.insert(make_pair("points",             "30"   )); // Number of saturation points (uniformly distributed within saturation endpoints)
-    options.insert(make_pair("outputWater",        ""));       // If set, where to write upscaled water permeabilities
-    options.insert(make_pair("outputOil",          ""));       // If set, where to write upscaled oil permeabilites
-    options.insert(make_pair("waterCurve",         "2"));      // column in stonefiles that represents rel.perm. for water
-    options.insert(make_pair("oilCurve",           "3"));      // column in stonefiles that represents rel.perm. for oil
-    options.insert(make_pair("waterViscosity",     "0.001"));  // viscosity of water in Pascal seconds.
-    options.insert(make_pair("oilViscosity",       "0.1"));    // viscosity of oil in Pascal seconds.
-    options.insert(make_pair("interpolate",        "0"));    // default is not to interpolate 
-    //options.insert(make_pair("outputprecision",    "8")); // number of decimals to print
-    options.insert(make_pair("minPerm",            "1e-12")); // perm values below this will be truncated upwards
-    options.insert(make_pair("maxPerm",            "100000")); // perm values below this will be truncated upwards
-    options.insert(make_pair("minPoro",            "0.0001")); // poro values below this will be truncated upwards
-    options.insert(make_pair("maxPermContrast",    "1e7")); // maximum allowed contrast in each single-phase computation
-    options.insert(make_pair("saturationThreshold", "0.00001")); // accuracy threshold for saturation, we ignore Pc values
-    // that give so small contributions to Sw near endpoints.
-    options.insert(make_pair("linsolver_tolerance", "1e-12"));  // residual tolerance for linear solver
-    options.insert(make_pair("linsolver_verbosity", "0"));     // verbosity level for linear solver
-    options.insert(make_pair("linsolver_type",      "3"));     // type of linear solver: 0 = ILU/BiCGStab, 1 = AMG/CG, 2 = KAMG/CG, 3 = FastAMG/CG
-    options.insert(make_pair("linsolver_prolongate_factor", "1.0")); // Factor to scale the prolongate coarse grid correction,
-    options.insert(make_pair("linsolver_smooth_steps", "1")); // Number of pre and postsmoothing steps for AMG
+    map<string,string> options =
+       {{"bc",                            "f"}, // Boundary conditions, default is fixed.
+        {"points",                       "30"}, // Number of saturation points (uniformly distributed within saturation endpoints)
+        {"outputWater",                    ""}, // If set, where to write upscaled water permeabilities
+        {"outputOil",                      ""}, // If set, where to write upscaled oil permeabilites
+        {"waterCurve",                    "2"}, // column in stonefiles that represents rel.perm. for water
+        {"oilCurve",                      "3"}, // column in stonefiles that represents rel.perm. for oil
+        {"waterViscosity",            "0.001"}, // viscosity of water in Pascal seconds.
+        {"oilViscosity",                "0.1"}, // viscosity of oil in Pascal seconds.
+        {"interpolate",                   "0"}, // default is not to interpolate
+     // {"outputprecision",               "8"}, // number of decimals to print
+        {"minPerm",                   "1e-12"}, // perm values below this will be truncated upwards
+        {"maxPerm",                  "100000"}, // perm values below this will be truncated upwards
+        {"minPoro",                  "0.0001"}, // poro values below this will be truncated upwards
+        {"maxPermContrast",             "1e7"}, // maximum allowed contrast in each single-phase computation
+        {"saturationThreshold",     "0.00001"}, // accuracy threshold for saturation, we ignore Pc values
+                                               // that give so small contributions to Sw near endpoints.
+        {"linsolver_tolerance",       "1e-12"}, // residual tolerance for linear solver
+        {"linsolver_verbosity",           "0"}, // verbosity level for linear solver
+        {"linsolver_type",                "3"}, // type of linear solver: 0 = ILU/BiCGStab, 1 = AMG/CG, 2 = KAMG/CG, 3 = FastAMG/CG
+        {"linsolver_prolongate_factor", "1.0"}, // Factor to scale the prolongate coarse grid correction,
+        {"linsolver_smooth_steps",        "1"}}; // Number of pre and postsmoothing steps for AMG
 
     /* Check first if there is anything on the command line to look for */
     if (varnum == 1) {

@@ -57,6 +57,29 @@ macro (add_test_upscale_perm gridname bcs rows)
 endmacro (add_test_upscale_perm gridname bcs)
 
 ###########################################################################
+# TEST: upscale_relperm 
+###########################################################################
+
+# Define macro that performs the two steps mentioned above for upscale_relperm
+# Input: 
+#   - gridname: basename (no extension) of grid model
+#   - rows: Number of rows in result file that is to be compared
+# This macro assumes that ${gridname}.grdecl is found in directory ${INPUT_DATA_PATH}grids/
+# and that upscale_perm_BC${bcs}_${gridname}.txt is found in ${INPUT_DATA_PATH}reference_solutions
+macro (add_test_upscale_relperm gridname rows)
+  # Add test that runs upscale_perm and outputs the results to file
+  opm_add_test(upscale_relperm_${gridname} NO_COMPILE
+               EXE_NAME upscale_relperm
+               DRIVER_ARGS ${INPUT_DATA_PATH} ${RESULT_PATH}
+                           ${CMAKE_BINARY_DIR}/bin
+                           upscale_relperm_${gridname}
+                           0.02 ${rows} 8
+               TEST_ARGS -bc f -points 20 -relPermCurve 2 -upscaleBothPhases true -jFunctionCurve 3 -surfaceTension 11 -gravity 0.0 -waterDensity 1.0 -oilDensity 0.6 -interpolate 0 -maxpoints 1000 -outputprecision 20 -maxPermContrast 1e7 -minPerm 1e-12 -maxPerm 100000 -minPoro 0.0001 -saturationThreshold 0.0001 -linsolver_tolerance 1e-12 -linsolver_verbosity 0 -linsolver_type 3 -fluids ow -krowxswirr -1 -krowyswirr -1 -krowzswirr -1 -doEclipseCheck true -critRelpermThresh 1e-6
+                         -output ${RESULT_PATH}/upscale_relperm_${gridname}.txt
+                         ${INPUT_DATA_PATH}/grids/${gridname}.grdecl ${INPUT_DATA_PATH}/grids/stonefile_benchmark.txt)
+endmacro (add_test_upscale_relperm gridname)
+
+###########################################################################
 # TEST: upscale_elasticity
 ###########################################################################
 
@@ -82,7 +105,7 @@ endmacro (add_test_upscale_elasticity gridname method rows)
 # Make sure that we build the helper executable before running tests
 # (the "tests" target is setup in OpmLibMain.cmake)
 add_custom_target(test-suite)
-add_dependencies (test-suite datafiles upscale_perm)
+add_dependencies (test-suite datafiles upscale_perm upscale_relperm)
 add_dependencies (test-suite compare_upscaling_results)
 opm_set_test_driver(${PROJECT_SOURCE_DIR}/tests/runtest.sh "")
 
@@ -93,9 +116,18 @@ add_test_upscale_perm(27cellsIso flp 9)
 add_test_upscale_perm(EightCells fl 6)
 add_test_upscale_perm(Hummocky flp 9)
 
+# Add tests for different models
+add_test_upscale_relperm(benchmark_tiny_grid 20)
+
 if((DUNE_ISTL_VERSION_MAJOR GREATER 2) OR
    (DUNE_ISTL_VERSION_MAJOR EQUAL 2 AND DUNE_ISTL_VERSION_MINOR GREATER 2))
   add_dependencies (test-suite upscale_elasticity)
   add_test_upscale_elasticity(EightCells mpc)
   add_test_upscale_elasticity(EightCells mortar)
 endif()
+
+add_custom_target(clear_test_data ${CMAKE_COMMAND} -E remove_directory ${RESULT_PATH}
+                  COMMAND ${CMAKE_COMMAND} -E make_directory ${RESULT_PATH}
+                  COMMENT "Removing old test results")
+
+add_dependencies(check clear_test_data)
