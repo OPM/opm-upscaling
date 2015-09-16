@@ -23,6 +23,7 @@
 #include <iostream>
 #include <exception>
 #include <sstream>
+#include <cfloat>  // FOR DBL_MAX/DBL_MIN
 
 namespace Opm {
 
