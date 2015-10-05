@@ -67,9 +67,12 @@ namespace Opm
         const auto& pvdoTables = tables->getPvdoTables();
         const auto& pvtoTables = tables->getPvtoTables();
         if (!pvdoTables.empty()) {
-            oil_props_.reset(new MiscibilityDead(pvdoTables[0]));
+            const auto& pvdoTable = pvdoTables.getTable<PvdoTable>(0);
+            oil_props_.reset(new MiscibilityDead(pvdoTable));
         } else if (pvtoTables.empty()) {
-            oil_props_.reset(new MiscibilityLiveOil(pvtoTables[0]));
+            // PVTOTables is a std::vector<>
+            const auto& pvtoTable = pvtoTables[0];
+            oil_props_.reset(new MiscibilityLiveOil(pvtoTable));
         } else if (deck->hasKeyword("PVCDO")) {
             auto *misc_water = new MiscibilityWater(0);
             misc_water->initFromPvcdo(deck->getKeyword("PVCDO"));
@@ -82,7 +85,8 @@ namespace Opm
         const auto& pvdgTables = tables->getPvdgTables();
         const auto& pvtgTables = tables->getPvtgTables();
         if (!pvdgTables.empty()) {
-            gas_props_.reset(new MiscibilityDead(pvdgTables[0]));
+            const auto& pvdgTable = pvdgTables.getTable<PvdgTable>(0);
+            gas_props_.reset(new MiscibilityDead(pvdgTable));
         } else if (pvtgTables.empty()) {
             gas_props_.reset(new MiscibilityLiveGas(pvtgTables[0]));
         } else {
