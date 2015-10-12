@@ -43,7 +43,7 @@
 //#include <cmath>
 //#include <algorithm>
 
-//#include <opm/core/utility/ErrorMacros.hpp>
+//#include <opm/common/ErrorMacros.hpp>
 #include <opm/core/utility/Average.hpp>
 //#include <opm/core/utility/Units.hpp>
 //#include <dune/grid/common/Volumes.hpp>

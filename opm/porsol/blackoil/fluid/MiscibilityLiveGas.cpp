@@ -31,7 +31,7 @@
 #include "config.h"
 #include <algorithm>
 #include "MiscibilityLiveGas.hpp"
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/core/utility/linearInterpolation.hpp>
 
 using namespace std;

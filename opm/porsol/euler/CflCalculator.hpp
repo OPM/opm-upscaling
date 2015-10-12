@@ -36,7 +36,7 @@
 #ifndef OPENRS_CFLCALCULATOR_HEADER
 #define OPENRS_CFLCALCULATOR_HEADER
 
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/core/utility/Average.hpp>
 
 #include <opm/porsol/common/Matrix.hpp>

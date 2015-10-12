@@ -30,7 +30,7 @@
 #include "config.h"
 #include <algorithm>
 #include "MiscibilityDead.hpp"
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/core/utility/linearInterpolation.hpp>
 #include <opm/core/utility/buildUniformMonotoneTable.hpp>
 #include <boost/lexical_cast.hpp>

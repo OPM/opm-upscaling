@@ -37,7 +37,7 @@
 #ifndef OPENRS_EULERUPSTREAMIMPLICIT_IMPL_HEADER
 #define OPENRS_EULERUPSTREAMIMPLICIT_IMPL_HEADER
 
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/core/utility/Average.hpp>
 #include <opm/core/utility/Units.hpp>
 #include <dune/grid/common/Volumes.hpp>

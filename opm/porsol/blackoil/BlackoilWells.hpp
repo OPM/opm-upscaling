@@ -22,7 +22,7 @@
 
 #include <opm/porsol/blackoil/fluid/BlackoilDefs.hpp>
 #include <dune/grid/CpGrid.hpp>
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/core/utility/SparseTable.hpp>
 #include <opm/porsol/common/Rock.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>

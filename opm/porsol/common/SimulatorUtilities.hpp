@@ -37,7 +37,7 @@
 #define OPENRS_SIMULATORUTILITIES_HEADER
 
 
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 #include <dune/common/version.hh>
 #include <dune/common/fvector.hh>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>

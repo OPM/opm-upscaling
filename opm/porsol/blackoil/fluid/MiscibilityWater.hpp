@@ -35,7 +35,7 @@
 #define OPENRS_MISCIBILITYWATER_HEADER
 
 #include "MiscibilityProps.hpp"
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 
 // Forward declaration.
 class PVTW;

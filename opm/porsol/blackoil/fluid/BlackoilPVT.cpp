@@ -25,7 +25,7 @@
 #include "MiscibilityLiveOil.hpp"
 #include "MiscibilityLiveGas.hpp"
 #include "MiscibilityWater.hpp"
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/core/utility/linearInterpolation.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>

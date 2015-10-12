@@ -42,7 +42,7 @@
 #include <boost/bind.hpp>
 
 #include <dune/common/fvector.hh>
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 
 #include <opm/porsol/common/fortran.hpp>
 #include <opm/porsol/common/blas_lapack.hpp>
