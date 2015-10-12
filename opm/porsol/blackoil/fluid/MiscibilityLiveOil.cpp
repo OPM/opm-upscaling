@@ -32,7 +32,7 @@
 
 #include <algorithm>
 #include "MiscibilityLiveOil.hpp"
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/core/utility/linearInterpolation.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 

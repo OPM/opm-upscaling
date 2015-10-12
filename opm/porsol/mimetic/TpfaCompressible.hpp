@@ -26,7 +26,7 @@
 #include <opm/core/linalg/LinearSolverIstl.hpp>
 #include <opm/porsol/common/BoundaryConditions.hpp>
 
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/core/utility/SparseTable.hpp>
 
 #include <array>

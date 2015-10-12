@@ -40,7 +40,7 @@
 #include <vector>
 #include <ostream>
 #include <boost/mpl/if.hpp>
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 #include <dune/common/fvector.hh>
 
 namespace Opm

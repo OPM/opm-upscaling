@@ -23,7 +23,7 @@
 
 #include <dune/common/fvector.hh>
 #include <array>
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 
 #include <algorithm>
 #include <vector>

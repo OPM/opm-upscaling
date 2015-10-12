@@ -42,7 +42,7 @@
 #include <boost/bind.hpp>
 #include <array>
 
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/core/utility/SparseTable.hpp>
 
 #include <opm/porsol/common/fortran.hpp>

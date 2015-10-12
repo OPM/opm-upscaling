@@ -46,7 +46,7 @@
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/core/utility/SparseTable.hpp>
 
 #include <dune/istl/bvector.hh>
