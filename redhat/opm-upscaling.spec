@@ -13,11 +13,11 @@ Group:          Development/Libraries/C and C++
 Url:            http://www.opm-project.org/
 Source0:        https://github.com/OPM/%{name}/archive/release/%{version}/%{tag}.tar.gz#/%{name}-%{version}.tar.gz
 BuildRequires:  blas-devel lapack-devel dune-common-devel
-BuildRequires:  git suitesparse-devel cmake28 doxygen bc opm-parser-devel
-BuildRequires:  tinyxml-devel dune-istl-devel superlu-devel opm-core-devel
+BuildRequires:  git suitesparse-devel doxygen bc opm-parser-devel
+BuildRequires:  tinyxml-devel dune-istl-devel opm-common-devel opm-core-devel
 BuildRequires:  opm-porsol-devel opm-material-devel ert.ecl-devel boost148-devel
-%{?el5:BuildRequires: gcc44 gcc44-gfortran gcc44-c++}
-%{!?el5:BuildRequires: gcc gcc-gfortran gcc-c++}
+%{?el6:BuildRequires: cmake28 devtoolset-2 superlu-devel}
+%{!?el6:BuildRequires: cmake gcc gcc-gfortran gcc-c++ SuperLU-devel}
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Requires:       libopm-upscaling1 = %{version}
 
@@ -27,7 +27,6 @@ This module provides semi-implicit pressure and transport solvers using the IMPE
 %package -n libopm-upscaling1
 Summary:        Open Porous Media - upscaling library
 Group:          System/Libraries
-%{?el5:BuildArch: %{_arch}}
 
 %description -n libopm-upscaling1
 This module implements single-phase and steady-state upscaling methods.
@@ -40,7 +39,6 @@ Requires:       blas-devel
 Requires:       lapack-devel
 Requires:       suitesparse-devel
 Requires:       libopm-upscaling1 = %{version}
-%{?el5:BuildArch: %{_arch}}
 
 %description devel
 This package contains the development and header files for opm-upscaling
@@ -58,7 +56,6 @@ Summary:        Applications in opm-upscaling
 Group:          Scientific
 Requires:       %{name} = %{version}
 Requires:       libopm-upscaling1 = %{version}
-%{?el5:BuildArch: %{_arch}}
 
 %description bin
 This package contains the applications for opm-upscaling
@@ -68,7 +65,8 @@ This package contains the applications for opm-upscaling
 
 # consider using -DUSE_VERSIONED_DIR=ON if backporting
 %build
-cmake28 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_INSTALL_DOCDIR=share/doc/%{name}-%{version} -DUSE_RUNPATH=OFF %{?el5:-DCMAKE_CXX_COMPILER=g++44 -DCMAKE_C_COMPILER=gcc44 -DCMAKE_Fortran_COMPILER=gfortran44} -DBOOST_LIBRARYDIR=%{_libdir}/boost148 -DBOOST_INCLUDEDIR=/usr/include/boost148
+%{?el6:scl enable devtoolset-2 bash}
+%{?el6:cmake28} %{!?el6:cmake} -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_INSTALL_DOCDIR=share/doc/%{name}-%{version} -DUSE_RUNPATH=OFF %{?el6:-DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-2/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-2/root/usr/bin/gcc} -DBOOST_LIBRARYDIR=%{_libdir}/boost148 -DBOOST_INCLUDEDIR=/usr/include/boost148 -DINSTALL_BENCHMARKS=1
 make
 
 %install
