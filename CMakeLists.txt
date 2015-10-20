@@ -18,6 +18,7 @@ cmake_minimum_required (VERSION 2.8)
 
 set( OPM_COMMON_ROOT "" CACHE PATH "Root directory containing OPM related cmake modules")
 option(SIBLING_SEARCH "Search for other modules in sibling directories?" ON)
+option(INSTALL_BENCHMARKS "Install benchmark applications?" OFF)
 
 if(NOT OPM_COMMON_ROOT)
    find_package(opm-common QUIET)
@@ -176,4 +177,7 @@ foreach(benchmark ${OPM_BENCHMARKS})
   add_custom_command(TARGET benchmarks-static POST_BUILD
                      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/static/benchmarks/src/benchmarks-static-build/bin/${benchmark}
                                                       ${CMAKE_BINARY_DIR}/bin/${benchmark}-static)
+	if(INSTALL_BENCHMARKS)
+		install(TARGETS ${benchmark} DESTINATION bin)
+	endif()
 endforeach()
