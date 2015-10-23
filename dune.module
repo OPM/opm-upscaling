@@ -1,12 +1,13 @@
-################################
-# Dune module information file #
-################################
+####################################################################
+# Dune module information file: This file gets parsed by dunecontrol
+# and by the CMake build scripts.
+####################################################################
 
-#Name of the module
 Module: opm-upscaling
 Description: DUNE module containing single-phase and steady-state upscaling methods
-Version: 1.0
-Label: 2013.10
+Version: 2016.04-pre
+Label: 2016.04-pre
 Maintainer: arne.morten.kvarving@sintef.no
-#depending on 
+MaintainerName: Arne Morten Kvarving
+Url: http://opm-project.org
 Depends: dune-common dune-grid dune-istl dune-cornerpoint opm-porsol opm-common
