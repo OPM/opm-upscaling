@@ -63,20 +63,21 @@ endmacro (add_test_upscale_perm gridname bcs)
 # Define macro that performs the two steps mentioned above for upscale_relperm
 # Input: 
 #   - gridname: basename (no extension) of grid model
+#   - options: options available and detailed in TEST_ARGS
 #   - rows: Number of rows in result file that is to be compared
 # This macro assumes that ${gridname}.grdecl is found in directory ${INPUT_DATA_PATH}grids/
 # and that upscale_perm_BC${bcs}_${gridname}.txt is found in ${INPUT_DATA_PATH}reference_solutions
-macro (add_test_upscale_relperm gridname rows)
+macro (add_test_upscale_relperm gridname option rows)
   # Add test that runs upscale_perm and outputs the results to file
-  opm_add_test(upscale_relperm_${gridname} NO_COMPILE
+  opm_add_test(upscale_relperm_${option}_${gridname} NO_COMPILE
                EXE_NAME upscale_relperm
                DRIVER_ARGS ${INPUT_DATA_PATH} ${RESULT_PATH}
                            ${CMAKE_BINARY_DIR}/bin
-                           upscale_relperm_${gridname}
+                           upscale_relperm_${option}_${gridname}
                            0.02 ${rows} 8
                TEST_ARGS -bc f -points 20 -relPermCurve 2 -upscaleBothPhases true -jFunctionCurve 3 -surfaceTension 11 -gravity 0.0 -waterDensity 1.0 -oilDensity 0.6 -interpolate 0 -maxpoints 1000 -outputprecision 20 -maxPermContrast 1e7 -minPerm 1e-12 -maxPerm 100000 -minPoro 0.0001 -saturationThreshold 0.0001 -linsolver_tolerance 1e-12 -linsolver_verbosity 0 -linsolver_type 3 -fluids ow -krowxswirr -1 -krowyswirr -1 -krowzswirr -1 -doEclipseCheck true -critRelpermThresh 1e-6
-                         -output ${RESULT_PATH}/upscale_relperm_${gridname}.txt
-                         ${INPUT_DATA_PATH}/grids/${gridname}.grdecl ${INPUT_DATA_PATH}/grids/stonefile_benchmark.txt)
+                         -output ${RESULT_PATH}/upscale_relperm_${option}_${gridname}.txt
+                         ${INPUT_DATA_PATH}/grids/${gridname}.grdecl ${INPUT_DATA_PATH}/grids/${stonefilename}.txt)
 endmacro (add_test_upscale_relperm gridname)
 
 ###########################################################################
@@ -118,6 +119,14 @@ add_test_upscale_perm(Hummocky flp 9)
 
 # Add tests for different models
 add_test_upscale_relperm(benchmark_tiny_grid 20)
+add_test_upscale_relperm(EightCells 20)
+add_test_upscale_relperm(EightCells 30)
+add_test_upscale_relperm(EightCells BCl 30)
+add_test_upscale_relperm(EightCells surfaceTension 30)
+add_test_upscale_relperm(EightCells stonefileRT1&2 30)
+add_test_upscale_relperm(EightCells interpolate 30)
+add_test_upscale_relperm(EightCells critRelpermThresh 30)
+add_test_upscale_relperm(27cellsAniso stonefileAniso)
 
 if((DUNE_ISTL_VERSION_MAJOR GREATER 2) OR
    (DUNE_ISTL_VERSION_MAJOR EQUAL 2 AND DUNE_ISTL_VERSION_MINOR GREATER 2))
