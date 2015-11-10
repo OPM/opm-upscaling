@@ -67,18 +67,19 @@ endmacro (add_test_upscale_perm gridname bcs)
 #   - rows: Number of rows in result file that is to be compared
 # This macro assumes that ${gridname}.grdecl is found in directory ${INPUT_DATA_PATH}grids/
 # and that upscale_perm_BC${bcs}_${gridname}.txt is found in ${INPUT_DATA_PATH}reference_solutions
-macro (add_test_upscale_relperm gridname option rows)
+macro (add_test_upscale_relperm gridname stonefile1 stonefile2 option1 option2 option3 rows)
   # Add test that runs upscale_perm and outputs the results to file
-  opm_add_test(upscale_relperm_${option}_${gridname} NO_COMPILE
+  opm_add_test(upscale_relperm_BC${option1}_pts${option2}_surfTens${option3}_${stonefile1}_${stonefile2}_${gridname} NO_COMPILE
                EXE_NAME upscale_relperm
                DRIVER_ARGS ${INPUT_DATA_PATH} ${RESULT_PATH}
                            ${CMAKE_BINARY_DIR}/bin
-                           upscale_relperm_${option}_${gridname}
+                           upscale_relperm_BC${option1}_pts${option2}_surfTens${option3}_${stonefile1}_${stonefile2}_${gridname}
                            0.02 ${rows} 8
-               TEST_ARGS -bc f -points 20 -relPermCurve 2 -upscaleBothPhases true -jFunctionCurve 3 -surfaceTension 11 -gravity 0.0 -waterDensity 1.0 -oilDensity 0.6 -interpolate 0 -maxpoints 1000 -outputprecision 20 -maxPermContrast 1e7 -minPerm 1e-12 -maxPerm 100000 -minPoro 0.0001 -saturationThreshold 0.0001 -linsolver_tolerance 1e-12 -linsolver_verbosity 0 -linsolver_type 3 -fluids ow -krowxswirr -1 -krowyswirr -1 -krowzswirr -1 -doEclipseCheck true -critRelpermThresh 1e-6
-                         -output ${RESULT_PATH}/upscale_relperm_${option}_${gridname}.txt
-                         ${INPUT_DATA_PATH}/grids/${gridname}.grdecl ${INPUT_DATA_PATH}/grids/${stonefilename}.txt)
-endmacro (add_test_upscale_relperm gridname)
+		TEST_ARGS -bc {option1} -points {option2} -relPermCurve 2 -upscaleBothPhase true -jFunctionCurve 3 -surfaceTension {option3} -gravity 0 -waterDensity 1.0 -oilDensity 0.6 -interpolate 0 -maxpoints 1000 -outputprecision 20 -maxPermContrast 1e7 -minPerm 1e-12 -maxPerm 100000 -minPoro 0.0001 -saturationThreshold 0.0001 -linsolver_tolerance 1e-12 -linsolver_verbosity 0 -linsolver_type 3 -fluids ow -krowxswirr -1 -krowyswirr -1 -krowzswirr -1 -doEclipseCheck true -critRelpermThresh 1e-6
+#Default values:  TEST_ARGS -bc f -points 20 -relPermCurve 2 -upscaleBothPhases true -jFunctionCurve 3 -surfaceTension 11 -gravity 0.0 -waterDensity 1.0 -oilDensity 0.6 -interpolate 0 -maxpoints 1000 -outputprecision 20 -maxPermContrast 1e7 -minPerm 1e-12 -maxPerm 100000 -minPoro 0.0001 -saturationThreshold 0.0001 -linsolver_tolerance 1e-12 -linsolver_verbosity 0 -linsolver_type 3 -fluids ow -krowxswirr -1 -krowyswirr -1 -krowzswirr -1 -doEclipseCheck true -critRelpermThresh 1e-6
+                         -output ${RESULT_PATH}/upscale_relperm_BC${option1}_pts${option2}_surfTens${option3}_${stonefile1}_${stonefile2}_${gridname}.txt
+                         ${INPUT_DATA_PATH}/grids/${gridname}.grdecl ${INPUT_DATA_PATH}/grids/${stonefile1}.txt ${INPUT_DATA_PATH}/grids/${stonefile2}.txt) 
+endmacro (add_test_upscale_relperm gridname option1 option2 option3 option4)
 
 ###########################################################################
 # TEST: upscale_elasticity
@@ -118,15 +119,13 @@ add_test_upscale_perm(EightCells fl 6)
 add_test_upscale_perm(Hummocky flp 9)
 
 # Add tests for different models
-add_test_upscale_relperm(benchmark_tiny_grid 20)
-add_test_upscale_relperm(EightCells 20)
-add_test_upscale_relperm(EightCells 30)
-add_test_upscale_relperm(EightCells BCl 30)
-add_test_upscale_relperm(EightCells surfaceTension 30)
-add_test_upscale_relperm(EightCells stonefileRT1&2 30)
-add_test_upscale_relperm(EightCells interpolate 30)
-add_test_upscale_relperm(EightCells critRelpermThresh 30)
-add_test_upscale_relperm(27cellsAniso stonefileAniso)
+add_test_upscale_relperm(benchmark_tiny_grid stonefile_benchmark stonefile_benchmark f 20 11 20)
+add_test_upscale_relperm(EightCells stone1 stone1 f 20 11 20)
+add_test_upscale_relperm(EightCells stone1 stone1 f 30 11 30)
+add_test_upscale_relperm(EightCells stone1 stone1 l 30 11 30)
+add_test_upscale_relperm(EightCells stone1 stone1 f 30 45 30)
+add_test_upscale_relperm(EightCells stone1 stone2 f 30 11 30)
+add_test_upscale_relperm(27cellsAniso stoneAniso stoneAniso f 30 11 30)
 
 if((DUNE_ISTL_VERSION_MAJOR GREATER 2) OR
    (DUNE_ISTL_VERSION_MAJOR EQUAL 2 AND DUNE_ISTL_VERSION_MINOR GREATER 2))
