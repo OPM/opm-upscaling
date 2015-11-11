@@ -66,18 +66,22 @@ endmacro (add_test_upscale_perm gridname bcs)
 #   - rows: Number of rows in result file that is to be compared
 # This macro assumes that ${gridname}.grdecl is found in directory ${INPUT_DATA_PATH}grids/
 # and that upscale_perm_BC${bcs}_${gridname}.txt is found in ${INPUT_DATA_PATH}reference_solutions
-macro (add_test_upscale_relperm gridname rows)
+macro (add_test_upscale_relperm testname gridname stonefiles rows cols)
   # Add test that runs upscale_perm and outputs the results to file
-  opm_add_test(upscale_relperm_${gridname} NO_COMPILE
+  set(test_args ${ARGN}
+                -output ${RESULT_PATH}/upscale_relperm_${testname}.txt
+                ${INPUT_DATA_PATH}/grids/${gridname}.grdecl)
+  foreach(stonefile ${stonefiles})
+    list(APPEND test_args ${INPUT_DATA_PATH}/grids/${stonefile})
+  endforeach()
+  opm_add_test(upscale_relperm_${testname} NO_COMPILE
                EXE_NAME upscale_relperm
                DRIVER_ARGS ${INPUT_DATA_PATH} ${RESULT_PATH}
                            ${CMAKE_BINARY_DIR}/bin
-                           upscale_relperm_${gridname}
-                           0.02 ${rows} 8
-               TEST_ARGS -bc f -points 20 -relPermCurve 2 -upscaleBothPhases true -jFunctionCurve 3 -surfaceTension 11 -gravity 0.0 -waterDensity 1.0 -oilDensity 0.6 -interpolate 0 -maxpoints 1000 -outputprecision 20 -maxPermContrast 1e7 -minPerm 1e-12 -maxPerm 100000 -minPoro 0.0001 -saturationThreshold 0.0001 -linsolver_tolerance 1e-12 -linsolver_verbosity 0 -linsolver_type 3 -fluids ow -krowxswirr -1 -krowyswirr -1 -krowzswirr -1 -doEclipseCheck true -critRelpermThresh 1e-6
-                         -output ${RESULT_PATH}/upscale_relperm_${gridname}.txt
-                         ${INPUT_DATA_PATH}/grids/${gridname}.grdecl ${INPUT_DATA_PATH}/grids/stonefile_benchmark.txt)
-endmacro (add_test_upscale_relperm gridname)
+                           upscale_relperm_${testname}
+                           0.02 ${rows} ${cols}
+               TEST_ARGS ${test_args})
+endmacro ()
 
 ###########################################################################
 # TEST: upscale_elasticity
@@ -117,7 +121,29 @@ add_test_upscale_perm(EightCells fl 6)
 add_test_upscale_perm(Hummocky flp 9)
 
 # Add tests for different models
-add_test_upscale_relperm(benchmark_tiny_grid 20)
+add_test_upscale_relperm(BCf_pts20_surfTens11_stonefile_benchmark_stonefile_benchmark_benchmark_tiny_grid
+                         benchmark_tiny_grid stonefile_benchmark.txt 20 8
+                         -bc f -points 20 -relPermCurve 2 -upscaleBothPhases true
+                         -jFunctionCurve 3 -surfaceTension 11 -gravity 0.0
+                         -waterDensity 1.0 -oilDensity 0.6 -interpolate 0
+                         -maxpoints 1000 -outputprecision 20 -maxPermContrast 1e7
+                         -minPerm 1e-12 -maxPerm 100000 -minPoro 0.0001
+                         -saturationThreshold 0.0001 -linsolver_tolerance 1e-12
+                         -linsolver_verbosity 0 -linsolver_type 3 -fluids ow
+                         -krowxswirr -1 -krowyswirr -1 -krowzswirr -1
+                         -doEclipseCheck true -critRelpermThresh 1e-6)
+add_test_upscale_relperm(BCf_pts30_surfTens11_stone1_stone1_EightCells
+                         EightCells stone1.txt 30 8)
+add_test_upscale_relperm(BCf_pts20_surfTens11_stone1_stone1_EightCells
+                         EightCells stone1.txt 30 8 -points 20)
+add_test_upscale_relperm(BCl_pts30_surfTens11_stone1_stone1_EightCells
+                         EightCells stone1.txt 30 20 -bc l)
+add_test_upscale_relperm(BCf_pts30_surfTens45_stone1_stone1_EightCells
+                         EightCells stone1.txt 30 8 -surfaceTension 45)
+add_test_upscale_relperm(BCf_pts30_surfTens11_stone1_stone2_EightCells
+                         EightCells "stone1.txt;stone2.txt" 30 8)
+add_test_upscale_relperm(BCf_pts30_surfTens11_stoneAniso_stoneAniso_27cellsAniso
+                         27cellsAniso stoneAniso.txt 30 8)
 
 if((DUNE_ISTL_VERSION_MAJOR GREATER 2) OR
    (DUNE_ISTL_VERSION_MAJOR EQUAL 2 AND DUNE_ISTL_VERSION_MINOR GREATER 2))
