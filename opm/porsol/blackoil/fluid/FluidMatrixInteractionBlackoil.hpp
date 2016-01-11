@@ -50,14 +50,14 @@ public:
         const auto& swofTable = tables->getSwofTables().getTable<SwofTable>(0);
         const auto& sgofTable = tables->getSgofTables().getTable<SgofTable>(0);
 
-        const std::vector<double>& sw = swofTable.getSwColumn();
-        const std::vector<double>& krw = swofTable.getKrwColumn();
-        const std::vector<double>& krow = swofTable.getKrowColumn();
-        const std::vector<double>& pcow = swofTable.getPcowColumn();
-        const std::vector<double>& sg = sgofTable.getSgColumn();
-        const std::vector<double>& krg = sgofTable.getKrgColumn();
-        const std::vector<double>& krog = sgofTable.getKrogColumn();
-        const std::vector<double>& pcog = sgofTable.getPcogColumn();
+        std::vector<double> sw = swofTable.getSwColumn().vectorCopy();
+        std::vector<double> krw = swofTable.getKrwColumn().vectorCopy();
+        std::vector<double> krow = swofTable.getKrowColumn().vectorCopy();
+        std::vector<double> pcow = swofTable.getPcowColumn().vectorCopy();
+        std::vector<double> sg = sgofTable.getSgColumn().vectorCopy();
+        std::vector<double> krg = sgofTable.getKrgColumn().vectorCopy();
+        std::vector<double> krog = sgofTable.getKrogColumn().vectorCopy();
+        std::vector<double> pcog = sgofTable.getPcogColumn().vectorCopy();
 
         // Create tables for krw, krow, krg and krog.
         int samples = 200;
