@@ -50,13 +50,13 @@ namespace Opm
     /// Constructor
     MiscibilityLiveOil::MiscibilityLiveOil(const PvtoTable& pvtoTable)
     {
-        const auto &saturatedPvtoTable = *pvtoTable.getOuterTable();
+        const auto& saturatedPvtoTable = pvtoTable.getSaturatedTable();
 
         saturated_oil_table_.resize(4);
-        saturated_oil_table_[0] = saturatedPvtoTable.getPressureColumn();
-        saturated_oil_table_[1] = saturatedPvtoTable.getOilFormationFactorColumn();
-	    saturated_oil_table_[2] = saturatedPvtoTable.getOilViscosityColumn();
-	    saturated_oil_table_[3] = saturatedPvtoTable.getGasSolubilityColumn();
+        saturated_oil_table_[0] = saturatedPvtoTable.getColumn("P").vectorCopy();
+        saturated_oil_table_[1] = saturatedPvtoTable.getColumn("BO").vectorCopy();
+        saturated_oil_table_[2] = saturatedPvtoTable.getColumn("MU").vectorCopy();
+        saturated_oil_table_[3] = saturatedPvtoTable.getColumn("RS").vectorCopy();
 
         // store the inverse of Bo...
         int sz = saturated_oil_table_[1].size();
@@ -66,11 +66,11 @@ namespace Opm
 
         undersat_oil_tables_.resize(sz);
         for (int i=0; i<sz; ++i) {
-            const auto &undersaturatedPvtoTable = *pvtoTable.getInnerTable(i);
+            const auto &undersaturatedPvtoTable = pvtoTable.getUnderSaturatedTable(i);
 
-            undersat_oil_tables_[i][0] = undersaturatedPvtoTable.getPressureColumn();
-            undersat_oil_tables_[i][1] = undersaturatedPvtoTable.getOilFormationFactorColumn();
-            undersat_oil_tables_[i][2] = undersaturatedPvtoTable.getOilViscosityColumn();
+            undersat_oil_tables_[i][0] = undersaturatedPvtoTable.getColumn("P").vectorCopy();
+            undersat_oil_tables_[i][1] = undersaturatedPvtoTable.getColumn("BO").vectorCopy();
+            undersat_oil_tables_[i][2] = undersaturatedPvtoTable.getColumn("MU").vectorCopy();
             // store the inverted oil formation factor
             for (size_t j=0; j<undersat_oil_tables_[i][1].size(); ++j) {
                 undersat_oil_tables_[i][1][j] = 1.0/undersat_oil_tables_[i][1][j];

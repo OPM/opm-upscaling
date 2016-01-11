@@ -51,9 +51,9 @@ namespace Opm
     MiscibilityDead::MiscibilityDead(const Opm::PvdgTable& pvdgTable)
     {
         // Copy data
-        std::vector<double> press(pvdgTable.getPressureColumn());
-        std::vector<double> B_inv(pvdgTable.getFormationFactorColumn());
-        std::vector<double> visc(pvdgTable.getViscosityColumn());
+        std::vector<double> press = pvdgTable.getPressureColumn().vectorCopy( );
+        std::vector<double> B_inv = pvdgTable.getFormationFactorColumn().vectorCopy( );
+        std::vector<double> visc = pvdgTable.getViscosityColumn().vectorCopy( );
 
         const int sz = B_inv.size();
         for (int i = 0; i < sz; ++i) {
@@ -75,9 +75,9 @@ namespace Opm
     MiscibilityDead::MiscibilityDead(const Opm::PvdoTable& pvdoTable)
     {
         // Copy data
-        std::vector<double> press(pvdoTable.getPressureColumn());
-        std::vector<double> B_inv(pvdoTable.getFormationFactorColumn());
-        std::vector<double> visc(pvdoTable.getViscosityColumn());
+        std::vector<double> press = pvdoTable.getPressureColumn().vectorCopy( );
+        std::vector<double> B_inv = pvdoTable.getFormationFactorColumn().vectorCopy( );
+        std::vector<double> visc = pvdoTable.getViscosityColumn().vectorCopy( );
 
         const int sz = B_inv.size();
         for (int i = 0; i < sz; ++i) {

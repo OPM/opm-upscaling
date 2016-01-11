@@ -48,22 +48,22 @@ namespace Opm
     MiscibilityLiveGas::MiscibilityLiveGas(const Opm::PvtgTable& pvtgTable)
     {
         // GAS, PVTG
-        const auto &saturatedPvtgTable = *pvtgTable.getOuterTable();
+        const auto &saturatedPvtgTable = pvtgTable.getSaturatedTable();
 
         saturated_gas_table_.resize(4);
-        saturated_gas_table_[0] = saturatedPvtgTable.getPressureColumn();
-        saturated_gas_table_[1] = saturatedPvtgTable.getGasFormationFactorColumn();
-	    saturated_gas_table_[2] = saturatedPvtgTable.getGasViscosityColumn();
-	    saturated_gas_table_[3] = saturatedPvtgTable.getOilSolubilityColumn();
+        saturated_gas_table_[0] = saturatedPvtgTable.getColumn("PG").vectorCopy();
+        saturated_gas_table_[1] = saturatedPvtgTable.getColumn("BG").vectorCopy();
+        saturated_gas_table_[2] = saturatedPvtgTable.getColumn("MUG").vectorCopy();
+        saturated_gas_table_[3] = saturatedPvtgTable.getColumn("RV").vectorCopy();
 
         int sz = saturated_gas_table_[0].size();
         undersat_gas_tables_.resize(sz);
         for (int i=0; i<sz; ++i) {
-            const auto &undersaturatedPvtgTable = *pvtgTable.getInnerTable(i);
+            const auto &undersaturatedPvtgTable = pvtgTable.getUnderSaturatedTable(i);
 
-            undersat_gas_tables_[i][0] = undersaturatedPvtgTable.getOilSolubilityColumn();
-            undersat_gas_tables_[i][1] = undersaturatedPvtgTable.getGasFormationFactorColumn();
-            undersat_gas_tables_[i][2] = undersaturatedPvtgTable.getGasViscosityColumn();
+            undersat_gas_tables_[i][0] = undersaturatedPvtgTable.getColumn("RV").vectorCopy();
+            undersat_gas_tables_[i][1] = undersaturatedPvtgTable.getColumn("BG").vectorCopy();
+            undersat_gas_tables_[i][2] = undersaturatedPvtgTable.getColumn("MUG").vectorCopy();
         }
     }
 
