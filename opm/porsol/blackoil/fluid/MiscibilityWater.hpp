@@ -37,6 +37,9 @@
 #include "MiscibilityProps.hpp"
 #include <opm/common/ErrorMacros.hpp>
 
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+
 // Forward declaration.
 class PVTW;
 
