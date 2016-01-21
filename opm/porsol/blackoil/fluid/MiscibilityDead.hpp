@@ -41,6 +41,10 @@
 
 namespace Opm
 {
+
+    class PvdoTable;
+    class PvdgTable;
+
     class MiscibilityDead : public MiscibilityProps
     {
     public:

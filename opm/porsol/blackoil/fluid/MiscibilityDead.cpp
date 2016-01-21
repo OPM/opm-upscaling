@@ -33,6 +33,8 @@
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/core/utility/linearInterpolation.hpp>
 #include <opm/core/utility/buildUniformMonotoneTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PvdgTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PvdoTable.hpp>
 #include <boost/lexical_cast.hpp>
 #include <string>
 #include <fstream>

@@ -41,6 +41,9 @@
 
 namespace Opm
 {
+
+    class PvtoTable;
+
     class MiscibilityLiveOil : public MiscibilityProps
     {
     public:

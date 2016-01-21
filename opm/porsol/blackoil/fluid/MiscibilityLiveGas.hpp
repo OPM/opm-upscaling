@@ -40,6 +40,9 @@
 
 namespace Opm
 {
+
+    class PvtgTable;
+
     class MiscibilityLiveGas : public MiscibilityProps
     {
     public:
