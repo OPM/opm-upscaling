@@ -38,6 +38,7 @@
 
 #include <opm/core/io/eclipse/EclipseGridInspector.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 #include <fstream>
 #include <array>
