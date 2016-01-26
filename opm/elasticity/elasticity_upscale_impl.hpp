@@ -18,6 +18,9 @@
 #include <omp.h>
 #endif
 
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+
 namespace Opm {
 namespace Elasticity {
 
