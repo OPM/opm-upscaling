@@ -68,6 +68,8 @@
 #include <dune/common/mpihelper.hh>
 #endif
 
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
 #include <opm/core/utility/Units.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>

@@ -50,6 +50,8 @@
 #include <numeric> // for std::accumulate
 #include <sys/utsname.h>
 
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/upscaling/ParserAdditions.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 #include <opm/core/io/eclipse/EclipseGridInspector.hpp>
