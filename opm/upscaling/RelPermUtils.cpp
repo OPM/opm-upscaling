@@ -244,15 +244,15 @@ void RelPermUpscaleHelper::sanityCheckInput(Opm::DeckConstPtr deck,
       throw std::runtime_error("Error: Did not find SPECGRID, COORD, ZCORN, PORO and PERMX in Eclipse file.");
     }
 
-    poros    = deck->getKeyword("PORO")->getRawDoubleData();
-    perms[0] = deck->getKeyword("PERMX")->getRawDoubleData();
-    zcorns   = deck->getKeyword("ZCORN")->getRawDoubleData();
+    poros    = deck->getKeyword("PORO").getRawDoubleData();
+    perms[0] = deck->getKeyword("PERMX").getRawDoubleData();
+    zcorns   = deck->getKeyword("ZCORN").getRawDoubleData();
 
     // Load anisotropic (only diagonal supported) input if present in grid
     if (deck->hasKeyword("PERMY") && deck->hasKeyword("PERMZ")) {
         anisotropic_input = true;
-        perms[1] = deck->getKeyword("PERMY")->getRawDoubleData();
-        perms[2] = deck->getKeyword("PERMZ")->getRawDoubleData();
+        perms[1] = deck->getKeyword("PERMY").getRawDoubleData();
+        perms[2] = deck->getKeyword("PERMZ").getRawDoubleData();
         if (isMaster)
           std::cout << "Info: PERMY and PERMZ present, going into anisotropic input mode, no J-functions\n"
                     << "      Options -relPermCurve and -jFunctionCurve is meaningless.\n";
@@ -263,7 +263,7 @@ void RelPermUpscaleHelper::sanityCheckInput(Opm::DeckConstPtr deck,
     satnums.resize(poros.size(), 1);
 
     if (deck->hasKeyword("SATNUM")) {
-        satnums = deck->getKeyword("SATNUM")->getIntData();
+        satnums = deck->getKeyword("SATNUM").getIntData();
     }
     else {
         if (isMaster)

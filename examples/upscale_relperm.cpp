@@ -392,11 +392,11 @@ try
    finish = clock();   timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
    if (helper.isMaster) cout << " (" << timeused <<" secs)" << endl;
 
-   Opm::DeckRecordConstPtr specgridRecord = deck->getKeyword("SPECGRID")->getRecord(0);
+   const auto& specgridRecord = deck->getKeyword("SPECGRID").getRecord(0);
    std::array<int,3> res;
-   res[0] = specgridRecord->getItem("NX")->getInt(0);
-   res[1] = specgridRecord->getItem("NY")->getInt(0);
-   res[2] = specgridRecord->getItem("NZ")->getInt(0);
+   res[0] = specgridRecord.getItem("NX").get< int >(0);
+   res[1] = specgridRecord.getItem("NY").get< int >(0);
+   res[2] = specgridRecord.getItem("NZ").get< int >(0);
 
    const double minPerm = atof(options["minPerm"].c_str());
    const double maxPerm = atof(options["maxPerm"].c_str());

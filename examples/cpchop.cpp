@@ -353,12 +353,12 @@ try
                 // Calculate minimum and maximum water volume in each cell based on input pc-curves per rock type
                 // Create single-phase upscaling object to get poro and perm values from the grid
                 Opm::DeckConstPtr subdeck = ch.subDeck();
-                std::vector<double>  perms = subdeck->getKeyword("PERMX")->getRawDoubleData();
+                std::vector<double>  perms = subdeck->getKeyword("PERMX").getRawDoubleData();
                 Opm::SinglePhaseUpscaler upscaler;                
                 upscaler.init(subdeck, bctype, minpermSI,
                               residual_tolerance, linsolver_verbosity, linsolver_type, false);
-                std::vector<int>   satnums = subdeck->getKeyword("SATNUM")->getIntData();
-                std::vector<double>  poros = subdeck->getKeyword("PORO")->getSIDoubleData();
+                std::vector<int>   satnums = subdeck->getKeyword("SATNUM").getIntData();
+                std::vector<double>  poros = subdeck->getKeyword("PORO").getSIDoubleData();
                 std::vector<double> cellVolumes, cellPoreVolumes;
                 cellVolumes.resize(satnums.size(), 0.0);
                 cellPoreVolumes.resize(satnums.size(), 0.0);
@@ -492,10 +492,10 @@ try
 	    if (dips) {
 		Opm::DeckConstPtr subdeck = ch.subDeck();
 		std::vector<int>  griddims(3);
-		Opm::DeckRecordConstPtr specgridRecord(subdeck->getKeyword("SPECGRID")->getRecord(0));
-		griddims[0] = specgridRecord->getItem("NX")->getInt(0);
-		griddims[1] = specgridRecord->getItem("NY")->getInt(0);
-		griddims[2] = specgridRecord->getItem("NZ")->getInt(0);
+		const auto& specgridRecord = subdeck->getKeyword("SPECGRID").getRecord(0);
+		griddims[0] = specgridRecord.getItem("NX").get< int >(0);
+		griddims[1] = specgridRecord.getItem("NY").get< int >(0);
+		griddims[2] = specgridRecord.getItem("NZ").get< int >(0);
 
 		std::vector<double> xdips_subsample, ydips_subsample;
 
@@ -533,15 +533,15 @@ try
 		Opm::DeckConstPtr subdeck = ch.subDeck();
 		Opm::EclipseGridInspector subinspector(subdeck);
 		std::vector<int>  griddims(3);
-		Opm::DeckRecordConstPtr specgridRecord(subdeck->getKeyword("SPECGRID")->getRecord(0));
-		griddims[0] = specgridRecord->getItem("NX")->getInt(0);
-		griddims[1] = specgridRecord->getItem("NY")->getInt(0);
-		griddims[2] = specgridRecord->getItem("NZ")->getInt(0);
+		const auto& specgridRecord = subdeck->getKeyword("SPECGRID").getRecord(0);
+		griddims[0] = specgridRecord.getItem("NX").get< int >(0);
+		griddims[1] = specgridRecord.getItem("NY").get< int >(0);
+		griddims[2] = specgridRecord.getItem("NZ").get< int >(0);
 
 		int number_of_subsamplecells = griddims[0] * griddims[1] * griddims[2];
 
 		// If SATNUM is non-existent in input grid, this will fail:
-		std::vector<int> satnums = subdeck->getKeyword("SATNUM")->getIntData();
+		std::vector<int> satnums = subdeck->getKeyword("SATNUM").getIntData();
 
 		std::vector<double> rockvolumessubsample;
 		for (int cell_idx=0; cell_idx < number_of_subsamplecells; ++cell_idx) {

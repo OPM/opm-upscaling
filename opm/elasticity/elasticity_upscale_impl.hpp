@@ -592,8 +592,8 @@ IMPL_FUNC(void, loadMaterialsFromGrid(const std::string& file))
     Opm::ParseMode parseMode;
     Opm::DeckConstPtr deck(parser->parseFile(file , parseMode));
     if (deck->hasKeyword("YOUNGMOD") && deck->hasKeyword("POISSONMOD")) {
-      Emod = deck->getKeyword("YOUNGMOD")->getRawDoubleData();
-      Poiss = deck->getKeyword("POISSONMOD")->getRawDoubleData();
+      Emod = deck->getKeyword("YOUNGMOD").getRawDoubleData();
+      Poiss = deck->getKeyword("POISSONMOD").getRawDoubleData();
       std::vector<double>::const_iterator it = std::min_element(Poiss.begin(), Poiss.end());
       if (*it < 0) {
         std::cerr << "Auxetic material specified for cell " << it-Poiss.begin() << std::endl
@@ -601,8 +601,8 @@ IMPL_FUNC(void, loadMaterialsFromGrid(const std::string& file))
         exit(1);
       }
     } else if (deck->hasKeyword("LAMEMOD") && deck->hasKeyword("SHEARMOD")) {
-      std::vector<double> lame = deck->getKeyword("LAMEMOD")->getRawDoubleData();
-      std::vector<double> shear = deck->getKeyword("SHEARMOD")->getRawDoubleData();
+      std::vector<double> lame = deck->getKeyword("LAMEMOD").getRawDoubleData();
+      std::vector<double> shear = deck->getKeyword("SHEARMOD").getRawDoubleData();
       Emod.resize(lame.size());
       Poiss.resize(lame.size());
       for (size_t i=0;i<lame.size();++i) {
@@ -617,8 +617,8 @@ IMPL_FUNC(void, loadMaterialsFromGrid(const std::string& file))
         exit(1);
       }
     } else if (deck->hasKeyword("BULKMOD") && deck->hasKeyword("SHEARMOD")) {
-      std::vector<double> bulk = deck->getKeyword("BULKMOD")->getRawDoubleData();
-      std::vector<double> shear = deck->getKeyword("SHEARMOD")->getRawDoubleData();
+      std::vector<double> bulk = deck->getKeyword("BULKMOD").getRawDoubleData();
+      std::vector<double> shear = deck->getKeyword("SHEARMOD").getRawDoubleData();
       Emod.resize(bulk.size());
       Poiss.resize(bulk.size());
       for (size_t i=0;i<bulk.size();++i) {
@@ -634,16 +634,16 @@ IMPL_FUNC(void, loadMaterialsFromGrid(const std::string& file))
       }
     } else if (deck->hasKeyword("PERMX") && deck->hasKeyword("PORO")) {
       std::cerr << "WARNING: Using PERMX and PORO for elastic material properties" << std::endl;
-      Emod = deck->getKeyword("PERMX")->getRawDoubleData();
-      Poiss = deck->getKeyword("PORO")->getRawDoubleData();
+      Emod = deck->getKeyword("PERMX").getRawDoubleData();
+      Poiss = deck->getKeyword("PORO").getRawDoubleData();
     } else {
       std::cerr << "No material data found in eclipse file, aborting" << std::endl;
       exit(1);
     }
     if (deck->hasKeyword("SATNUM"))
-      satnum = deck->getKeyword("SATNUM")->getIntData();
+      satnum = deck->getKeyword("SATNUM").getIntData();
     if (deck->hasKeyword("RHO"))
-      rho = deck->getKeyword("RHO")->getRawDoubleData();
+      rho = deck->getKeyword("RHO").getRawDoubleData();
   }
   // scale E modulus of materials
   if (Escale > 0) {
@@ -752,7 +752,7 @@ IMPL_FUNC(void, loadMaterialsFromRocklist(const std::string& file,
     Opm::ParserPtr parser(new Opm::Parser());
     Opm::ParseMode parseMode;
     Opm::DeckConstPtr deck(parser->parseFile(file , parseMode));
-    std::vector<int> satnum = deck->getKeyword("SATNUM")->getIntData();
+    std::vector<int> satnum = deck->getKeyword("SATNUM").getIntData();
     std::vector<int> cells = gv.globalCell();
     for (size_t i=0;i<cells.size();++i) {
       int k = cells[i];

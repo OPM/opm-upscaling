@@ -84,11 +84,11 @@ int main(int argc, char** argv) try {
      * Find dips for every cell.
      */
 
-    Opm::DeckRecordConstPtr specgridRecord = deck->getKeyword("SPECGRID")->getRecord(0);
+    const auto& specgridRecord = deck->getKeyword("SPECGRID").getRecord(0);
     vector<int>  griddims(3);
-    griddims[0] = specgridRecord->getItem("NX")->getInt(0);
-    griddims[1] = specgridRecord->getItem("NY")->getInt(0);
-    griddims[2] = specgridRecord->getItem("NZ")->getInt(0);
+    griddims[0] = specgridRecord.getItem("NX").get< int >(0);
+    griddims[1] = specgridRecord.getItem("NY").get< int >(0);
+    griddims[2] = specgridRecord.getItem("NZ").get< int >(0);
     vector<double> xdips, ydips, cellvolumes;
     vector<int> cellidxs_i, cellidxs_j, cellidxs_k;
     
