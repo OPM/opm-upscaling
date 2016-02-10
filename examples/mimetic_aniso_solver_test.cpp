@@ -133,11 +133,11 @@ void build_grid(Opm::DeckConstPtr deck,
     cartDims[1] = g.dims[1] = insp.gridSize()[1];
     cartDims[2] = g.dims[2] = insp.gridSize()[2];
 
-    g.coord = &deck->getKeyword("COORD")->getSIDoubleData()[0];
-    g.zcorn = &deck->getKeyword("ZCORN")->getSIDoubleData()[0];
+    g.coord = &deck->getKeyword("COORD").getSIDoubleData()[0];
+    g.zcorn = &deck->getKeyword("ZCORN").getSIDoubleData()[0];
 
     if (deck->hasKeyword("ACTNUM")) {
-        g.actnum = &deck->getKeyword("ACTNUM")->getIntData()[0];
+        g.actnum = &deck->getKeyword("ACTNUM").getIntData()[0];
         grid.processEclipseFormat(g, z_tol, false, false);
     } else {
         std::vector<int> dflt_actnum(g.dims[0] * g.dims[1] * g.dims[2], 1);
