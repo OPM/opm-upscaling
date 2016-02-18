@@ -139,25 +139,25 @@ namespace Opm
         using namespace Opm;
 
 	// Get WELLSPECS data
-    Opm::DeckKeywordConstPtr welspecsKeyword = deck->getKeyword("WELSPECS");
-	const int num_welspecs = welspecsKeyword->size();
+    const auto& welspecsKeyword = deck->getKeyword("WELSPECS");
+	const int num_welspecs = welspecsKeyword.size();
 	well_names_.reserve(num_welspecs);
 	well_data_.reserve(num_welspecs);
 	for (int i=0; i<num_welspecs; ++i) {
-	    well_names_.push_back(welspecsKeyword->getRecord(i)->getItem("WELL")->getString(0));
+	    well_names_.push_back(welspecsKeyword.getRecord(i).getItem("WELL").get< std::string >(0));
 	    WellData wd;
 	    well_data_.push_back(wd);
             well_data_.back().reference_bhp_depth =
-                welspecsKeyword->getRecord(i)->getItem("REF_DEPTH")->getSIDouble(0);
+                welspecsKeyword.getRecord(i).getItem("REF_DEPTH").getSIDouble(0);
     }
 
 	// Get COMPDAT data   
-    Opm::DeckKeywordConstPtr compdatKeyword = deck->getKeyword("COMPDAT");
-	const int num_compdats  = compdatKeyword->size();
+    const auto& compdatKeyword = deck->getKeyword("COMPDAT");
+	const int num_compdats  = compdatKeyword.size();
     std::vector<std::vector<PerfData> > wellperf_data(num_welspecs);
 	for (int kw=0; kw<num_compdats; ++kw) {
-        Opm::DeckRecordConstPtr compdatRecord = compdatKeyword->getRecord(kw);
-	    std::string name = compdatRecord->getItem("WELL")->getString(0);
+        const auto& compdatRecord = compdatKeyword.getRecord(kw);
+	    std::string name = compdatRecord.getItem("WELL").get< std::string >(0);
 	    std::string::size_type len = name.find('*');
 	    if (len != std::string::npos) {
 		name = name.substr(0, len);
@@ -173,10 +173,10 @@ namespace Opm
 	    bool found = false;
 	    for (int wix=0; wix<num_welspecs; ++wix) {
 		if (well_names_[wix].compare(0,len, name) == 0) { //equal
-		    int ix = compdatRecord->getItem("I")->getInt(0) - 1;
-		    int jy = compdatRecord->getItem("J")->getInt(0) - 1;
-		    int kz1 = compdatRecord->getItem("K1")->getInt(0) - 1;
-		    int kz2 = compdatRecord->getItem("K2")->getInt(0) - 1;
+		    int ix = compdatRecord.getItem("I").get< int >(0) - 1;
+		    int jy = compdatRecord.getItem("J").get< int >(0) - 1;
+		    int kz1 = compdatRecord.getItem("K1").get< int >(0) - 1;
+		    int kz2 = compdatRecord.getItem("K2").get< int >(0) - 1;
             for (int kz = kz1; kz <= kz2; ++kz) {
                 int cart_grid_indx = ix + cpgdim[0]*(jy + cpgdim[1]*kz);
                 std::map<int, int>::const_iterator cgit = 
@@ -188,10 +188,10 @@ namespace Opm
                 int cell = cgit->second;
                 PerfData pd;
                 pd.cell = cell;
-                if (compdatRecord->getItem("CF")->getSIDouble(0) > 0.0) {
-                    pd.well_index = compdatRecord->getItem("CF")->getSIDouble(0);
+                if (compdatRecord.getItem("CF").getSIDouble(0) > 0.0) {
+                    pd.well_index = compdatRecord.getItem("CF").getSIDouble(0);
                 } else {
-                    double radius = 0.5*compdatRecord->getItem("DIAMETER")->getSIDouble(0);
+                    double radius = 0.5*compdatRecord.getItem("DIAMETER").getSIDouble(0);
                     if (radius <= 0.0) {
                         radius = 0.5*unit::feet;
                         OPM_MESSAGE("Warning: Well bore internal radius set to " << radius);
@@ -199,7 +199,7 @@ namespace Opm
                     Dune::FieldVector<double, 3> cubical = getCubeDim(grid, cell);
                     const Rock<3>::PermTensor permeability = rock.permeability(cell);  
                     pd.well_index = computeWellIndex(radius, cubical, permeability,
-                                                     compdatRecord->getItem("SKIN")->getSIDouble(0));
+                                                     compdatRecord.getItem("SKIN").getSIDouble(0));
                 }
                 wellperf_data[wix].push_back(pd);
             }
@@ -208,7 +208,7 @@ namespace Opm
         }
         }
 	    if (!found) {
-            OPM_THROW(std::runtime_error, "Undefined well name: " << compdatRecord->getItem("WELL")->getString(0)
+            OPM_THROW(std::runtime_error, "Undefined well name: " << compdatRecord.getItem("WELL").get< std::string >(0)
                       << " in COMPDAT");
 	    }
 	}
@@ -229,12 +229,12 @@ namespace Opm
 	// Get WCONINJE data
         injection_mixture_ = 0.0;
         if (deck->hasKeyword("WCONINJE")) {
-            Opm::DeckKeywordConstPtr wconinjeKeyword = deck->getKeyword("WCONINJE");
-            const int num_wconinjes = wconinjeKeyword->size();
+            const auto& wconinjeKeyword = deck->getKeyword("WCONINJE");
+            const int num_wconinjes = wconinjeKeyword.size();
             int injector_component = -1;
             for (int kw=0; kw<num_wconinjes; ++kw) {
-                Opm::DeckRecordConstPtr wconinjeRecord = wconinjeKeyword->getRecord(kw);
-                std::string name = wconinjeRecord->getItem("WELL")->getString(0);
+                const auto& wconinjeRecord = wconinjeKeyword.getRecord(kw);
+                std::string name = wconinjeRecord.getItem("WELL").get< std::string >(0);
                 std::string::size_type len = name.find('*');
                 if (len != std::string::npos) {
                     name = name.substr(0, len);
@@ -245,37 +245,37 @@ namespace Opm
                     if (well_names_[wix].compare(0,len, name) == 0) { //equal
                         well_found = true;
                         well_data_[wix].type = Injector;
-                        int m = inje_control_mode(wconinjeRecord->getItem("CMODE")->getString(0));
+                        int m = inje_control_mode(wconinjeRecord.getItem("CMODE").get< std::string >(0));
                         switch(m) {
                         case 0:  // RATE
                             well_data_[wix].control = Rate;
                             // TODO: convert rate to SI!
-                            well_data_[wix].target = wconinjeRecord->getItem("RATE")->getRawDouble(0);
+                            well_data_[wix].target = wconinjeRecord.getItem("RATE").get< double >(0);
                             break;
                         case 1:  // RESV
                             well_data_[wix].control = Rate;
                             // TODO: convert rate to SI!
-                            well_data_[wix].target = wconinjeRecord->getItem("RESV")->getRawDouble(0);
+                            well_data_[wix].target = wconinjeRecord.getItem("RESV").get< double >(0);
                             break;
                         case 2:  // BHP
                             well_data_[wix].control = Pressure;
-                            well_data_[wix].target = wconinjeRecord->getItem("BHP")->getSIDouble(0);
+                            well_data_[wix].target = wconinjeRecord.getItem("BHP").getSIDouble(0);
                             break;
                         case 3:  // THP
                             well_data_[wix].control = Pressure;
-                            well_data_[wix].target = wconinjeRecord->getItem("THP")->getSIDouble(0);
+                            well_data_[wix].target = wconinjeRecord.getItem("THP").getSIDouble(0);
                             break;
                         default:
                             OPM_THROW(std::runtime_error, "Unknown well control mode; WCONIJE  = "
-                                  << wconinjeRecord->getItem("CMODE")->getString(0)
+                                  << wconinjeRecord.getItem("CMODE").get< std::string >(0)
                                   << " in input file");
                         }
                         int itp = -1;
-                        if (wconinjeRecord->getItem("TYPE")->getString(0) == "WATER") {
+                        if (wconinjeRecord.getItem("TYPE").get< std::string >(0) == "WATER") {
                             itp = Water;
-                        } else if (wconinjeRecord->getItem("TYPE")->getString(0) == "OIL") {
+                        } else if (wconinjeRecord.getItem("TYPE").get< std::string >(0) == "OIL") {
                             itp = Oil;
-                        } else if (wconinjeRecord->getItem("TYPE")->getString(0) == "GAS") {
+                        } else if (wconinjeRecord.getItem("TYPE").get< std::string >(0) == "GAS") {
                             itp = Gas;
                         }
                         if (itp == -1 || (injector_component != -1 && itp != injector_component)) {
@@ -290,7 +290,7 @@ namespace Opm
                     }
                 }
                 if (!well_found) {
-                    OPM_THROW(std::runtime_error, "Undefined well name: " << wconinjeRecord->getItem("WELL")->getString(0)
+                    OPM_THROW(std::runtime_error, "Undefined well name: " << wconinjeRecord.getItem("WELL").get< std::string >(0)
                           << " in WCONINJE");
                 }
             }
@@ -309,11 +309,11 @@ namespace Opm
 
 	// Get WCONPROD data
         if (deck->hasKeyword("WCONPROD")) {
-            Opm::DeckKeywordConstPtr wconprodKeyword = deck->getKeyword("WCONPROD");
-            const int num_wconprods = wconprodKeyword->size();
+            const auto& wconprodKeyword = deck->getKeyword("WCONPROD");
+            const int num_wconprods = wconprodKeyword.size();
             for (int kw=0; kw<num_wconprods; ++kw) {
-                Opm::DeckRecordConstPtr wconprodRecord = wconprodKeyword->getRecord(kw);
-                std::string name = wconprodRecord->getItem("WELL")->getString(0);
+                const auto& wconprodRecord = wconprodKeyword.getRecord(kw);
+                std::string name = wconprodRecord.getItem("WELL").get< std::string >(0);
                 std::string::size_type len = name.find('*');
                 if (len != std::string::npos) {
                     name = name.substr(0, len);
@@ -324,45 +324,45 @@ namespace Opm
                     if (well_names_[wix].compare(0,len, name) == 0) { //equal
                         well_found = true;
                         well_data_[wix].type = Producer;
-                        int m = prod_control_mode(wconprodRecord->getItem("CMODE")->getString(0));
+                        int m = prod_control_mode(wconprodRecord.getItem("CMODE").get< std::string >(0));
                         switch(m) {
                         case 0:  // ORAT
                             well_data_[wix].control = Rate;
-                            well_data_[wix].target = wconprodRecord->getItem("ORAT")->getSIDouble(0);
+                            well_data_[wix].target = wconprodRecord.getItem("ORAT").getSIDouble(0);
                             break;
                         case 1:  // WRAT
                             well_data_[wix].control = Rate;
-                            well_data_[wix].target = wconprodRecord->getItem("WRAT")->getSIDouble(0);
+                            well_data_[wix].target = wconprodRecord.getItem("WRAT").getSIDouble(0);
                             break;
                         case 2:  // GRAT
                             well_data_[wix].control = Rate;
-                            well_data_[wix].target = wconprodRecord->getItem("GRAT")->getSIDouble(0);
+                            well_data_[wix].target = wconprodRecord.getItem("GRAT").getSIDouble(0);
                             break;
                         case 3:  // LRAT
                             well_data_[wix].control = Rate;
-                            well_data_[wix].target = wconprodRecord->getItem("LRAT")->getSIDouble(0);
+                            well_data_[wix].target = wconprodRecord.getItem("LRAT").getSIDouble(0);
                             break;
                         case 4:  // RESV 
                             well_data_[wix].control = Rate;
-                            well_data_[wix].target = wconprodRecord->getItem("RESV")->getSIDouble(0);
+                            well_data_[wix].target = wconprodRecord.getItem("RESV").getSIDouble(0);
                             break;
                         case 5:  // BHP
                             well_data_[wix].control = Pressure; 
-                            well_data_[wix].target = wconprodRecord->getItem("BHP")->getSIDouble(0);
+                            well_data_[wix].target = wconprodRecord.getItem("BHP").getSIDouble(0);
                             break;
                         case 6:  // THP 
                             well_data_[wix].control = Pressure;
-                            well_data_[wix].target = wconprodRecord->getItem("THP")->getSIDouble(0);
+                            well_data_[wix].target = wconprodRecord.getItem("THP").getSIDouble(0);
                             break;
                         default:
                             OPM_THROW(std::runtime_error, "Unknown well control mode; WCONPROD  = "
-                                      << wconprodRecord->getItem("CMODE")->getString(0)
+                                      << wconprodRecord.getItem("CMODE").get< std::string >(0)
                                       << " in input file");
                         }
                     }
                 }
                 if (!well_found) {
-                    OPM_THROW(std::runtime_error, "Undefined well name: " << wconprodRecord->getItem("WELL")->getString(0)
+                    OPM_THROW(std::runtime_error, "Undefined well name: " << wconprodRecord.getItem("WELL").get< std::string >(0)
                           << " in WCONPROD");
                 }
             }
@@ -370,11 +370,11 @@ namespace Opm
 
 	// Get WELTARG data
         if (deck->hasKeyword("WELTARG")) {
-            Opm::DeckKeywordConstPtr weltargKeyword = deck->getKeyword("WELTARG");
-            const int num_weltargs  = weltargKeyword->size();
+            const auto& weltargKeyword = deck->getKeyword("WELTARG");
+            const int num_weltargs  = weltargKeyword.size();
             for (int kw=0; kw<num_weltargs; ++kw) {
-                Opm::DeckRecordConstPtr weltargRecord = weltargKeyword->getRecord(kw);
-                std::string name = weltargRecord->getItem("WELL")->getString(0);
+                const auto& weltargRecord = weltargKeyword.getRecord(kw);
+                std::string name = weltargRecord.getItem("WELL").get< std::string >(0);
                 std::string::size_type len = name.find('*');
                 if (len != std::string::npos) {
                     name = name.substr(0, len);
@@ -384,12 +384,12 @@ namespace Opm
                     if (well_names_[wix].compare(0,len, name) == 0) { //equal
                         well_found = true;
                         // TODO: convert to SI!
-                        well_data_[wix].target = weltargRecord->getItem("NEW_VALUE")->getRawDouble(0);
+                        well_data_[wix].target = weltargRecord.getItem("NEW_VALUE").get< double >(0);
                         break;
                     }
                 }
                 if (!well_found) {
-                    OPM_THROW(std::runtime_error, "Undefined well name: " << weltargRecord->getItem("WELL")->getString(0)
+                    OPM_THROW(std::runtime_error, "Undefined well name: " << weltargRecord.getItem("WELL").get< std::string >(0)
                           << " in WELTARG");
                 }
             }

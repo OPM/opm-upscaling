@@ -118,7 +118,7 @@ namespace Opm
         porosity_.assign(global_cell.size(), 1.0);
 
         if (deck->hasKeyword("PORO")) {
-            const std::vector<double>& poro = deck->getKeyword("PORO")->getSIDoubleData();
+            const std::vector<double>& poro = deck->getKeyword("PORO").getSIDoubleData();
 
             for (int c = 0; c < int(porosity_.size()); ++c) {
                 porosity_[c] = poro[global_cell[c]];

@@ -49,10 +49,10 @@ namespace Opm
             fmi_params_.init(deck);
             // FluidSystemBlackoil<>::init(parser);
             pvt_.init(deck);
-            Opm::DeckRecordConstPtr densityRecord = deck->getKeyword("DENSITY")->getRecord(0);
-            surface_densities_[Oil] = densityRecord->getItem("OIL")->getSIDouble(0);
-            surface_densities_[Water] = densityRecord->getItem("WATER")->getSIDouble(0);
-            surface_densities_[Gas] = densityRecord->getItem("GAS")->getSIDouble(0);
+            const auto& densityRecord = deck->getKeyword("DENSITY").getRecord(0);
+            surface_densities_[Oil] = densityRecord.getItem("OIL").getSIDouble(0);
+            surface_densities_[Water] = densityRecord.getItem("WATER").getSIDouble(0);
+            surface_densities_[Gas] = densityRecord.getItem("GAS").getSIDouble(0);
         }
 
         FluidState computeState(PhaseVec phase_pressure, CompVec z) const

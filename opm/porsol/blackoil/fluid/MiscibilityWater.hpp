@@ -51,15 +51,15 @@ namespace Opm
     public:
         typedef std::vector<std::vector<double> > table_t;
 
-        MiscibilityWater(DeckKeywordConstPtr pvtwKeyword)
+        MiscibilityWater(const DeckKeyword& pvtwKeyword)
         {
-            auto pvtwRecord = pvtwKeyword->getRecord(0);
-            ref_press_ = pvtwRecord->getItem("P_REF")->getSIDouble(0);
-            ref_B_     = pvtwRecord->getItem("WATER_VOL_FACTOR")->getSIDouble(0);
-            comp_      = pvtwRecord->getItem("WATER_COMPRESSIBILITY")->getSIDouble(0);
-            viscosity_ = pvtwRecord->getItem("WATER_VISCOSITY")->getSIDouble(0);
+            const auto& pvtwRecord = pvtwKeyword.getRecord(0);
+            ref_press_ = pvtwRecord.getItem("P_REF").getSIDouble(0);
+            ref_B_     = pvtwRecord.getItem("WATER_VOL_FACTOR").getSIDouble(0);
+            comp_      = pvtwRecord.getItem("WATER_COMPRESSIBILITY").getSIDouble(0);
+            viscosity_ = pvtwRecord.getItem("WATER_VISCOSITY").getSIDouble(0);
 
-            if (pvtwRecord->getItem("WATER_VISCOSIBILITY")->getSIDouble(0) != 0.0) {
+            if (pvtwRecord.getItem("WATER_VISCOSIBILITY").getSIDouble(0) != 0.0) {
                 OPM_THROW(std::runtime_error, "MiscibilityWater does not support 'viscosibility'.");
             }
         }
@@ -74,14 +74,14 @@ namespace Opm
         }
 
         // WTF?? we initialize a class for water from a keyword for oil?
-        void initFromPvcdo(DeckKeywordConstPtr pvcdoKeyword)
+        void initFromPvcdo(const DeckKeyword& pvcdoKeyword)
         {
-            auto pvcdoRecord = pvcdoKeyword->getRecord(0);
-            ref_press_ = pvcdoRecord->getItem("P_REF")->getSIDouble(0);
-            ref_B_     = pvcdoRecord->getItem("OIL_VOL_FACTOR")->getSIDouble(0);
-            comp_      = pvcdoRecord->getItem("OIL_COMPRESSIBILITY")->getSIDouble(0);
-            viscosity_ = pvcdoRecord->getItem("OIL_VISCOSITY")->getSIDouble(0);
-            if (pvcdoRecord->getItem("OIL_VISCOSIBILITY")->getSIDouble(0) != 0.0) {
+            const auto& pvcdoRecord = pvcdoKeyword.getRecord(0);
+            ref_press_ = pvcdoRecord.getItem("P_REF").getSIDouble(0);
+            ref_B_     = pvcdoRecord.getItem("OIL_VOL_FACTOR").getSIDouble(0);
+            comp_      = pvcdoRecord.getItem("OIL_COMPRESSIBILITY").getSIDouble(0);
+            viscosity_ = pvcdoRecord.getItem("OIL_VISCOSITY").getSIDouble(0);
+            if (pvcdoRecord.getItem("OIL_VISCOSIBILITY").getSIDouble(0) != 0.0) {
                 OPM_THROW(std::runtime_error, "MiscibilityWater does not support 'viscosibility'.");
             }
         }

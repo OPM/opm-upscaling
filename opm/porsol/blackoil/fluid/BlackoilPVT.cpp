@@ -49,11 +49,11 @@ namespace Opm
 
 	// Surface densities. Accounting for different orders in eclipse and our code.
 	if (deck->hasKeyword("DENSITY")) {
-        Opm::DeckRecordConstPtr densityRecord =
-            deck->getKeyword("DENSITY")->getRecord(/*regionIdx=*/0);
-	    densities_[Aqua]   = densityRecord->getItem("WATER")->getSIDouble(0);
-	    densities_[Vapour] = densityRecord->getItem("GAS")->getSIDouble(0);
-	    densities_[Liquid] = densityRecord->getItem("OIL")->getSIDouble(0);
+        const auto& densityRecord =
+            deck->getKeyword("DENSITY").getRecord(/*regionIdx=*/0);
+	    densities_[Aqua]   = densityRecord.getItem("WATER").getSIDouble(0);
+	    densities_[Vapour] = densityRecord.getItem("GAS").getSIDouble(0);
+	    densities_[Liquid] = densityRecord.getItem("OIL").getSIDouble(0);
 	} else {
 	    OPM_THROW(std::runtime_error, "Input is missing DENSITY\n");
 	}
