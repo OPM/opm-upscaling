@@ -357,9 +357,9 @@ try
 
    const int points                = atoi(options["points"].c_str());
 
-   vector<int> satnums   = deck->getKeyword("SATNUM")->getIntData();
-   vector<double> poros  = deck->getKeyword("PORO")->getRawDoubleData();
-   vector<double> permxs = deck->getKeyword("PERMX")->getRawDoubleData();
+   vector<int> satnums   = deck->getKeyword("SATNUM").getIntData();
+   vector<double> poros  = deck->getKeyword("PORO").getRawDoubleData();
+   vector<double> permxs = deck->getKeyword("PERMX").getRawDoubleData();
    const double minPerm = atof(options["minPerm"].c_str()); 
    const double minPoro = atof(options["minPoro"].c_str());
 
@@ -462,11 +462,11 @@ try
      (crop top and bottom). These modifications ruin the computations for 
      fixed and linear boundary conditions.
    */
-   Opm::DeckRecordConstPtr specgridRecord = deck->getKeyword("SPECGRID")->getRecord(0);
+   const auto& specgridRecord = deck->getKeyword("SPECGRID").getRecord(0);
    vector<int>  griddims(3);
-   griddims[0] = specgridRecord->getItem("NX")->getInt(0);
-   griddims[1] = specgridRecord->getItem("NY")->getInt(0);
-   griddims[2] = specgridRecord->getItem("NZ")->getInt(0);
+   griddims[0] = specgridRecord.getItem("NX").get< int >(0);
+   griddims[1] = specgridRecord.getItem("NY").get< int >(0);
+   griddims[2] = specgridRecord.getItem("NZ").get< int >(0);
    SinglePhaseUpscaler upscaler;
    double linsolver_tolerance = atof(options["linsolver_tolerance"].c_str());
    int linsolver_verbosity    = atoi(options["linsolver_verbosity"].c_str());

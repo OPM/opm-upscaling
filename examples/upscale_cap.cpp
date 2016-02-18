@@ -243,14 +243,14 @@ try
        usageandexit();  
    }  
    
-   vector<int>   satnums = deck->getKeyword("SATNUM")->getIntData();  
-   vector<double>  poros = deck->getKeyword("PORO")->getRawDoubleData();
-   vector<double> permxs = deck->getKeyword("PERMX")->getRawDoubleData();
+   vector<int>   satnums = deck->getKeyword("SATNUM").getIntData();  
+   vector<double>  poros = deck->getKeyword("PORO").getRawDoubleData();
+   vector<double> permxs = deck->getKeyword("PERMX").getRawDoubleData();
    vector<int>  griddims(3);
-   Opm::DeckRecordConstPtr specgridRecord(deck->getKeyword("SPECGRID")->getRecord(0));
-   griddims[0] = specgridRecord->getItem("NX")->getInt(0);
-   griddims[1] = specgridRecord->getItem("NY")->getInt(0);
-   griddims[2] = specgridRecord->getItem("NZ")->getInt(0);
+   const auto& specgridRecord = deck->getKeyword("SPECGRID").getRecord(0);
+   griddims[0] = specgridRecord.getItem("NX").get< int >(0);
+   griddims[1] = specgridRecord.getItem("NY").get< int >(0);
+   griddims[2] = specgridRecord.getItem("NZ").get< int >(0);
 
    unsigned int maxSatnum = 0;
    const double maxPermContrast = atof(options["maxPermContrast"].c_str());
