@@ -283,11 +283,11 @@ try
     start = clock();
     helper.sanityCheckInput(deck, minPerm, maxPerm, minPoro);
 
-    Opm::DeckRecordConstPtr specgridRecord(deck->getKeyword("SPECGRID")->getRecord(0));
+    const Opm::DeckRecord& specgridRecord(deck->getKeyword("SPECGRID").getRecord(0));
     std::array<int,3> res;
-    res[0] = specgridRecord->getItem("NX")->getInt(0);
-    res[1] = specgridRecord->getItem("NY")->getInt(0);
-    res[2] = specgridRecord->getItem("NZ")->getInt(0);
+    res[0] = specgridRecord.getItem("NX").get<int>(0);
+    res[1] = specgridRecord.getItem("NY").get<int>(0);
+    res[2] = specgridRecord.getItem("NZ").get<int>(0);
 
     /***************************************************************************
      * Step 3:
