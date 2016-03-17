@@ -108,7 +108,9 @@ endmacro (add_test_upscale_elasticity gridname method rows)
 
 # Make sure that we build the helper executable before running tests
 # (the "tests" target is setup in OpmLibMain.cmake)
-add_custom_target(test-suite)
+if(NOT TARGET test-suite)
+  add_custom_target(test-suite)
+endif()
 add_dependencies (test-suite datafiles upscale_perm upscale_relperm)
 add_dependencies (test-suite compare_upscaling_results)
 opm_set_test_driver(${PROJECT_SOURCE_DIR}/tests/runtest.sh "")

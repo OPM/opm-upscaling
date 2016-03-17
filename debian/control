@@ -6,7 +6,7 @@ Build-Depends: build-essential, debhelper (>= 9), libboost-filesystem-dev,
                libsuperlu3-dev, gfortran, libsuitesparse-dev, libopm-core-dev,
                libdune-common-dev, libdune-istl-dev, cmake, libtinyxml-dev, bc,
                libert.ecl-dev, git, zlib1g-dev, libtool, libopm-material-dev,
-               libdune-cornerpoint-dev, libdune-grid-dev, libopm-porsol-dev,
+               libdune-cornerpoint-dev, libdune-grid-dev,
                doxygen, texlive-latex-extra, texlive-latex-recommended, ghostscript,
                libopm-parser-dev, libboost-iostreams-dev, pkg-config,
                libopm-common-dev
