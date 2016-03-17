@@ -188,7 +188,7 @@ try
         usageandexit();
     }
     // Initialize.
-    Opm::ParseMode parseMode;
+    Opm::ParseContext parseMode;
     Opm::parameter::ParameterGroup param(argc, argv);
     std::string gridfilename = param.get<std::string>("gridfilename");
     Opm::ParserPtr parser(new Opm::Parser());
