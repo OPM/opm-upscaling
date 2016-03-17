@@ -23,7 +23,7 @@
 #include <opm/core/utility/UniformTableLinear.hpp>
 #include <opm/core/utility/buildUniformMonotoneTable.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
@@ -46,8 +46,8 @@ public:
     typedef ScalarT Scalar;
     void init(Opm::DeckConstPtr deck)
     {
-        ParseMode parseMode;
-        EclipseState eclipseState(deck , parseMode);
+        ParseContext parseContext;
+        EclipseState eclipseState(deck , parseContext);
         // Extract input data.
         const auto& tables    = eclipseState.getTableManager();
         const auto& swofTable = tables->getSwofTables().getTable<SwofTable>(0);

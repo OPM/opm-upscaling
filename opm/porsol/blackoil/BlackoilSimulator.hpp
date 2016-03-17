@@ -30,7 +30,7 @@
 #include <opm/porsol/blackoil/BlackoilInitialization.hpp>
 #include <opm/porsol/common/SimulatorUtilities.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <boost/filesystem/convenience.hpp>
 #include <boost/lexical_cast.hpp>
@@ -117,9 +117,9 @@ init(const Opm::parameter::ParameterGroup& param)
     using namespace Opm;
     std::string fileformat = param.getDefault<std::string>("fileformat", "cartesian");
     if (fileformat == "eclipse") {
-        Opm::ParseMode parseMode;
+        Opm::ParseContext parseContext;
         Opm::ParserPtr parser(new Opm::Parser());
-        Opm::DeckConstPtr deck = parser->parseFile(param.get<std::string>("filename") , parseMode);
+        Opm::DeckConstPtr deck = parser->parseFile(param.get<std::string>("filename") , parseContext);
         double z_tolerance = param.getDefault<double>("z_tolerance", 0.0);
         bool periodic_extension = param.getDefault<bool>("periodic_extension", false);
         bool turn_normals = param.getDefault<bool>("turn_normals", false);
@@ -143,9 +143,9 @@ init(const Opm::parameter::ParameterGroup& param)
         OPM_MESSAGE("Warning: For generated cartesian grids, we use uniform rock properties.");
         rock_.init(grid_.size(0), default_poro, default_perm);
 
-        Opm::ParseMode parseMode;
+        Opm::ParseContext parseContext;
         Opm::ParserPtr parser(new Opm::Parser());
-        Opm::DeckConstPtr deck = parser->parseFile(param.get<std::string>("filename") , parseMode);
+        Opm::DeckConstPtr deck = parser->parseFile(param.get<std::string>("filename") , parseContext);
         fluid_.init(deck);
         wells_.init(deck, grid_, rock_);
     } else {
