@@ -19,7 +19,7 @@
 #endif
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
 namespace Opm {
 namespace Elasticity {
@@ -589,8 +589,8 @@ IMPL_FUNC(void, loadMaterialsFromGrid(const std::string& file))
     Poiss.insert(Poiss.begin(),cells,0.38f);
   } else {
     Opm::ParserPtr parser(new Opm::Parser());
-    Opm::ParseMode parseMode;
-    Opm::DeckConstPtr deck(parser->parseFile(file , parseMode));
+    Opm::ParseContext parseContext;
+    Opm::DeckConstPtr deck(parser->parseFile(file , parseContext));
     if (deck->hasKeyword("YOUNGMOD") && deck->hasKeyword("POISSONMOD")) {
       Emod = deck->getKeyword("YOUNGMOD").getRawDoubleData();
       Poiss = deck->getKeyword("POISSONMOD").getRawDoubleData();
@@ -750,8 +750,8 @@ IMPL_FUNC(void, loadMaterialsFromRocklist(const std::string& file,
     }
   } else {
     Opm::ParserPtr parser(new Opm::Parser());
-    Opm::ParseMode parseMode;
-    Opm::DeckConstPtr deck(parser->parseFile(file , parseMode));
+    Opm::ParseContext parseContext;
+    Opm::DeckConstPtr deck(parser->parseFile(file , parseContext));
     std::vector<int> satnum = deck->getKeyword("SATNUM").getIntData();
     std::vector<int> cells = gv.globalCell();
     for (size_t i=0;i<cells.size();++i) {
