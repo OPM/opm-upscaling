@@ -192,7 +192,7 @@ int upscale(int varnum, char** vararg) {
     cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... ";
     flush(cout);   start = clock();
 
-    Opm::ParseMode parseMode;
+    Opm::ParseContext parseMode;
     Opm::ParserPtr parser(new Opm::Parser());
     Opm::addNonStandardUpscalingKeywords(parser);
     Opm::DeckConstPtr deck(parser->parseFile(ECLIPSEFILENAME , parseMode));

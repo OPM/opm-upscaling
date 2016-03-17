@@ -69,7 +69,7 @@ int main(int argc, char** argv) try {
 	param.displayUsage();
     }
 
-    Opm::ParseMode parseMode;
+    Opm::ParseContext parseMode;
     Opm::ParserPtr parser(new Opm::Parser());
     Opm::DeckConstPtr deck(parser->parseFile(gridfilename , parseMode));
     Opm::EclipseGridInspector gridinspector(deck);

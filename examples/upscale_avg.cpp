@@ -161,7 +161,7 @@ int main(int varnum, char** vararg) try {
     // eclParser_p is here a pointer to an object of type Opm::EclipseGridParser
     // (this pointer trick is necessary for the try-catch-clause to work)
     
-   Opm::ParseMode parseMode;
+   Opm::ParseContext parseMode;
    Opm::ParserPtr parser(new Opm::Parser());
    Opm::addNonStandardUpscalingKeywords(parser);
    Opm::DeckConstPtr deck(parser->parseFile(ECLIPSEFILENAME , parseMode));

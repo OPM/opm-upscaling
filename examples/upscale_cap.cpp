@@ -231,7 +231,7 @@ try
    eclipsefile.close(); 
 
    cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... " << endl;
-   Opm::ParseMode parseMode;
+   Opm::ParseContext parseMode;
    Opm::ParserPtr parser(new Opm::Parser());
    Opm::addNonStandardUpscalingKeywords(parser);
    Opm::DeckConstPtr deck(parser->parseFile(ECLIPSEFILENAME , parseMode));
