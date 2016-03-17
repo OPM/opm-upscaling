@@ -21,27 +21,17 @@
 #define OPM_UPSCALING_PARSER_ADDITIONS_HPP
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
-#include <opm/json/JsonObject.hpp>
 
 namespace Opm {
 
-/*!
- * \brief This function registers the non-standard keywords used by
- *        opm-upscaling in a parser object.
- *
- * The name of this function is intentionally long and awkward. This
- * is to discourage its use unless it is *really* necessary!
- */
-inline void addNonStandardUpscalingKeywords(Opm::ParserPtr parser)
-{
-    const char *rhoJsonData =
-        "{\"name\" : \"RHO\", \"sections\" : [], \"data\" : {\"value_type\" : \"DOUBLE\" }}\n";
-
-    Json::JsonObject rhoJson(rhoJsonData);
-    parser->addParserKeyword( rhoJson );
-}
-
+    /*!
+     * \brief This function registers non-standard keywords used by
+     *        opm-upscaling in a parser object.
+     *
+     * The name of this function is intentionally long and awkward. This is
+     * to discourage its use unless it is *really* necessary!
+     */
+    void addNonStandardUpscalingKeywords(Parser& parser);
 }
 
 #endif

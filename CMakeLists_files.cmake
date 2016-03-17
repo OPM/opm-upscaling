@@ -34,6 +34,7 @@ list (APPEND TEST_SOURCE_FILES
 	)
 
 list(APPEND MAIN_SOURCE_FILES
+	opm/upscaling/ParserAdditions.cpp
 	opm/upscaling/RelPermUtils.cpp
 	opm/porsol/blackoil/fluid/BlackoilPVT.cpp
 	opm/porsol/blackoil/fluid/MiscibilityDead.cpp

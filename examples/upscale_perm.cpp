@@ -48,6 +48,7 @@
 #include <ctime>
 #include <fstream>
 #include <iomanip>
+#include <ctime>
 #include <iostream>
 #include <memory>
 #include <sstream>
@@ -195,8 +196,8 @@ int upscale(int varnum, char** vararg) {
     flush(cout);   start = clock();
 
     Opm::ParseContext parseMode;
-    Opm::ParserPtr parser(new Opm::Parser());
-    Opm::addNonStandardUpscalingKeywords(parser);
+    auto parser = std::make_shared<Opm::Parser>();
+    Opm::addNonStandardUpscalingKeywords(*parser);
     Opm::DeckConstPtr deck(parser->parseFile(ECLIPSEFILENAME , parseMode));
 
     finish = clock();   timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;

@@ -162,8 +162,8 @@ int main(int varnum, char** vararg) try {
     // (this pointer trick is necessary for the try-catch-clause to work)
     
    Opm::ParseContext parseMode;
-   Opm::ParserPtr parser(new Opm::Parser());
-   Opm::addNonStandardUpscalingKeywords(parser);
+   auto parser = std::make_shared<Opm::Parser>();
+   Opm::addNonStandardUpscalingKeywords(*parser);
    Opm::DeckConstPtr deck(parser->parseFile(ECLIPSEFILENAME , parseMode));
 
     Opm::EclipseGridInspector eclInspector(deck);
