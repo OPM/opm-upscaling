@@ -69,7 +69,7 @@
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 
@@ -231,9 +231,9 @@ try
     // Make a grid
     Dune::CpGrid grid;
 
-    Opm::ParseMode parseMode;
+    Opm::ParseContext parseContext;
     Opm::ParserPtr parser(new Opm::Parser());
-    Opm::DeckConstPtr deck(parser->parseFile(param.get<std::string>("filename") , parseMode));
+    Opm::DeckConstPtr deck(parser->parseFile(param.get<std::string>("filename") , parseContext));
     double z_tol = param.getDefault<double>("z_tolerance", 0.0);
     std::array<int,3> cartDims;
     build_grid(deck, z_tol, grid, cartDims);
