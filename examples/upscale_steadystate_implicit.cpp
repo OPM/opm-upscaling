@@ -31,8 +31,8 @@
   You should have received a copy of the GNU General Public License
   along with OpenRS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <config.h>
 
+#include <config.h>
 
 //#define VERBOSE
 #include <opm/upscaling/SteadyStateUpscalerImplicit.hpp>
@@ -42,7 +42,9 @@
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 #include <opm/upscaling/ParserAdditions.hpp>
+
 #include <sys/utsname.h>
+
 #include <iostream>
 
 #include <dune/common/version.hh>
@@ -52,33 +54,34 @@
 #include <dune/common/mpihelper.hh>
 #endif
 
-namespace Opm{
-	template <class IsotropyPolicy>
+namespace Opm {
+    template <class IsotropyPolicy>
     struct Implicit
     {
         template <class GridInterface, class BoundaryConditions>
         struct TransportSolver
         {
-            //enum { Dimension = GridInterface::Dimension };
-        	enum { Dimension = GridInterface::Dimension };
+            enum { Dimension = GridInterface::Dimension };
             typedef typename IsotropyPolicy::template ResProp<Dimension>::Type RP;
 
             typedef EulerUpstreamImplicit<GridInterface,
-                                  RP,
-                                  BoundaryConditions> Type;
+                                          RP,
+                                          BoundaryConditions> Type;
 
         };
     };
-	typedef SimulatorTraits<Isotropic, Implicit> UpscalingTraitsBasicImplicit;
+
+    typedef SimulatorTraits<Isotropic, Implicit> UpscalingTraitsBasicImplicit;
 }
+
 using namespace Opm;
 
 void usage()
 {
-    std::cout << "Usage: upscale_steadystate_implicit gridfilename=filename.grdecl  " << std::endl;
-    std::cout << "       rock_list=rocklist.txt [outputWater=] [outputOil=] " << std::endl;
-    std::cout << "       [bc=fixed] [num_sats=10] [num_pdrops=10] " << std::endl;
-    std::cout << "       [anisotropicrocks=false]" << std::endl;
+    std::cout << "Usage: upscale_steadystate_implicit gridfilename=filename.grdecl\n"
+              << "       rock_list=rocklist.txt [outputWater=] [outputOil=]\n"
+              << "       [bc=fixed] [num_sats=10] [num_pdrops=10]\n"
+              << "       [anisotropicrocks=false]" << std::endl;
 }
 
 void usageandexit() {

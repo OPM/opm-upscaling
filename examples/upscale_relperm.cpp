@@ -1,4 +1,3 @@
-
 /*
   Copyright 2010 Statoil ASA.
 
@@ -59,14 +58,16 @@
  */
 #include <config.h>
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <iomanip>
-#include <ctime>
-#include <cmath>
 #include <cfloat> // for DBL_MAX/DBL_MIN
+#include <cmath>
+#include <ctime>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
 #include <map>
+#include <memory>
+#include <sstream>
+
 #include <sys/utsname.h>
 
 #include <opm/common/utility/platform_dependent/disable_warnings.h>

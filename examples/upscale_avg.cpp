@@ -1,4 +1,3 @@
-
 /*
   Copyright 2010 Statoil ASA.
 
@@ -40,14 +39,15 @@
  */
 #include <config.h>
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <iomanip>
-#include <ctime>
 #include <cmath>
 #include <cstdlib>
+#include <ctime>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <memory>
 #include <numeric> // for std::accumulate
+#include <sstream>
 #include <sys/utsname.h>
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>

@@ -45,11 +45,13 @@
  */
 #include <config.h>
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <iomanip>
 #include <ctime>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <memory>
+#include <sstream>
+
 #include <sys/utsname.h>
 
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
