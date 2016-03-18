@@ -25,8 +25,11 @@
 #define OPM_UPSCALING_RELPERM_UTILS_HPP
 
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
+
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
+
 #include <array>
+#include <map>
 #include <tuple>
 #include <vector>
 
@@ -91,7 +94,9 @@ namespace Opm {
       //! \param[in] minPoro Minimum porosity.
       //! \details Throws error string.
       void sanityCheckInput(Opm::DeckConstPtr deck,
-                            double minPerm, double maxPerm, double minPoro);
+                            const double      minPerm,
+                            const double      maxPerm,
+                            const double      minPoro);
 
       //! \brief Check that input relperm curevs specify critical saturations.
       void checkCriticalSaturations();
@@ -128,6 +133,7 @@ namespace Opm {
       //! \details Uses the following options:  minPerm, maxPermContrast
       //! \return Tuple with (total time, time per point).
       std::tuple<double,double> upscalePermeability(int mpi_rank);
+
     private:
       //! \brief Perform critical saturation check for a single curve.
       //! \param[in,out] func Function to check for.
@@ -151,9 +157,6 @@ namespace Opm {
       double minSinglePhasePerm; //!< Minimum single phase permability value.
       std::vector<double> cellPoreVolumes; //!< Pore volume for each grid cell.
       MonotCubicInterpolator WaterSaturationVsCapPressure; //!< Water saturation as a function of capillary pressure.
-
-      // Reference: http://www.spe.org/spe-site/spe/spe/papers/authors/Metric_Standard.pdf
-      const double milliDarcyToSqMetre; //!< Conversion factor, multiply mD numbers with this to get m² numbers.
 
       std::vector<double> dP; //!<  Cell center pressure gradients due to gravity effects.
       std::map<std::string,std::string>& options; //!< Reference to options structure.
