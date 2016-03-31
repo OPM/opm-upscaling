@@ -289,7 +289,7 @@ void test_flowsolver(const GI& g, const RI& r, double tol, int kind)
 
     compare_pressure(g, cell_pressure);
 
-    Dune::VTKWriter<typename GI::GridType::LeafGridView> vtkwriter(g.grid().leafView());
+    Dune::VTKWriter<typename GI::GridType::LeafGridView> vtkwriter(g.grid().leafGridView());
     vtkwriter.addCellData(cell_velocity_flat, "velocity", GI::GridType::dimension);
     vtkwriter.addCellData(cell_pressure, "pressure");
     vtkwriter.write("testsolution-" + boost::lexical_cast<std::string>(0),
@@ -306,12 +306,12 @@ try
 
     // Make a grid
     // Either a Dune::CpGrid...
-//     typedef Dune::CpGrid Grid;
-//     Grid grid;
-//     grid.init(param);
-//     grid.setUniqueBoundaryIds(true);
-
+    typedef Dune::CpGrid Grid;
+    Grid grid;
+    grid.init(param);
+    grid.setUniqueBoundaryIds(true);
     // ... or a YaspGrid.
+    /*
     const int dim = 3;
     typedef Dune::YaspGrid<dim> Grid;
 
@@ -330,7 +330,7 @@ try
     sz[1] = param.getDefault("dy", sz[1])*dims[1];
     sz[2] = param.getDefault("dz", sz[2])*dims[2];
     Grid grid(sz, dims, per, 0);
-
+    */
 
     // Make the grid interface
     Opm::GridInterfaceEuler<Grid> g(grid);

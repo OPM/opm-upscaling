@@ -53,7 +53,7 @@
 
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/CpGrid.hpp>
-#include <opm/core/io/eclipse/EclipseGridInspector.hpp>
+#include <opm/output/eclipse/EclipseGridInspector.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
