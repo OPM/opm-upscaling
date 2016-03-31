@@ -1,0 +1,72 @@
+/*
+  Copyright 2012 SINTEF ICT, Applied Mathematics.
+
+  This file is part of the Open Porous Media project (OPM).
+
+  OPM is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  OPM is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+
+
+#define VERBOSE
+
+#include "config.h"
+
+#include "SimulatorTester.hpp"
+#include "SimulatorTesterFlexibleBC.hpp"
+#include <opm/porsol/euler/EulerUpstreamImplicit.hpp>
+#include <opm/porsol/common/SimulatorTraits.hpp>
+
+#include <iostream>
+
+namespace Opm
+{
+    template <class IsotropyPolicy>
+    struct Implicit
+    {
+        template <class GridInterface, class BoundaryConditions>
+        struct TransportSolver
+        {
+            //enum { Dimension = GridInterface::Dimension };
+        	enum { Dimension = GridInterface::Dimension };
+            typedef typename IsotropyPolicy::template ResProp<Dimension>::Type RP;
+
+            typedef EulerUpstreamImplicit<GridInterface,
+                                  RP,
+                                  BoundaryConditions> Type;
+
+        };
+    };
+}
+
+using namespace Opm;
+
+typedef SimulatorTraits<Isotropic, Implicit> SimTraits;
+typedef SimulatorTesterFlexibleBC<SimTraits> Simulator;
+
+int main(int argc, char** argv)
+try
+{
+    Opm::parameter::ParameterGroup param(argc, argv);
+    Dune::MPIHelper::instance(argc,argv);
+    Simulator sim;
+    sim.init(param);
+    sim.run();
+}
+catch (const std::exception &e) {
+    std::cerr << "Program threw an exception: " << e.what() << "\n";
+    throw;
+}
+
+

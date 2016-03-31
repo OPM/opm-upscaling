@@ -12,10 +12,10 @@ License:        GPL-3.0
 Group:          Development/Libraries/C and C++
 Url:            http://www.opm-project.org/
 Source0:        https://github.com/OPM/%{name}/archive/release/%{version}/%{tag}.tar.gz#/%{name}-%{version}.tar.gz
-BuildRequires:  blas-devel lapack-devel dune-common-devel
+BuildRequires:  blas-devel lapack-devel dune-common-devel dune-cornerpoint-devel
 BuildRequires:  git suitesparse-devel doxygen bc opm-parser-devel
 BuildRequires:  tinyxml-devel dune-istl-devel opm-common-devel opm-core-devel
-BuildRequires:  opm-porsol-devel opm-material-devel ert.ecl-devel boost148-devel
+BuildRequires:  opm-material-devel ert.ecl-devel boost148-devel
 %{?el6:BuildRequires: cmake28 devtoolset-2 superlu-devel}
 %{!?el6:BuildRequires: cmake gcc gcc-gfortran gcc-c++ SuperLU-devel}
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
