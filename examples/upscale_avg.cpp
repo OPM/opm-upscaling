@@ -54,7 +54,7 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/upscaling/ParserAdditions.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
-#include <opm/core/io/eclipse/EclipseGridInspector.hpp>
+#include <opm/output/eclipse/EclipseGridInspector.hpp>
 
 #include <dune/common/version.hh>
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)

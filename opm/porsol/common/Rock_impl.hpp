@@ -23,7 +23,7 @@
 
 #include <fstream>
 #include <array>
-#include <opm/core/io/eclipse/EclipseGridInspector.hpp>
+#include <opm/output/eclipse/EclipseGridInspector.hpp>
 
 namespace Opm
 {
