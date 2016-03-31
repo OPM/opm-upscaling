@@ -281,15 +281,15 @@ void RelPermUpscaleHelper::sanityCheckInput(Opm::DeckConstPtr deck,
     int cells_truncated_from_below_poro = 0;
     int cells_truncated_from_below_permx = 0;
     int cells_truncated_from_above_permx = 0;
-    auto it = std::find_if(satnums.begin(), satnums.end(), [](int a) { return a < 0; });
+    auto it1 = std::find_if(satnums.begin(), satnums.end(), [](int a) { return a < 0; });
     auto it2 = std::find_if(satnums.begin(), satnums.end(), [](int a) { return a > 1000;});
-    if (it != satnums.end() || it2 != satnums.end()) {
+    if (it1 != satnums.end() || it2 != satnums.end()) {
         std::stringstream str;
         str << "satnums[";
-        if (it == satnums.end())
+        if (it1 == satnums.end())
             str << it2-satnums.begin() << "] = " << *it2;
         else
-            str << it-satnums.begin() << "] = " << *it;
+            str << it1-satnums.begin() << "] = " << *it1;
         str << ", not sane, quitting.";
         throw std::runtime_error(str.str());
     }
@@ -298,7 +298,7 @@ void RelPermUpscaleHelper::sanityCheckInput(Opm::DeckConstPtr deck,
     auto it3 = std::find_if(poros.begin(), poros.end(), find_error_both);
     if (it3 != poros.end()) {
         std::stringstream str;
-        str << "poros[" << it3-poros.begin() <<"] = " << *it << ", not sane, quitting.";
+        str << "poros[" << it3-poros.begin() <<"] = " << *it3 << ", not sane, quitting.";
         throw std::runtime_error(str.str());
     }
     auto&& find_error_below = [](double value) { return value < 0; };
