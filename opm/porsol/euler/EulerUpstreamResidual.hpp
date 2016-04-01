@@ -101,7 +101,7 @@ namespace Opm {
 	void initFinal();
 
 	typename GridInterface::Vector
-	estimateCapPressureGradient(const FIt& f, const FIt& nbf, const std::vector<double>& saturation) const;
+	estimateCapPressureGradient(const FIt& f, const FIt& nbf) const;
 
 	const GridInterface* pgrid_;
 	const ReservoirProperties* preservoir_properties_;
