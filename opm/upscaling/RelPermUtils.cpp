@@ -768,7 +768,7 @@ std::tuple<double, double>
 
             double Ptestvalue = pressurePoints[pointidx];
 
-            std::array<double,2> maxPhasePerm({0.0, 0.0});
+            std::array<double,2> maxPhasePerm{{0.0, 0.0}};
             std::array<std::vector<double>,2> phasePermValues;
             std::array<std::vector<std::vector<double>>,2> phasePermValuesDiag;
             std::array<double,2> minPhasePerm;
