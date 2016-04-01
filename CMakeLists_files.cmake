@@ -118,12 +118,6 @@ list (APPEND ATTIC_FILES
 	attic/aniso_steadystate_test.cpp
 	attic/implicit_steadystate_test.cpp
 	attic/steadystate_test_explicit.cpp
-	attic/appleyard/appleyard_test.cpp
-	attic/common/gie_test.cpp
-	attic/common/periodic_test.cpp
-	attic/common/rockjfunc_test.cpp
-	attic/euler/euler_upstream_test.cpp
-	attic/mimetic/mimetic_ipeval_test.cpp
 	)
 
 # programs listed here will not only be compiled, but also marked for
