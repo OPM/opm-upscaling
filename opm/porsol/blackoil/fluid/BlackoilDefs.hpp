@@ -20,9 +20,12 @@
 #ifndef OPM_BLACKOILDEFS_HEADER_INCLUDED
 #define OPM_BLACKOILDEFS_HEADER_INCLUDED
 
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
+
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 namespace Opm
 {

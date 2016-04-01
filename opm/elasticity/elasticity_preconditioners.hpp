@@ -12,23 +12,27 @@
 #ifndef ELASTICITY_PRECONDITIONERS_HPP_
 #define ELASTICITY_PRECONDITIONERS_HPP_
 
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
+
 #include <dune/common/fmatrix.hh>
 #include <dune/istl/bcrsmatrix.hh>
 #include <dune/istl/matrixmatrix.hh>
 #include <dune/istl/ilu.hh>
 #include <dune/istl/solvers.hh>
 #include <dune/istl/preconditioners.hh>
-#include <dune/grid/CpGrid.hpp>
-
-#include <opm/elasticity/asmhandler.hpp>
-#include <opm/elasticity/matrixops.hpp>
-
 #include <dune/istl/superlu.hh>
 #include <dune/istl/umfpack.hh>
 #include <dune/istl/paamg/amg.hh>
 #include <dune/istl/paamg/fastamg.hh>
 #include <dune/istl/paamg/twolevelmethod.hh>
 #include <dune/istl/overlappingschwarz.hh>
+
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
+
+#include <dune/grid/CpGrid.hpp>
+#include <opm/elasticity/asmhandler.hpp>
+#include <opm/elasticity/matrixops.hpp>
+
 
 namespace Opm {
 namespace Elasticity {

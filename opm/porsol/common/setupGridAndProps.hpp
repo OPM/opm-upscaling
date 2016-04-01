@@ -39,12 +39,17 @@
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/core/utility/Units.hpp>
 #include <dune/grid/CpGrid.hpp>
-#include <dune/grid/sgrid.hh>
 #include <opm/porsol/common/ReservoirPropertyCapillary.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
+
+#include <dune/grid/sgrid.hh>
 #include <boost/filesystem.hpp>
+
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 namespace Opm
 {

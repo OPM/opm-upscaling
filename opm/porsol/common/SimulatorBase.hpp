@@ -37,8 +37,6 @@
 #define OPENRS_SIMULATORBASE_HEADER
 
 
-#include <boost/lexical_cast.hpp>
-
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 
 #include <opm/core/utility/SparseVector.hpp>
@@ -47,7 +45,6 @@
 
 #include <dune/grid/common/Volumes.hpp>
 #include <dune/grid/CpGrid.hpp>
-#include <dune/grid/yaspgrid.hh>
 
 #include <opm/porsol/common/GridInterfaceEuler.hpp>
 #include <opm/porsol/common/ReservoirPropertyCapillary.hpp>
@@ -61,6 +58,15 @@
 
 #include <opm/porsol/mimetic/MimeticIPEvaluator.hpp>
 #include <opm/porsol/mimetic/IncompFlowSolverHybrid.hpp>
+
+
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
+
+#include <boost/lexical_cast.hpp>
+#include <dune/grid/yaspgrid.hh>
+
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
+
 
 #include <fstream>
 #include <iterator>

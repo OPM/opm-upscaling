@@ -12,8 +12,12 @@
 #ifndef MATERIAL_HH_
 #define MATERIAL_HH_
 
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
+
 #include <dune/common/fmatrix.hh>
 #include <dune/common/dynvector.hh>
+
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 namespace Opm {
 namespace Elasticity {

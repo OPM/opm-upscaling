@@ -12,10 +12,16 @@
 #ifndef ASMHANDLER_HPP_
 #define ASMHANDLER_HPP_
 
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
+
 #include <dune/geometry/referenceelements.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/istl/bvector.hh>
 #include <dune/common/fvector.hh>
+
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
+
+
 #include <opm/elasticity/logutils.hpp>
 #include <opm/elasticity/mpc.hh>
 #include <opm/elasticity/matrixops.hpp>
