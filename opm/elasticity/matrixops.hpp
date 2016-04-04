@@ -12,9 +12,13 @@
 #ifndef MATRIXOPS_HPP_
 #define MATRIXOPS_HPP_
 
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
+
 #include <dune/common/fmatrix.hh> 
 #include <dune/common/dynmatrix.hh>
 #include <dune/istl/bcrsmatrix.hh>
+
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 namespace Opm {
 namespace Elasticity {

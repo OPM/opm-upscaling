@@ -35,12 +35,30 @@
 
 #include "config.h"
 
+#include <opm/porsol/common/SimulatorUtilities.hpp>
+#include <dune/grid/io/file/vtk/vtkwriter.hh>
+
+#include <dune/grid/CpGrid.hpp>
+#include <opm/porsol/common/fortran.hpp>
+#include <opm/porsol/common/blas_lapack.hpp>
+#include <opm/porsol/common/Matrix.hpp>
+#include <opm/porsol/common/GridInterfaceEuler.hpp>
+#include <opm/porsol/common/ReservoirPropertyCapillary.hpp>
+#include <opm/porsol/common/BoundaryConditions.hpp>
+#include <opm/porsol/common/setupGridAndProps.hpp>
+#include <opm/porsol/mimetic/MimeticIPEvaluator.hpp>
+#include <opm/porsol/mimetic/IncompFlowSolverHybrid.hpp>
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
+#include <opm/core/utility/Units.hpp>
+
 #include <algorithm>
 #include <iostream>
 #include <iomanip>
-
-
 #include <array>
+
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
+
+#include <dune/grid/yaspgrid.hh>
 
 #include <dune/common/version.hh>
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
@@ -48,7 +66,6 @@
 #else
 #include <dune/common/mpihelper.hh>
 #endif
-#include <opm/core/utility/Units.hpp>
 
 #if HAVE_ALUGRID
 #include <dune/common/shared_ptr.hh>
@@ -58,23 +75,7 @@
 #include <dune/grid/alugrid.hh>
 #endif
 
-#include <opm/porsol/common/SimulatorUtilities.hpp>
-#include <dune/grid/io/file/vtk/vtkwriter.hh>
-
-#include <dune/grid/yaspgrid.hh>
-#include <dune/grid/CpGrid.hpp>
-
-#include <opm/porsol/common/fortran.hpp>
-#include <opm/porsol/common/blas_lapack.hpp>
-#include <opm/porsol/common/Matrix.hpp>
-#include <opm/porsol/common/GridInterfaceEuler.hpp>
-#include <opm/porsol/common/ReservoirPropertyCapillary.hpp>
-#include <opm/porsol/common/BoundaryConditions.hpp>
-#include <opm/porsol/common/setupGridAndProps.hpp>
-
-#include <opm/porsol/mimetic/MimeticIPEvaluator.hpp>
-#include <opm/porsol/mimetic/IncompFlowSolverHybrid.hpp>
-#include <opm/core/utility/parameters/ParameterGroup.hpp>
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 
 
