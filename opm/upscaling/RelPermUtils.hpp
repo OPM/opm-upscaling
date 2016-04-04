@@ -115,9 +115,8 @@ namespace Opm {
       double tesselateGrid(Opm::DeckConstPtr deck);
 
       //! \brief Find cell center pressure gradient for every cell.
-      //! \param[in] res The number of cells in each direction.
       //! \details Uses the following options: gravity, waterDensity, oilDensity
-      void calculateCellPressureGradients(const std::array<int,3>& res);
+      void calculateCellPressureGradients();
 
       //! \brief Calculate minimum and maximum capillary pressures.
       //! \details Uses the following options: maxPermContrast, minPerm,

@@ -36,6 +36,7 @@
 #include <stdexcept>
 #include <string>
 #include <tuple>
+#include <vector>
 
 namespace {
     double to_double(const std::string& x)
@@ -47,8 +48,122 @@ namespace {
     {
         return static_cast<int>(std::strtol(x.c_str(), nullptr, 10));
     }
+
+    std::vector<double>::size_type
+    sub2ind(std::array<std::vector<double>::size_type, 2>&& n,
+            std::array<std::vector<double>::size_type, 3>&& ijk)
+    {
+        return ijk[0] + n[0]*(ijk[1] + n[1]*ijk[2]);
+    }
+
+    std::vector<std::vector<double>::size_type>
+    zcorn_offset(const std::vector<double>::size_type nx,
+                 const std::vector<double>::size_type ny)
+    {
+        using sz_t = std::vector<double>::size_type;
+        auto  off  = std::vector<sz_t>{};
+        off.reserve(2 * 2 * 2);
+
+        const auto n1 = 2 * nx;
+        const auto n2 = 2 * ny;
+
+        for (sz_t k = 0; k < 2; ++k) {
+        for (sz_t j = 0; j < 2; ++j) {
+        for (sz_t i = 0; i < 2; ++i) {
+            off.push_back(sub2ind({n1, n2}, { i, j, k }));
+        }}}
+
+        return off;
+    }
+
+    std::vector<double>::size_type
+    zcorn_start(const std::vector<double>::size_type nx,
+                const std::vector<double>::size_type ny,
+                const std::array<int,3>&             ijk)
+    {
+        using sz_t = std::vector<double>::size_type;
+
+        auto x2 = [](const sz_t x) { return 2 * x; };
+
+        return sub2ind({ x2(nx)    , x2(ny)   },
+                       { x2(ijk[0]), x2(ijk[1]), x2(ijk[2]) });
+    }
 } // Anonymous
 
+class ArithmeticAverage
+{
+public:
+    void add(const double x);
+
+    double value() const;
+
+private:
+    double x_{ 0.0 };
+    double n_{ 0.0 };
+};
+
+void ArithmeticAverage::add(const double x)
+{
+    x_ += x;
+    n_ += 1.0;
+}
+
+double ArithmeticAverage::value() const
+{
+    return x_ / n_;
+}
+
+class ModelThickness
+{
+public:
+    ModelThickness(const std::array<int, 3>&  cdim,
+                   const std::vector<double>& zcorn);
+
+    void activateCell(const std::array<int, 3>& ijk);
+
+    double thickness() const;
+
+private:
+    using SizeType = std::vector<double>::size_type;
+
+    const std::array<int, 3>    cdim_;
+    const std::vector<double>&  zcorn_;
+    const std::vector<SizeType> off_;
+
+    std::vector<ArithmeticAverage> horizon_;
+};
+
+ModelThickness::ModelThickness(const std::array<int, 3>&  cdim,
+                               const std::vector<double>& zcorn)
+    : cdim_   (cdim)
+    , zcorn_  (zcorn)
+    , off_    (zcorn_offset(cdim[0], cdim[1]))
+    , horizon_(2 * cdim[2])
+{}
+
+void ModelThickness::activateCell(const std::array<int, 3>& ijk)
+{
+    const auto  start = zcorn_start(cdim_[0], cdim_[1], ijk);
+    auto* const layer = horizon_.data() +
+        static_cast<SizeType>(2 * ijk[2]);
+
+    const auto corners_per_layer = off_.size() / 2;
+
+    auto ncorners = SizeType{0};
+
+    for (const auto& corner : off_) {
+        layer[ncorners++ / corners_per_layer]
+            .add(zcorn_[start + corner]);
+    }
+}
+
+double ModelThickness::thickness() const
+{
+    const auto& top = horizon_.front();
+    const auto& bot = horizon_.back();
+
+    return bot.value() - top.value();
+}
 
 namespace Opm {
 
@@ -97,16 +212,22 @@ RelPermUpscaleHelper::RelPermUpscaleHelper(int mpi_rank,
     , permTensorInv    (3, 3, nullptr)
     , options          (options_)
 {
-    if (options["fluids"] == "ow" || options["fluids"] == "wo") {
-        saturationstring = "Sw";
-    }
-    else if (options["fluids"] == "go" || options["fluids"] == "og") {
-        saturationstring = "Sg";
-    }
-    else {
-        std::stringstream str;
-        str << "Fluidsystem " << options["fluids"] << " not valid (-fluids option). Should be ow or go";
-        throw std::runtime_error(str.str());
+    {
+        const auto& fluids = options["fluids"];
+
+        if ((fluids == "ow") || (fluids == "wo")) {
+            saturationstring = "Sw";
+        }
+        else if ((fluids == "go") || (fluids == "og")) {
+            saturationstring = "Sg";
+        }
+        else {
+            std::stringstream str;
+            str << "Fluidsystem " << fluids
+                << " not valid (-fluids option). Should be ow or go";
+
+            throw std::runtime_error(str.str());
+        }
     }
 
     critRelpThresh = to_double(options["critRelpermThresh"]);
@@ -560,75 +681,46 @@ double RelPermUpscaleHelper::tesselateGrid(Opm::DeckConstPtr deck)
     return timeused_tesselation;
 }
 
-void RelPermUpscaleHelper::calculateCellPressureGradients(const std::array<int,3>& res)
+void RelPermUpscaleHelper::calculateCellPressureGradients()
 {
-    const auto gravity      = to_double(options["gravity"]);
-    const auto waterDensity = to_double(options["waterDensity"]);
-    const auto oilDensity   = to_double(options["oilDensity"]);
+    const auto& grid = upscaler.grid();
 
-    // height of model is calculated as the average of the z-values at the
-    // top layer.  This calculation makes assumption on the indexing of
-    // cells in the grid, going from bottom to top.
-    auto modelHeight = 0.0;
-    for (size_t zIdx = (4 * res[0] * res[1] * (2*res[2] - 1));
-         zIdx < zcorns.size(); ++zIdx)
+    auto celldepth = std::vector<double>(grid.numCells(), 0.0);
+    auto mt        = ModelThickness{grid.logicalCartesianSize(), zcorns};
     {
-        modelHeight += zcorns[zIdx] / (4 * res[0] * res[1]);
+        auto ijk = std::array<int,3>{{0, 0, 0}};
+
+        for (auto c  = grid.leafbegin<0>(),
+                 end = grid.leafend  <0>(); c != end; ++c)
+        {
+            const auto ix = c->index();
+
+            grid.getIJK(ix, ijk);
+            mt.activateCell(ijk);
+
+            const auto& cc = c->geometry().center();
+            celldepth[ix]  = cc[ cc.size() - 1 ];
+        }
     }
 
-    // We assume that the spatial units in the grid file is in centimetres,
-    // so we divide by 100 to get to metres.
-    modelHeight /= 100.0;
-
-    // Input water and oil density is given in g/cm3, we convert it to kg/m3
-    // (SI) by multiplying with 1000.
-    const auto dRho = (waterDensity - oilDensity) * 1000; // SI unit (kg/m3)
-
-    // Calculating difference in capillary pressure for all cells
-    dP.resize(satnums.size(), 0);
-    for (decltype(satnums.size())
-             cellIdx = 0, n = satnums.size(); cellIdx < n; ++cellIdx)
     {
-        // index in the corresponding horizon
-        auto horIdx = (cellIdx + 1) -
-            int(std::floor(((double)(cellIdx+1)) / ((double)(res[0] * res[1])))) * res[0]*res[1];
+        const auto gravity      = to_double(options["gravity"]);
+        const auto waterDensity = to_double(options["waterDensity"]);
+        const auto oilDensity   = to_double(options["oilDensity"]);
 
-        if (horIdx == 0) {
-            horIdx = res[0] * res[1];
+        // Input water and oil density is given in g/cm3.
+        const auto dRho = unit::convert::
+            from(waterDensity - oilDensity,
+                 prefix::milli*unit::kilogram /* 'g' missing from set */
+                 / unit::cubic(prefix::centi * unit::meter));
+
+        const auto thick = mt.thickness();
+
+        dP.clear();  dP.reserve(celldepth.size());
+
+        for (const auto& depth : celldepth) {
+            dP.push_back(dRho * gravity * (depth - (thick / 2.0)));
         }
-
-        auto i = horIdx - int(std::floor(((double)horIdx) / ((double)res[0]))) * res[0];
-
-        if (i == 0) {
-            i = res[0];
-        }
-
-        const auto j = (horIdx - i) / res[0] + 1;
-        const auto k = ((cellIdx + 1) - res[0] * (j - 1) - 1) / (res[0] * res[1]) + 1;
-
-        const auto zBegin = 8 * res[0] * res[1] * (k-1); // indices of Z-values of bottom
-        const auto level2 = 4 * res[0] * res[1];         // number of z-values in one horizon
-
-        auto zIndices = std::vector<int>(8,0); // 8 corners with 8 heights
-
-        zIndices[0] = zBegin +          4*res[0]*(  j - 1) + 2*i - 1;
-        zIndices[1] = zBegin +          4*res[0]*(  j - 1) + 2*i;
-        zIndices[2] = zBegin +          2*res[0]*(2*j - 1) + 2*i;
-        zIndices[3] = zBegin +          2*res[0]*(2*j - 1) + 2*i - 1;
-
-        zIndices[4] = zBegin + level2 + 4*res[0]*(  j - 1) + 2*i - 1;
-        zIndices[5] = zBegin + level2 + 4*res[0]*(  j - 1) + 2*i;
-        zIndices[6] = zBegin + level2 + 2*res[0]*(2*j - 1) + 2*i;
-        zIndices[7] = zBegin + level2 + 2*res[0]*(2*j - 1) + 2*i - 1;
-
-        auto cellDepth = 0.0;
-        for (size_t corner = 0; corner < 8; ++corner) {
-            cellDepth += zcorns[zIndices[corner]-1] / 8.0;
-        }
-
-        // cellDepth is in cm, convert to m by dividing by 100
-        cellDepth   /= 100.0;
-        dP[cellIdx]  = dRho * gravity * (cellDepth - modelHeight/2.0);
     }
 }
 
@@ -760,7 +852,7 @@ void RelPermUpscaleHelper::calculateMinMaxCapillaryPressure()
                   << "Upscaled "           << saturationstring << "ir:     " << Swir << '\n'
                   << "Upscaled "           << saturationstring << "max:    " << Swor << '\n' //Swor=1-Swmax
                   << "Saturation points to be computed: "
-                  << points << '\n';
+                  << points << std::endl;
     }
 
     // Sometimes, if Swmax=1 or Swir=0 in the input tables, the upscaled

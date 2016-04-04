@@ -333,21 +333,6 @@ namespace {
         return parser->parseFile(ECLIPSEFILENAME, Opm::ParseContext{});
     }
 
-    std::array<int, 3>
-    getCartesianDimension(const std::shared_ptr<const Opm::Deck>& deck)
-    {
-        const auto grid = Opm::EclipseGrid(deck);
-
-        return
-        {
-            {
-                static_cast<int>(grid.getNX()),
-                static_cast<int>(grid.getNY()),
-                static_cast<int>(grid.getNZ()),
-            }
-        };
-    }
-
     void invertCapillaryPressureIsotropic(const char*                ROCKFILENAME,
                                           const int                  i,
                                           const int                  jFunctionCurve,
@@ -579,8 +564,7 @@ try
    // Test if filename exists and is readable
    start = clock();
 
-   auto       deck = parseEclipseFile(ECLIPSEFILENAME, helper.isMaster);
-   const auto res  = getCartesianDimension(deck);
+   auto deck = parseEclipseFile(ECLIPSEFILENAME, helper.isMaster);
 
    finish   = clock();
    timeused = (double(finish) - double(start)) / CLOCKS_PER_SEC;
@@ -688,7 +672,7 @@ try
 
    /* If gravity is to be included, calculate z-values of every cell: */
    if (includeGravity) {
-       helper.calculateCellPressureGradients(res);
+       helper.calculateCellPressureGradients();
    }
 
    /******************************************************************************
