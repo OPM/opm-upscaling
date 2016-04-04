@@ -228,9 +228,9 @@ namespace Opm
     template <class PressureSolution>
     bool EulerUpstreamImplicit<GI, RP, BC>::transportSolve(std::vector<double>& saturation,
                                                            const double time,
-                                                           const typename GI::Vector& gravity,
+                                                           const typename GI::Vector& /* gravity */,
                                                            const PressureSolution& pressure_sol,
-                                                           const Opm::SparseVector<double>& injection_rates) const
+                                                           const Opm::SparseVector<double>& /* injection_rates */) const
     {
 
         Opm::ReservoirState<2> state(mygrid_.c_grid());

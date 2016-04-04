@@ -273,7 +273,7 @@ namespace Opm
                               int iCell,
                               int iRef,
                               double wo_contact_depth,
-                              double go_contact_depth,
+                              double /* go_contact_depth */,
                               double connate_water_saturation,
                               double residual_oil_saturation,
                               State& simstate)

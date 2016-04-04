@@ -145,8 +145,8 @@ bool OrthotropicD::getConstitutiveMatrix (Dune::FieldMatrix<double,6,6>& C,
   return true;
 }
 
-bool OrthotropicD::getConstitutiveMatrix (Dune::FieldMatrix<double,3,3>& C,
-                                          bool invers) const
+bool OrthotropicD::getConstitutiveMatrix (Dune::FieldMatrix<double,3,3>& /* C */,
+                                          bool /* invers */) const
 {
   return false;
 }
@@ -212,8 +212,8 @@ bool OrthotropicSym::getConstitutiveMatrix (Dune::FieldMatrix<double,6,6>& C,
   return true;
 }
 
-bool OrthotropicSym::getConstitutiveMatrix (Dune::FieldMatrix<double,3,3>& C,
-                                            bool invers) const
+bool OrthotropicSym::getConstitutiveMatrix (Dune::FieldMatrix<double,3,3>& /* C */,
+                                            bool /* invers */) const
 {
   return false;
 }

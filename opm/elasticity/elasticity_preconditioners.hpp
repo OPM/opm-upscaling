@@ -75,7 +75,7 @@ struct Schwarz {
   //! \param[in] gv The cornerpoint grid
   //! \param[out] thread Whether or not to clone for threads
   static std::shared_ptr<type>
-                setup(int pre, int post, int target, int zcells,
+                setup(int /* pre */, int /* post */, int /* target */, int /* zcells */,
                       std::shared_ptr<Operator>& op, const Dune::CpGrid& gv,
                       ASMHandler<Dune::CpGrid>& A, bool& copy)
   {
@@ -115,8 +115,8 @@ struct AMG1 {
   //! \param[out] thread Whether or not to clone for threads
   static std::shared_ptr<type>
                 setup(int pre, int post, int target, int zcells,
-                      std::shared_ptr<Operator>& op, const Dune::CpGrid& gv,
-                      ASMHandler<Dune::CpGrid>& A, bool& copy)
+                      std::shared_ptr<Operator>& op, const Dune::CpGrid& /* gv */,
+                      ASMHandler<Dune::CpGrid>& /* A */, bool& copy)
   {
     Criterion crit;
     typename AMG1<Smoother>::type::SmootherArgs args;

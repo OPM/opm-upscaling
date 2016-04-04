@@ -41,7 +41,7 @@ class UzawaSolver : public Dune::InverseOperator<X,Y>
     //! \param[in] b The load vector
     //! \param[in] reduction Ignored
     //! \param[in] res The inverse operator result
-    void apply(X& x, Y& b, double reduction, 
+    void apply(X& x, Y& b, double /* reduction */,
                Dune::InverseOperatorResult& res)
     {
       apply(x, b, res);

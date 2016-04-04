@@ -17,11 +17,11 @@
 namespace Opm {
 namespace Elasticity {
 
-std::shared_ptr<FastAMG::type> FastAMG::setup(int pre, int post, int target,
+std::shared_ptr<FastAMG::type> FastAMG::setup(int /* pre */, int /* post */, int target,
                                               int zcells,
                                               std::shared_ptr<Operator>& op,
-                                              const Dune::CpGrid& gv,
-                                              ASMHandler<Dune::CpGrid>& A,
+                                              const Dune::CpGrid& /* gv */,
+                                              ASMHandler<Dune::CpGrid>& /* A */,
                                               bool& copy)
 {
   AMG1<JACSmoother>::Criterion crit;

@@ -196,7 +196,7 @@ namespace Opm
 	    setupBoundaryConditions(param, ginterf_, bcond_);
 	}
 
-        virtual void initSources(const Opm::parameter::ParameterGroup& param)
+        virtual void initSources(const Opm::parameter::ParameterGroup& /* param */)
         {
             int nc = ginterf_.numberOfCells();
 	    injection_rates_ = Opm::SparseVector<double>(nc);
