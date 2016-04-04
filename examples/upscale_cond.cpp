@@ -543,8 +543,7 @@ try
    double Swirvolume = 0;
    double Sworvolume = 0;
    const std::vector<int>& ecl_idx = upscaler.grid().globalCell();
-   Dune::CpGrid::Codim<0>::LeafIterator c = upscaler.grid().leafbegin<0>();
-   for (; c != upscaler.grid().leafend<0>(); ++c) {
+   for (auto c = upscaler.grid().leafbegin<0>(); c != upscaler.grid().leafend<0>(); ++c) {
        size_t cell_idx = ecl_idx[c->index()];
        if (satnums[cell_idx] > 0) { // Satnum zero is "no rock"
            cellVolumes[cell_idx] = c->geometry().volume();
@@ -737,8 +736,7 @@ try
        }
        
        double waterVolume = 0.0;
-       Dune::CpGrid::Codim<0>::LeafIterator c = upscaler.grid().leafbegin<0>();
-       for (; c != upscaler.grid().leafend<0>(); ++c) {
+       for (auto c = upscaler.grid().leafbegin<0>(); c != upscaler.grid().leafend<0>(); ++c) {
            size_t cell_idx = ecl_idx[c->index()];
            //           for (size_t cell_idx = 0; cell_idx < satnums.size(); ++cell_idx) {
            //if (LFgrid.getCellIndex(cell_idx) != EMPTY) {
@@ -866,8 +864,7 @@ try
            // capillary pressure:
            waterVolumeLF = 0.0;
 
-           Dune::CpGrid::Codim<0>::LeafIterator c = upscaler.grid().leafbegin<0>();
-           for (; c != upscaler.grid().leafend<0>(); ++c) {
+           for (auto c = upscaler.grid().leafbegin<0>(); c != upscaler.grid().leafend<0>(); ++c) {
                size_t cell_idx = ecl_idx[c->index()];
                //               for (size_t cell_idx = 0; cell_idx < satnums.size(); ++cell_idx) {
                //  if (LFgrid.getCellIndex(cell_idx) != EMPTY) {

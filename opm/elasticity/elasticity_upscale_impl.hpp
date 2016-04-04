@@ -123,8 +123,8 @@ IMPL_FUNC(BoundaryGrid, extractMasterFace(Direction dir,
   int p=0;
   std::map<double, std::vector<BoundaryGrid::Quad> >::const_iterator it;
   for (it = nodeMap.begin(); it != nodeMap.end(); ++it, ++p) {
-    for (size_t i=0;i<it->second.size();++i)
-      result.addToColumn(p,it->second[i]);
+    for (size_t ii=0;ii<it->second.size();++ii)
+      result.addToColumn(p,it->second[ii]);
   }
 
   return result;
@@ -493,8 +493,8 @@ IMPL_FUNC(void, assemble(int loadcase, bool matrix))
           if (detJ <= 1.e-5 && verbose) {
             std::cout << "cell " << color[i][j][k] << " is (close to) degenerated, detJ " << detJ << std::endl;
             double zdiff=0.0;
-            for (int i=0;i<4;++i)
-              zdiff = std::max(zdiff, it->geometry().corner(i+4)[2]-it->geometry().corner(i)[2]);
+            for (int ii=0;ii<4;++ii)
+              zdiff = std::max(zdiff, it->geometry().corner(ii+4)[2]-it->geometry().corner(ii)[2]);
             std::cout << " - Consider setting ctol larger than " << zdiff << std::endl;
           }
 

@@ -75,9 +75,9 @@ public:
     DOF(int n, int d, double c = double(0)) : node(n), dof(d), coeff(c) {}
 
     //! \brief Global stream operator printing a DOF instance.
-    friend std::ostream& operator<<(std::ostream& s, const DOF& dof)
+    friend std::ostream& operator<<(std::ostream& s, const DOF& d)
     {
-      return s <<"u_"<< char('w'+dof.dof) <<" in node "<< dof.node;
+      return s <<"u_"<< char('w'+d.dof) <<" in node "<< d.node;
     }
 
     int  node;  //!< Node number identifying this DOF

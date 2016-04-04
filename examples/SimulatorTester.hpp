@@ -95,8 +95,8 @@ namespace Opm
                 // Comparing old to new.
                 int num_cells = saturation.size();
                 double maxdiff = 0.0;
-                for (int i = 0; i < num_cells; ++i) {
-                    maxdiff = std::max(maxdiff, std::fabs(saturation[i] - saturation_old[i]));
+                for (int cell = 0; cell < num_cells; ++cell) {
+                    maxdiff = std::max(maxdiff, std::fabs(saturation[cell] - saturation_old[cell]));
                 }
                 std::cout << "Maximum saturation change: " << maxdiff << std::endl;
 

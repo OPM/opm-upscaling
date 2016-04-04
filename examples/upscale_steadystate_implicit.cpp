@@ -367,11 +367,11 @@ try
         } {
             init_sat.resize(num_cells, saturations[satidx]);
         }
-        const Opm::SparseTable<double>::row_type pdrops = all_pdrops[satidx];
-        int num_pdrops = pdrops.size();
-        for (int pidx = 0; pidx < num_pdrops; ++pidx) {
+        const Opm::SparseTable<double>::row_type pressdrops = all_pdrops[satidx];
+        int num_pressdrops = pressdrops.size();
+        for (int pidx = 0; pidx < num_pressdrops; ++pidx) {
             upscaler.initSatLimits(init_sat);
-            double pdrop = pdrops[pidx];
+            double pdrop = pressdrops[pidx];
             bool success = false;
             std::pair<permtensor_t, permtensor_t> lambda
                 = upscaler.upscaleSteadyState(fldir, init_sat, saturations[satidx], pdrop, upscaled_K, success);
