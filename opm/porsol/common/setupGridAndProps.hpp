@@ -46,7 +46,6 @@
 
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
 
-#include <dune/grid/sgrid.hh>
 #include <boost/filesystem.hpp>
 
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
@@ -163,35 +162,6 @@ namespace Opm
         res_prop.init(deck, grid.globalCell(), perm_threshold, rl_ptr, use_jfunction_scaling, sigma, theta);
         if (unique_bids) {
             grid.setUniqueBoundaryIds(true);
-        }
-    }
-
-    /// @brief
-    /// @todo Doc me!
-    /// @param
-    template <template <int> class ResProp>
-    inline void setupGridAndProps(const Opm::parameter::ParameterGroup& param,
-                                  Dune::SGrid<3, 3>& grid,
-                                  ResProp<3>& res_prop)
-    {
-        // Initialize grid and reservoir properties.
-        // Parts copied from Dune::CpGrid::init().
-        std::string fileformat = param.getDefault<std::string>("fileformat", "cartesian");
-        if (fileformat == "cartesian") {
-            std::array<int, 3> dims = {{ param.getDefault<int>("nx", 1),
-                                    param.getDefault<int>("ny", 1),
-                                    param.getDefault<int>("nz", 1) }};
-            std::array<double, 3> cellsz = {{ param.getDefault<double>("dx", 1.0),
-                                         param.getDefault<double>("dy", 1.0),
-                                         param.getDefault<double>("dz", 1.0) }};
-            grid.~SGrid<3,3>();
-            new (&grid) Dune::SGrid<3, 3>(&dims[0], &cellsz[0]);
-            double default_poro = param.getDefault("default_poro", 0.2);
-            double default_perm = param.getDefault("default_perm", 100.0*Opm::prefix::milli*Opm::unit::darcy);
-            OPM_MESSAGE("Warning: For generated cartesian grids, we use uniform reservoir properties.");
-            res_prop.init(grid.size(0), default_poro, default_perm);
-        } else {
-            OPM_THROW(std::runtime_error, "Dune::SGrid can only handle cartesian grids, unsupported file format string: " << fileformat);
         }
     }
 
