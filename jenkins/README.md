@@ -22,4 +22,4 @@ The trigger line needs to contain ert=&lt;pull request number&gt; and/or
 opm-common=&lt;pull request number&gt; and/or opm-parser=&lt;pull request number&gt;
 and/or opm-material=&lt;pull request number&gt; and/or opm-core=&lt;pull request number&gt;
 and/or opm-output=&lt;pull request number&gt;
-and/or dune-cornerpoint=&lt;pull request number&gt;.
+and/or dune-cornerpoint=&lt;pull request number&gt;. asdfasdf
