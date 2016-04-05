@@ -43,6 +43,7 @@ list(APPEND MAIN_SOURCE_FILES
 	opm/porsol/blackoil/fluid/MiscibilityProps.cpp
 	opm/porsol/common/blas_lapack.cpp
 	opm/porsol/common/BoundaryPeriodicity.cpp
+	opm/porsol/common/ImplicitTransportDefs.cpp
 	opm/porsol/common/setupGridAndProps.cpp
 	opm/porsol/euler/ImplicitCapillarity.cpp
 	)
