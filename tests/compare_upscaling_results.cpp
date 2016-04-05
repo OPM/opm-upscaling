@@ -30,6 +30,7 @@ using namespace Opm;
 
 typedef FullMatrix<double, OwnData, COrdering> Matrix;
 
+namespace {
 
 /// @brief
 ///    Read result file and store results in a matrix.
@@ -111,6 +112,7 @@ bool matrixAlmostEqual(Matrix refSoln, Matrix newSoln, double tol) {
     return true;
 }
 
+} // namespace anonymous
 
 /// @brief
 ///    Tests if two result files are equal
