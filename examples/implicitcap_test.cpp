@@ -33,22 +33,27 @@
   along with OpenRS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #define VERBOSE
 //#define USE_TBB
 
 #include "config.h"
 
-#include "SimulatorTester.hpp"
-#include "SimulatorTesterFlexibleBC.hpp"
-#include <opm/porsol/common/SimulatorTraits.hpp>
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
 
 #include <dune/common/version.hh>
+
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
 #include <dune/common/parallel/mpihelper.hh>
 #else
 #include <dune/common/mpihelper.hh>
 #endif
+
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
+
+#include "SimulatorTester.hpp"
+#include "SimulatorTesterFlexibleBC.hpp"
+
+#include <opm/porsol/common/SimulatorTraits.hpp>
 
 #ifdef USE_TBB
 #include <tbb/task_scheduler_init.h>
@@ -66,10 +71,12 @@ try
 {
     Opm::parameter::ParameterGroup param(argc, argv);
     Dune::MPIHelper::instance(argc,argv);
+
 #ifdef USE_TBB
     int num_threads = param.getDefault("num_threads", tbb::task_scheduler_init::default_num_threads());
     tbb::task_scheduler_init init(num_threads);
 #endif
+
     Simulator sim;
     sim.init(param);
     sim.run();

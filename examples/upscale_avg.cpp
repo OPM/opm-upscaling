@@ -39,6 +39,25 @@
  */
 #include <config.h>
 
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
+
+#include <dune/common/version.hh>
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
+#include <dune/common/parallel/mpihelper.hh>
+#else
+#include <dune/common/mpihelper.hh>
+#endif
+
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
+
+#include <opm/output/eclipse/EclipseGridInspector.hpp>
+
+#include <opm/upscaling/ParserAdditions.hpp>
+#include <opm/upscaling/SinglePhaseUpscaler.hpp>
+
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
@@ -48,34 +67,25 @@
 #include <memory>
 #include <numeric> // for std::accumulate
 #include <sstream>
+
 #include <sys/utsname.h>
-
-#include <opm/parser/eclipse/Deck/DeckItem.hpp>
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/upscaling/ParserAdditions.hpp>
-#include <opm/upscaling/SinglePhaseUpscaler.hpp>
-#include <opm/output/eclipse/EclipseGridInspector.hpp>
-
-#include <dune/common/version.hh>
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
-#include <dune/common/parallel/mpihelper.hh>
-#else
-#include <dune/common/mpihelper.hh>
-#endif
 
 using namespace Opm;
 using namespace std;
 
-void usage() {
-    cout << endl <<
-        "Usage: upscale_avg <options> <eclipsefile>" << endl <<
-        "were the options are:" << endl <<
-        "-use_actnum                  -- If used and given a number larger than 0, the cells with" << endl <<
-        "                                ACTNUM 0 is removed from the calculations" << endl;
-}
-void usageandexit() {
-    usage();
-    exit(1);
+namespace {
+    void usage() {
+        cout << endl <<
+            "Usage: upscale_avg <options> <eclipsefile>" << endl <<
+            "were the options are:" << endl <<
+            "-use_actnum                  -- If used and given a number larger than 0, the cells with" << endl <<
+            "                                ACTNUM 0 is removed from the calculations" << endl;
+    }
+
+    void usageandexit() {
+        usage();
+        exit(EXIT_FAILURE);
+    }
 }
 
 

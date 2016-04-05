@@ -68,8 +68,26 @@
  */
 #include <config.h>
 
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
+
+#include <dune/common/version.hh>
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
+#include <dune/common/parallel/mpihelper.hh>
+#else
+#include <dune/common/mpihelper.hh>
+#endif
+
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
+
+#include <opm/core/utility/MonotCubicInterpolator.hpp>
+
+#include <opm/upscaling/ParserAdditions.hpp>
+#include <opm/upscaling/RelPermUtils.hpp>
+#include <opm/upscaling/SinglePhaseUpscaler.hpp>
+
 #include <cfloat>  // FOR DBL_MAX/DBL_MIN
 #include <cmath>
+#include <cstdlib>
 #include <ctime>
 #include <fstream>
 #include <iomanip>
@@ -80,20 +98,10 @@
 
 #include <sys/utsname.h>
 
-#include <opm/core/utility/MonotCubicInterpolator.hpp>
-#include <opm/upscaling/SinglePhaseUpscaler.hpp>
-#include <opm/upscaling/ParserAdditions.hpp>
-#include <opm/upscaling/RelPermUtils.hpp>
-
-#include <dune/common/version.hh>
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
-#include <dune/common/parallel/mpihelper.hh>
-#else
-#include <dune/common/mpihelper.hh>
-#endif
-
 using namespace Opm;
 using namespace std;
+
+namespace {
 
 /**
    The usage() function displays a message with syntax and available 
@@ -144,8 +152,10 @@ void usage()
 
 void usageandexit() {
     usage();
-    exit(1);
+    std::exit(EXIT_FAILURE);
 }
+
+} // namespace anonymous
 
 int main(int varnum, char** vararg)
 try

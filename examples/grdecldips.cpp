@@ -1,4 +1,3 @@
-
 /*
   Copyright 2011 Statoil ASA.
 
@@ -17,32 +16,41 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #include <config.h>
 
-#include <map>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <iomanip>
-#include <ctime>
-#include <cmath>
-#include <numeric>
-#include <sys/utsname.h>
-
-#include <opm/output/eclipse/EclipseGridInspector.hpp>
-#include <opm/core/utility/parameters/ParameterGroup.hpp>
-
-#include <opm/output/eclipse/CornerpointChopper.hpp>
-#include <opm/upscaling/SinglePhaseUpscaler.hpp>
-#include <opm/porsol/common/setupBoundaryConditions.hpp>
-#include <opm/core/utility/Units.hpp>
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
 
 #include <dune/common/version.hh>
+
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
 #include <dune/common/parallel/mpihelper.hh>
 #else
 #include <dune/common/mpihelper.hh>
 #endif
+
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
+
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
+#include <opm/core/utility/Units.hpp>
+
+#include <opm/output/eclipse/CornerpointChopper.hpp>
+#include <opm/output/eclipse/EclipseGridInspector.hpp>
+
+#include <opm/porsol/common/setupBoundaryConditions.hpp>
+
+#include <opm/upscaling/SinglePhaseUpscaler.hpp>
+
+#include <cmath>
+#include <ctime>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <map>
+#include <numeric>
+#include <sstream>
+
+#include <sys/utsname.h>
 
 using namespace std;
 

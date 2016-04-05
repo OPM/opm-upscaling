@@ -34,26 +34,34 @@
 
 #include <config.h>
 
-//#define VERBOSE
-#include <opm/upscaling/SteadyStateUpscalerImplicit.hpp>
-#include <opm/upscaling/SteadyStateUpscalerManagerImplicit.hpp>
-#include <opm/porsol/euler/EulerUpstreamImplicit.hpp>
-#include <opm/porsol/common/SimulatorTraits.hpp>
-#include <opm/core/utility/MonotCubicInterpolator.hpp>
-#include <opm/upscaling/SinglePhaseUpscaler.hpp>
-#include <opm/upscaling/ParserAdditions.hpp>
-
-#include <sys/utsname.h>
-
-#include <iostream>
-#include <memory>
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
 
 #include <dune/common/version.hh>
+
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
 #include <dune/common/parallel/mpihelper.hh>
 #else
 #include <dune/common/mpihelper.hh>
 #endif
+
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
+
+#include <opm/core/utility/MonotCubicInterpolator.hpp>
+
+#include <opm/porsol/common/SimulatorTraits.hpp>
+#include <opm/porsol/euler/EulerUpstreamImplicit.hpp>
+
+#include <opm/upscaling/ParserAdditions.hpp>
+#include <opm/upscaling/SinglePhaseUpscaler.hpp>
+#include <opm/upscaling/SteadyStateUpscalerImplicit.hpp>
+#include <opm/upscaling/SteadyStateUpscalerManagerImplicit.hpp>
+
+#include <cassert>
+#include <cstdlib>
+#include <iostream>
+#include <memory>
+
+#include <sys/utsname.h>
 
 namespace Opm {
     template <class IsotropyPolicy>
@@ -77,6 +85,8 @@ namespace Opm {
 
 using namespace Opm;
 
+namespace {
+
 void usage()
 {
     std::cout << "Usage: upscale_steadystate_implicit gridfilename=filename.grdecl\n"
@@ -87,7 +97,7 @@ void usage()
 
 void usageandexit() {
     usage();
-    exit(1);
+    std::exit(EXIT_FAILURE);
 }
 
 // Assumes that permtensor_t use C ordering.
@@ -149,7 +159,7 @@ std::vector<std::vector<double> > getExtremeSats(std::string rock_list, std::vec
             catch (const char * errormessage) {
                 std::cerr << "Error: " << errormessage << std::endl;
                 std::cerr << "Check filename" << std::endl;
-                exit(1);
+                std::exit(EXIT_FAILURE);
             }
             rocksatendp[i][0] = Jtmp.getMinimumX().first;
             rocksatendp[i][1] = Jtmp.getMaximumX().first;
@@ -166,7 +176,7 @@ std::vector<std::vector<double> > getExtremeSats(std::string rock_list, std::vec
             catch (const char * errormessage) {
                 std::cerr << "Error: " << errormessage << std::endl;
                 std::cerr << "Check filename and columns 1 and 2 (Pc and Sw)" << std::endl;
-                exit(1);
+                std::exit(EXIT_FAILURE);
             }
             rocksatendp[i][0] = Pctmp.getMinimumX().first;
             rocksatendp[i][1] = Pctmp.getMaximumX().first;
@@ -174,6 +184,8 @@ std::vector<std::vector<double> > getExtremeSats(std::string rock_list, std::vec
     }
     return rocksatendp;
 }
+
+} // namespace anonymous
 
 template <typename T>
 std::string toString(T const& value) {

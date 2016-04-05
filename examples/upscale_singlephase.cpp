@@ -22,16 +22,23 @@
 #include "config.h"
 #endif
 
-#include <opm/upscaling/SinglePhaseUpscaler.hpp>
-#include <opm/core/utility/Units.hpp>
-#include <iostream>
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
 
 #include <dune/common/version.hh>
+
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
 #include <dune/common/parallel/mpihelper.hh>
 #else
 #include <dune/common/mpihelper.hh>
 #endif
+
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
+
+#include <opm/core/utility/Units.hpp>
+
+#include <opm/upscaling/SinglePhaseUpscaler.hpp>
+
+#include <iostream>
 
 using namespace Opm;
 using namespace Opm::prefix;
@@ -42,16 +49,24 @@ try
 {
     Dune::MPIHelper::instance(argc, argv);
 
-    Opm::parameter::ParameterGroup param(argc, argv);
-    // MPIHelper::instance(argc,argv);
     SinglePhaseUpscaler upscaler;
-    upscaler.init(param);
-    SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
-    upscaled_K *= (1.0/(milli*darcy));
+    {
+        auto param = Opm::parameter::ParameterGroup(argc, argv);
+
+        upscaler.init(param);
+    }
+
+    auto upscaled_K = upscaler.upscaleSinglePhase();
+    {
+        const auto fact = convert::to(1.0*square(meter), milli*darcy);
+
+        upscaled_K *= fact;
+    }
+
     std::cout.precision(15);
     std::cout << "Upscaled K in millidarcy:\n" << upscaled_K << std::endl;
 }
-catch (const std::exception &e) {
-    std::cerr << "Program threw an exception: " << e.what() << "\n";
+catch (const std::exception& e) {
+    std::cerr << "Program threw an exception: " << e.what() << '\n';
     throw;
 }

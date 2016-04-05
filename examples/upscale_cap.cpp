@@ -54,8 +54,29 @@
  */
 #include <config.h>
 
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
+
+#include <dune/common/version.hh>
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
+#include <dune/common/parallel/mpihelper.hh>
+#else
+#include <dune/common/mpihelper.hh>
+#endif
+
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
+
+#include <opm/core/utility/MonotCubicInterpolator.hpp>
+#include <opm/core/utility/Units.hpp>
+
+#include <opm/upscaling/SinglePhaseUpscaler.hpp>
+#include <opm/upscaling/ParserAdditions.hpp>
+
 #include <cfloat> // for DB_MAX/DBL_MIN
 #include <cmath>
+#include <cstdlib>
 #include <ctime>
 #include <fstream>
 #include <iomanip>
@@ -66,60 +87,47 @@
 
 #include <sys/utsname.h>
 
-#include <opm/parser/eclipse/Deck/DeckItem.hpp>
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/core/utility/MonotCubicInterpolator.hpp>
-#include <opm/core/utility/Units.hpp>
-#include <opm/upscaling/SinglePhaseUpscaler.hpp>
-#include <opm/upscaling/ParserAdditions.hpp>
-
-#include <dune/common/version.hh>
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
-#include <dune/common/parallel/mpihelper.hh>
-#else
-#include <dune/common/mpihelper.hh>
-#endif
-
 using namespace Opm;
 using namespace std;
 
-/**
-   Explains how to use the file. Shows possible option parameters.
+namespace {
 
- */
-void usage()
-{
-    cout << "Usage: upscale_cap <options> <eclipsefile> stoneA.txt stoneB.txt ..." << endl << 
-        "where the options are:" << endl <<
-        "  -points <integer>            -- Number of saturation points to report for." << endl <<
-        "                                  Uniformly distributed within saturation endpoints." << endl <<
-        "                                  Default 50." << endl << 
-        "  -jFunctionCurve <integer>    -- the column number in the stone-files that" << endl << 
-        "                                  represent the Leverett J-function. Default 4." << endl <<
-        "  -output <string>             -- filename for where to write upscaled values." << endl <<
-        "                                  If not supplied, output will only go to " << endl <<
-        "                                  the terminal (standard out)." << endl <<
-        "  -surfaceTension <float>      -- Surface tension to use in J-function/Pc conversion." << endl << 
-        "                                  Default 11 dynes/cm (oil-water systems). In absence of" << endl <<  
-        "                                  a correct value, the surface tension for gas-oil systems " << endl << 
-        "                                  could be 22.5 dynes/cm." << endl << 
-        "  -maxPermContrast <float>     -- maximal permeability contrast in model." << endl <<
-        "                                  Default 10^7" << endl <<
-        "  -minPerm <float>             -- Minimum floating point value allowed for" << endl << 
-        "                                  phase permeability in computations. If set to zero," << endl << 
-        "                                  some models can end up singular for permeability" << endl <<
-        "                                  upscaling. Default 10^-12" << endl << 
-        "" << endl <<
-        "If only one stone-file is supplied, it is used for all stone-types defined" << endl <<
-        "in the geometry. If more than one, it corresponds to the SATNUM-values." << endl;
-    // "minPoro" intentionally left undocumented
+    /**
+       Explains how to use the file. Shows possible option parameters.
+    */
+    void usage()
+    {
+        std::cout
+            << "Usage: upscale_cap <options> <eclipsefile> stoneA.txt stoneB.txt ...\n"
+            << "where the options are:\n"
+            << "  -points <integer>            -- Number of saturation points to report for.\n"
+            << "                                  Uniformly distributed within saturation endpoints.\n"
+            << "                                  Default 50.\n"
+            << "  -jFunctionCurve <integer>    -- the column number in the stone-files that\n"
+            << "                                  represent the Leverett J-function. Default 4.\n"
+            << "  -output <string>             -- filename for where to write upscaled values.\n"
+            << "                                  If not supplied, output will only go to\n"
+            << "                                  the terminal (standard out).\n"
+            << "  -surfaceTension <float>      -- Surface tension to use in J-function/Pc conversion.\n"
+            << "                                  Default 11 dynes/cm (oil-water systems). In absence of\n"
+            << "                                  a correct value, the surface tension for gas-oil systems\n"
+            << "                                  could be 22.5 dynes/cm.\n"
+            << "  -maxPermContrast <float>     -- maximal permeability contrast in model.\n"
+            << "                                  Default 10^7\n"
+            << "  -minPerm <float>             -- Minimum floating point value allowed for\n"
+            << "                                  phase permeability in computations. If set to zero,\n"
+            << "                                  some models can end up singular for permeability\n"
+            << "                                  upscaling. Default 10^-12\n\n"
+            << "If only one stone-file is supplied, it is used for all stone-types defined\n"
+            << "in the geometry. If more than one, it corresponds to the SATNUM-values." << std::endl;
 
-}
+        // "minPoro" intentionally left undocumented
+    }
 
-
-void usageandexit() {
-    usage();
-    exit(1);
+    void usageandexit() {
+        usage();
+        std::exit(EXIT_FAILURE);
+    }
 }
 
 int main(int varnum, char** vararg)

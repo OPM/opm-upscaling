@@ -51,17 +51,8 @@
  */
 #include <config.h>
 
-#include <cfloat> // for DBL_MAX
-#include <cmath>
-#include <ctime>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
-#include <map>
-#include <memory>
-#include <sstream>
-
-#include <sys/utsname.h>
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
 
@@ -74,109 +65,129 @@
 
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
-#include <opm/parser/eclipse/Deck/DeckItem.hpp>
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
 #include <opm/core/utility/Units.hpp>
-#include <opm/upscaling/SinglePhaseUpscaler.hpp>
+
 #include <opm/upscaling/ParserAdditions.hpp>
+#include <opm/upscaling/SinglePhaseUpscaler.hpp>
+
+#include <cfloat> // for DBL_MAX
+#include <cmath>
+#include <cstdlib>
+#include <ctime>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <sstream>
+
+#include <sys/utsname.h>
  
 using namespace Opm;
 using namespace std;
 
 
+namespace {
 
-/**
-   Explains how to use the file. Shows possible option parameters.
- */
-void usage()
-{
-    cout << "Usage: upscale_cond [<options>] <eclipsefile> Jfunc1.data [Jfunc2.data [...]]" << endl << 
-        "where the options are:" << endl <<
-        "  -bc <string>                    -- which boundary conditions to use." << endl <<
-        "                                     Possible values are f (fixed), " << endl <<
-        "                                     l (linear) and p (periodic). Default f." << endl <<
-        "  -points <integer>               -- Number of saturation points to compute for. " <<
-        "                                     Default 30" << endl <<
-        "  -resistivityCutoff <float>      -- Default 10000. Not necessary to touch" << endl <<
-        "  -lithologyCoeff <float>         -- Archie parameter. Default 1.0" << endl <<
-        "  -cementationExponent <float>    -- Archie parameter. Default 1.8" << endl <<
-        "  -saturationExponent <float>     -- Archie parameter. Default 2.3" << endl <<
-        "  -waterresistivity               -- Resistivity of formation water." << endl <<
-        "  -output <string>                -- Output to file as well as screen if" << endl <<
-        "                                     provided." << endl <<
-        "                                     Default none" << endl <<
-        "  -mudresistivity <float>         -- Constant resistivity for mud. Default 1.4" << endl <<
-        "  -mud1rocktype <int>             -- First mud rock type." << endl << 
-        "                                     0 if there are no mud types." << endl <<
-        "                                     Default 0" << endl <<
-        "  -mud2rocktype <int>             -- Second mud rock type. Default 0" << endl <<
-        "  -jFunctionCurve <int>           -- Which column in the supplied J-files" << endl <<
-        "                                     corresponds to the J-function values." << endl <<
-        "                                     Default 2." << endl <<
-        "  -surfaceTension <float>         -- Surface tension to use in J-function/Pc conversion." << endl << 
-        "                                     Default 11 dynes/cm (oil-water systems). In absence of" << endl <<  
-        "                                     a correct value, the surface tension for gas-oil systems " << endl << 
-        "                                     could be 22.5 dynes/cm." << endl <<                 
-        "  -interpolate <integer>          -- If supplied and > 1, the output data points will be" << endl << 
-        "                                     interpolated using monotone cubic interpolation" << endl << 
-        "                                     on a uniform grid with the specified number of" << endl << 
-        "                                     points. Suggested value: 1000." << endl <<         "" << endl <<
-        "  -rock<int>cemexp <float>        -- Cementation exponent can be set on a per rocktype basis" << endl <<
-        "  -rock<int>satexp <float>        -- Saturation exponent can be set on a per rocktype basis" << endl <<
-        "Jfunctions are data files with two colums of numbers. The first column is water " << endl <<
-        "saturation, the second is the J-function. The first Jfunction, Jfunc1.data" << endl <<
-        "corresponds to the first rock type defined in the eclipsefile's SATNUM. The" << endl <<
-        "second correspond to the second rock type and so on. If just one Jfunc is" << endl <<
-        "given, this is used for all rock types" << endl;
-    // "minPoro" intentionally left undocumented
+    /**
+       Explains how to use the file. Shows possible option parameters.
+    */
+    void usage()
+    {
+        std::cout
+            << "Usage: upscale_cond [<options>] <eclipsefile> Jfunc1.data [Jfunc2.data [...]]\n"
+            << "where the options are:\n"
+            << "  -bc <string>                    -- which boundary conditions to use.\n"
+            << "                                     Possible values are f (fixed),\n"
+            << "                                     l (linear) and p (periodic). Default f.\n"
+            << "  -points <integer>               -- Number of saturation points to compute for.\n"
+            << "                                     Default 30\n"
+            << "  -resistivityCutoff <float>      -- Default 10000. Not necessary to touch\n"
+            << "  -lithologyCoeff <float>         -- Archie parameter. Default 1.0\n"
+            << "  -cementationExponent <float>    -- Archie parameter. Default 1.8\n"
+            << "  -saturationExponent <float>     -- Archie parameter. Default 2.3\n"
+            << "  -waterresistivity               -- Resistivity of formation water.\n"
+            << "  -output <string>                -- Output to file as well as screen if\n"
+            << "                                     provided.\n"
+            << "                                     Default none\n"
+            << "  -mudresistivity <float>         -- Constant resistivity for mud. Default 1.4\n"
+            << "  -mud1rocktype <int>             -- First mud rock type.\n"
+            << "                                     0 if there are no mud types.\n"
+            << "                                     Default 0\n"
+            << "  -mud2rocktype <int>             -- Second mud rock type. Default 0\n"
+            << "  -jFunctionCurve <int>           -- Which column in the supplied J-files\n"
+            << "                                     corresponds to the J-function values.\n"
+            << "                                     Default 2.\n"
+            << "  -surfaceTension <float>         -- Surface tension to use in J-function/Pc conversion.\n"
+            << "                                     Default 11 dynes/cm (oil-water systems). In absence of\n"
+            << "                                     a correct value, the surface tension for gas-oil systems\n"
+            << "                                     could be 22.5 dynes/cm.\n"
+            << "  -interpolate <integer>          -- If supplied and > 1, the output data points will be\n"
+            << "                                     interpolated using monotone cubic interpolation\n"
+            << "                                     on a uniform grid with the specified number of\n"
+            << "                                     points. Suggested value: 1000.\n\n"
+            << "  -rock<int>cemexp <float>        -- Cementation exponent can be set on a per rocktype basis\n"
+            << "  -rock<int>satexp <float>        -- Saturation exponent can be set on a per rocktype basis\n\n"
+            << "Jfunctions are data files with two colums of numbers. The first column is water\n"
+            << "saturation, the second is the J-function. The first Jfunction, Jfunc1.data\n"
+            << "corresponds to the first rock type defined in the eclipsefile's SATNUM. The\n"
+            << "second correspond to the second rock type and so on. If just one Jfunc is\n"
+            << "given, this is used for all rock types" << std::endl;
 
-}
+            // "minPoro" intentionally left undocumented
 
-void usageandexit() {
-    usage();
-    exit(1);
-}
-// Assumes that permtensor_t use C ordering.
-double getVoigtValue(const SinglePhaseUpscaler::permtensor_t& K, int voigt_idx)
-{
-    assert(K.numRows() == 3 && K.numCols() == 3);
-    switch (voigt_idx) {
-    case 0: return K.data()[0];
-    case 1: return K.data()[4];
-    case 2: return K.data()[8];
-    case 3: return K.data()[5];
-    case 4: return K.data()[2];
-    case 5: return K.data()[1];
-    case 6: return K.data()[7];
-    case 7: return K.data()[6];
-    case 8: return K.data()[3];
-    default:
-        std::cout << "Voigt index out of bounds (only 0-8 allowed)" << std::endl;
-        throw std::exception();
     }
-}
 
-
-// Assumes that permtensor_t use C ordering.
-void setVoigtValue(SinglePhaseUpscaler::permtensor_t& K, int voigt_idx, double val)
-{
-    assert(K.numRows() == 3 && K.numCols() == 3);
-    switch (voigt_idx) {
-    case 0: K.data()[0] = val; break;
-    case 1: K.data()[4] = val; break;
-    case 2: K.data()[8] = val; break;
-    case 3: K.data()[5] = val; break;
-    case 4: K.data()[2] = val; break;
-    case 5: K.data()[1] = val; break;
-    case 6: K.data()[7] = val; break;
-    case 7: K.data()[6] = val; break;
-    case 8: K.data()[3] = val; break;
-    default:
-        std::cout << "Voigt index out of bounds (only 0-8 allowed)" << std::endl;
-        throw std::exception();
+    void usageandexit() {
+        usage();
+        std::exit(EXIT_FAILURE);
     }
-}
+
+    // Assumes that permtensor_t use C ordering.
+    double getVoigtValue(const SinglePhaseUpscaler::permtensor_t& K, int voigt_idx)
+    {
+         assert(K.numRows() == 3 && K.numCols() == 3);
+
+         switch (voigt_idx) {
+         case 0: return K.data()[0];
+         case 1: return K.data()[4];
+         case 2: return K.data()[8];
+         case 3: return K.data()[5];
+         case 4: return K.data()[2];
+         case 5: return K.data()[1];
+         case 6: return K.data()[7];
+         case 7: return K.data()[6];
+         case 8: return K.data()[3];
+
+         default:
+             std::cout << "Voigt index out of bounds (only 0-8 allowed)" << std::endl;
+             throw std::exception();
+         }
+    }
+
+    // Assumes that permtensor_t use C ordering.
+    void setVoigtValue(SinglePhaseUpscaler::permtensor_t& K, int voigt_idx, double val)
+    {
+         assert(K.numRows() == 3 && K.numCols() == 3);
+
+         switch (voigt_idx) {
+         case 0: K.data()[0] = val; break;
+         case 1: K.data()[4] = val; break;
+         case 2: K.data()[8] = val; break;
+         case 3: K.data()[5] = val; break;
+         case 4: K.data()[2] = val; break;
+         case 5: K.data()[1] = val; break;
+         case 6: K.data()[7] = val; break;
+         case 7: K.data()[6] = val; break;
+         case 8: K.data()[3] = val; break;
+
+         default:
+             std::cout << "Voigt index out of bounds (only 0-8 allowed)" << std::endl;
+             throw std::exception();
+        }
+    }
+} // Anonymous
 
 int main(int varnum, char** vararg)
 try

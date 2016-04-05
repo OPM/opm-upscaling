@@ -13,7 +13,6 @@
 # include "config.h"     
 #endif
 
-
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
 
 #include <dune/common/exceptions.hh> // We use exceptions
@@ -35,14 +34,16 @@
 
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
-#include <opm/elasticity/elasticity_upscale.hpp>
-#include <opm/elasticity/matrixops.hpp>
 #include <opm/core/utility/StopWatch.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 
-#include <iostream>
-#include <unistd.h>
+#include <opm/elasticity/elasticity_upscale.hpp>
+#include <opm/elasticity/matrixops.hpp>
+
 #include <cstring>
+#include <iostream>
+
+#include <unistd.h>
 
 using namespace Opm::Elasticity;
 

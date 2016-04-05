@@ -19,34 +19,43 @@
 */
 #include <config.h>
 
-#include <opm/output/eclipse/CornerpointChopper.hpp>
-#include <opm/output/eclipse/EclipseGridInspector.hpp>
-#include <opm/upscaling/SinglePhaseUpscaler.hpp>
-#include <opm/core/utility/MonotCubicInterpolator.hpp>
-#include <opm/porsol/common/setupBoundaryConditions.hpp>
-#include <opm/core/utility/Units.hpp>
-
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_int.hpp>
-#include <boost/random/uniform_real.hpp>
-#include <boost/random/variate_generator.hpp>
-
-#include <ios>
-#include <iomanip>
-#include <sys/utsname.h>
-#include <ctime>
-#include <sstream>
-#include <fstream>
-#include <iostream>
-#include <cfloat>
-#include <cmath>
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
 
 #include <dune/common/version.hh>
+
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
 #include <dune/common/parallel/mpihelper.hh>
 #else
 #include <dune/common/mpihelper.hh>
 #endif
+
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
+
+#include <opm/core/utility/MonotCubicInterpolator.hpp>
+#include <opm/core/utility/Units.hpp>
+
+#include <opm/output/eclipse/CornerpointChopper.hpp>
+#include <opm/output/eclipse/EclipseGridInspector.hpp>
+
+#include <opm/porsol/common/setupBoundaryConditions.hpp>
+
+#include <opm/upscaling/SinglePhaseUpscaler.hpp>
+
+#include <cfloat>
+#include <cmath>
+#include <ctime>
+#include <fstream>
+#include <iomanip>
+#include <ios>
+#include <iostream>
+#include <sstream>
+
+#include <sys/utsname.h>
+
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_int.hpp>
+#include <boost/random/uniform_real.hpp>
+#include <boost/random/variate_generator.hpp>
 
 int main(int argc, char** argv)
 try

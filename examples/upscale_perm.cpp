@@ -45,28 +45,33 @@
  */
 #include <config.h>
 
-#include <ctime>
-#include <fstream>
-#include <iomanip>
-#include <ctime>
-#include <iostream>
-#include <memory>
-#include <sstream>
-
-#include <sys/utsname.h>
-
-#include <opm/upscaling/SinglePhaseUpscaler.hpp>
-#include <opm/upscaling/ParserAdditions.hpp>
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
 
 #include <dune/common/version.hh>
+
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
 #include <dune/common/parallel/mpihelper.hh>
 #else
 #include <dune/common/mpihelper.hh>
 #endif
 
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
+
+#include <opm/upscaling/SinglePhaseUpscaler.hpp>
+#include <opm/upscaling/ParserAdditions.hpp>
+
+#include <ctime>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <memory>
+#include <sstream>
+
+#include <sys/utsname.h>
+
 using namespace std;
 
+namespace {
 
 void usage() {
     cout << endl <<
@@ -381,6 +386,8 @@ int upscale(int varnum, char** vararg) {
     }
     return 0;   
 }
+
+} // namespace anonymous
 
 /**
    @brief Upscales permeability

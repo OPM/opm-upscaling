@@ -32,32 +32,42 @@
    - Be careful with non-flat top and bottom boundary.
 
 */
-#include <config.h>
 
-#include <opm/output/eclipse/CornerpointChopper.hpp>
-#include <opm/output/eclipse/EclipseGridInspector.hpp>
-#include <opm/upscaling/SinglePhaseUpscaler.hpp>
-#include <opm/porsol/common/setupBoundaryConditions.hpp>
-#include <opm/core/utility/Units.hpp>
+#include <config.h>
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
-#include <ios>
-#include <iomanip>
-#include <sys/utsname.h>
-#include <ctime>
-#include <sstream>
-#include <fstream>
-#include <iostream>
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
 
 #include <dune/common/version.hh>
+
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
 #include <dune/common/parallel/mpihelper.hh>
 #else
 #include <dune/common/mpihelper.hh>
 #endif
+
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
+
+#include <opm/core/utility/Units.hpp>
+
+#include <opm/output/eclipse/CornerpointChopper.hpp>
+#include <opm/output/eclipse/EclipseGridInspector.hpp>
+
+#include <opm/porsol/common/setupBoundaryConditions.hpp>
+
+#include <opm/upscaling/SinglePhaseUpscaler.hpp>
+
+#include <ctime>
+#include <fstream>
+#include <iomanip>
+#include <ios>
+#include <iostream>
+#include <sstream>
+
+#include <sys/utsname.h>
 
 int main(int argc, char** argv)
 try

@@ -16,34 +16,43 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #include <config.h>
 
-
-#include <opm/output/eclipse/CornerpointChopper.hpp>
-#include <opm/upscaling/SinglePhaseUpscaler.hpp>
-#include <opm/porsol/common/setupBoundaryConditions.hpp>
-#include <opm/core/utility/Units.hpp>
-
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_int.hpp>
-#include <boost/random/uniform_real.hpp>
-#include <boost/random/variate_generator.hpp>
-
-#include <ios>
-#include <iomanip>
-#include <sys/utsname.h>
-#include <cmath> // for min()
-#include <ctime>
-#include <sstream>
-#include <fstream>
-#include <iostream>
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
 
 #include <dune/common/version.hh>
+
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
 #include <dune/common/parallel/mpihelper.hh>
 #else
 #include <dune/common/mpihelper.hh>
 #endif
+
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
+
+#include <opm/core/utility/Units.hpp>
+
+#include <opm/output/eclipse/CornerpointChopper.hpp>
+
+#include <opm/porsol/common/setupBoundaryConditions.hpp>
+
+#include <opm/upscaling/SinglePhaseUpscaler.hpp>
+
+#include <cmath> // for min()
+#include <ctime>
+#include <fstream>
+#include <iomanip>
+#include <ios>
+#include <iostream>
+#include <sstream>
+
+#include <sys/utsname.h>
+
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_int.hpp>
+#include <boost/random/uniform_real.hpp>
+#include <boost/random/variate_generator.hpp>
 
 /**
    This program is a variant of cpchop. Instead of subsampling randomly, 
