@@ -12,23 +12,27 @@
 #ifndef ELASTICITY_PRECONDITIONERS_HPP_
 #define ELASTICITY_PRECONDITIONERS_HPP_
 
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
+
 #include <dune/common/fmatrix.hh>
 #include <dune/istl/bcrsmatrix.hh>
 #include <dune/istl/matrixmatrix.hh>
 #include <dune/istl/ilu.hh>
 #include <dune/istl/solvers.hh>
 #include <dune/istl/preconditioners.hh>
-#include <dune/grid/CpGrid.hpp>
-
-#include <opm/elasticity/asmhandler.hpp>
-#include <opm/elasticity/matrixops.hpp>
-
 #include <dune/istl/superlu.hh>
 #include <dune/istl/umfpack.hh>
 #include <dune/istl/paamg/amg.hh>
 #include <dune/istl/paamg/fastamg.hh>
 #include <dune/istl/paamg/twolevelmethod.hh>
 #include <dune/istl/overlappingschwarz.hh>
+
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
+
+#include <dune/grid/CpGrid.hpp>
+#include <opm/elasticity/asmhandler.hpp>
+#include <opm/elasticity/matrixops.hpp>
+
 
 namespace Opm {
 namespace Elasticity {
@@ -71,7 +75,7 @@ struct Schwarz {
   //! \param[in] gv The cornerpoint grid
   //! \param[out] thread Whether or not to clone for threads
   static std::shared_ptr<type>
-                setup(int pre, int post, int target, int zcells,
+                setup(int /* pre */, int /* post */, int /* target */, int /* zcells */,
                       std::shared_ptr<Operator>& op, const Dune::CpGrid& gv,
                       ASMHandler<Dune::CpGrid>& A, bool& copy)
   {
@@ -111,8 +115,8 @@ struct AMG1 {
   //! \param[out] thread Whether or not to clone for threads
   static std::shared_ptr<type>
                 setup(int pre, int post, int target, int zcells,
-                      std::shared_ptr<Operator>& op, const Dune::CpGrid& gv,
-                      ASMHandler<Dune::CpGrid>& A, bool& copy)
+                      std::shared_ptr<Operator>& op, const Dune::CpGrid& /* gv */,
+                      ASMHandler<Dune::CpGrid>& /* A */, bool& copy)
   {
     Criterion crit;
     typename AMG1<Smoother>::type::SmootherArgs args;

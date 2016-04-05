@@ -117,7 +117,7 @@ namespace Opm
                             double rho = 0.5*((simstate.cell_z_[cell]+simstate.cell_z_[cell-1])*fluid.surfaceDensities());
                             double press = rho*((grid.cellCentroid(cell) - grid.cellCentroid(cell-1))*gravity) + simstate.cell_pressure_[cell-1][0];
                             simstate.cell_pressure_[cell] = PhaseVec(press);
-                            typename Fluid::FluidState state = fluid.computeState(simstate.cell_pressure_[cell], simstate.cell_z_[cell]);
+                            state = fluid.computeState(simstate.cell_pressure_[cell], simstate.cell_z_[cell]);
                             fluid_vol_dens = state.total_phase_volume_density_;
                             simstate.cell_z_[cell] *= 1.0/fluid_vol_dens;
                             ++cnt;
@@ -273,7 +273,7 @@ namespace Opm
                               int iCell,
                               int iRef,
                               double wo_contact_depth,
-                              double go_contact_depth,
+                              double /* go_contact_depth */,
                               double connate_water_saturation,
                               double residual_oil_saturation,
                               State& simstate)

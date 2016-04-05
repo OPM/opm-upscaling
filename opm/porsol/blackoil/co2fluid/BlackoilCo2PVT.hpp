@@ -118,7 +118,7 @@ private:
 
 // ------------ Method implementations --------------
 
-void BlackoilCo2PVT::init(Opm::DeckConstPtr deck)
+void BlackoilCo2PVT::init(Opm::DeckConstPtr /* deck */)
 {
 	surfaceDensities_[Water]   = 1000.;
 	surfaceDensities_[Gas] = 2.0;

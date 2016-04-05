@@ -12,6 +12,9 @@
 #ifndef ELASTICITY_UPSCALE_HPP_
 #define ELASTICITY_UPSCALE_HPP_
 
+
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
+
 #include <dune/common/fmatrix.hh>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <dune/grid/common/mcmgmapper.hh>
@@ -21,6 +24,8 @@
 #include <dune/istl/preconditioners.hh>
 #include <dune/grid/CpGrid.hpp>
 #include <opm/elasticity/shapefunctions.hpp>
+
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 #include <opm/elasticity/asmhandler.hpp>
 #include <opm/elasticity/boundarygrid.hh>
@@ -253,7 +258,7 @@ class ElasticityUpscale
     //! \param[in] dir The direction of the MPC
     //! \param[in] slave The slave node index
     //! \param[in] m The vertices on the master grid
-    void addMPC(Direction dir, int slave, 
+    void addMPC(Direction dir, int slavenode,
                 const BoundaryGrid::Vertex& m);
 
     //! \brief Establish periodic boundaries using the MPC approach
@@ -365,9 +370,9 @@ class ElasticityUpscale
     //! \param[in] dir The coordinate direction to enforce periodicity in
     //! \param[in] slave The slave point grid
     //! \param[in] master The master quad grid
-    void periodicPlane(Direction plane, Direction dir,
-                       const std::vector<BoundaryGrid::Vertex>& slave,
-                       const BoundaryGrid& master);
+    void periodicPlane(Direction planenormal, Direction dir,
+                       const std::vector<BoundaryGrid::Vertex>& slavepointgrid,
+                       const BoundaryGrid& mastergrid);
 
     //! \brief Fix the DOFs in a given point on the grid
     //! \param[in] dir The coordinate direction to fix in

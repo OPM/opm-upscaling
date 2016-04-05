@@ -175,6 +175,7 @@ namespace Opm
         ///
         /// @param [out] tensor
         /// @param [out] kmap
+        inline
         PermeabilityKind fillTensor(Opm::DeckConstPtr deck,
                                     std::vector<const std::vector<double>*>& tensor,
                                     std::array<int,9>&                     kmap)

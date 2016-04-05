@@ -162,7 +162,7 @@ public:
                   const double* cell_pressure,
                   const double* gravcapf,
                   const double* wellperf_gpot,
-                  const double* surf_dens)
+                  const double* /* surf_dens */)
     {
         if (state_ == Uninitialized) {
             throw std::runtime_error("Error in TpfaCompressibleAssembler::assemble(): You must call init() prior to calling assemble().");

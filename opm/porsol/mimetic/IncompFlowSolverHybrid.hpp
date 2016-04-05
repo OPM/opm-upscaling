@@ -38,22 +38,25 @@
 #ifndef OPENRS_INCOMPFLOWSOLVERHYBRID_HEADER
 #define OPENRS_INCOMPFLOWSOLVERHYBRID_HEADER
 
-#include <boost/unordered_map.hpp>
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/core/utility/SparseTable.hpp>
+#include <opm/porsol/common/BoundaryConditions.hpp>
+#include <opm/porsol/common/Matrix.hpp>
 
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
+
+#include <boost/unordered_map.hpp>
 #include <boost/bind.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
-#include <opm/common/ErrorMacros.hpp>
-#include <opm/core/utility/SparseTable.hpp>
 
 #include <dune/istl/bvector.hh>
 #include <dune/istl/bcrsmatrix.hh>
 #include <dune/istl/operators.hh>
 #include <dune/istl/io.hh>
-
 #include <dune/istl/overlappingschwarz.hh>
 #include <dune/istl/schwarz.hh>
 #include <dune/istl/preconditioners.hh>
@@ -67,8 +70,8 @@
 #include <dune/istl/paamg/kamg.hh>
 #include <dune/istl/paamg/pinfo.hh>
 
-#include <opm/porsol/common/BoundaryConditions.hpp>
-#include <opm/porsol/common/Matrix.hpp>
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
+
 
 #include <algorithm>
 #include <functional>
@@ -1510,8 +1513,10 @@ namespace Opm {
 #endif
                 criterion.setProlongationDampingFactor(prolong_factor);
                 criterion.setBeta(1e-10);
-                precond_.reset(new Precond(*opS_, criterion, smootherArgs,
-				           1, smooth_steps, smooth_steps));
+                criterion.setNoPreSmoothSteps(smooth_steps);
+                criterion.setNoPostSmoothSteps(smooth_steps);
+                criterion.setGamma(1); // V-cycle; this is the default
+                precond_.reset(new Precond(*opS_, criterion, smootherArgs));
             }
             // Construct solver for system of linear equations.
             Dune::CGSolver<Vector> linsolve(*opS_, dynamic_cast<Precond&>(*precond_), residTol, (maxit>0)?maxit:S_.N(), verbosity_level);

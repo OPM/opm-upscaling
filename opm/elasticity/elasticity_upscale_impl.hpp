@@ -123,8 +123,8 @@ IMPL_FUNC(BoundaryGrid, extractMasterFace(Direction dir,
   int p=0;
   std::map<double, std::vector<BoundaryGrid::Quad> >::const_iterator it;
   for (it = nodeMap.begin(); it != nodeMap.end(); ++it, ++p) {
-    for (size_t i=0;i<it->second.size();++i)
-      result.addToColumn(p,it->second[i]);
+    for (size_t ii=0;ii<it->second.size();++ii)
+      result.addToColumn(p,it->second[ii]);
   }
 
   return result;
@@ -157,10 +157,10 @@ IMPL_FUNC(void, findBoundaries(double* min, double* max))
   }
 }
 
-IMPL_FUNC(void, addMPC(Direction dir, int slave,
+IMPL_FUNC(void, addMPC(Direction dir, int slavenode,
                        const BoundaryGrid::Vertex& m))
 {
-  MPC* mpc = new MPC(slave,log2(dir)+1);
+  MPC* mpc = new MPC(slavenode,log2(dir)+1);
   if (m.i > -1) { // we matched a node exactly
     mpc->addMaster(m.i,log2(dir)+1,1.f);
   } else {
@@ -171,17 +171,17 @@ IMPL_FUNC(void, addMPC(Direction dir, int slave,
   A.addMPC(mpc);
 }
 
-IMPL_FUNC(void, periodicPlane(Direction plane,
-                              Direction dir, 
-                              const std::vector<BoundaryGrid::Vertex>& slave,
-                              const BoundaryGrid& master))
+IMPL_FUNC(void, periodicPlane(Direction /*plane */,
+                              Direction /* dir */,
+                              const std::vector<BoundaryGrid::Vertex>& slavepointgrid,
+                              const BoundaryGrid& mastergrid))
 {
-  for (size_t i=0;i<slave.size();++i) {
+  for (size_t i=0;i<slavepointgrid.size();++i) {
     BoundaryGrid::Vertex coord;
-    if (master.find(coord,slave[i])) {
-      addMPC(X,slave[i].i,coord);
-      addMPC(Y,slave[i].i,coord);
-      addMPC(Z,slave[i].i,coord);
+    if (mastergrid.find(coord,slavepointgrid[i])) {
+      addMPC(X,slavepointgrid[i].i,coord);
+      addMPC(Y,slavepointgrid[i].i,coord);
+      addMPC(Z,slavepointgrid[i].i,coord);
     }
   }
 }
@@ -232,7 +232,7 @@ static std::vector< std::vector<int> > renumber(const BoundaryGrid& b,
 
 IMPL_FUNC(int, addBBlockMortar(const BoundaryGrid& b1,
                                const BoundaryGrid& interface,
-                               int dir, int n1, int n2,
+                               int /* dir */, int n1, int n2,
                                int colofs))
 {
   // renumber the linear grid to the real multiplier grid
@@ -493,8 +493,8 @@ IMPL_FUNC(void, assemble(int loadcase, bool matrix))
           if (detJ <= 1.e-5 && verbose) {
             std::cout << "cell " << color[i][j][k] << " is (close to) degenerated, detJ " << detJ << std::endl;
             double zdiff=0.0;
-            for (int i=0;i<4;++i)
-              zdiff = std::max(zdiff, it->geometry().corner(i+4)[2]-it->geometry().corner(i)[2]);
+            for (int ii=0;ii<4;++ii)
+              zdiff = std::max(zdiff, it->geometry().corner(ii+4)[2]-it->geometry().corner(ii)[2]);
             std::cout << " - Consider setting ctol larger than " << zdiff << std::endl;
           }
 
@@ -522,7 +522,7 @@ IMPL_FUNC(void, assemble(int loadcase, bool matrix))
 
 IMPL_FUNC(template<int comp> void,
           averageStress(Dune::FieldVector<ctype,comp>& sigma,
-                        const Vector& u, int loadcase))
+                        const Vector& uarg, int loadcase))
 {
   if (loadcase < 0 || loadcase > 5)
     return;
@@ -544,7 +544,7 @@ IMPL_FUNC(template<int comp> void,
     Dune::GeometryType gt = it->type();
 
     Dune::FieldVector<ctype,bfunc*dim> v;
-    A.extractValues(v,u,it);
+    A.extractValues(v,uarg,it);
 
     // get a quadrature rule of order two for the given geometry type
     const Dune::QuadratureRule<ctype,dim>& rule = Dune::QuadratureRules<ctype,dim>::rule(gt,2);
@@ -698,9 +698,9 @@ IMPL_FUNC(void, loadMaterialsFromGrid(const std::string& file))
     }
     bySat = false;
   } else {
-    for (size_t j=0; j < volumeFractions.size(); ++j) {
-      volumeFractions[j] /= totalvolume;
-      std::cout << "SATNUM " << j+1 << ": " << volumeFractions[j]*100 << '%' << std::endl;
+    for (size_t jj=0; jj < volumeFractions.size(); ++jj) {
+      volumeFractions[jj] /= totalvolume;
+      std::cout << "SATNUM " << jj+1 << ": " << volumeFractions[jj]*100 << '%' << std::endl;
     }
     bySat = true;
   }
@@ -720,9 +720,9 @@ IMPL_FUNC(void, loadMaterialsFromRocklist(const std::string& file,
   int mats;
   f >> mats;
   for (int i=0;i<mats;++i) {
-    std::string file;
-    f >> file;
-    cache.push_back(std::shared_ptr<Material>(Material::create(i+1,file)));
+    std::string matfile;
+    f >> matfile;
+    cache.push_back(std::shared_ptr<Material>(Material::create(i+1,matfile)));
   }
 
   // scale E modulus of materials

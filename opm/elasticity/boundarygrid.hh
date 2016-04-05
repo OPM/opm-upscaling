@@ -12,12 +12,17 @@
 #ifndef BOUNDARYGRID_HH_
 #define BOUNDARYGRID_HH_
 
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
+
 #include <dune/common/version.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/geometry/referenceelements.hh>
 #include <dune/geometry/genericgeometry/matrixhelper.hh>
 #include <dune/grid/common/mcmgmapper.hh>
+
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
+
 
 #include <vector>
 

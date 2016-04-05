@@ -61,12 +61,16 @@
 #include <map>
 #include <sys/utsname.h>
 
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
+
 #include <dune/common/version.hh>
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
 #include <dune/common/parallel/mpihelper.hh>
 #else
 #include <dune/common/mpihelper.hh>
 #endif
+
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
@@ -539,8 +543,7 @@ try
    double Swirvolume = 0;
    double Sworvolume = 0;
    const std::vector<int>& ecl_idx = upscaler.grid().globalCell();
-   Dune::CpGrid::Codim<0>::LeafIterator c = upscaler.grid().leafbegin<0>();
-   for (; c != upscaler.grid().leafend<0>(); ++c) {
+   for (auto c = upscaler.grid().leafbegin<0>(); c != upscaler.grid().leafend<0>(); ++c) {
        size_t cell_idx = ecl_idx[c->index()];
        if (satnums[cell_idx] > 0) { // Satnum zero is "no rock"
            cellVolumes[cell_idx] = c->geometry().volume();
@@ -733,8 +736,7 @@ try
        }
        
        double waterVolume = 0.0;
-       Dune::CpGrid::Codim<0>::LeafIterator c = upscaler.grid().leafbegin<0>();
-       for (; c != upscaler.grid().leafend<0>(); ++c) {
+       for (auto c = upscaler.grid().leafbegin<0>(); c != upscaler.grid().leafend<0>(); ++c) {
            size_t cell_idx = ecl_idx[c->index()];
            //           for (size_t cell_idx = 0; cell_idx < satnums.size(); ++cell_idx) {
            //if (LFgrid.getCellIndex(cell_idx) != EMPTY) {
@@ -862,8 +864,7 @@ try
            // capillary pressure:
            waterVolumeLF = 0.0;
 
-           Dune::CpGrid::Codim<0>::LeafIterator c = upscaler.grid().leafbegin<0>();
-           for (; c != upscaler.grid().leafend<0>(); ++c) {
+           for (auto c = upscaler.grid().leafbegin<0>(); c != upscaler.grid().leafend<0>(); ++c) {
                size_t cell_idx = ecl_idx[c->index()];
                //               for (size_t cell_idx = 0; cell_idx < satnums.size(); ++cell_idx) {
                //  if (LFgrid.getCellIndex(cell_idx) != EMPTY) {

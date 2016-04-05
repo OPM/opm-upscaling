@@ -62,7 +62,7 @@ void PreApplier::apply(Vector& v, Vector& d)
 }
 
   template<>
-void InverseApplier::pre(Vector& x, Vector& b)
+void InverseApplier::pre(Vector& /* x */, Vector& /* b */)
 {
 }
 
@@ -73,7 +73,7 @@ void PreApplier::pre(Vector& x, Vector& b)
 }
 
   template<>
-void InverseApplier::post(Vector& x)
+void InverseApplier::post(Vector& /* x */)
 {
 }
 

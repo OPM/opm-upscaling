@@ -54,7 +54,7 @@ void ASMHandler<GridType>::addDOF(int row, int erow,
                               const Dune::FieldVector<double,esize>* S,
                               const LeafIndexSet& set,
                               const LeafIterator& cell, 
-                              Vector* b,
+                              Vector* bptr,
                               double scale)
 {
   if (row == -1)
@@ -76,8 +76,8 @@ void ASMHandler<GridType>::addDOF(int row, int erow,
       }
     }
   }
-  if (S && b)
-    (*b)[row] += scale*(*S)[erow];
+  if (S && bptr)
+    (*bptr)[row] += scale*(*S)[erow];
 }
 
   template<class GridType>

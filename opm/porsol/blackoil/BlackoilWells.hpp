@@ -486,7 +486,7 @@ namespace Opm
         return well_cell_pressure_[cell];
     }
 
-    inline Dune::FieldVector<double, 3> BlackoilWells::injectionMixture(int cell) const
+    inline Dune::FieldVector<double, 3> BlackoilWells::injectionMixture(int /* cell */) const
     {
         return injection_mixture_;
     }

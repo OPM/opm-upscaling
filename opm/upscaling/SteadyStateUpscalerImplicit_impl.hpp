@@ -260,7 +260,6 @@ namespace Opm
                     Opm::writeECLData(*grid_adapter_.c_grid(), datamap, it_count, ecl_time, ecl_curdate, "./", basename);
                 }
                 // Comparing old to new.
-                int num_cells = saturation.size();
                 double maxdiff = 0.0;
                 double euclidean_diff = 0.0;
                 for (int i = 0; i < num_cells; ++i) {

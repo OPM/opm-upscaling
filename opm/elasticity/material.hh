@@ -12,8 +12,12 @@
 #ifndef MATERIAL_HH_
 #define MATERIAL_HH_
 
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
+
 #include <dune/common/fmatrix.hh>
 #include <dune/common/dynvector.hh>
+
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 namespace Opm {
 namespace Elasticity {
@@ -52,7 +56,7 @@ public:
   //! \brief Returns the number of parameters describing this material.
   virtual int numPar() const = 0;
   //! \brief Returns the \a ipar'th parameter describing this material.
-  virtual double getPar(int ipar = 1) const
+  virtual double getPar(int /* ipar */ = 1) const
   {
     return double(0);
   }

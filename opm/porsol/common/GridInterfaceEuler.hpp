@@ -36,14 +36,19 @@
 #ifndef OPENRS_GRIDINTERFACEEULER_HEADER
 #define OPENRS_GRIDINTERFACEEULER_HEADER
 
-#include <dune/common/fvector.hh>
 #include <opm/core/utility/SparseTable.hpp>
 #include <opm/core/utility/StopWatch.hpp>
-#include <dune/grid/common/mcmgmapper.hh>
 #include <dune/grid/CpGrid.hpp> // How to avoid this? Needed for the explicit mapper specialization below.
+
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
+
+#include <dune/common/fvector.hh>
+#include <dune/grid/common/mcmgmapper.hh>
 
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/scoped_ptr.hpp>
+
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 #include <climits>
 #include <iostream>

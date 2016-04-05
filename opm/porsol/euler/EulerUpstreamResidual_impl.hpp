@@ -268,15 +268,9 @@ namespace Opm
                     if (s.method_capillary_) {
                         // J(s_w) = \frac{p_c(s_w)\sqrt{k/\phi}}{\sigma \cos\theta}
                         // p_c = \frac{J \sigma \cos\theta}{\sqrt{k/\phi}}
-                        Vector cap_influence = prod(aver_perm, s.estimateCapPressureGradient(f, nbface, saturation));
+                        Vector cap_influence = prod(aver_perm, s.estimateCapPressureGradient(f, nbface));
                         const double cap_change = loc_area
 			    *inner(loc_normal, m_aver[0].multiply(m_aver_totinv.multiply(m_aver[1].multiply(cap_influence))));
-                        // 		    const double cap_vel = inner(loc_normal, prod(aver_perm, estimateCapPressureGradient(f, nbface, saturation)));
-                        // 		    const double loc_cap_flux = cap_vel*loc_area;
-                        // //   		    const double cap_change = loc_cap_flux*(m_aver[1].mob*m_aver[0].mob
-                        // //   							    /(m_aver[0].mob + m_aver[1].mob));
-                        //  		    const double cap_change = loc_cap_flux*(aver_lambda_two*aver_lambda_one
-                        //  							    /(aver_lambda_one + aver_lambda_two));
                         dS += cap_change;
                     }
 
@@ -510,7 +504,7 @@ namespace Opm
     template <class GI, class RP, class BC>
     inline typename GI::Vector
     EulerUpstreamResidual<GI, RP, BC>::
-    estimateCapPressureGradient(const FIt& f, const FIt& nbf, const std::vector<double>& saturation) const
+    estimateCapPressureGradient(const FIt& f, const FIt& nbf) const
     {
 	typedef typename GI::CellIterator::FaceIterator Face;
 	typedef typename Face::Cell Cell;

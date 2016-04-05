@@ -124,27 +124,6 @@ public:
         pc[Vapour] = params.pcog_(sg);
     }
 
-    /*!
-     * \brief The saturation-capillary pressure curve.
-     *
-     * This is the inverse of the capillary pressure-saturation curve:
-     * \f[
-     S_w = 1 - \frac{p_C - p_{C,entry}}{p_{C,max} - p_{C,entry}}
-     \f]
-     *
-     * \param pC Capillary pressure \f$\p_C\f$
-     * \return The effective saturaion of the wetting phase \f$\overline{S}_w\f$
-     */
-    template <class SatContainerT, class pcContainerT>
-    static void S(SatContainerT &saturations,
-                  const Params &params, 
-                  const pcContainerT &pc,
-                  Scalar /*temperature*/)
-    {
-        std::cerr << "FluidMatrixInteractionBlackoil::S() is not implemented yet\n";
-        throw std::logic_error("Not implemented");
-    }
-
 
     /*!
      * \brief The relative permeability of all phases.
