@@ -170,7 +170,7 @@ include (${PROJECT_SOURCE_DIR}/EmbedCases.cmake)
 # Setup static benchmarks
 include(OpmStaticTargets)
 opm_from_git(${PROJECT_SOURCE_DIR} benchmarks ${VCS_SHA1} benchmarks)
-add_dependencies(benchmarks-static dune-cornerpoint-static)
+add_dependencies(benchmarks-static opm-grid-static)
 
 # Copy static benchmarks to main project binary directory
 foreach(benchmark ${OPM_BENCHMARKS})

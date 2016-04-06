@@ -216,7 +216,7 @@ try
    options.insert(make_pair("minPerm",                "1e-12" )); // minimum modelled permeability (for saturation distr)
    options.insert(make_pair("minPoro",            "0.0001")); // this limit is necessary for pcmin/max computation
 
-   // dune-cornerpoint specific options
+   // linear solver options
    options.insert(make_pair("linsolver_tolerance", "1e-12"));  // residual tolerance for linear solver
    options.insert(make_pair("linsolver_verbosity", "0"));     // verbosity level for linear solver
    options.insert(make_pair("linsolver_type",      "3"));     // type of linear solver: 0 = ILU/BiCGStab, 1 = AMG/CG, 2 = KAMG/CG, 3 = FastAMG/CG
