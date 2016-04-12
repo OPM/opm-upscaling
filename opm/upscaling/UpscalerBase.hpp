@@ -35,11 +35,14 @@
 #ifndef OPM_UPSCALERBASE_HEADER
 #define OPM_UPSCALERBASE_HEADER
 
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
+
 #include <dune/grid/CpGrid.hpp>
+
 #include <opm/porsol/common/GridInterfaceEuler.hpp>
 #include <opm/porsol/common/BoundaryConditions.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
 
 
 namespace Opm
