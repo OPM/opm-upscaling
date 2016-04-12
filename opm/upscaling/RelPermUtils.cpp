@@ -652,10 +652,12 @@ double RelPermUpscaleHelper::tesselateGrid(Opm::DeckConstPtr deck)
     const auto linsolver_tolerance         = to_double(options["linsolver_tolerance"]);
     const auto linsolver_verbosity         = to_int   (options["linsolver_verbosity"]);
     const auto linsolver_type              = to_int   (options["linsolver_type"]);
+    const auto twodim_hack                 = false;
     const auto linsolver_maxit             = to_int   (options["linsolver_max_iterations"]);
     const auto smooth_steps                = to_int   (options["linsolver_smooth_steps"]);
     const auto linsolver_prolongate_factor = to_double(options["linsolver_prolongate_factor"]);
     const auto minPerm                     = to_double(options["minPerm"]);
+    const auto gravity                     = to_double(options["gravity"]);
 
     if (isMaster) {
         std::cout << "Tesselating grid... ";
@@ -667,8 +669,9 @@ double RelPermUpscaleHelper::tesselateGrid(Opm::DeckConstPtr deck)
 
     upscaler.init(deck, boundaryCondition,
                   unit::convert::from(minPerm, prefix::milli*unit::darcy),
-                  linsolver_tolerance, linsolver_verbosity, linsolver_type, false,
-                  linsolver_maxit, linsolver_prolongate_factor, smooth_steps);
+                  linsolver_tolerance, linsolver_verbosity, linsolver_type,
+                  twodim_hack, linsolver_maxit, linsolver_prolongate_factor,
+                  smooth_steps, gravity);
 
     const auto finish = clock();
     const auto timeused_tesselation =
