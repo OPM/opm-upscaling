@@ -67,8 +67,8 @@ namespace Opm
 
         // Oil PVT
         const auto& tables     = eclipseState->getTableManager();
-        const auto& pvdoTables = tables->getPvdoTables();
-        const auto& pvtoTables = tables->getPvtoTables();
+        const auto& pvdoTables = tables.getPvdoTables();
+        const auto& pvtoTables = tables.getPvtoTables();
         if (!pvdoTables.empty()) {
             const auto& pvdoTable = pvdoTables.getTable<PvdoTable>(0);
             oil_props_.reset(new MiscibilityDead(pvdoTable));
@@ -85,8 +85,8 @@ namespace Opm
         }
 
 	// Gas PVT
-        const auto& pvdgTables = tables->getPvdgTables();
-        const auto& pvtgTables = tables->getPvtgTables();
+        const auto& pvdgTables = tables.getPvdgTables();
+        const auto& pvtgTables = tables.getPvtgTables();
         if (!pvdgTables.empty()) {
             const auto& pvdgTable = pvdgTables.getTable<PvdgTable>(0);
             gas_props_.reset(new MiscibilityDead(pvdgTable));
