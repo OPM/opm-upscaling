@@ -50,8 +50,8 @@ public:
         EclipseState eclipseState(deck , parseContext);
         // Extract input data.
         const auto& tables    = eclipseState.getTableManager();
-        const auto& swofTable = tables->getSwofTables().getTable<SwofTable>(0);
-        const auto& sgofTable = tables->getSgofTables().getTable<SgofTable>(0);
+        const auto& swofTable = tables.getSwofTables().getTable<SwofTable>(0);
+        const auto& sgofTable = tables.getSgofTables().getTable<SgofTable>(0);
 
         std::vector<double> sw = swofTable.getSwColumn().vectorCopy();
         std::vector<double> krw = swofTable.getKrwColumn().vectorCopy();
