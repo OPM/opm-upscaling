@@ -407,7 +407,7 @@ void BlackoilCo2PVT::computeState(BlackoilCo2PVT::SubState& ss, double zBrine, d
     double massCO2 = surfaceDensities_[Gas]*zCO2;
         
     // A priori, assume presence of both phases
-    typename FluidSystem::ParameterCache paramCache;
+    FluidSystem::ParameterCache<double> paramCache;
     typedef Opm::MiscibleMultiPhaseComposition</*Scalar=*/double, FluidSystem> MMPC;
     MMPC::solve(fluidState, paramCache, /*setViscosity=*/false, /*setEnthalpy=*/false);
     ss.density[wPhase] = fluidState.density(wPhase);
