@@ -12,12 +12,12 @@ License:        GPL-3.0
 Group:          Development/Libraries/C and C++
 Url:            http://www.opm-project.org/
 Source0:        https://github.com/OPM/%{name}/archive/release/%{version}/%{tag}.tar.gz#/%{name}-%{version}.tar.gz
-BuildRequires:  blas-devel lapack-devel dune-common-devel dune-cornerpoint-devel
+BuildRequires:  blas-devel lapack-devel dune-common-devel opm-grid-devel
 BuildRequires:  git suitesparse-devel doxygen bc opm-parser-devel
 BuildRequires:  tinyxml-devel dune-istl-devel opm-common-devel opm-core-devel
-BuildRequires:  opm-material-devel ert.ecl-devel boost148-devel
-%{?el6:BuildRequires: cmake28 devtoolset-2 superlu-devel}
-%{!?el6:BuildRequires: cmake gcc gcc-gfortran gcc-c++ SuperLU-devel}
+BuildRequires:  opm-material-devel ert.ecl-devel opm-output-devel
+%{?el6:BuildRequires: cmake28 devtoolset-2 superlu-devel boost148-devel}
+%{!?el6:BuildRequires: cmake gcc gcc-gfortran gcc-c++ SuperLU-devel boost-devel}
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Requires:       libopm-upscaling1 = %{version}
 
@@ -66,7 +66,7 @@ This package contains the applications for opm-upscaling
 # consider using -DUSE_VERSIONED_DIR=ON if backporting
 %build
 %{?el6:scl enable devtoolset-2 bash}
-%{?el6:cmake28} %{!?el6:cmake} -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_INSTALL_DOCDIR=share/doc/%{name}-%{version} -DUSE_RUNPATH=OFF %{?el6:-DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-2/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-2/root/usr/bin/gcc} -DBOOST_LIBRARYDIR=%{_libdir}/boost148 -DBOOST_INCLUDEDIR=/usr/include/boost148 -DINSTALL_BENCHMARKS=1
+%{?el6:cmake28} %{!?el6:cmake} -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_INSTALL_DOCDIR=share/doc/%{name}-%{version} -DUSE_RUNPATH=OFF %{?el6:-DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-2/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-2/root/usr/bin/gcc -DBOOST_LIBRARYDIR=%{_libdir}/boost148 -DBOOST_INCLUDEDIR=/usr/include/boost148} -DINSTALL_BENCHMARKS=1
 make
 
 %install
@@ -81,7 +81,7 @@ rm -rf %{buildroot}
 %postun -n libopm-upscaling1 -p /sbin/ldconfig
 
 %files
-%doc README
+%doc README COPYING
 
 %files doc
 %{_docdir}/*
