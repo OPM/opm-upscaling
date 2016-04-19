@@ -861,7 +861,7 @@ void RelPermUpscaleHelper::calculateMinMaxCapillaryPressure()
     // Sometimes, if Swmax=1 or Swir=0 in the input tables, the upscaled
     // values can be a little bit larger (within machine precision) and the
     // check below fails. Hence, check if these values are within the [0,1]
-    // interval within some precision (use linsolver_precision)
+    // interval within some precision (use linsolver_tolerance)
     if ((Swor > 1.0) && (Swor - linsolver_tolerance < 1.0)) {
         Swor = 1.0;
     }
