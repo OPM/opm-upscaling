@@ -208,7 +208,7 @@ namespace Opm {
             params.insertParameter("linsolver_tolerance",
                                    boost::lexical_cast<std::string>(5.0e-9));
 
-            params.insertParameter("linsoler_verbosity",
+            params.insertParameter("linsolver_verbosity",
                                    boost::lexical_cast<std::string>(1));
 
             params.insertParameter("linsolver_type",
