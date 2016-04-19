@@ -24,12 +24,18 @@
 #ifndef OPM_UPSCALING_RELPERM_UTILS_HPP
 #define OPM_UPSCALING_RELPERM_UTILS_HPP
 
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
 
+#include <opm/upscaling/ParserAdditions.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 
 #include <array>
 #include <map>
+#include <memory>
 #include <tuple>
 #include <vector>
 
@@ -68,6 +74,18 @@ namespace Opm {
       double volume; //!< Total volume.
       double poreVolume; //!< Total pore volume.
       std::vector<double> pressurePoints; //!< Vector of capillary pressure points between Swor and Swir.
+
+      //! \brief Form Deck object from input file (ECLIPSE format)
+      //!
+      //! \tparam String String type for representing pathnames.  Typically
+      //! \code std::string \endcode or \code const char* \endcode.
+      //!
+      //! \param[in] eclipseFileName Name of input ECLIPSE file.
+      //!
+      //! \return Deck object resulting from parsing input file.
+      template <class String>
+      static std::shared_ptr<Deck>
+      parseEclipseFile(const String& eclipseFileName);
 
       //! \brief Default constructor.
       //! \param[in] mpi_rank Rank of this process (for parallel simulations).
@@ -160,6 +178,16 @@ namespace Opm {
       std::vector<double> dP; //!<  Cell center pressure gradients due to gravity effects.
       std::map<std::string,std::string>& options; //!< Reference to options structure.
   };
+
+  template <class String>
+  std::shared_ptr<Deck>
+  RelPermUpscaleHelper::parseEclipseFile(const String& eclipseFileName)
+  {
+    auto parser = Parser{};
+    addNonStandardUpscalingKeywords(parser);
+
+    return parser.parseFile(eclipseFileName, ParseContext{});
+  }
 }
 
-#endif
+#endif  // OPM_UPSCALING_RELPERM_UTILS_HPP

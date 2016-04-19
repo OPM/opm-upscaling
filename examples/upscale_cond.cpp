@@ -51,9 +51,6 @@
  */
 #include <config.h>
 
-#include <opm/parser/eclipse/Deck/DeckItem.hpp>
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
 
 #include <dune/common/version.hh>
@@ -68,7 +65,7 @@
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
 #include <opm/core/utility/Units.hpp>
 
-#include <opm/upscaling/ParserAdditions.hpp>
+#include <opm/upscaling/RelPermUtils.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 
 #include <cfloat> // for DBL_MAX
@@ -142,50 +139,6 @@ namespace {
     void usageandexit() {
         usage();
         std::exit(EXIT_FAILURE);
-    }
-
-    // Assumes that permtensor_t use C ordering.
-    double getVoigtValue(const SinglePhaseUpscaler::permtensor_t& K, int voigt_idx)
-    {
-         assert(K.numRows() == 3 && K.numCols() == 3);
-
-         switch (voigt_idx) {
-         case 0: return K.data()[0];
-         case 1: return K.data()[4];
-         case 2: return K.data()[8];
-         case 3: return K.data()[5];
-         case 4: return K.data()[2];
-         case 5: return K.data()[1];
-         case 6: return K.data()[7];
-         case 7: return K.data()[6];
-         case 8: return K.data()[3];
-
-         default:
-             std::cout << "Voigt index out of bounds (only 0-8 allowed)" << std::endl;
-             throw std::exception();
-         }
-    }
-
-    // Assumes that permtensor_t use C ordering.
-    void setVoigtValue(SinglePhaseUpscaler::permtensor_t& K, int voigt_idx, double val)
-    {
-         assert(K.numRows() == 3 && K.numCols() == 3);
-
-         switch (voigt_idx) {
-         case 0: K.data()[0] = val; break;
-         case 1: K.data()[4] = val; break;
-         case 2: K.data()[8] = val; break;
-         case 3: K.data()[5] = val; break;
-         case 4: K.data()[2] = val; break;
-         case 5: K.data()[1] = val; break;
-         case 6: K.data()[7] = val; break;
-         case 7: K.data()[6] = val; break;
-         case 8: K.data()[3] = val; break;
-
-         default:
-             std::cout << "Voigt index out of bounds (only 0-8 allowed)" << std::endl;
-             throw std::exception();
-        }
     }
 } // Anonymous
 
@@ -357,10 +310,8 @@ try
 
    if (isMaster) cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... ";
    flush(cout);   start = clock();
-   Opm::ParseContext parseMode;
-   auto parser = std::make_shared<Opm::Parser>();
-   Opm::addNonStandardUpscalingKeywords(*parser);
-   Opm::DeckConstPtr deck(parser->parseFile(ECLIPSEFILENAME , parseMode));
+
+   auto deck = RelPermUpscaleHelper::parseEclipseFile(ECLIPSEFILENAME);
 
    finish = clock();   timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
    if (isMaster) cout << " (" << timeused <<" secs)" << endl;
@@ -945,7 +896,7 @@ try
 
       // Store result
       for (int voigtIdx = 0; voigtIdx < tensorElementCount; ++voigtIdx) {
-          UpscaledConductivity[pointidx][voigtIdx] = getVoigtValue(resTensor, voigtIdx);
+          UpscaledConductivity[pointidx][voigtIdx] = ::Opm::getVoigtValue(resTensor, voigtIdx);
       }
 
       //      finish = clock();    timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
@@ -958,7 +909,7 @@ try
 #endif
       cout << Ptestvalue << "\t" << waterVolumeLF/poreVolume;
       for (int voigtIdx = 0; voigtIdx < tensorElementCount; ++voigtIdx) {
-          cout << "\t" << getVoigtValue(resTensor, voigtIdx);
+          cout << "\t" << ::Opm::getVoigtValue(resTensor, voigtIdx);
       }
       cout << endl;
    }
@@ -1141,11 +1092,11 @@ try
        for (int idx=0; idx < points; ++idx) {
            Matrix condTensor(zeroMatrix);
            for (int voigtIdx = 0; voigtIdx < tensorElementCount; ++voigtIdx) {
-               setVoigtValue(condTensor, voigtIdx, UpscaledConductivity[idx][voigtIdx]);
+               ::Opm::setVoigtValue(condTensor, voigtIdx, UpscaledConductivity[idx][voigtIdx]);
            }
            //cout << phasePermTensor << endl;
            for (int voigtIdx = 0; voigtIdx < tensorElementCount; ++voigtIdx) {
-               ResDirValues[voigtIdx].push_back(getVoigtValue(condTensor, voigtIdx));
+               ResDirValues[voigtIdx].push_back(::Opm::getVoigtValue(condTensor, voigtIdx));
            }
            //cout << relPermTensor << endl;
        }

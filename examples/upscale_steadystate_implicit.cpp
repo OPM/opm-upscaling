@@ -51,7 +51,7 @@
 #include <opm/porsol/common/SimulatorTraits.hpp>
 #include <opm/porsol/euler/EulerUpstreamImplicit.hpp>
 
-#include <opm/upscaling/ParserAdditions.hpp>
+#include <opm/upscaling/RelPermUtils.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 #include <opm/upscaling/SteadyStateUpscalerImplicit.hpp>
 #include <opm/upscaling/SteadyStateUpscalerManagerImplicit.hpp>
@@ -98,26 +98,6 @@ void usage()
 void usageandexit() {
     usage();
     std::exit(EXIT_FAILURE);
-}
-
-// Assumes that permtensor_t use C ordering.
-double getVoigtValue(const SinglePhaseUpscaler::permtensor_t& K, int voigt_idx)
-{
-    assert(K.numRows() == 3 && K.numCols() == 3);
-    switch (voigt_idx) {
-    case 0: return K.data()[0];
-    case 1: return K.data()[4];
-    case 2: return K.data()[8];
-    case 3: return K.data()[5];
-    case 4: return K.data()[2];
-    case 5: return K.data()[1];
-    case 6: return K.data()[7];
-    case 7: return K.data()[6];
-    case 8: return K.data()[3];
-    default:
-        std::cout << "Voigt index out of bounds (only 0-8 allowed)" << std::endl;
-        throw std::exception();
-    }
 }
 
 std::vector<std::vector<double> > getExtremeSats(std::string rock_list, std::vector<std::string>& rockfilelist, bool anisorocks=false) {
@@ -203,13 +183,11 @@ try
     if (argc == 1) {
         usageandexit();
     }
+
     // Initialize.
-    Opm::ParseContext parseMode;
     Opm::parameter::ParameterGroup param(argc, argv);
     std::string gridfilename = param.get<std::string>("gridfilename");
-    auto parser = std::make_shared<Opm::Parser>();
-    Opm::addNonStandardUpscalingKeywords(*parser);
-    Opm::DeckConstPtr deck(parser->parseFile(gridfilename , parseMode));
+    auto deck = Opm::RelPermUpscaleHelper::parseEclipseFile(gridfilename);
 
     // Check that we have the information we need from the eclipse file:  
     if (! (deck->hasKeyword("SPECGRID") && deck->hasKeyword("COORD") && deck->hasKeyword("ZCORN")  
@@ -400,8 +378,8 @@ try
             }
             // Store upscaled values
             for (int voigtIdx=0; voigtIdx<tensorElementCount; ++voigtIdx) {
-                RelPermPhase1[satidx][pidx][voigtIdx] = getVoigtValue(lambda.first,voigtIdx);
-                RelPermPhase2[satidx][pidx][voigtIdx] = getVoigtValue(lambda.second,voigtIdx);
+                RelPermPhase1[satidx][pidx][voigtIdx] = ::Opm::getVoigtValue(lambda.first,voigtIdx);
+                RelPermPhase2[satidx][pidx][voigtIdx] = ::Opm::getVoigtValue(lambda.second,voigtIdx);
             }
         }
     }

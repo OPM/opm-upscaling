@@ -39,6 +39,7 @@
 
 #include <opm/porsol/common/setupBoundaryConditions.hpp>
 
+#include <opm/upscaling/RelPermUtils.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 
 #include <cmath>
@@ -77,9 +78,7 @@ int main(int argc, char** argv) try {
 	param.displayUsage();
     }
 
-    Opm::ParseContext parseMode;
-    Opm::ParserPtr parser(new Opm::Parser());
-    Opm::DeckConstPtr deck(parser->parseFile(gridfilename , parseMode));
+    auto deck = Opm::RelPermUpscaleHelper::parseEclipseFile(gridfilename);
     Opm::EclipseGridInspector gridinspector(deck);
     
     // Check that we have the information we need from the eclipse file, we will check PERM-fields later

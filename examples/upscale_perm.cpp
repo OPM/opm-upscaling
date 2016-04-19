@@ -57,8 +57,8 @@
 
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
+#include <opm/upscaling/RelPermUtils.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
-#include <opm/upscaling/ParserAdditions.hpp>
 
 #include <ctime>
 #include <fstream>
@@ -200,10 +200,7 @@ int upscale(int varnum, char** vararg) {
     cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... ";
     flush(cout);   start = clock();
 
-    Opm::ParseContext parseMode;
-    auto parser = std::make_shared<Opm::Parser>();
-    Opm::addNonStandardUpscalingKeywords(*parser);
-    Opm::DeckConstPtr deck(parser->parseFile(ECLIPSEFILENAME , parseMode));
+    auto deck = Opm::RelPermUpscaleHelper::parseEclipseFile(ECLIPSEFILENAME);
 
     finish = clock();   timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
     cout << " (" << timeused <<" secs)" << endl;

@@ -54,9 +54,6 @@
  */
 #include <config.h>
 
-#include <opm/parser/eclipse/Deck/DeckItem.hpp>
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
 
 #include <dune/common/version.hh>
@@ -71,8 +68,8 @@
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
 #include <opm/core/utility/Units.hpp>
 
+#include <opm/upscaling/RelPermUtils.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
-#include <opm/upscaling/ParserAdditions.hpp>
 
 #include <cfloat> // for DB_MAX/DBL_MIN
 #include <cmath>
@@ -241,10 +238,7 @@ try
    eclipsefile.close(); 
 
    cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... " << endl;
-   Opm::ParseContext parseMode;
-   auto parser = std::make_shared<Opm::Parser>();
-   Opm::addNonStandardUpscalingKeywords(*parser);
-   Opm::DeckConstPtr deck(parser->parseFile(ECLIPSEFILENAME , parseMode));
+   auto deck = RelPermUpscaleHelper::parseEclipseFile(ECLIPSEFILENAME);
    
    // Check that we have the information we need from the eclipse file:  
    if (! (deck->hasKeyword("SPECGRID") && deck->hasKeyword("COORD") && deck->hasKeyword("ZCORN")  

@@ -39,9 +39,6 @@
  */
 #include <config.h>
 
-#include <opm/parser/eclipse/Deck/DeckItem.hpp>
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
 
 #include <dune/common/version.hh>
@@ -55,7 +52,7 @@
 
 #include <opm/output/eclipse/EclipseGridInspector.hpp>
 
-#include <opm/upscaling/ParserAdditions.hpp>
+#include <opm/upscaling/RelPermUtils.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 
 #include <cmath>
@@ -171,10 +168,7 @@ int main(int varnum, char** vararg) try {
     // eclParser_p is here a pointer to an object of type Opm::EclipseGridParser
     // (this pointer trick is necessary for the try-catch-clause to work)
     
-   Opm::ParseContext parseMode;
-   auto parser = std::make_shared<Opm::Parser>();
-   Opm::addNonStandardUpscalingKeywords(*parser);
-   Opm::DeckConstPtr deck(parser->parseFile(ECLIPSEFILENAME , parseMode));
+    auto deck = RelPermUpscaleHelper::parseEclipseFile(ECLIPSEFILENAME);
 
     Opm::EclipseGridInspector eclInspector(deck);
 

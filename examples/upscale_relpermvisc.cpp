@@ -81,7 +81,6 @@
 
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
 
-#include <opm/upscaling/ParserAdditions.hpp>
 #include <opm/upscaling/RelPermUtils.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 
@@ -347,10 +346,7 @@ try
     if (isMaster) cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... ";
     flush(cout);   start = clock();
  
-    Opm::ParseContext parseMode;
-    auto parser = std::make_shared<Opm::Parser>();
-    Opm::addNonStandardUpscalingKeywords(*parser);
-    Opm::DeckConstPtr deck(parser->parseFile(ECLIPSEFILENAME , parseMode));
+    auto deck = RelPermUpscaleHelper::parseEclipseFile(ECLIPSEFILENAME);
 
     finish = clock();   timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
     if (isMaster) cout << " (" << timeused <<" secs)" << endl;
@@ -1344,8 +1340,8 @@ try
                 cout << fracFlowRatioTestvalue << "\t" << WaterSaturation[pointidx];
                 // Store and print phase-perm-result
                 for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) { 
-                    PhasePerm[phase][pointidx][voigtIdx] = getVoigtValue(phasePermTensor,voigtIdx); 
-                    cout << "\t" << getVoigtValue(phasePermTensor,voigtIdx); 
+                    PhasePerm[phase][pointidx][voigtIdx] = ::Opm::getVoigtValue(phasePermTensor,voigtIdx);
+                    cout << "\t" << ::Opm::getVoigtValue(phasePermTensor,voigtIdx);
                 } 
                 cout << endl; 
             }
@@ -1429,7 +1425,7 @@ try
                 Matrix phasePermTensor = zeroMatrix;
                 zero(phasePermTensor);
                 for (int voigtIdx = 0; voigtIdx < tensorElementCount; ++voigtIdx) {
-                    setVoigtValue(phasePermTensor, voigtIdx, PhasePerm[phase][idx][voigtIdx]);
+                    ::Opm::setVoigtValue(phasePermTensor, voigtIdx, PhasePerm[phase][idx][voigtIdx]);
                 }
                 //cout << phasePermTensor << endl;
                 Matrix relPermTensor = zeroMatrix;
@@ -1437,7 +1433,7 @@ try
                 // relPermTensor *= permTensorInv;
                 prod(phasePermTensor, permTensorInv, relPermTensor);
                 for (int voigtIdx = 0; voigtIdx < tensorElementCount; ++voigtIdx) {
-                    RelPermValues[phase][voigtIdx].push_back(getVoigtValue(relPermTensor, voigtIdx));
+                    RelPermValues[phase][voigtIdx].push_back(::Opm::getVoigtValue(relPermTensor, voigtIdx));
                 }
                 //cout << relPermTensor << endl;
             }

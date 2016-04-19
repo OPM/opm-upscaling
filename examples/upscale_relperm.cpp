@@ -58,9 +58,6 @@
  */
 #include <config.h>
 
-#include <opm/parser/eclipse/Deck/DeckItem.hpp>
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
 
 #include <dune/common/version.hh>
@@ -75,7 +72,6 @@
 
 #include <opm/core/utility/Units.hpp>
 
-#include <opm/upscaling/ParserAdditions.hpp>
 #include <opm/upscaling/RelPermUtils.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 
@@ -304,33 +300,6 @@ namespace {
             {"doEclipseCheck",             "true"}, // Check if minimum relpermvalues in input are zero (specify critical saturations)
             {"critRelpermThresh",          "1e-6"}, // Threshold for setting minimum relperm to 0 (thus specify critical saturations)
         };
-    }
-
-    template <class String>
-    std::shared_ptr<const Opm::Deck>
-    parseEclipseFile(const String& ECLIPSEFILENAME, const bool isMaster)
-    {
-        {
-            ifstream eclipsefile(ECLIPSEFILENAME, std::ios::in);
-            if (!eclipsefile) {
-                std::stringstream str;
-                str << "Error: Filename " << ECLIPSEFILENAME
-                    << " not found or not readable.";
-
-                throw std::domain_error(str.str());
-            }
-        }
-
-        if (isMaster) {
-            std::cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... ";
-        }
-
-        flush(std::cout);
-
-        auto parser = std::make_shared<Opm::Parser>();
-        Opm::addNonStandardUpscalingKeywords(*parser);
-
-        return parser->parseFile(ECLIPSEFILENAME, Opm::ParseContext{});
     }
 
     void invertCapillaryPressureIsotropic(const char*                ROCKFILENAME,
@@ -564,7 +533,7 @@ try
    // Test if filename exists and is readable
    start = clock();
 
-   auto deck = parseEclipseFile(ECLIPSEFILENAME, helper.isMaster);
+   auto deck = RelPermUpscaleHelper::parseEclipseFile(ECLIPSEFILENAME);
 
    finish   = clock();
    timeused = (double(finish) - double(start)) / CLOCKS_PER_SEC;
