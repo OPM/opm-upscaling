@@ -35,10 +35,6 @@
 
 #include "config.h"
 
-#include <iostream>
-
-#include <array>
-
 #include <opm/core/utility/Units.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 
@@ -48,34 +44,40 @@
 #include <opm/porsol/common/BoundaryConditions.hpp>
 #include <opm/porsol/common/GridInterfaceEuler.hpp>
 #include <opm/porsol/common/ReservoirPropertyCapillary.hpp>
-
 #include <opm/porsol/mimetic/MimeticIPEvaluator.hpp>
 #include <opm/porsol/mimetic/IncompFlowSolverHybrid.hpp>
 
-using namespace Opm;
+#include <array>
+#include <iostream>
 
 int main(int argc, char** argv)
 try
 {
-    typedef Opm::GridInterfaceEuler<Dune::CpGrid>                       GI;
-    typedef GI  ::CellIterator                                     CI;
-    typedef Opm::BasicBoundaryConditions<true, false>                  BCs;
-    typedef Opm::ReservoirPropertyCapillary<3>                    RI;
+    typedef Opm::GridInterfaceEuler<Dune::CpGrid>      GI;
+    typedef GI ::CellIterator                          CI;
+    typedef Opm::BasicBoundaryConditions<true, false>  BCs;
+    typedef Opm::ReservoirPropertyCapillary<3>         RI;
     typedef Opm::IncompFlowSolverHybrid<GI, RI, BCs,
-                                         Opm::MimeticIPEvaluator> FlowSolver;
+                                        Opm::MimeticIPEvaluator> FlowSolver;
 
-    Opm::parameter::ParameterGroup param(argc, argv);
     Dune::CpGrid grid;
-    grid.init(param);
-    grid.setUniqueBoundaryIds(true);
-    GridInterfaceEuler<Dune::CpGrid> g(grid);
-    typedef FlowBC FBC;
-    std::array<FBC, 6> cond = {{ FBC(FBC::Periodic,  1.0*Opm::unit::barsa),
-                            FBC(FBC::Periodic, -1.0*Opm::unit::barsa),
-                            FBC(FBC::Periodic,  0.0),
-                            FBC(FBC::Periodic,  0.0),
-                            FBC(FBC::Neumann,   0.0),
-                            FBC(FBC::Neumann,   0.0) }};
+    {
+        Opm::parameter::ParameterGroup param(argc, argv);
+
+        grid.init(param);
+        grid.setUniqueBoundaryIds(true);
+    }
+
+    const Opm::GridInterfaceEuler<Dune::CpGrid> g(grid);
+
+    using FBC = Opm::FlowBC;
+    const auto cond =
+        std::array<FBC, 6>{{ FBC(FBC::Periodic,  1.0*Opm::unit::barsa),
+                             FBC(FBC::Periodic, -1.0*Opm::unit::barsa),
+                             FBC(FBC::Periodic,  0.0),
+                             FBC(FBC::Periodic,  0.0),
+                             FBC(FBC::Neumann,   0.0),
+                             FBC(FBC::Neumann,   0.0) }};
     BCs fbc;
     createPeriodic(fbc, g, cond);
 
@@ -84,37 +86,18 @@ try
 
     CI::Vector gravity;
     gravity[0] = gravity[1] = gravity[2] = 0.0;
+
 #if 0
     gravity[2] = Dune::unit::gravity;
 #endif
 
-    FlowSolver solver;
+    FlowSolver solver{};
     solver.init(g, r, gravity, fbc);
 
     std::vector<double> src(g.numberOfCells(), 0.0);
     std::vector<double> sat(g.numberOfCells(), 0.0);
 
     solver.solve(r, sat, fbc, src);
-
-#if 0
-    FlowSolver::SolutionType soln = solver.getSolution();
-    std::cout << "Cell Pressure:\n" << std::scientific << std::setprecision(15);
-    for (CI c = g.cellbegin(); c != g.cellend(); ++c) {
-        std::cout << '\t' << soln.pressure(c) << '\n';
-    }
-
-    std::cout << "Cell (Out) Fluxes:\n";
-    std::cout << "flux = [\n";
-    for (CI c = g.cellbegin(); c != g.cellend(); ++c) {
-        for (FI f = c->facebegin(); f != c->faceend(); ++f) {
-            std::cout << soln.outflux(f) << ' ';
-        }
-        std::cout << "\b\n";
-    }
-    std::cout << "]\n";
-#endif
-    
-    return 0;
 }
 catch (const std::exception &e) {
     std::cerr << "Program threw an exception: " << e.what() << "\n";

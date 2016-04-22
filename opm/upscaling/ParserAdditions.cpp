@@ -1,5 +1,5 @@
 /*
-  Copyright 2014 by Andreas Lauser
+  Copyright 2016 SINTEF ICT, Applied Mathematics.
 
   This file is part of The Open Porous Media Project (OPM).
 
@@ -17,21 +17,28 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef OPM_UPSCALING_PARSER_ADDITIONS_HPP
-#define OPM_UPSCALING_PARSER_ADDITIONS_HPP
+#include <opm/upscaling/ParserAdditions.hpp>
 
-#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/json/JsonObject.hpp>
 
-namespace Opm {
+#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 
-    /*!
-     * \brief This function registers non-standard keywords used by
-     *        opm-upscaling in a parser object.
-     *
-     * The name of this function is intentionally long and awkward. This is
-     * to discourage its use unless it is *really* necessary!
-     */
-    void addNonStandardUpscalingKeywords(Parser& parser);
+namespace {
+    void add_RHO(Opm::Parser& parser)
+    {
+        const auto rhoJsonData =
+R"~~({
+        "name"     : "RHO",
+        "sections" : [],
+        "data"     : {"value_type" : "DOUBLE" }
 }
+)~~";
 
-#endif
+        parser.addParserKeyword(Json::JsonObject(rhoJsonData));
+    }
+} // Anonymous
+
+void Opm::addNonStandardUpscalingKeywords(Parser& parser)
+{
+    add_RHO(parser);
+}

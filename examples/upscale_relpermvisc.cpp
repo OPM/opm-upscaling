@@ -1,4 +1,3 @@
-
 /*
   Copyright 2010 Statoil ASA.
 
@@ -69,20 +68,7 @@
  */
 #include <config.h>
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <iomanip>
-#include <ctime>
-#include <cmath>
-#include <cfloat>  // FOR DBL_MAX/DBL_MIN
-#include <map>
-#include <sys/utsname.h>
-
-#include <opm/core/utility/MonotCubicInterpolator.hpp>
-#include <opm/upscaling/SinglePhaseUpscaler.hpp>
-#include <opm/upscaling/ParserAdditions.hpp>
-#include <opm/upscaling/RelPermUtils.hpp>
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
 
 #include <dune/common/version.hh>
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
@@ -91,8 +77,30 @@
 #include <dune/common/mpihelper.hh>
 #endif
 
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
+
+#include <opm/core/utility/MonotCubicInterpolator.hpp>
+
+#include <opm/upscaling/RelPermUtils.hpp>
+#include <opm/upscaling/SinglePhaseUpscaler.hpp>
+
+#include <cfloat>  // FOR DBL_MAX/DBL_MIN
+#include <cmath>
+#include <cstdlib>
+#include <ctime>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <sstream>
+
+#include <sys/utsname.h>
+
 using namespace Opm;
 using namespace std;
+
+namespace {
 
 /**
    The usage() function displays a message with syntax and available 
@@ -143,8 +151,10 @@ void usage()
 
 void usageandexit() {
     usage();
-    exit(1);
+    std::exit(EXIT_FAILURE);
 }
+
+} // namespace anonymous
 
 int main(int varnum, char** vararg)
 try
@@ -336,10 +346,7 @@ try
     if (isMaster) cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... ";
     flush(cout);   start = clock();
  
-    Opm::ParseContext parseMode;
-    Opm::ParserPtr parser(new Opm::Parser());
-    Opm::addNonStandardUpscalingKeywords(parser);
-    Opm::DeckConstPtr deck(parser->parseFile(ECLIPSEFILENAME , parseMode));
+    auto deck = RelPermUpscaleHelper::parseEclipseFile(ECLIPSEFILENAME);
 
     finish = clock();   timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
     if (isMaster) cout << " (" << timeused <<" secs)" << endl;
@@ -1333,8 +1340,8 @@ try
                 cout << fracFlowRatioTestvalue << "\t" << WaterSaturation[pointidx];
                 // Store and print phase-perm-result
                 for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) { 
-                    PhasePerm[phase][pointidx][voigtIdx] = getVoigtValue(phasePermTensor,voigtIdx); 
-                    cout << "\t" << getVoigtValue(phasePermTensor,voigtIdx); 
+                    PhasePerm[phase][pointidx][voigtIdx] = ::Opm::getVoigtValue(phasePermTensor,voigtIdx);
+                    cout << "\t" << ::Opm::getVoigtValue(phasePermTensor,voigtIdx);
                 } 
                 cout << endl; 
             }
@@ -1418,7 +1425,7 @@ try
                 Matrix phasePermTensor = zeroMatrix;
                 zero(phasePermTensor);
                 for (int voigtIdx = 0; voigtIdx < tensorElementCount; ++voigtIdx) {
-                    setVoigtValue(phasePermTensor, voigtIdx, PhasePerm[phase][idx][voigtIdx]);
+                    ::Opm::setVoigtValue(phasePermTensor, voigtIdx, PhasePerm[phase][idx][voigtIdx]);
                 }
                 //cout << phasePermTensor << endl;
                 Matrix relPermTensor = zeroMatrix;
@@ -1426,7 +1433,7 @@ try
                 // relPermTensor *= permTensorInv;
                 prod(phasePermTensor, permTensorInv, relPermTensor);
                 for (int voigtIdx = 0; voigtIdx < tensorElementCount; ++voigtIdx) {
-                    RelPermValues[phase][voigtIdx].push_back(getVoigtValue(relPermTensor, voigtIdx));
+                    RelPermValues[phase][voigtIdx].push_back(::Opm::getVoigtValue(relPermTensor, voigtIdx));
                 }
                 //cout << relPermTensor << endl;
             }

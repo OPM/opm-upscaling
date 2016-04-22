@@ -24,9 +24,18 @@
 #ifndef OPM_UPSCALING_RELPERM_UTILS_HPP
 #define OPM_UPSCALING_RELPERM_UTILS_HPP
 
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
+
+#include <opm/upscaling/ParserAdditions.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
+
 #include <array>
+#include <map>
+#include <memory>
 #include <tuple>
 #include <vector>
 
@@ -66,6 +75,18 @@ namespace Opm {
       double poreVolume; //!< Total pore volume.
       std::vector<double> pressurePoints; //!< Vector of capillary pressure points between Swor and Swir.
 
+      //! \brief Form Deck object from input file (ECLIPSE format)
+      //!
+      //! \tparam String String type for representing pathnames.  Typically
+      //! \code std::string \endcode or \code const char* \endcode.
+      //!
+      //! \param[in] eclipseFileName Name of input ECLIPSE file.
+      //!
+      //! \return Deck object resulting from parsing input file.
+      template <class String>
+      static std::shared_ptr<Deck>
+      parseEclipseFile(const String& eclipseFileName);
+
       //! \brief Default constructor.
       //! \param[in] mpi_rank Rank of this process (for parallel simulations).
       //! \param[in] options Options structure.
@@ -91,7 +112,9 @@ namespace Opm {
       //! \param[in] minPoro Minimum porosity.
       //! \details Throws error string.
       void sanityCheckInput(Opm::DeckConstPtr deck,
-                            double minPerm, double maxPerm, double minPoro);
+                            const double      minPerm,
+                            const double      maxPerm,
+                            const double      minPoro);
 
       //! \brief Check that input relperm curevs specify critical saturations.
       void checkCriticalSaturations();
@@ -110,9 +133,8 @@ namespace Opm {
       double tesselateGrid(Opm::DeckConstPtr deck);
 
       //! \brief Find cell center pressure gradient for every cell.
-      //! \param[in] res The number of cells in each direction.
       //! \details Uses the following options: gravity, waterDensity, oilDensity
-      void calculateCellPressureGradients(const std::array<int,3>& res);
+      void calculateCellPressureGradients();
 
       //! \brief Calculate minimum and maximum capillary pressures.
       //! \details Uses the following options: maxPermContrast, minPerm,
@@ -128,6 +150,7 @@ namespace Opm {
       //! \details Uses the following options:  minPerm, maxPermContrast
       //! \return Tuple with (total time, time per point).
       std::tuple<double,double> upscalePermeability(int mpi_rank);
+
     private:
       //! \brief Perform critical saturation check for a single curve.
       //! \param[in,out] func Function to check for.
@@ -152,12 +175,27 @@ namespace Opm {
       std::vector<double> cellPoreVolumes; //!< Pore volume for each grid cell.
       MonotCubicInterpolator WaterSaturationVsCapPressure; //!< Water saturation as a function of capillary pressure.
 
-      // Reference: http://www.spe.org/spe-site/spe/spe/papers/authors/Metric_Standard.pdf
-      const double milliDarcyToSqMetre; //!< Conversion factor, multiply mD numbers with this to get m² numbers.
-
+#if defined(UNITTEST_TRESPASS_PRIVATE_PROPERTY_DP)
+    public: // Intrusive unit testing of calculcateCellPressureGradients()
+#endif // UNITTEST_TRESPASS_PRIVATE_PROPERTY_DP
       std::vector<double> dP; //!<  Cell center pressure gradients due to gravity effects.
+
+#if defined(UNITTEST_TRESPASS_PRIVATE_PROPERTY_DP)
+    private:
+#endif // UNITTEST_TRESPASS_PRIVATE_PROPERTY_DP
+
       std::map<std::string,std::string>& options; //!< Reference to options structure.
   };
+
+  template <class String>
+  std::shared_ptr<Deck>
+  RelPermUpscaleHelper::parseEclipseFile(const String& eclipseFileName)
+  {
+    auto parser = Parser{};
+    addNonStandardUpscalingKeywords(parser);
+
+    return parser.parseFile(eclipseFileName, ParseContext{});
+  }
 }
 
-#endif
+#endif  // OPM_UPSCALING_RELPERM_UTILS_HPP

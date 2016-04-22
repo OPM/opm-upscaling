@@ -31,10 +31,10 @@
 list (APPEND TEST_SOURCE_FILES
 	tests/common/boundaryconditions_test.cpp
 	tests/common/matrix_test.cpp
+	tests/common/test_gravitypressure.cpp
 	)
 
 list(APPEND MAIN_SOURCE_FILES
-	opm/upscaling/RelPermUtils.cpp
 	opm/porsol/blackoil/fluid/BlackoilPVT.cpp
 	opm/porsol/blackoil/fluid/MiscibilityDead.cpp
 	opm/porsol/blackoil/fluid/MiscibilityLiveGas.cpp
@@ -42,8 +42,11 @@ list(APPEND MAIN_SOURCE_FILES
 	opm/porsol/blackoil/fluid/MiscibilityProps.cpp
 	opm/porsol/common/blas_lapack.cpp
 	opm/porsol/common/BoundaryPeriodicity.cpp
+	opm/porsol/common/ImplicitTransportDefs.cpp
 	opm/porsol/common/setupGridAndProps.cpp
 	opm/porsol/euler/ImplicitCapillarity.cpp
+	opm/upscaling/ParserAdditions.cpp
+	opm/upscaling/RelPermUtils.cpp
 	)
 
 # originally generated with the command:
@@ -78,11 +81,23 @@ list (APPEND TEST_DATA_FILES
 # originally generated with the command:
 # find examples -name '*.c*' -a ! -name 'twophase2_test.cpp' -printf '\t%p\n' | sort
 list (APPEND EXAMPLE_SOURCE_FILES
+	examples/aniso_implicitcap_test.cpp
+	examples/aniso_simulator_test.cpp
+	examples/co2_blackoil_pvt.cpp
 	examples/cpchop.cpp
 	examples/cpchop_depthtrend.cpp
 	examples/cpregularize.cpp
 	examples/exp_variogram.cpp
 	examples/grdecldips.cpp
+	examples/implicitcap_test.cpp
+	examples/known_answer_test.cpp
+	examples/mimetic_aniso_solver_test.cpp
+	examples/mimetic_periodic_test.cpp
+	examples/mimetic_solver_test.cpp
+	examples/sim_blackoil_impes.cpp
+	examples/sim_co2_impes.cpp
+	examples/sim_steadystate_explicit.cpp
+	examples/sim_steadystate_implicit.cpp
 	examples/steadystate_test_implicit.cpp
 	examples/upscale_avg.cpp
 	examples/upscale_cap.cpp
@@ -93,23 +108,11 @@ list (APPEND EXAMPLE_SOURCE_FILES
 	examples/upscale_singlephase.cpp
 	examples/upscale_steadystate_implicit.cpp
 	tests/compare_upscaling_results.cpp
-	examples/aniso_implicitcap_test.cpp
-	examples/aniso_simulator_test.cpp
-	examples/co2_blackoil_pvt.cpp
-	examples/implicitcap_test.cpp
-	examples/known_answer_test.cpp
-	examples/mimetic_aniso_solver_test.cpp
-	examples/mimetic_periodic_test.cpp
-	examples/mimetic_solver_test.cpp
-	examples/sim_blackoil_impes.cpp
-	examples/sim_co2_impes.cpp
-	examples/sim_steadystate_explicit.cpp
-	examples/sim_steadystate_implicit.cpp
 	)
 
 list (APPEND ADDITIONAL_SOURCE_FILES
-  benchmarks/upscale_relperm_benchmark.cpp
-	   )
+	benchmarks/upscale_relperm_benchmark.cpp
+	)
 
 # originally generated with the command:
 # find attic -name '*.c*' -printf '\t%p\n' | sort
@@ -128,6 +131,8 @@ list (APPEND PROGRAM_SOURCE_FILES
 	examples/cpregularize.cpp
 	examples/exp_variogram.cpp
 	examples/grdecldips.cpp
+	examples/sim_blackoil_impes.cpp
+	examples/sim_co2_impes.cpp
 	examples/steadystate_test_implicit.cpp
 	examples/upscale_avg.cpp
 	examples/upscale_cap.cpp
@@ -137,24 +142,11 @@ list (APPEND PROGRAM_SOURCE_FILES
 	examples/upscale_relpermvisc.cpp
 	examples/upscale_singlephase.cpp
 	examples/upscale_steadystate_implicit.cpp
-	examples/sim_blackoil_impes.cpp
-	examples/sim_co2_impes.cpp
 	)
 
 # originally generated with the command:
 # find opm -name '*.h*' -a ! -name '*-pch.hpp' -printf '\t%p\n' | sort
 list (APPEND PUBLIC_HEADER_FILES
-	opm/upscaling/ParserAdditions.hpp
-	opm/upscaling/SinglePhaseUpscaler.hpp
-	opm/upscaling/SteadyStateUpscaler.hpp
-	opm/upscaling/SteadyStateUpscaler_impl.hpp
-	opm/upscaling/SteadyStateUpscalerImplicit.hpp
-	opm/upscaling/SteadyStateUpscalerImplicit_impl.hpp
-	opm/upscaling/SteadyStateUpscalerManager.hpp
-	opm/upscaling/SteadyStateUpscalerManagerImplicit.hpp
-	opm/upscaling/UpscalerBase.hpp
-	opm/upscaling/UpscalerBase_impl.hpp
-	opm/upscaling/UpscalingTraits.hpp
 	opm/porsol/blackoil/BlackoilFluid.hpp
 	opm/porsol/blackoil/BlackoilInitialization.hpp
 	opm/porsol/blackoil/BlackoilSimulator.hpp
@@ -213,6 +205,17 @@ list (APPEND PUBLIC_HEADER_FILES
 	opm/porsol/mimetic/IncompFlowSolverHybrid.hpp
 	opm/porsol/mimetic/MimeticIPAnisoRelpermEvaluator.hpp
 	opm/porsol/mimetic/MimeticIPEvaluator.hpp
-	opm/porsol/mimetic/TpfaCompressible.hpp
 	opm/porsol/mimetic/TpfaCompressibleAssembler.hpp
+	opm/porsol/mimetic/TpfaCompressible.hpp
+	opm/upscaling/ParserAdditions.hpp
+	opm/upscaling/SinglePhaseUpscaler.hpp
+	opm/upscaling/SteadyStateUpscaler.hpp
+	opm/upscaling/SteadyStateUpscaler_impl.hpp
+	opm/upscaling/SteadyStateUpscalerImplicit.hpp
+	opm/upscaling/SteadyStateUpscalerImplicit_impl.hpp
+	opm/upscaling/SteadyStateUpscalerManager.hpp
+	opm/upscaling/SteadyStateUpscalerManagerImplicit.hpp
+	opm/upscaling/UpscalerBase.hpp
+	opm/upscaling/UpscalerBase_impl.hpp
+	opm/upscaling/UpscalingTraits.hpp
 	)

@@ -1,4 +1,3 @@
-
 /*
   Copyright 2010 Statoil ASA.
 
@@ -40,21 +39,7 @@
  */
 #include <config.h>
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <iomanip>
-#include <ctime>
-#include <cmath>
-#include <cstdlib>
-#include <numeric> // for std::accumulate
-#include <sys/utsname.h>
-
-#include <opm/parser/eclipse/Deck/DeckItem.hpp>
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/upscaling/ParserAdditions.hpp>
-#include <opm/upscaling/SinglePhaseUpscaler.hpp>
-#include <opm/output/eclipse/EclipseGridInspector.hpp>
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
 
 #include <dune/common/version.hh>
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
@@ -63,19 +48,41 @@
 #include <dune/common/mpihelper.hh>
 #endif
 
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
+
+#include <opm/output/eclipse/EclipseGridInspector.hpp>
+
+#include <opm/upscaling/RelPermUtils.hpp>
+#include <opm/upscaling/SinglePhaseUpscaler.hpp>
+
+#include <cmath>
+#include <cstdlib>
+#include <ctime>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <memory>
+#include <numeric> // for std::accumulate
+#include <sstream>
+
+#include <sys/utsname.h>
+
 using namespace Opm;
 using namespace std;
 
-void usage() {
-    cout << endl <<
-        "Usage: upscale_avg <options> <eclipsefile>" << endl <<
-        "were the options are:" << endl <<
-        "-use_actnum                  -- If used and given a number larger than 0, the cells with" << endl <<
-        "                                ACTNUM 0 is removed from the calculations" << endl;
-}
-void usageandexit() {
-    usage();
-    exit(1);
+namespace {
+    void usage() {
+        cout << endl <<
+            "Usage: upscale_avg <options> <eclipsefile>" << endl <<
+            "were the options are:" << endl <<
+            "-use_actnum                  -- If used and given a number larger than 0, the cells with" << endl <<
+            "                                ACTNUM 0 is removed from the calculations" << endl;
+    }
+
+    void usageandexit() {
+        usage();
+        exit(EXIT_FAILURE);
+    }
 }
 
 
@@ -161,10 +168,7 @@ int main(int varnum, char** vararg) try {
     // eclParser_p is here a pointer to an object of type Opm::EclipseGridParser
     // (this pointer trick is necessary for the try-catch-clause to work)
     
-   Opm::ParseContext parseMode;
-   Opm::ParserPtr parser(new Opm::Parser());
-   Opm::addNonStandardUpscalingKeywords(parser);
-   Opm::DeckConstPtr deck(parser->parseFile(ECLIPSEFILENAME , parseMode));
+    auto deck = RelPermUpscaleHelper::parseEclipseFile(ECLIPSEFILENAME);
 
     Opm::EclipseGridInspector eclInspector(deck);
 

@@ -17,14 +17,13 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-
 #define VERBOSE
 
 #include "config.h"
 
 #include "SimulatorTester.hpp"
 #include "SimulatorTesterFlexibleBC.hpp"
+
 #include <opm/porsol/euler/EulerUpstreamImplicit.hpp>
 #include <opm/porsol/common/SimulatorTraits.hpp>
 
@@ -39,13 +38,12 @@ namespace Opm
         struct TransportSolver
         {
             //enum { Dimension = GridInterface::Dimension };
-        	enum { Dimension = GridInterface::Dimension };
+            enum { Dimension = GridInterface::Dimension };
             typedef typename IsotropyPolicy::template ResProp<Dimension>::Type RP;
 
             typedef EulerUpstreamImplicit<GridInterface,
-                                  RP,
-                                  BoundaryConditions> Type;
-
+                                          RP,
+                                          BoundaryConditions> Type;
         };
     };
 }
@@ -60,6 +58,7 @@ try
 {
     Opm::parameter::ParameterGroup param(argc, argv);
     Dune::MPIHelper::instance(argc,argv);
+
     Simulator sim;
     sim.init(param);
     sim.run();

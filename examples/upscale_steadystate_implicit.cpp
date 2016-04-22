@@ -31,79 +31,73 @@
   You should have received a copy of the GNU General Public License
   along with OpenRS.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #include <config.h>
 
-
-//#define VERBOSE
-#include <opm/upscaling/SteadyStateUpscalerImplicit.hpp>
-#include <opm/upscaling/SteadyStateUpscalerManagerImplicit.hpp>
-#include <opm/porsol/euler/EulerUpstreamImplicit.hpp>
-#include <opm/porsol/common/SimulatorTraits.hpp>
-#include <opm/core/utility/MonotCubicInterpolator.hpp>
-#include <opm/upscaling/SinglePhaseUpscaler.hpp>
-#include <opm/upscaling/ParserAdditions.hpp>
-#include <sys/utsname.h>
-#include <iostream>
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
 
 #include <dune/common/version.hh>
+
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
 #include <dune/common/parallel/mpihelper.hh>
 #else
 #include <dune/common/mpihelper.hh>
 #endif
 
-namespace Opm{
-	template <class IsotropyPolicy>
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
+
+#include <opm/core/utility/MonotCubicInterpolator.hpp>
+
+#include <opm/porsol/common/SimulatorTraits.hpp>
+#include <opm/porsol/euler/EulerUpstreamImplicit.hpp>
+
+#include <opm/upscaling/RelPermUtils.hpp>
+#include <opm/upscaling/SinglePhaseUpscaler.hpp>
+#include <opm/upscaling/SteadyStateUpscalerImplicit.hpp>
+#include <opm/upscaling/SteadyStateUpscalerManagerImplicit.hpp>
+
+#include <cassert>
+#include <cstdlib>
+#include <iostream>
+#include <memory>
+
+#include <sys/utsname.h>
+
+namespace Opm {
+    template <class IsotropyPolicy>
     struct Implicit
     {
         template <class GridInterface, class BoundaryConditions>
         struct TransportSolver
         {
-            //enum { Dimension = GridInterface::Dimension };
-        	enum { Dimension = GridInterface::Dimension };
+            enum { Dimension = GridInterface::Dimension };
             typedef typename IsotropyPolicy::template ResProp<Dimension>::Type RP;
 
             typedef EulerUpstreamImplicit<GridInterface,
-                                  RP,
-                                  BoundaryConditions> Type;
+                                          RP,
+                                          BoundaryConditions> Type;
 
         };
     };
-	typedef SimulatorTraits<Isotropic, Implicit> UpscalingTraitsBasicImplicit;
+
+    typedef SimulatorTraits<Isotropic, Implicit> UpscalingTraitsBasicImplicit;
 }
+
 using namespace Opm;
+
+namespace {
 
 void usage()
 {
-    std::cout << "Usage: upscale_steadystate_implicit gridfilename=filename.grdecl  " << std::endl;
-    std::cout << "       rock_list=rocklist.txt [outputWater=] [outputOil=] " << std::endl;
-    std::cout << "       [bc=fixed] [num_sats=10] [num_pdrops=10] " << std::endl;
-    std::cout << "       [anisotropicrocks=false]" << std::endl;
+    std::cout << "Usage: upscale_steadystate_implicit gridfilename=filename.grdecl\n"
+              << "       rock_list=rocklist.txt [outputWater=] [outputOil=]\n"
+              << "       [bc=fixed] [num_sats=10] [num_pdrops=10]\n"
+              << "       [anisotropicrocks=false]" << std::endl;
 }
 
 void usageandexit() {
     usage();
-    exit(1);
-}
-
-// Assumes that permtensor_t use C ordering.
-double getVoigtValue(const SinglePhaseUpscaler::permtensor_t& K, int voigt_idx)
-{
-    assert(K.numRows() == 3 && K.numCols() == 3);
-    switch (voigt_idx) {
-    case 0: return K.data()[0];
-    case 1: return K.data()[4];
-    case 2: return K.data()[8];
-    case 3: return K.data()[5];
-    case 4: return K.data()[2];
-    case 5: return K.data()[1];
-    case 6: return K.data()[7];
-    case 7: return K.data()[6];
-    case 8: return K.data()[3];
-    default:
-        std::cout << "Voigt index out of bounds (only 0-8 allowed)" << std::endl;
-        throw std::exception();
-    }
+    std::exit(EXIT_FAILURE);
 }
 
 std::vector<std::vector<double> > getExtremeSats(std::string rock_list, std::vector<std::string>& rockfilelist, bool anisorocks=false) {
@@ -145,7 +139,7 @@ std::vector<std::vector<double> > getExtremeSats(std::string rock_list, std::vec
             catch (const char * errormessage) {
                 std::cerr << "Error: " << errormessage << std::endl;
                 std::cerr << "Check filename" << std::endl;
-                exit(1);
+                std::exit(EXIT_FAILURE);
             }
             rocksatendp[i][0] = Jtmp.getMinimumX().first;
             rocksatendp[i][1] = Jtmp.getMaximumX().first;
@@ -162,7 +156,7 @@ std::vector<std::vector<double> > getExtremeSats(std::string rock_list, std::vec
             catch (const char * errormessage) {
                 std::cerr << "Error: " << errormessage << std::endl;
                 std::cerr << "Check filename and columns 1 and 2 (Pc and Sw)" << std::endl;
-                exit(1);
+                std::exit(EXIT_FAILURE);
             }
             rocksatendp[i][0] = Pctmp.getMinimumX().first;
             rocksatendp[i][1] = Pctmp.getMaximumX().first;
@@ -170,6 +164,8 @@ std::vector<std::vector<double> > getExtremeSats(std::string rock_list, std::vec
     }
     return rocksatendp;
 }
+
+} // namespace anonymous
 
 template <typename T>
 std::string toString(T const& value) {
@@ -187,13 +183,11 @@ try
     if (argc == 1) {
         usageandexit();
     }
+
     // Initialize.
-    Opm::ParseContext parseMode;
     Opm::parameter::ParameterGroup param(argc, argv);
     std::string gridfilename = param.get<std::string>("gridfilename");
-    Opm::ParserPtr parser(new Opm::Parser());
-    Opm::addNonStandardUpscalingKeywords(parser);
-    Opm::DeckConstPtr deck(parser->parseFile(gridfilename , parseMode));
+    auto deck = Opm::RelPermUpscaleHelper::parseEclipseFile(gridfilename);
 
     // Check that we have the information we need from the eclipse file:  
     if (! (deck->hasKeyword("SPECGRID") && deck->hasKeyword("COORD") && deck->hasKeyword("ZCORN")  
@@ -384,8 +378,8 @@ try
             }
             // Store upscaled values
             for (int voigtIdx=0; voigtIdx<tensorElementCount; ++voigtIdx) {
-                RelPermPhase1[satidx][pidx][voigtIdx] = getVoigtValue(lambda.first,voigtIdx);
-                RelPermPhase2[satidx][pidx][voigtIdx] = getVoigtValue(lambda.second,voigtIdx);
+                RelPermPhase1[satidx][pidx][voigtIdx] = ::Opm::getVoigtValue(lambda.first,voigtIdx);
+                RelPermPhase2[satidx][pidx][voigtIdx] = ::Opm::getVoigtValue(lambda.second,voigtIdx);
             }
         }
     }

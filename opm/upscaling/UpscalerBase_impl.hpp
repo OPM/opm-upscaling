@@ -137,7 +137,8 @@ namespace Opm
                                            bool twodim_hack,
                                            int linsolver_maxit,
                                            double linsolver_prolongate_factor,
-                                           int linsolver_smooth_steps)
+                                           int linsolver_smooth_steps,
+                                           const double gravity)
     {
 	bctype_ = bctype;
 	residual_tolerance_ = residual_tolerance;
@@ -147,6 +148,8 @@ namespace Opm
          linsolver_prolongate_factor_ = linsolver_prolongate_factor;
         linsolver_smooth_steps_ = linsolver_smooth_steps;
 	twodim_hack_ = twodim_hack;
+        gravity_ = gravity;
+
 
 	// Faking some parameters depending on bc type.
         bool periodic_ext = (bctype_ == Periodic);
@@ -229,7 +232,7 @@ namespace Opm
 	std::vector<double> sat(num_cells, 1.0);
 	// Gravity.
 	Dune::FieldVector<double, 3> gravity(0.0);
-	// gravity[2] = -Dune::unit::gravity;
+	gravity[2] = gravity_;
 
 	permtensor_t upscaled_K(3, 3, (double*)0);
 	for (int pdd = 0; pdd < Dimension; ++pdd) {

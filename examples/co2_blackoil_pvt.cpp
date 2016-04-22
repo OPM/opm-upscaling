@@ -17,8 +17,6 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-
 #include "config.h"
 
 #include <opm/core/utility/StopWatch.hpp>
@@ -30,20 +28,24 @@ int main(int argc, char** argv)
 try
 {
     double temperature = 300.;
-    if (argc == 2) temperature = std::atof(argv[1]);
+    if (argc == 2) {
+        temperature = std::atof(argv[1]);
+    }
 
     Opm::BlackoilCo2PVT boPvt;
     Opm::DeckConstPtr deck; // <- uninitalized pointer!
     Opm::time::StopWatch clock;
-  clock.start();
+
+    clock.start();
     boPvt.init(deck);
 
     boPvt.generateBlackOilTables(temperature);
-  clock.stop();
-  std::cout << "\n\nInitialisation and table generation - clock time (secs): " << clock.secsSinceStart() << std::endl;
+    clock.stop();
+
+    std::cout << "\n\nInitialisation and table generation - clock time (secs): "
+              << clock.secsSinceStart() << std::endl;
 }
 catch (const std::exception &e) {
     std::cerr << "Program threw an exception: " << e.what() << "\n";
     throw;
 }
-

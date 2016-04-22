@@ -17,24 +17,12 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-
 #include "config.h"
-
-#include <opm/porsol/blackoil/fluid/BlackoilPVT.hpp>
-#include <opm/porsol/blackoil/BlackoilFluid.hpp>
-#include <opm/porsol/blackoil/BlackoilSimulator.hpp>
-#include <opm/porsol/common/SimulatorUtilities.hpp>
-#include <dune/grid/CpGrid.hpp>
-#include <opm/porsol/common/Rock.hpp>
-#include <opm/porsol/mimetic/TpfaCompressible.hpp>
-#include <opm/core/utility/StopWatch.hpp>
-#include <opm/porsol/blackoil/BlackoilWells.hpp>
-#include <opm/porsol/blackoil/ComponentTransport.hpp>
 
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
 
 #include <dune/common/version.hh>
+
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
 #include <dune/common/parallel/mpihelper.hh>
 #else
@@ -42,6 +30,19 @@
 #endif
 
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
+
+#include <opm/core/utility/StopWatch.hpp>
+
+#include <dune/grid/CpGrid.hpp>
+
+#include <opm/porsol/blackoil/BlackoilFluid.hpp>
+#include <opm/porsol/blackoil/BlackoilSimulator.hpp>
+#include <opm/porsol/blackoil/BlackoilWells.hpp>
+#include <opm/porsol/blackoil/ComponentTransport.hpp>
+#include <opm/porsol/blackoil/fluid/BlackoilPVT.hpp>
+#include <opm/porsol/common/Rock.hpp>
+#include <opm/porsol/common/SimulatorUtilities.hpp>
+#include <opm/porsol/mimetic/TpfaCompressible.hpp>
 
 #include <iostream>
 
@@ -55,7 +56,6 @@ typedef Opm::ExplicitCompositionalTransport<Grid, Rock, Fluid, Wells> TransportS
 
 
 typedef Opm::BlackoilSimulator<Grid, Rock, Fluid, Wells, FlowSolver, TransportSolver> Simulator;
-
 
 int main(int argc, char** argv)
 try
@@ -72,11 +72,10 @@ try
     clock.start();
     sim.simulate();
     clock.stop();
-    std::cout << "\n\nSimulation clock time (secs): " << clock.secsSinceStart() << std::endl;
+    std::cout << "\n\nSimulation clock time (secs): "
+              << clock.secsSinceStart() << std::endl;
 }
 catch (const std::exception &e) {
     std::cerr << "Program threw an exception: " << e.what() << "\n";
     throw;
 }
-
-

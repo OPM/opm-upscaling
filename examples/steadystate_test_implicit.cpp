@@ -32,43 +32,49 @@
   You should have received a copy of the GNU General Public License
   along with OpenRS.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #include <config.h>
 
-
-//#define VERBOSE
-#include <opm/upscaling/SteadyStateUpscalerImplicit.hpp>
-#include <opm/upscaling/SteadyStateUpscalerManagerImplicit.hpp>
-//#include <opm/upscaling/UpscalingTraits.hpp>
-#include <opm/porsol/euler/EulerUpstreamImplicit.hpp>
-#include <opm/porsol/common/SimulatorTraits.hpp>
-#include <iostream>
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
 
 #include <dune/common/version.hh>
+
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
 #include <dune/common/parallel/mpihelper.hh>
 #else
 #include <dune/common/mpihelper.hh>
 #endif
 
-namespace Opm{
-	template <class IsotropyPolicy>
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
+
+#include <opm/porsol/common/SimulatorTraits.hpp>
+#include <opm/porsol/euler/EulerUpstreamImplicit.hpp>
+
+#include <opm/upscaling/SteadyStateUpscalerImplicit.hpp>
+#include <opm/upscaling/SteadyStateUpscalerManagerImplicit.hpp>
+
+#include <iostream>
+
+namespace Opm {
+    template <class IsotropyPolicy>
     struct Implicit
     {
         template <class GridInterface, class BoundaryConditions>
         struct TransportSolver
         {
-            //enum { Dimension = GridInterface::Dimension };
-        	enum { Dimension = GridInterface::Dimension };
+            enum { Dimension = GridInterface::Dimension };
             typedef typename IsotropyPolicy::template ResProp<Dimension>::Type RP;
 
             typedef EulerUpstreamImplicit<GridInterface,
-                                  RP,
-                                  BoundaryConditions> Type;
+                                          RP,
+                                          BoundaryConditions> Type;
 
         };
     };
-	typedef SimulatorTraits<Isotropic, Implicit> UpscalingTraitsBasicImplicit;
+
+    typedef SimulatorTraits<Isotropic, Implicit> UpscalingTraitsBasicImplicit;
 }
+
 using namespace Opm;
 
 int main(int argc, char** argv)
@@ -78,8 +84,10 @@ try
 
     // Initialize.
     Opm::parameter::ParameterGroup param(argc, argv);
+
     // MPIHelper::instance(argc,argv) ;
     typedef SteadyStateUpscalerImplicit<UpscalingTraitsBasicImplicit> upscaler_t;
+
     SteadyStateUpscalerManagerImplicit<upscaler_t> mgr;
     mgr.upscale(param);
 }
@@ -87,4 +95,3 @@ catch (const std::exception &e) {
     std::cerr << "Program threw an exception: " << e.what() << "\n";
     throw;
 }
-
