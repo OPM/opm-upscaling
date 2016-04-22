@@ -31,6 +31,7 @@
 list (APPEND TEST_SOURCE_FILES
 	tests/common/boundaryconditions_test.cpp
 	tests/common/matrix_test.cpp
+	tests/common/test_gravitypressure.cpp
 	)
 
 list(APPEND MAIN_SOURCE_FILES

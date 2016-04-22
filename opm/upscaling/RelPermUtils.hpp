@@ -175,7 +175,15 @@ namespace Opm {
       std::vector<double> cellPoreVolumes; //!< Pore volume for each grid cell.
       MonotCubicInterpolator WaterSaturationVsCapPressure; //!< Water saturation as a function of capillary pressure.
 
+#if defined(UNITTEST_TRESPASS_PRIVATE_PROPERTY_DP)
+    public: // Intrusive unit testing of calculcateCellPressureGradients()
+#endif // UNITTEST_TRESPASS_PRIVATE_PROPERTY_DP
       std::vector<double> dP; //!<  Cell center pressure gradients due to gravity effects.
+
+#if defined(UNITTEST_TRESPASS_PRIVATE_PROPERTY_DP)
+    private:
+#endif // UNITTEST_TRESPASS_PRIVATE_PROPERTY_DP
+
       std::map<std::string,std::string>& options; //!< Reference to options structure.
   };
 
