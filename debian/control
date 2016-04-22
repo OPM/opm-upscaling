@@ -3,7 +3,8 @@ Priority: extra
 Maintainer: Arne Morten Kvarving <arne.morten.kvarving@sintef.no>
 Build-Depends: build-essential, debhelper (>= 9), libboost-filesystem-dev,
                libboost-system-dev, libboost-date-time-dev, libboost-test-dev,
-               libsuperlu3-dev, gfortran, libsuitesparse-dev, libopm-core-dev,
+               libsuperlu3-dev (>= 3.0) | libsuperlu-dev (>= 4.3),
+               gfortran, libsuitesparse-dev, libopm-core-dev,
                libdune-common-dev, libdune-istl-dev, cmake, libtinyxml-dev, bc,
                libert.ecl-dev, git, zlib1g-dev, libtool, libopm-material-dev,
                libopm-grid-dev, libdune-grid-dev, libopm-output-dev,
