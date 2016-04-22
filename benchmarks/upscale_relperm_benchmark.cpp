@@ -393,7 +393,7 @@ try
 
     /* If gravity is to be included, calculate z-values of every cell: */
     if (includeGravity)
-        helper.calculateCellPressureGradients(res);
+        helper.calculateCellPressureGradients();
 
     /******************************************************************************
      * Step 5:
