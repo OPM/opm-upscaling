@@ -31,8 +31,13 @@
 //
 #define UNITTEST_TRESPASS_PRIVATE_PROPERTY_DP 1
 
-// This test fails in an MPI environment.
-#undef HAVE_MPI
+#include <dune/common/version.hh>
+
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
+#include <dune/common/parallel/mpihelper.hh>
+#else
+#include <dune/common/mpihelper.hh>
+#endif
 
 #include <opm/upscaling/RelPermUtils.hpp>
 #undef  UNITTEST_TRESPASS_PRIVATE_PROPERTY_DP
@@ -403,6 +408,10 @@ PORO
                 // RelPermUpscaleHelper during grid construction (i.e., when
                 // calling tesselateGrid()).
                 const auto mpi_rank = 1;
+
+                int m_argc = boost::unit_test::framework::master_test_suite().argc;
+                char** m_argv = boost::unit_test::framework::master_test_suite().argv;
+                Dune::MPIHelper& mhelper = Dune::MPIHelper::instance(m_argc, m_argv);
 
                 Opm::RelPermUpscaleHelper helper{mpi_rank, options};
                 {
