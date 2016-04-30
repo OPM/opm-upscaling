@@ -38,25 +38,7 @@ function build_opm_upscaling {
   test $? -eq 0 || exit 1
   popd
 
-  # Build opm-parser
-  clone_and_build_module opm-parser "-DCMAKE_PREFIX_PATH=$WORKSPACE/serial/install -DCMAKE_INSTALL_PREFIX=$WORKSPACE/serial/install" $OPM_PARSER_REVISION $WORKSPACE/serial
-  test $? -eq 0 || exit 1
-
-  # Build opm-material
-  clone_and_build_module opm-material "-DCMAKE_PREFIX_PATH=$WORKSPACE/serial/install -DCMAKE_INSTALL_PREFIX=$WORKSPACE/serial/install" $OPM_MATERIAL_REVISION $WORKSPACE/serial
-  test $? -eq 0 || exit 1
-
-  # Build opm-core
-  clone_and_build_module opm-core "-DCMAKE_PREFIX_PATH=$WORKSPACE/serial/install -DCMAKE_INSTALL_PREFIX=$WORKSPACE/serial/install" $OPM_CORE_REVISION $WORKSPACE/serial
-  test $? -eq 0 || exit 1
-
-  # Build opm-grid
-  clone_and_build_module opm-grid "-DCMAKE_PREFIX_PATH=$WORKSPACE/serial/install -DCMAKE_INSTALL_PREFIX=$WORKSPACE/serial/install" $OPM_GRID_REVISION $WORKSPACE/serial
-  test $? -eq 0 || exit 1
-
-  # Build opm-output
-  clone_and_build_module opm-output "-DCMAKE_PREFIX_PATH=$WORKSPACE/serial/install -DCMAKE_INSTALL_PREFIX=$WORKSPACE/serial/install" $OPM_OUTPUT_REVISION $WORKSPACE/serial
-  test $? -eq 0 || exit 1
+  build_upstreams
 
   # Build opm-upscaling
   pushd .
