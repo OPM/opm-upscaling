@@ -47,6 +47,7 @@ list(APPEND MAIN_SOURCE_FILES
 	opm/porsol/euler/ImplicitCapillarity.cpp
 	opm/upscaling/ParserAdditions.cpp
 	opm/upscaling/RelPermUtils.cpp
+        opm/upscaling/initCPGrid.cpp
 	)
 
 # originally generated with the command:
@@ -218,4 +219,5 @@ list (APPEND PUBLIC_HEADER_FILES
 	opm/upscaling/UpscalerBase.hpp
 	opm/upscaling/UpscalerBase_impl.hpp
 	opm/upscaling/UpscalingTraits.hpp
+        opm/upscaling/initCPGrid.hpp
 	)

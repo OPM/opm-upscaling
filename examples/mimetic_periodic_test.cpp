@@ -47,8 +47,15 @@
 #include <opm/porsol/mimetic/MimeticIPEvaluator.hpp>
 #include <opm/porsol/mimetic/IncompFlowSolverHybrid.hpp>
 
+#include <opm/upscaling/initCPGrid.hpp>
+
+
+
 #include <array>
 #include <iostream>
+
+
+
 
 int main(int argc, char** argv)
 try
@@ -63,8 +70,7 @@ try
     Dune::CpGrid grid;
     {
         Opm::parameter::ParameterGroup param(argc, argv);
-
-        grid.init(param);
+        Opm::initCPGrid(grid , param);
         grid.setUniqueBoundaryIds(true);
     }
 

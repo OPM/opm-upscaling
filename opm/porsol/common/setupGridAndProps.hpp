@@ -43,6 +43,7 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
 
@@ -90,7 +91,10 @@ namespace Opm
             }
             bool periodic_extension = param.getDefault<bool>("periodic_extension", false);
             bool turn_normals = param.getDefault<bool>("turn_normals", false);
-            grid.processEclipseFormat(deck, periodic_extension, turn_normals);
+            {
+                std::shared_ptr<EclipseState> state = std::make_shared<EclipseState>(deck , parseContext);
+                grid.processEclipseFormat(state->getInputGrid(), periodic_extension, turn_normals);
+            }
             // Save EGRID file in case we are writing ECL output.
             if (param.getDefault("output_ecl", false)) {
                 OPM_THROW(std::runtime_error, "Saving to EGRID files is not yet implemented");
@@ -157,8 +161,10 @@ namespace Opm
                                          Dune::CpGrid& grid,
                                          ResProp<3>& res_prop)
     {
-        grid.processEclipseFormat(deck, periodic_extension, turn_normals, clip_z);
+        Opm::ParseContext parseContext;
+        std::shared_ptr<EclipseState> state = std::make_shared<EclipseState>(deck , parseContext);
         const std::string* rl_ptr = (rock_list == "no_list") ? 0 : &rock_list;
+        grid.processEclipseFormat(state->getInputGrid(), periodic_extension, turn_normals, clip_z);
         res_prop.init(deck, grid.globalCell(), perm_threshold, rl_ptr, use_jfunction_scaling, sigma, theta);
         if (unique_bids) {
             grid.setUniqueBoundaryIds(true);
