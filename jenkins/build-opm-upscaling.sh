@@ -44,7 +44,7 @@ function build_opm_upscaling {
   pushd .
   mkdir serial/build-opm-upscaling
   cd serial/build-opm-upscaling
-  build_module "-DCMAKE_PREFIX_PATH=$WORKSPACE/serial/install" 1 $WORKSPACE
+  build_module "-DCMAKE_PREFIX_PATH=$WORKSPACE/serial/install -DINSTALL_BENCHMARKS=1" 1 $WORKSPACE
   test $? -eq 0 || exit 1
   popd
 }

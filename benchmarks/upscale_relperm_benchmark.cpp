@@ -268,11 +268,10 @@ try
 
     // create the parser
     Opm::ParserPtr parser(new Opm::Parser);
-    stringstream *gridstringstream(new stringstream(stringstream::in | stringstream::out));
-    std::shared_ptr<std::istream> gridstream(gridstringstream);
-    inflate (eclipseInput, sizeof (eclipseInput) / sizeof (eclipseInput[0]), *gridstringstream);
+    stringstream gridstringstream(stringstream::in | stringstream::out);
+    inflate (eclipseInput, sizeof (eclipseInput) / sizeof (eclipseInput[0]), gridstringstream);
     Opm::ParseContext mode;
-    Opm::DeckConstPtr deck = parser->parseStream(gridstream, mode);
+    auto deck = parser->parseString(gridstringstream.str(), mode);
 
     finish = clock();   timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
     if (helper.isMaster) cout << " (" << timeused <<" secs)" << endl;
