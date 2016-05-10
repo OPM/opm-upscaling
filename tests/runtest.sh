@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 INPUT_DATA_PATH="$1"
 RESULT_PATH="$2"
