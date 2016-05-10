@@ -32,6 +32,10 @@
 #include <dune/common/mpihelper.hh>
 #endif
 
+#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 #include <opm/core/utility/StopWatch.hpp>
@@ -289,13 +293,13 @@ int run(Params& p)
       cellsize[1] = p.max[1] > -1?p.max[1]/cells[1]:1.0;
       cellsize[2] = p.max[2] > -1?p.max[2]/cells[2]:1.0;
       grid.createCartesian(cells,cellsize);
-    } else
-#ifdef HAVE_OLD_CPGRID_API
-      grid.readEclipseFormat(p.file,p.ctol,false);
-#else
-      grid.readEclipseFormat(p.file,false);
-#endif
-
+    } else {
+        Opm::ParseContext parseContext;
+        Opm::ParserPtr parser(new Opm::Parser());
+        Opm::DeckConstPtr deck(parser->parseFile(p.file , parseContext));
+        std::shared_ptr<Opm::EclipseGrid> inputGrid = std::make_shared<Opm::EclipseGrid>(deck , nullptr);
+        grid.processEclipseFormat(inputGrid, false);
+    }
     ElasticityUpscale<GridType, AMG> upscale(grid, p.ctol, p.Emin, p.file,
                                              p.rocklist, p.verbose);
 

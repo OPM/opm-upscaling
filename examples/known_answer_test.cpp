@@ -66,6 +66,10 @@
 #include <opm/porsol/mimetic/IncompFlowSolverHybrid.hpp>
 #include <opm/porsol/mimetic/MimeticIPEvaluator.hpp>
 
+#include <opm/upscaling/initCPGrid.hpp>
+
+
+
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -73,6 +77,8 @@
 #include <iostream>
 
 #include <boost/lexical_cast.hpp>
+
+
 
 // ------------ Specifying the solution ------------
 
@@ -249,7 +255,7 @@ try
     // Make a Dune::CpGrid.
     typedef Dune::CpGrid Grid;
     Grid grid;
-    grid.init(param);
+    Opm::initCPGrid(grid , param);
     grid.setUniqueBoundaryIds(true);
 
     // Make the grid interface

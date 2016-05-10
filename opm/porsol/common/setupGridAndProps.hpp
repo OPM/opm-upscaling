@@ -5,7 +5,7 @@
 // Created: Tue Aug 11 14:47:35 2009
 //
 // Author(s): Atgeirr F Rasmussen <atgeirr@sintef.no>
-//            Bård Skaflestad     <bard.skaflestad@sintef.no>
+//            BÃ¥rd Skaflestad     <bard.skaflestad@sintef.no>
 //
 // $Date$
 //
@@ -90,7 +90,10 @@ namespace Opm
             }
             bool periodic_extension = param.getDefault<bool>("periodic_extension", false);
             bool turn_normals = param.getDefault<bool>("turn_normals", false);
-            grid.processEclipseFormat(deck, periodic_extension, turn_normals);
+            {
+                std::shared_ptr<EclipseGrid> inputGrid = std::make_shared<EclipseGrid>(deck , nullptr);
+                grid.processEclipseFormat(inputGrid, periodic_extension, turn_normals);
+            }
             // Save EGRID file in case we are writing ECL output.
             if (param.getDefault("output_ecl", false)) {
                 OPM_THROW(std::runtime_error, "Saving to EGRID files is not yet implemented");
@@ -157,8 +160,9 @@ namespace Opm
                                          Dune::CpGrid& grid,
                                          ResProp<3>& res_prop)
     {
-        grid.processEclipseFormat(deck, periodic_extension, turn_normals, clip_z);
+        auto eg = std::make_shared<const EclipseGrid>(deck, nullptr);
         const std::string* rl_ptr = (rock_list == "no_list") ? 0 : &rock_list;
+        grid.processEclipseFormat(eg, periodic_extension, turn_normals, clip_z);
         res_prop.init(deck, grid.globalCell(), perm_threshold, rl_ptr, use_jfunction_scaling, sigma, theta);
         if (unique_bids) {
             grid.setUniqueBoundaryIds(true);
