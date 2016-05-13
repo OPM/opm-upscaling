@@ -45,6 +45,7 @@
 #include <opm/core/utility/Units.hpp>
 #include <opm/output/eclipse/writeECLData.hpp>
 #include <opm/core/utility/miscUtilities.hpp>
+#include <opm/core/utility/Compat.hpp>
 #include <algorithm>
 #include <iostream>
 
@@ -251,9 +252,9 @@ namespace Opm
                                    + '-' + boost::lexical_cast<std::string>(pressure_drop);
                     Opm::toBothSat(saturation, ecl_sat);
                     getCellPressure(ecl_press, this->ginterf_, this->flow_solver_.getSolution());
-                    Opm::DataMap datamap;
-                    datamap["saturation"] = &ecl_sat;
-                    datamap["pressure"] = &ecl_press;
+                    data::Solution solution;
+                    solution.insert( data::Solution::key::PRESSURE, ecl_press );
+                    solution.insert( data::Solution::key::SWAT, destripe( ecl_sat, 2, 0 ) );
                     ecl_time += stepsize;
                     boost::posix_time::ptime ecl_startdate( boost::gregorian::date(2012, 1, 1) );
                     boost::posix_time::ptime ecl_curdate = ecl_startdate + boost::posix_time::seconds(int(ecl_time));
@@ -264,7 +265,7 @@ namespace Opm
                                       cgrid->cartdims[ 1 ],
                                       cgrid->cartdims[ 2 ],
                                       cgrid->number_of_cells,
-                                      datamap, it_count,
+                                      solution, it_count,
                                       ecl_time, ecl_posix_time,
                                       "./", basename);
                 }
