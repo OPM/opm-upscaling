@@ -257,7 +257,16 @@ namespace Opm
                     ecl_time += stepsize;
                     boost::posix_time::ptime ecl_startdate( boost::gregorian::date(2012, 1, 1) );
                     boost::posix_time::ptime ecl_curdate = ecl_startdate + boost::posix_time::seconds(int(ecl_time));
-                    Opm::writeECLData(*grid_adapter_.c_grid(), datamap, it_count, ecl_time, ecl_curdate, "./", basename);
+                    boost::posix_time::ptime epoch( boost::gregorian::date( 1970, 1, 1 ) );
+                    auto ecl_posix_time = ( ecl_curdate - epoch ).total_seconds();
+                    const auto* cgrid = grid_adapter_.c_grid();
+                    Opm::writeECLData(cgrid->cartdims[ 0 ],
+                                      cgrid->cartdims[ 1 ],
+                                      cgrid->cartdims[ 2 ],
+                                      cgrid->number_of_cells,
+                                      datamap, it_count,
+                                      ecl_time, ecl_posix_time,
+                                      "./", basename);
                 }
                 // Comparing old to new.
                 double maxdiff = 0.0;
