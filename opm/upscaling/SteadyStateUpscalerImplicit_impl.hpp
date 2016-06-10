@@ -45,6 +45,7 @@
 #include <opm/core/utility/Units.hpp>
 #include <opm/output/eclipse/writeECLData.hpp>
 #include <opm/core/utility/miscUtilities.hpp>
+#include <opm/core/utility/Compat.hpp>
 #include <algorithm>
 #include <iostream>
 
@@ -251,13 +252,22 @@ namespace Opm
                                    + '-' + boost::lexical_cast<std::string>(pressure_drop);
                     Opm::toBothSat(saturation, ecl_sat);
                     getCellPressure(ecl_press, this->ginterf_, this->flow_solver_.getSolution());
-                    Opm::DataMap datamap;
-                    datamap["saturation"] = &ecl_sat;
-                    datamap["pressure"] = &ecl_press;
+                    data::Solution solution;
+                    solution.insert( data::Solution::key::PRESSURE, ecl_press );
+                    solution.insert( data::Solution::key::SWAT, destripe( ecl_sat, 2, 0 ) );
                     ecl_time += stepsize;
                     boost::posix_time::ptime ecl_startdate( boost::gregorian::date(2012, 1, 1) );
                     boost::posix_time::ptime ecl_curdate = ecl_startdate + boost::posix_time::seconds(int(ecl_time));
-                    Opm::writeECLData(*grid_adapter_.c_grid(), datamap, it_count, ecl_time, ecl_curdate, "./", basename);
+                    boost::posix_time::ptime epoch( boost::gregorian::date( 1970, 1, 1 ) );
+                    auto ecl_posix_time = ( ecl_curdate - epoch ).total_seconds();
+                    const auto* cgrid = grid_adapter_.c_grid();
+                    Opm::writeECLData(cgrid->cartdims[ 0 ],
+                                      cgrid->cartdims[ 1 ],
+                                      cgrid->cartdims[ 2 ],
+                                      cgrid->number_of_cells,
+                                      solution, it_count,
+                                      ecl_time, ecl_posix_time,
+                                      "./", basename);
                 }
                 // Comparing old to new.
                 double maxdiff = 0.0;
