@@ -161,6 +161,9 @@ endmacro (tests_hook)
 # all setup common to the OPM library modules is done here
 include (OpmLibMain)
 
+# setup extra tests (using helper binaries)
+include (${CMAKE_CURRENT_SOURCE_DIR}/compareUpscaling.cmake)
+
 # encode test cases so they can be embedded in the benchmark executables
 include (${PROJECT_SOURCE_DIR}/EmbedCases.cmake)
 
