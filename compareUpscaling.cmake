@@ -22,14 +22,14 @@
 
 
 # Set absolute tolerance to be used for testing
-set(tol 1e-2)
+set(abstol 1e-2)
+set(reltol 1e-5)
 
 # Define some paths
 set(RESULT_PATH ${PROJECT_BINARY_DIR}/tests/results)
 set(INPUT_DATA_PATH ${PROJECT_BINARY_DIR}/tests/input_data)
 
 # Create directory to store upscaling results in
-file(MAKE_DIRECTORY ${RESULT_PATH})
 
 
 ###########################################################################
@@ -50,11 +50,11 @@ macro (add_test_upscale_perm gridname bcs rows)
                DRIVER_ARGS ${INPUT_DATA_PATH} ${RESULT_PATH}
                            ${CMAKE_BINARY_DIR}/bin
                            upscale_perm_BC${bcs}_${gridname}
-                           ${tol} ${rows} 3
+                           ${abstol} ${reltol} 
                TEST_ARGS -bc ${bcs}
                          -output ${RESULT_PATH}/upscale_perm_BC${bcs}_${gridname}.txt
                          ${INPUT_DATA_PATH}/grids/${gridname}.grdecl)
-endmacro (add_test_upscale_perm gridname bcs)
+endmacro (add_test_upscale_perm)
 
 ###########################################################################
 # TEST: upscale_relperm 
@@ -79,7 +79,7 @@ macro (add_test_upscale_relperm testname gridname stonefiles rows cols)
                DRIVER_ARGS ${INPUT_DATA_PATH} ${RESULT_PATH}
                            ${CMAKE_BINARY_DIR}/bin
                            upscale_relperm_${testname}
-                           0.02 ${rows} ${cols}
+                           ${abstol} ${reltol}
                TEST_ARGS ${test_args})
 endmacro ()
 
@@ -100,7 +100,7 @@ macro (add_test_upscale_elasticity gridname method)
                DRIVER_ARGS ${INPUT_DATA_PATH} ${RESULT_PATH}
                            ${CMAKE_BINARY_DIR}/bin
                            upscale_elasticity_${method}_${gridname}
-                           ${tol} 6 6
+                           ${abstol} ${reltol} 
                TEST_ARGS output=${RESULT_PATH}/upscale_elasticity_${method}_${gridname}.txt
                          gridfilename=${INPUT_DATA_PATH}/grids/${gridname}.grdecl
                          method=${method})
@@ -113,7 +113,7 @@ if(NOT TARGET test-suite)
 endif()
 add_dependencies (test-suite datafiles upscale_perm upscale_relperm)
 add_dependencies (test-suite compare_upscaling_results)
-opm_set_test_driver(${PROJECT_SOURCE_DIR}/tests/runtest.sh "")
+opm_set_test_driver(${PROJECT_SOURCE_DIR}/tests/run-compareUpscaling.sh "")
 
 # Add tests for different models
 add_test_upscale_perm(PeriodicTilted p 3)
@@ -154,8 +154,4 @@ if((DUNE_ISTL_VERSION_MAJOR GREATER 2) OR
   add_test_upscale_elasticity(EightCells mortar)
 endif()
 
-add_custom_target(clear_test_data ${CMAKE_COMMAND} -E remove_directory ${RESULT_PATH}
-                  COMMAND ${CMAKE_COMMAND} -E make_directory ${RESULT_PATH}
-                  COMMENT "Removing old test results")
 
-add_dependencies(check clear_test_data)

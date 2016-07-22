@@ -108,7 +108,7 @@ list (APPEND EXAMPLE_SOURCE_FILES
 	examples/upscale_relpermvisc.cpp
 	examples/upscale_singlephase.cpp
 	examples/upscale_steadystate_implicit.cpp
-	tests/compare_upscaling_results.cpp
+	tests/compareUpscaling.cpp
 	)
 
 list (APPEND ADDITIONAL_SOURCE_FILES
