@@ -42,7 +42,7 @@ typedef Dune::UMFPack<Matrix> LUSolver;
 #elif defined(HAVE_SUPERLU)
 typedef Dune::SuperLU<Matrix> LUSolver;
 #else
-static_assert("Enable either SuperLU or UMFPACK");
+static_assert(false, "Enable either SuperLU or UMFPACK");
 #endif
 
 //! \brief A linear operator
