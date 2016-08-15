@@ -31,8 +31,9 @@ void readData(const char* fileName, std::vector<double> &dataVec){
     std::ifstream inFile (fileName, std::ifstream::in);
     std::string line, value; 
     if(inFile.fail()){
-	std::cout << "For filename: " << fileName << std::endl; 
-	OPM_THROW(std::runtime_error, "Could not open file.");
+        std::string fname = fileName;
+        std::cout << "Could not open file " + fname << std::endl;
+        OPM_THROW(std::runtime_error, "Could not open file " + fname);
     }
     while(std::getline(inFile, line)){
 	std::stringstream ss(line);
