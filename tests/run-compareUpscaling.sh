@@ -11,11 +11,10 @@ EXE_NAME="$7"
 shift 7
 TEST_ARGS="$@"
 
-rm -Rf  ${RESULT_PATH};
+rm -Rf ${RESULT_PATH}
 mkdir -p ${RESULT_PATH}
-cd ${RESULT_PATH}
-${BINPATH}/${EXE_NAME} ${TEST_ARGS}
-cd ..
 
-$BINPATH/$EXE_NAME $TEST_ARGS
-$BINPATH/compareUpscaling $INPUT_DATA_PATH/reference_solutions/$TEST_NAME.txt $RESULT_PATH/$TEST_NAME.txt $ABS_TOL $REL_TOL 
+${BINPATH}/${EXE_NAME} ${TEST_ARGS}
+${BINPATH}/compareUpscaling ${INPUT_DATA_PATH}/reference_solutions/${TEST_NAME}.txt ${RESULT_PATH}/${TEST_NAME}.txt ${ABS_TOL} ${REL_TOL}
+
+rm -Rf ${RESULT_PATH}

@@ -26,11 +26,8 @@ set(abstol 1e-2)
 set(reltol 1e-5)
 
 # Define some paths
-set(RESULT_PATH ${PROJECT_BINARY_DIR}/tests/results)
+set(BASE_RESULT_PATH ${PROJECT_BINARY_DIR}/tests/results)
 set(INPUT_DATA_PATH ${PROJECT_BINARY_DIR}/tests/input_data)
-
-# Create directory to store upscaling results in
-
 
 ###########################################################################
 # TEST: upscale_perm 
@@ -45,7 +42,10 @@ set(INPUT_DATA_PATH ${PROJECT_BINARY_DIR}/tests/input_data)
 # and that upscale_perm_BC${bcs}_${gridname}.txt is found in ${INPUT_DATA_PATH}reference_solutions
 macro (add_test_upscale_perm gridname bcs rows)
   # Add test that runs upscale_perm and outputs the results to file
-  opm_add_test(upscale_perm_BC${bcs}_${gridname} NO_COMPILE
+  # Ensure unique output folder per test (because this folder is deleted in the test driver script)
+  set(TEST_NAME upscale_perm_BC${bcs}_${gridname})
+  set(RESULT_PATH ${BASE_RESULT_PATH}/${TEST_NAME})
+  opm_add_test(${TEST_NAME} NO_COMPILE
                EXE_NAME upscale_perm
                DRIVER_ARGS ${INPUT_DATA_PATH} ${RESULT_PATH}
                            ${CMAKE_BINARY_DIR}/bin
@@ -68,13 +68,16 @@ endmacro (add_test_upscale_perm)
 # and that upscale_perm_BC${bcs}_${gridname}.txt is found in ${INPUT_DATA_PATH}reference_solutions
 macro (add_test_upscale_relperm testname gridname stonefiles rows cols)
   # Add test that runs upscale_perm and outputs the results to file
+  # Ensure unique output folder per test (because this folder is deleted in the test driver script)
+  set(TEST_NAME upscale_relperm_${testname})
+  set(RESULT_PATH ${BASE_RESULT_PATH}/${TEST_NAME})
   set(test_args ${ARGN}
                 -output ${RESULT_PATH}/upscale_relperm_${testname}.txt
                 ${INPUT_DATA_PATH}/grids/${gridname}.grdecl)
   foreach(stonefile ${stonefiles})
     list(APPEND test_args ${INPUT_DATA_PATH}/grids/${stonefile})
   endforeach()
-  opm_add_test(upscale_relperm_${testname} NO_COMPILE
+  opm_add_test(${TEST_NAME} NO_COMPILE
                EXE_NAME upscale_relperm
                DRIVER_ARGS ${INPUT_DATA_PATH} ${RESULT_PATH}
                            ${CMAKE_BINARY_DIR}/bin
@@ -94,8 +97,11 @@ endmacro ()
 # This macro assumes that ${gridname}.grdecl is found in directory ${INPUT_DATA_PATH}grids/
 # and that upscale_elasticity_${method}_${gridname}.txt is found in ${INPUT_DATA_PATH}reference_solutions
 macro (add_test_upscale_elasticity gridname method)
-  # Add test that runs upscale_perm and outputs the results to file
-  opm_add_test(upscale_elasticity_${method}_${gridname} NO_COMPILE
+  # Add test that runs upscale_elasticity and outputs the results to file
+  # Ensure unique output folder per test (because this folder is deleted in the test driver script)
+  set(TEST_NAME upscale_elasticity_${method}_${gridname})
+  set(RESULT_PATH ${BASE_RESULT_PATH}/${TEST_NAME})
+  opm_add_test(${TEST_NAME} NO_COMPILE
                EXE_NAME upscale_elasticity
                DRIVER_ARGS ${INPUT_DATA_PATH} ${RESULT_PATH}
                            ${CMAKE_BINARY_DIR}/bin
@@ -112,7 +118,7 @@ if(NOT TARGET test-suite)
   add_custom_target(test-suite)
 endif()
 add_dependencies (test-suite datafiles upscale_perm upscale_relperm)
-add_dependencies (test-suite compare_upscaling_results)
+add_dependencies (test-suite compareUpscaling)
 opm_set_test_driver(${PROJECT_SOURCE_DIR}/tests/run-compareUpscaling.sh "")
 
 # Add tests for different models
@@ -153,5 +159,3 @@ if((DUNE_ISTL_VERSION_MAJOR GREATER 2) OR
   add_test_upscale_elasticity(EightCells mpc)
   add_test_upscale_elasticity(EightCells mortar)
 endif()
-
-
