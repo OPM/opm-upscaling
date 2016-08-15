@@ -16,5 +16,3 @@ mkdir -p ${RESULT_PATH}
 
 ${BINPATH}/${EXE_NAME} ${TEST_ARGS}
 ${BINPATH}/compareUpscaling ${INPUT_DATA_PATH}/reference_solutions/${TEST_NAME}.txt ${RESULT_PATH}/${TEST_NAME}.txt ${ABS_TOL} ${REL_TOL}
-
-rm -Rf ${RESULT_PATH}
