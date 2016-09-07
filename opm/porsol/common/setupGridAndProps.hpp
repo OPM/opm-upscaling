@@ -91,7 +91,7 @@ namespace Opm
             bool periodic_extension = param.getDefault<bool>("periodic_extension", false);
             bool turn_normals = param.getDefault<bool>("turn_normals", false);
             {
-                std::shared_ptr<EclipseGrid> inputGrid = std::make_shared<EclipseGrid>(deck , nullptr);
+                Opm::EclipseGrid inputGrid(deck);
                 grid.processEclipseFormat(inputGrid, periodic_extension, turn_normals);
             }
             // Save EGRID file in case we are writing ECL output.
@@ -160,7 +160,7 @@ namespace Opm
                                          Dune::CpGrid& grid,
                                          ResProp<3>& res_prop)
     {
-        auto eg = std::make_shared<const EclipseGrid>(deck, nullptr);
+        Opm::EclipseGrid eg(deck);
         const std::string* rl_ptr = (rock_list == "no_list") ? 0 : &rock_list;
         grid.processEclipseFormat(eg, periodic_extension, turn_normals, clip_z);
         res_prop.init(deck, grid.globalCell(), perm_threshold, rl_ptr, use_jfunction_scaling, sigma, theta);

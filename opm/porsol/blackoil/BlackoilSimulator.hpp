@@ -125,7 +125,7 @@ init(const Opm::parameter::ParameterGroup& param)
         Opm::ParseContext parseContext;
         Opm::ParserPtr parser(new Opm::Parser());
         Opm::DeckConstPtr deck = parser->parseFile(param.get<std::string>("filename") , parseContext);
-        std::shared_ptr<Opm::EclipseGrid> inputGrid = std::make_shared<Opm::EclipseGrid>( deck , nullptr );
+        Opm::EclipseGrid inputGrid( deck );
 
         double z_tolerance = param.getDefault<double>("z_tolerance", 0.0);
         bool periodic_extension = param.getDefault<bool>("periodic_extension", false);

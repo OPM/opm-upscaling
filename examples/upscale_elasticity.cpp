@@ -297,7 +297,7 @@ int run(Params& p)
         Opm::ParseContext parseContext;
         Opm::ParserPtr parser(new Opm::Parser());
         Opm::DeckConstPtr deck(parser->parseFile(p.file , parseContext));
-        std::shared_ptr<Opm::EclipseGrid> inputGrid = std::make_shared<Opm::EclipseGrid>(deck , nullptr);
+        Opm::EclipseGrid inputGrid(deck);
         grid.processEclipseFormat(inputGrid, false);
     }
     ElasticityUpscale<GridType, AMG> upscale(grid, p.ctol, p.Emin, p.file,
