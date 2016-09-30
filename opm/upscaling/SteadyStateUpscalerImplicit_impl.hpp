@@ -45,7 +45,6 @@
 #include <opm/core/utility/Units.hpp>
 #include <opm/output/eclipse/writeECLData.hpp>
 #include <opm/core/utility/miscUtilities.hpp>
-#include <opm/core/utility/Compat.hpp>
 #include <algorithm>
 #include <iostream>
 
@@ -137,6 +136,20 @@ namespace Opm
                 m(i, i) = std::max(m(i, i), threshold);
             }
         }
+
+        // Workaround: duplicate of Opm::destripe in opm-simulators.
+        inline std::vector< double > destripe( const std::vector< double >& v,
+                                               size_t stride,
+                                               size_t offset )
+        {
+            std::vector< double > dst( v.size() / stride );
+            size_t di = 0;
+            for( size_t i = offset; i < v.size(); i += stride ) {
+                dst[ di++ ] = v[ i ];
+            }
+            return dst;
+        }
+
     } // anon namespace
 
 
