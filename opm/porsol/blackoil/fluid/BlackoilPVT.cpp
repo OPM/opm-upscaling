@@ -20,7 +20,7 @@
 #include "config.h"
 
 #include "BlackoilPVT.hpp"
-#include <opm/core/utility/Units.hpp>
+#include <opm/parser/eclipse/Units/Units.hpp>
 #include "MiscibilityDead.hpp"
 #include "MiscibilityLiveOil.hpp"
 #include "MiscibilityLiveGas.hpp"

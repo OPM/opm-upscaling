@@ -37,7 +37,7 @@
 #define OPM_SETUPGRIDANDPROPS_HEADER
 
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
-#include <opm/core/utility/Units.hpp>
+#include <opm/parser/eclipse/Units/Units.hpp>
 #include <dune/grid/CpGrid.hpp>
 #include <opm/porsol/common/ReservoirPropertyCapillary.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>

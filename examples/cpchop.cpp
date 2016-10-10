@@ -32,7 +32,7 @@
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 #include <opm/core/utility/MonotCubicInterpolator.hpp>
-#include <opm/core/utility/Units.hpp>
+#include <opm/parser/eclipse/Units/Units.hpp>
 
 #include <opm/output/eclipse/CornerpointChopper.hpp>
 #include <opm/output/eclipse/EclipseGridInspector.hpp>
