@@ -33,7 +33,7 @@ namespace Opm
     class BlackoilPVT : public BlackoilDefs
     {
     public:
-        void init(Opm::DeckConstPtr deck);
+        void init(const Deck& deck);
 
         double getViscosity(double press,
                             const CompVec& surfvol,

@@ -267,11 +267,11 @@ try
     flush(cout);   start = clock();
 
     // create the parser
-    Opm::ParserPtr parser(new Opm::Parser);
+    Opm::Parser parser;
     stringstream gridstringstream(stringstream::in | stringstream::out);
     inflate (eclipseInput, sizeof (eclipseInput) / sizeof (eclipseInput[0]), gridstringstream);
     Opm::ParseContext mode;
-    auto deck = parser->parseString(gridstringstream.str(), mode);
+    auto deck = parser.parseString(gridstringstream.str(), mode);
 
     finish = clock();   timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
     if (helper.isMaster) cout << " (" << timeused <<" secs)" << endl;
@@ -282,7 +282,7 @@ try
     start = clock();
     helper.sanityCheckInput(deck, minPerm, maxPerm, minPoro);
 
-    const Opm::DeckRecord& specgridRecord(deck->getKeyword("SPECGRID").getRecord(0));
+    const Opm::DeckRecord& specgridRecord(deck.getKeyword("SPECGRID").getRecord(0));
     std::array<int,3> res;
     res[0] = specgridRecord.getItem("NX").get<int>(0);
     res[1] = specgridRecord.getItem("NY").get<int>(0);

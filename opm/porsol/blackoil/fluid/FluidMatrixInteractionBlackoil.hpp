@@ -44,7 +44,7 @@ class FluidMatrixInteractionBlackoilParams
 {
 public:
     typedef ScalarT Scalar;
-    void init(Opm::DeckConstPtr deck)
+    void init(const Opm::Deck& deck)
     {
         ParseContext parseContext;
         EclipseState eclipseState(deck , parseContext);

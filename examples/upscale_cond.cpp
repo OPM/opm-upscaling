@@ -317,17 +317,17 @@ try
    if (isMaster) cout << " (" << timeused <<" secs)" << endl;
 
    // Check that we have the information we need from the eclipse file:
-   if (! (deck->hasKeyword("SPECGRID") && deck->hasKeyword("COORD") && deck->hasKeyword("ZCORN")
-          && deck->hasKeyword("PORO") && deck->hasKeyword("PERMX") && deck->hasKeyword("SATNUM"))) {
+   if (! (deck.hasKeyword("SPECGRID") && deck.hasKeyword("COORD") && deck.hasKeyword("ZCORN")
+          && deck.hasKeyword("PORO") && deck.hasKeyword("PERMX") && deck.hasKeyword("SATNUM"))) {
        if (isMaster) cerr << "Error: Did not find SPECGRID, COORD and ZCORN in Eclipse file " << ECLIPSEFILENAME << endl;
        usageandexit();
    }
 
    const int points                = atoi(options["points"].c_str());
 
-   vector<int> satnums   = deck->getKeyword("SATNUM").getIntData();
-   vector<double> poros  = deck->getKeyword("PORO").getRawDoubleData();
-   vector<double> permxs = deck->getKeyword("PERMX").getRawDoubleData();
+   vector<int> satnums   = deck.getKeyword("SATNUM").getIntData();
+   vector<double> poros  = deck.getKeyword("PORO").getRawDoubleData();
+   vector<double> permxs = deck.getKeyword("PERMX").getRawDoubleData();
    const double minPerm = atof(options["minPerm"].c_str()); 
    const double minPoro = atof(options["minPoro"].c_str());
 
@@ -430,7 +430,7 @@ try
      (crop top and bottom). These modifications ruin the computations for 
      fixed and linear boundary conditions.
    */
-   const auto& specgridRecord = deck->getKeyword("SPECGRID").getRecord(0);
+   const auto& specgridRecord = deck.getKeyword("SPECGRID").getRecord(0);
    vector<int>  griddims(3);
    griddims[0] = specgridRecord.getItem("NX").get< int >(0);
    griddims[1] = specgridRecord.getItem("NY").get< int >(0);

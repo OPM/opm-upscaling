@@ -219,5 +219,6 @@ list (APPEND PUBLIC_HEADER_FILES
 	opm/upscaling/UpscalerBase.hpp
 	opm/upscaling/UpscalerBase_impl.hpp
 	opm/upscaling/UpscalingTraits.hpp
+	opm/upscaling/CornerpointChopper.hpp
         opm/upscaling/initCPGrid.hpp
 	)

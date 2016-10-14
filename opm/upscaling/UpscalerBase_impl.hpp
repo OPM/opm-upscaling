@@ -128,7 +128,7 @@ namespace Opm
 
 
     template <class Traits>
-    inline void UpscalerBase<Traits>::init(Opm::DeckConstPtr deck,
+    inline void UpscalerBase<Traits>::init(const Opm::Deck& deck,
                                            BoundaryConditionType bctype,
                                            double perm_threshold,
                                            double residual_tolerance,

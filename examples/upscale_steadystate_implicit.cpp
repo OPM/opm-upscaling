@@ -190,8 +190,8 @@ try
     auto deck = Opm::RelPermUpscaleHelper::parseEclipseFile(gridfilename);
 
     // Check that we have the information we need from the eclipse file:  
-    if (! (deck->hasKeyword("SPECGRID") && deck->hasKeyword("COORD") && deck->hasKeyword("ZCORN")  
-           && deck->hasKeyword("PORO") && deck->hasKeyword("PERMX"))) {
+    if (! (deck.hasKeyword("SPECGRID") && deck.hasKeyword("COORD") && deck.hasKeyword("ZCORN")
+           && deck.hasKeyword("PORO") && deck.hasKeyword("PERMX"))) {
         std::cerr << "Error: Did not find SPECGRID, COORD, ZCORN, PORO and PERMX in Eclipse file " << gridfilename << std::endl;  
         usageandexit();  
     }  
@@ -260,15 +260,15 @@ try
     std::vector<std::string> rockfiles;
     std::vector<std::vector<double> > rocksatendpoints_ = getExtremeSats(rock_list,rockfiles);
 
-    std::vector<double>  poros = deck->getKeyword("PORO").getSIDoubleData();  
+    std::vector<double>  poros = deck.getKeyword("PORO").getSIDoubleData();  
     // Anisotropic relperm not yet implemented in steadystate_implicit
     //bool anisorocks = param.getDefault("anisotropicrocks", false);
     std::vector<int> satnums(poros.size(), 1); 
-    if (deck->hasKeyword("SATNUM")) { 
-        satnums = deck->getKeyword("SATNUM").getIntData();
+    if (deck.hasKeyword("SATNUM")) {
+        satnums = deck.getKeyword("SATNUM").getIntData();
     } 
-    else if (deck->hasKeyword("ROCKTYPE")) { 
-        satnums = deck->getKeyword("ROCKTYPE").getIntData();
+    else if (deck.hasKeyword("ROCKTYPE")) {
+        satnums = deck.getKeyword("ROCKTYPE").getIntData();
     } 
     else { 
         std::cout << "Warning: SATNUM or ROCKTYPE not found in input file, assuming only one rocktype" << std::endl; 

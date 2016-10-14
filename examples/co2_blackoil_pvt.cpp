@@ -33,11 +33,10 @@ try
     }
 
     Opm::BlackoilCo2PVT boPvt;
-    Opm::DeckConstPtr deck; // <- uninitalized pointer!
     Opm::time::StopWatch clock;
 
     clock.start();
-    boPvt.init(deck);
+    boPvt.init( Opm::Deck{} );
 
     boPvt.generateBlackOilTables(temperature);
     clock.stop();

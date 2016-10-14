@@ -123,8 +123,8 @@ init(const Opm::parameter::ParameterGroup& param)
     std::string fileformat = param.getDefault<std::string>("fileformat", "cartesian");
     if (fileformat == "eclipse") {
         Opm::ParseContext parseContext;
-        Opm::ParserPtr parser(new Opm::Parser());
-        Opm::DeckConstPtr deck = parser->parseFile(param.get<std::string>("filename") , parseContext);
+        Opm::Parser parser;
+        auto deck = parser.parseFile(param.get<std::string>("filename") , parseContext);
         Opm::EclipseGrid inputGrid( deck );
 
         double z_tolerance = param.getDefault<double>("z_tolerance", 0.0);
@@ -151,8 +151,8 @@ init(const Opm::parameter::ParameterGroup& param)
         rock_.init(grid_.size(0), default_poro, default_perm);
 
         Opm::ParseContext parseContext;
-        Opm::ParserPtr parser(new Opm::Parser());
-        Opm::DeckConstPtr deck = parser->parseFile(param.get<std::string>("filename") , parseContext);
+        Opm::Parser parser;
+        auto deck = parser.parseFile(param.get<std::string>("filename") , parseContext);
         fluid_.init(deck);
         wells_.init(deck, grid_, rock_);
     } else {

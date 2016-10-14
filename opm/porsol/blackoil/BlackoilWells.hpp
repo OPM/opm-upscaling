@@ -38,7 +38,7 @@ namespace Opm
     class BlackoilWells : public BlackoilDefs
     {
     public:
-        void init(Opm::DeckConstPtr deck,
+        void init(const Opm::Deck& deck,
                   const Dune::CpGrid& grid,
                   const Opm::Rock<3>& rock);
 
@@ -121,25 +121,25 @@ namespace Opm
 
     } // anon namespace
 
-    inline void BlackoilWells::init(Opm::DeckConstPtr deck,
+    inline void BlackoilWells::init(const Opm::Deck& deck,
                                     const Dune::CpGrid& grid,
                                     const Opm::Rock<3>& rock)
     {
-	if (!deck->hasKeyword("WELSPECS")) {
+	if (!deck.hasKeyword("WELSPECS")) {
 	    OPM_MESSAGE("Missing keyword \"WELSPECS\" in deck, initializing no wells.");
             return;
 	}
-	if (!deck->hasKeyword("COMPDAT")) {
+	if (!deck.hasKeyword("COMPDAT")) {
 	    OPM_MESSAGE("Missing keyword \"COMPDAT\" in deck, initializing no wells.");
             return;
 	}
-	if (!(deck->hasKeyword("WCONINJE") || deck->hasKeyword("WCONPROD")) ) {
+	if (!(deck.hasKeyword("WCONINJE") || deck.hasKeyword("WCONPROD")) ) {
 	    OPM_THROW(std::runtime_error, "Needed field is missing in file");
 	}
         using namespace Opm;
 
 	// Get WELLSPECS data
-    const auto& welspecsKeyword = deck->getKeyword("WELSPECS");
+    const auto& welspecsKeyword = deck.getKeyword("WELSPECS");
 	const int num_welspecs = welspecsKeyword.size();
 	well_names_.reserve(num_welspecs);
 	well_data_.reserve(num_welspecs);
@@ -152,7 +152,7 @@ namespace Opm
     }
 
 	// Get COMPDAT data   
-    const auto& compdatKeyword = deck->getKeyword("COMPDAT");
+    const auto& compdatKeyword = deck.getKeyword("COMPDAT");
 	const int num_compdats  = compdatKeyword.size();
     std::vector<std::vector<PerfData> > wellperf_data(num_welspecs);
 	for (int kw=0; kw<num_compdats; ++kw) {
@@ -228,8 +228,8 @@ namespace Opm
  
 	// Get WCONINJE data
         injection_mixture_ = 0.0;
-        if (deck->hasKeyword("WCONINJE")) {
-            const auto& wconinjeKeyword = deck->getKeyword("WCONINJE");
+        if (deck.hasKeyword("WCONINJE")) {
+            const auto& wconinjeKeyword = deck.getKeyword("WCONINJE");
             const int num_wconinjes = wconinjeKeyword.size();
             int injector_component = -1;
             for (int kw=0; kw<num_wconinjes; ++kw) {
@@ -308,8 +308,8 @@ namespace Opm
         }
 
 	// Get WCONPROD data
-        if (deck->hasKeyword("WCONPROD")) {
-            const auto& wconprodKeyword = deck->getKeyword("WCONPROD");
+        if (deck.hasKeyword("WCONPROD")) {
+            const auto& wconprodKeyword = deck.getKeyword("WCONPROD");
             const int num_wconprods = wconprodKeyword.size();
             for (int kw=0; kw<num_wconprods; ++kw) {
                 const auto& wconprodRecord = wconprodKeyword.getRecord(kw);
@@ -369,8 +369,8 @@ namespace Opm
         }
 
 	// Get WELTARG data
-        if (deck->hasKeyword("WELTARG")) {
-            const auto& weltargKeyword = deck->getKeyword("WELTARG");
+        if (deck.hasKeyword("WELTARG")) {
+            const auto& weltargKeyword = deck.getKeyword("WELTARG");
             const int num_weltargs  = weltargKeyword.size();
             for (int kw=0; kw<num_weltargs; ++kw) {
                 const auto& weltargRecord = weltargKeyword.getRecord(kw);

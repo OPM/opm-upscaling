@@ -206,7 +206,7 @@ int upscale(int varnum, char** vararg) {
     cout << " (" << timeused <<" secs)" << endl;
  
     // Check that we have the information we need from the eclipse file, we will check PERM-fields later
-    if (! (deck->hasKeyword("SPECGRID") && deck->hasKeyword("COORD") && deck->hasKeyword("ZCORN"))) {  
+    if (! (deck.hasKeyword("SPECGRID") && deck.hasKeyword("COORD") && deck.hasKeyword("ZCORN"))) {  
         cerr << "Error: Did not find SPECGRID, COORD and ZCORN in Eclipse file " << ECLIPSEFILENAME << endl;  
         usage();  
         exit(1);  
@@ -270,7 +270,7 @@ int upscale(int varnum, char** vararg) {
      * in terms of cpu-resources (compared to permeability upscaling).
      */
     double upscaledPorosity = 0.0;
-    if (deck->hasKeyword("PORO")) {
+    if (deck.hasKeyword("PORO")) {
         if (isPeriodic) {
             upscaledPorosity = upscaler_periodic.upscalePorosity();
         } else {

@@ -34,7 +34,7 @@
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 
-#include <opm/output/eclipse/CornerpointChopper.hpp>
+#include <opm/upscaling/CornerpointChopper.hpp>
 #include <opm/output/eclipse/EclipseGridInspector.hpp>
 
 #include <opm/porsol/common/setupBoundaryConditions.hpp>
@@ -82,7 +82,7 @@ int main(int argc, char** argv) try {
     Opm::EclipseGridInspector gridinspector(deck);
     
     // Check that we have the information we need from the eclipse file, we will check PERM-fields later
-    if (! (deck->hasKeyword("SPECGRID") && deck->hasKeyword("COORD") && deck->hasKeyword("ZCORN"))) {  
+    if (! (deck.hasKeyword("SPECGRID") && deck.hasKeyword("COORD") && deck.hasKeyword("ZCORN"))) {  
         cerr << "Error: Did not find SPECGRID, COORD and ZCORN in Eclipse file " << gridfilename << endl;  
         exit(1);  
     }
@@ -91,7 +91,7 @@ int main(int argc, char** argv) try {
      * Find dips for every cell.
      */
 
-    const auto& specgridRecord = deck->getKeyword("SPECGRID").getRecord(0);
+    const auto& specgridRecord = deck.getKeyword("SPECGRID").getRecord(0);
     vector<int>  griddims(3);
     griddims[0] = specgridRecord.getItem("NX").get< int >(0);
     griddims[1] = specgridRecord.getItem("NY").get< int >(0);

@@ -41,7 +41,7 @@ namespace Opm
 
 
     template <int dim>
-    void Rock<dim>::init(Opm::DeckConstPtr deck,
+    void Rock<dim>::init(const Opm::Deck& deck,
                          const std::vector<int>& global_cell,
                          const double perm_threshold)
     {
@@ -112,13 +112,13 @@ namespace Opm
 
 
     template <int dim>
-    void Rock<dim>::assignPorosity(Opm::DeckConstPtr deck,
+    void Rock<dim>::assignPorosity(const Opm::Deck& deck,
                                    const std::vector<int>& global_cell)
     {
         porosity_.assign(global_cell.size(), 1.0);
 
-        if (deck->hasKeyword("PORO")) {
-            const std::vector<double>& poro = deck->getKeyword("PORO").getSIDoubleData();
+        if (deck.hasKeyword("PORO")) {
+            const std::vector<double>& poro = deck.getKeyword("PORO").getSIDoubleData();
 
             for (int c = 0; c < int(porosity_.size()); ++c) {
                 porosity_[c] = poro[global_cell[c]];
@@ -129,7 +129,7 @@ namespace Opm
 
 
     template <int dim>
-    void Rock<dim>::assignPermeability(Opm::DeckConstPtr deck,
+    void Rock<dim>::assignPermeability(const Opm::Deck& deck,
                                        const std::vector<int>& global_cell,
                                        double perm_threshold)
     {

@@ -352,23 +352,23 @@ try
     if (isMaster) cout << " (" << timeused <<" secs)" << endl;
   
     // Check that we have the information we need from the eclipse file: 
-    if (! (deck->hasKeyword("SPECGRID") && deck->hasKeyword("COORD") && deck->hasKeyword("ZCORN") 
-           && deck->hasKeyword("PORO") && deck->hasKeyword("PERMX") && deck->hasKeyword("SATNUM"))) { 
+    if (! (deck.hasKeyword("SPECGRID") && deck.hasKeyword("COORD") && deck.hasKeyword("ZCORN") 
+           && deck.hasKeyword("PORO") && deck.hasKeyword("PERMX") && deck.hasKeyword("SATNUM"))) { 
         cerr << "Error: Did not find SPECGRID, COORD and ZCORN in Eclipse file " << ECLIPSEFILENAME << endl; 
         usage(); 
         exit(1); 
     } 
     
-    vector<double> poros  = deck->getKeyword("PORO").getRawDoubleData();
-    vector<double> permxs = deck->getKeyword("PERMX").getRawDoubleData();
+    vector<double> poros  = deck.getKeyword("PORO").getRawDoubleData();
+    vector<double> permxs = deck.getKeyword("PERMX").getRawDoubleData();
  
     // Load anisotropic (only diagonal supported) input if present in grid
     vector<double> permys, permzs;
     
-    if (deck->hasKeyword("PERMY") && deck->hasKeyword("PERMZ")) {
+    if (deck.hasKeyword("PERMY") && deck.hasKeyword("PERMZ")) {
         anisotropic_input = true;
-        permys = deck->getKeyword("PERMY").getRawDoubleData();
-        permzs = deck->getKeyword("PERMZ").getRawDoubleData();
+        permys = deck.getKeyword("PERMY").getRawDoubleData();
+        permzs = deck.getKeyword("PERMZ").getRawDoubleData();
         if (isMaster) cout << "Info: PERMY and PERMZ present, going into anisotropic input mode, no J-functions\n"; 
         if (isMaster) cout << "      Options -relPermCurve and -jFunctionCurve is meaningless.\n"; 
     } 
@@ -377,11 +377,11 @@ try
     /* Initialize a default satnums-vector with only "ones" (meaning only one rocktype) */ 
     vector<int> satnums(poros.size(), 1); 
     
-    if (deck->hasKeyword("SATNUM")) { 
-        satnums = deck->getKeyword("SATNUM").getIntData();
+    if (deck.hasKeyword("SATNUM")) {
+        satnums = deck.getKeyword("SATNUM").getIntData();
     } 
-    else if (deck->hasKeyword("ROCKTYPE")) { 
-        satnums = deck->getKeyword("ROCKTYPE").getIntData();
+    else if (deck.hasKeyword("ROCKTYPE")) {
+        satnums = deck.getKeyword("ROCKTYPE").getIntData();
     } 
     else { 
         if (isMaster) cout << "Warning: SATNUM or ROCKTYPE not found in input file, assuming only one rocktype" << endl; 

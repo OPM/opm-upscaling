@@ -59,9 +59,9 @@ void Opm::initCPGrid(Dune::CpGrid& grid, const Opm::parameter::ParameterGroup& p
         }
         bool periodic_extension = param.getDefault<bool>("periodic_extension", false);
         bool turn_normals = param.getDefault<bool>("turn_normals", false);
-        Opm::ParserPtr parser(new Opm::Parser());
+        Opm::Parser parser;
         Opm::ParseContext parseContext;
-        Opm::DeckConstPtr deck = parser->parseFile(filename, parseContext);
+        auto deck = parser.parseFile(filename, parseContext);
         Opm::EclipseGrid inputGrid(deck);
         grid.processEclipseFormat(inputGrid, periodic_extension , turn_normals );
     } else if (fileformat == "cartesian") {

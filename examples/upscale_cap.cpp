@@ -241,17 +241,17 @@ try
    auto deck = RelPermUpscaleHelper::parseEclipseFile(ECLIPSEFILENAME);
    
    // Check that we have the information we need from the eclipse file:  
-   if (! (deck->hasKeyword("SPECGRID") && deck->hasKeyword("COORD") && deck->hasKeyword("ZCORN")  
-          && deck->hasKeyword("PORO") && deck->hasKeyword("PERMX") && deck->hasKeyword("SATNUM"))) {  
+   if (! (deck.hasKeyword("SPECGRID") && deck.hasKeyword("COORD") && deck.hasKeyword("ZCORN")  
+          && deck.hasKeyword("PORO") && deck.hasKeyword("PERMX") && deck.hasKeyword("SATNUM"))) {  
        cerr << "Error: Did not find SPECGRID, COORD and ZCORN in Eclipse file " << ECLIPSEFILENAME << endl;  
        usageandexit();  
    }  
    
-   vector<int>   satnums = deck->getKeyword("SATNUM").getIntData();  
-   vector<double>  poros = deck->getKeyword("PORO").getRawDoubleData();
-   vector<double> permxs = deck->getKeyword("PERMX").getRawDoubleData();
+   vector<int>   satnums = deck.getKeyword("SATNUM").getIntData();  
+   vector<double>  poros = deck.getKeyword("PORO").getRawDoubleData();
+   vector<double> permxs = deck.getKeyword("PERMX").getRawDoubleData();
    vector<int>  griddims(3);
-   const auto& specgridRecord = deck->getKeyword("SPECGRID").getRecord(0);
+   const auto& specgridRecord = deck.getKeyword("SPECGRID").getRecord(0);
    griddims[0] = specgridRecord.getItem("NX").get< int >(0);
    griddims[1] = specgridRecord.getItem("NY").get< int >(0);
    griddims[2] = specgridRecord.getItem("NZ").get< int >(0);

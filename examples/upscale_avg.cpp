@@ -176,7 +176,7 @@ int main(int varnum, char** vararg) try {
     cout << " (" << timeused <<" secs)" << endl;
     
     // Check that we have the information we need from the eclipse file, we will check PERM-fields later
-    if (! (deck->hasKeyword("SPECGRID") && deck->hasKeyword("COORD") && deck->hasKeyword("ZCORN"))) {  
+    if (! (deck.hasKeyword("SPECGRID") && deck.hasKeyword("COORD") && deck.hasKeyword("ZCORN"))) {  
         cerr << "Error: Did not find SPECGRID, COORD and ZCORN in Eclipse file " << ECLIPSEFILENAME << endl;  
         usage();  
         exit(1);  
@@ -191,9 +191,9 @@ int main(int varnum, char** vararg) try {
     bool use_actnum = false;
     vector<int> actnum;
     if (atoi(options["use_actnum"].c_str())>0) {
-        if (deck->hasKeyword("ACTNUM")) {
+        if (deck.hasKeyword("ACTNUM")) {
             use_actnum = true;
-            actnum = deck->getKeyword("ACTNUM").getIntData();
+            actnum = deck.getKeyword("ACTNUM").getIntData();
             cout << actnum[0] << " " << actnum[1] << endl;
         }
         else {
@@ -208,26 +208,26 @@ int main(int varnum, char** vararg) try {
     cout << "Statistics for filename: " << ECLIPSEFILENAME << endl;
     cout << "-----------------------------------------------------" << endl;
     bool doporosity = false;
-    if (deck->hasKeyword("PORO")) {
+    if (deck.hasKeyword("PORO")) {
         doporosity = true;
     }
     bool dontg = false;
-    if (deck->hasKeyword("NTG")) {
+    if (deck.hasKeyword("NTG")) {
         // Ntg only used together with PORO
-        if (deck->hasKeyword("PORO")) dontg = true;
+        if (deck.hasKeyword("PORO")) dontg = true;
     }    
 
     bool doperm = false;
-    if (deck->hasKeyword("PERMX")) {
+    if (deck.hasKeyword("PERMX")) {
         doperm = true;
-        if (deck->hasKeyword("PERMY") && deck->hasKeyword("PERMZ")) {
+        if (deck.hasKeyword("PERMY") && deck.hasKeyword("PERMZ")) {
             anisotropic_input = true;
             cout << "Info: PERMY and PERMZ present in data file." << endl;
         }
     }
 
     // Global number of cells (includes inactive cells)
-    const auto& specgridRecord = deck->getKeyword("SPECGRID").getRecord(0);
+    const auto& specgridRecord = deck.getKeyword("SPECGRID").getRecord(0);
     vector<int>  griddims(3);
     griddims[0] = specgridRecord.getItem("NX").get< int >(0);
     griddims[1] = specgridRecord.getItem("NY").get< int >(0);
@@ -260,16 +260,16 @@ int main(int varnum, char** vararg) try {
     vector<double> poros, ntgs;
     vector<double> permxs, permys, permzs;
     if (doporosity) {
-        poros = deck->getKeyword("PORO").getRawDoubleData();
+        poros = deck.getKeyword("PORO").getRawDoubleData();
     }
     if (dontg) {
-        ntgs = deck->getKeyword("NTG").getRawDoubleData();
+        ntgs = deck.getKeyword("NTG").getRawDoubleData();
     }
     if (doperm) {
-        permxs = deck->getKeyword("PERMX").getRawDoubleData();
+        permxs = deck.getKeyword("PERMX").getRawDoubleData();
         if (anisotropic_input) {
-            permys = deck->getKeyword("PERMY").getRawDoubleData();
-            permzs = deck->getKeyword("PERMZ").getRawDoubleData();
+            permys = deck.getKeyword("PERMY").getRawDoubleData();
+            permzs = deck.getKeyword("PERMZ").getRawDoubleData();
         }
         
     }
@@ -416,14 +416,14 @@ int main(int varnum, char** vararg) try {
     // Then do statistics on rocktype by rocktype basis    
     bool dosatnums = false;
     vector<int> satnums;
-    if (deck->hasKeyword("SATNUM")) {
+    if (deck.hasKeyword("SATNUM")) {
         dosatnums = true;
-        satnums = deck->getKeyword("SATNUM").getIntData();
+        satnums = deck.getKeyword("SATNUM").getIntData();
     } // If SATNUM was not present, maybe ROCKTYPE is there, 
     // if so, we will use it as SATNUM.
-    else if (deck->hasKeyword("ROCKTYPE")) {
+    else if (deck.hasKeyword("ROCKTYPE")) {
         dosatnums = true;
-        satnums = deck->getKeyword("ROCKTYPE").getIntData();
+        satnums = deck.getKeyword("ROCKTYPE").getIntData();
     }
 
 

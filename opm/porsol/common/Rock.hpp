@@ -58,7 +58,7 @@ namespace Opm
         ///                              pressure, if applicable.
         /// @param sigma interface tension for j-scaling, if applicable.
         /// @param theta angle for j-scaling, if applicable.
-        void init(Opm::DeckConstPtr deck,
+        void init(const Opm::Deck& deck,
                   const std::vector<int>& global_cell,
                   const double perm_threshold = 0.0);
 
@@ -88,9 +88,9 @@ namespace Opm
 
     protected:
         // Methods
-        void assignPorosity(Opm::DeckConstPtr deck,
+        void assignPorosity(const Opm::Deck& deck,
                             const std::vector<int>& global_cell);
-        void assignPermeability(Opm::DeckConstPtr deck,
+        void assignPermeability(const Opm::Deck& deck,
                                 const std::vector<int>& global_cell,
                                 const double perm_threshold);
 

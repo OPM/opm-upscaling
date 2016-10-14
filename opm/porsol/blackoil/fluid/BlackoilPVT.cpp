@@ -41,16 +41,16 @@ namespace Opm
 {
 
 
-    void BlackoilPVT::init(Opm::DeckConstPtr deck)
+    void BlackoilPVT::init(const Deck& deck)
     {
         Opm::ParseContext parseContext;
-        const auto eclipseState = std::make_shared<EclipseState>(deck , parseContext);
+        EclipseState eclipseState( deck , parseContext);
 	region_number_ = 0;
 
 	// Surface densities. Accounting for different orders in eclipse and our code.
-	if (deck->hasKeyword("DENSITY")) {
+	if (deck.hasKeyword("DENSITY")) {
         const auto& densityRecord =
-            deck->getKeyword("DENSITY").getRecord(/*regionIdx=*/0);
+            deck.getKeyword("DENSITY").getRecord(/*regionIdx=*/0);
 	    densities_[Aqua]   = densityRecord.getItem("WATER").getSIDouble(0);
 	    densities_[Vapour] = densityRecord.getItem("GAS").getSIDouble(0);
 	    densities_[Liquid] = densityRecord.getItem("OIL").getSIDouble(0);
@@ -59,14 +59,14 @@ namespace Opm
 	}
 
         // Water PVT
-        if (deck->hasKeyword("PVTW")) {
-            water_props_.reset(new MiscibilityWater(deck->getKeyword("PVTW")));
+        if (deck.hasKeyword("PVTW")) {
+            water_props_.reset(new MiscibilityWater(deck.getKeyword("PVTW")));
         } else {
             water_props_.reset(new MiscibilityWater(0.5*Opm::prefix::centi*Opm::unit::Poise)); // Eclipse 100 default 
         }
 
         // Oil PVT
-        const auto& tables     = eclipseState->getTableManager();
+        const auto& tables     = eclipseState.getTableManager();
         const auto& pvdoTables = tables.getPvdoTables();
         const auto& pvtoTables = tables.getPvtoTables();
         if (!pvdoTables.empty()) {
@@ -76,9 +76,9 @@ namespace Opm
             // PVTOTables is a std::vector<>
             const auto& pvtoTable = pvtoTables[0];
             oil_props_.reset(new MiscibilityLiveOil(pvtoTable));
-        } else if (deck->hasKeyword("PVCDO")) {
+        } else if (deck.hasKeyword("PVCDO")) {
             auto *misc_water = new MiscibilityWater(0);
-            misc_water->initFromPvcdo(deck->getKeyword("PVCDO"));
+            misc_water->initFromPvcdo(deck.getKeyword("PVCDO"));
             oil_props_.reset(misc_water);
         } else {
             OPM_THROW(std::runtime_error, "Input is missing PVDO and PVTO\n");

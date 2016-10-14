@@ -82,7 +82,7 @@ namespace Opm
         ///                              pressure, if applicable.
         /// @param sigma interface tension for j-scaling, if applicable.
         /// @param theta angle for j-scaling, if applicable.
-        void init(Opm::DeckConstPtr deck,
+        void init(const Opm::Deck&,
                   const std::vector<int>& global_cell,
                   const double perm_threshold = 0.0,
                   const std::string* rock_list_filename = 0,
@@ -211,18 +211,18 @@ namespace Opm
 
     protected:
 	// Methods
-        void assignPorosity(Opm::DeckConstPtr deck,
+        void assignPorosity(const Opm::Deck& deck,
                             const std::vector<int>& global_cell);
-        void assignNTG(Opm::DeckConstPtr deck,
+        void assignNTG(const Opm::Deck& deck,
                        const std::vector<int>& global_cell);
-        void assignSWCR(Opm::DeckConstPtr deck,
+        void assignSWCR(const Opm::Deck& deck,
                         const std::vector<int>& global_cell);
-        void assignSOWCR(Opm::DeckConstPtr deck,
+        void assignSOWCR(const Opm::Deck& deck,
                          const std::vector<int>& global_cell);
-        void assignPermeability(Opm::DeckConstPtr deck,
+        void assignPermeability(const Opm::Deck& deck,
                                 const std::vector<int>& global_cell,
                                 const double perm_threshold);
-        void assignRockTable(Opm::DeckConstPtr deck,
+        void assignRockTable(const Opm::Deck& deck,
                              const std::vector<int>& global_cell);
         void readRocks(const std::string& rock_list_file);
 
