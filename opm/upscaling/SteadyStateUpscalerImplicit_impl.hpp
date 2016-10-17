@@ -266,8 +266,8 @@ namespace Opm
                     Opm::toBothSat(saturation, ecl_sat);
                     getCellPressure(ecl_press, this->ginterf_, this->flow_solver_.getSolution());
                     data::Solution solution;
-                    solution.insert( data::Solution::key::PRESSURE, ecl_press );
-                    solution.insert( data::Solution::key::SWAT, destripe( ecl_sat, 2, 0 ) );
+                    solution.insert( "PRESSURE" , UnitSystem::measure::pressure , ecl_press , data::TargetType::RESTART_SOLUTION );
+                    solution.insert( "SWAT" , UnitSystem::measure::identity , destripe( ecl_sat, 2, 0) , data::TargetType::RESTART_SOLUTION );
                     ecl_time += stepsize;
                     boost::posix_time::ptime ecl_startdate( boost::gregorian::date(2012, 1, 1) );
                     boost::posix_time::ptime ecl_curdate = ecl_startdate + boost::posix_time::seconds(int(ecl_time));
