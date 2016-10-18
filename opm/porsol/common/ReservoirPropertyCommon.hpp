@@ -36,7 +36,7 @@
 #ifndef OPENRS_RESERVOIRPROPERTYCOMMON_HEADER
 #define OPENRS_RESERVOIRPROPERTYCOMMON_HEADER
 
-#include <opm/core/utility/Units.hpp>
+#include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/porsol/common/Matrix.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>

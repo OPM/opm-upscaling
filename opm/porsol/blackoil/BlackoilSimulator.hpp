@@ -31,7 +31,7 @@
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 
-#include <opm/core/utility/Units.hpp>
+#include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/porsol/common/BoundaryConditions.hpp>
 #include <opm/porsol/blackoil/BlackoilInitialization.hpp>

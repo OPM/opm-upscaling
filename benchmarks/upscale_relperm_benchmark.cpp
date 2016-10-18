@@ -112,7 +112,7 @@
 
 #include <opm/upscaling/RelPermUtils.hpp>
 
-#include <opm/core/utility/Units.hpp>
+#include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/material/common/Unused.hpp>
 
 // Choose model:

@@ -23,7 +23,7 @@
 
 #include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
 
-#include <opm/core/utility/Units.hpp>
+#include <opm/parser/eclipse/Units/Units.hpp>
 
 #include <algorithm>
 #include <cmath>

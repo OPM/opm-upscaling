@@ -41,7 +41,7 @@
 
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/core/utility/Average.hpp>
-#include <opm/core/utility/Units.hpp>
+#include <opm/parser/eclipse/Units/Units.hpp>
 #include <dune/grid/common/Volumes.hpp>
 #include <opm/porsol/euler/CflCalculator.hpp>
 #include <opm/core/utility/StopWatch.hpp>

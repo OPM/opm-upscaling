@@ -41,7 +41,7 @@
 
 #include <opm/core/utility/SparseVector.hpp>
 #include <opm/core/utility/SparseTable.hpp>
-#include <opm/core/utility/Units.hpp>
+#include <opm/parser/eclipse/Units/Units.hpp>
 
 #include <dune/grid/common/Volumes.hpp>
 #include <dune/grid/CpGrid.hpp>
