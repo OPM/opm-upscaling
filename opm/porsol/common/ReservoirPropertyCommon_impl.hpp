@@ -67,19 +67,19 @@ namespace Opm
         ///        TensorPerm     at least one cross-component given.
         ///        None           no components given.
         ///        Invalid        invalid set of components given.
-        PermeabilityKind classifyPermeability(Opm::DeckConstPtr deck)
+        PermeabilityKind classifyPermeability(const Opm::Deck& deck)
         {
-            const bool xx = deck->hasKeyword("PERMX" );
-            const bool xy = deck->hasKeyword("PERMXY");
-            const bool xz = deck->hasKeyword("PERMXZ");
+            const bool xx = deck.hasKeyword("PERMX" );
+            const bool xy = deck.hasKeyword("PERMXY");
+            const bool xz = deck.hasKeyword("PERMXZ");
 
-            const bool yx = deck->hasKeyword("PERMYX");
-            const bool yy = deck->hasKeyword("PERMY" );
-            const bool yz = deck->hasKeyword("PERMYZ");
+            const bool yx = deck.hasKeyword("PERMYX");
+            const bool yy = deck.hasKeyword("PERMY" );
+            const bool yz = deck.hasKeyword("PERMYZ");
 
-            const bool zx = deck->hasKeyword("PERMZX");
-            const bool zy = deck->hasKeyword("PERMZY");
-            const bool zz = deck->hasKeyword("PERMZ" );
+            const bool zx = deck.hasKeyword("PERMZX");
+            const bool zy = deck.hasKeyword("PERMZY");
+            const bool zz = deck.hasKeyword("PERMZ" );
 
             int num_cross_comp = xy + xz + yx + yz + zx + zy;
             int num_comp       = xx + yy + zz + num_cross_comp;
@@ -176,7 +176,7 @@ namespace Opm
         /// @param [out] tensor
         /// @param [out] kmap
         inline
-        PermeabilityKind fillTensor(Opm::DeckConstPtr deck,
+        PermeabilityKind fillTensor(const Opm::Deck& deck,
                                     std::vector<const std::vector<double>*>& tensor,
                                     std::array<int,9>&                     kmap)
         {
@@ -193,51 +193,51 @@ namespace Opm
 
             // -----------------------------------------------------------
             // 1st row: [kxx, kxy, kxz]
-            if (deck->hasKeyword("PERMX" )) {
+            if (deck.hasKeyword("PERMX" )) {
                 kmap[xx] = tensor.size();
-                tensor.push_back(&deck->getKeyword("PERMX").getSIDoubleData());
+                tensor.push_back(&deck.getKeyword("PERMX").getSIDoubleData());
 
                 setScalarPermIfNeeded(kmap, xx, yy, zz);
             }
-            if (deck->hasKeyword("PERMXY")) {
+            if (deck.hasKeyword("PERMXY")) {
                 kmap[xy] = kmap[yx] = tensor.size();  // Enforce symmetry.
-                tensor.push_back(&deck->getKeyword("PERMXY").getSIDoubleData());
+                tensor.push_back(&deck.getKeyword("PERMXY").getSIDoubleData());
             }
-            if (deck->hasKeyword("PERMXZ")) {
+            if (deck.hasKeyword("PERMXZ")) {
                 kmap[xz] = kmap[zx] = tensor.size();  // Enforce symmetry.
-                tensor.push_back(&deck->getKeyword("PERMXZ").getSIDoubleData());
+                tensor.push_back(&deck.getKeyword("PERMXZ").getSIDoubleData());
             }
 
             // -----------------------------------------------------------
             // 2nd row: [kyx, kyy, kyz]
-            if (deck->hasKeyword("PERMYX")) {
+            if (deck.hasKeyword("PERMYX")) {
                 kmap[yx] = kmap[xy] = tensor.size();  // Enforce symmetry.
-                tensor.push_back(&deck->getKeyword("PERMYX").getSIDoubleData());
+                tensor.push_back(&deck.getKeyword("PERMYX").getSIDoubleData());
             }
-            if (deck->hasKeyword("PERMY" )) {
+            if (deck.hasKeyword("PERMY" )) {
                 kmap[yy] = tensor.size();
-                tensor.push_back(&deck->getKeyword("PERMY").getSIDoubleData());
+                tensor.push_back(&deck.getKeyword("PERMY").getSIDoubleData());
 
                 setScalarPermIfNeeded(kmap, yy, zz, xx);
             }
-            if (deck->hasKeyword("PERMYZ")) {
+            if (deck.hasKeyword("PERMYZ")) {
                 kmap[yz] = kmap[zy] = tensor.size();  // Enforce symmetry.
-                tensor.push_back(&deck->getKeyword("PERMYZ").getSIDoubleData());
+                tensor.push_back(&deck.getKeyword("PERMYZ").getSIDoubleData());
             }
 
             // -----------------------------------------------------------
             // 3rd row: [kzx, kzy, kzz]
-            if (deck->hasKeyword("PERMZX")) {
+            if (deck.hasKeyword("PERMZX")) {
                 kmap[zx] = kmap[xz] = tensor.size();  // Enforce symmetry.
-                tensor.push_back(&deck->getKeyword("PERMZX").getSIDoubleData());
+                tensor.push_back(&deck.getKeyword("PERMZX").getSIDoubleData());
             }
-            if (deck->hasKeyword("PERMZY")) {
+            if (deck.hasKeyword("PERMZY")) {
                 kmap[zy] = kmap[yz] = tensor.size();  // Enforce symmetry.
-                tensor.push_back(&deck->getKeyword("PERMZY").getSIDoubleData());
+                tensor.push_back(&deck.getKeyword("PERMZY").getSIDoubleData());
             }
-            if (deck->hasKeyword("PERMZ" )) {
+            if (deck.hasKeyword("PERMZ" )) {
                 kmap[zz] = tensor.size();
-                tensor.push_back(&deck->getKeyword("PERMZ").getSIDoubleData());
+                tensor.push_back(&deck.getKeyword("PERMZ").getSIDoubleData());
 
                 setScalarPermIfNeeded(kmap, zz, xx, yy);
             }
@@ -273,7 +273,7 @@ namespace Opm
 
 
     template <int dim, class RPImpl, class RockType>
-    void ReservoirPropertyCommon<dim, RPImpl, RockType>::init(Opm::DeckConstPtr deck,
+    void ReservoirPropertyCommon<dim, RPImpl, RockType>::init(const Opm::Deck& deck,
                                                               const std::vector<int>& global_cell,
                                                               const double perm_threshold,
                                                               const std::string* rock_list_filename,
@@ -590,16 +590,16 @@ namespace Opm
 
 
     template <int dim, class RPImpl, class RockType>
-    void ReservoirPropertyCommon<dim, RPImpl, RockType>::assignPorosity(Opm::DeckConstPtr deck,
+    void ReservoirPropertyCommon<dim, RPImpl, RockType>::assignPorosity(const Opm::Deck& deck,
                                                                         const std::vector<int>& global_cell)
     {
         porosity_.assign(global_cell.size(), 1.0);
 
-        if (deck->hasKeyword("PORO")) {
+        if (deck.hasKeyword("PORO")) {
             Opm::EclipseGridInspector insp(deck);
             std::array<int, 3> dims = insp.gridSize();
             int num_global_cells = dims[0]*dims[1]*dims[2];
-            const std::vector<double>& poro = deck->getKeyword("PORO").getSIDoubleData();
+            const std::vector<double>& poro = deck.getKeyword("PORO").getSIDoubleData();
             if (int(poro.size()) != num_global_cells) {
                 OPM_THROW(std::runtime_error, "PORO field must have the same size as the "
                       "logical cartesian size of the grid: "
@@ -612,16 +612,16 @@ namespace Opm
     }
 
     template <int dim, class RPImpl, class RockType>
-    void ReservoirPropertyCommon<dim, RPImpl, RockType>::assignNTG(Opm::DeckConstPtr deck,
+    void ReservoirPropertyCommon<dim, RPImpl, RockType>::assignNTG(const Opm::Deck& deck,
                                                                    const std::vector<int>& global_cell)
     {
         ntg_.assign(global_cell.size(), 1.0);
 
-        if (deck->hasKeyword("NTG")) {
+        if (deck.hasKeyword("NTG")) {
             Opm::EclipseGridInspector insp(deck);
             std::array<int, 3> dims = insp.gridSize();
             int num_global_cells = dims[0]*dims[1]*dims[2];
-            const std::vector<double>& ntg = deck->getKeyword("NTG").getSIDoubleData();
+            const std::vector<double>& ntg = deck.getKeyword("NTG").getSIDoubleData();
             if (int(ntg.size()) != num_global_cells) {
                 OPM_THROW(std::runtime_error, "NTG field must have the same size as the "
                       "logical cartesian size of the grid: "
@@ -634,17 +634,17 @@ namespace Opm
     }
 
     template <int dim, class RPImpl, class RockType>
-    void ReservoirPropertyCommon<dim, RPImpl, RockType>::assignSWCR(Opm::DeckConstPtr deck,
+    void ReservoirPropertyCommon<dim, RPImpl, RockType>::assignSWCR(const Opm::Deck& deck,
                                                                     const std::vector<int>& global_cell)
     {
         swcr_.assign(global_cell.size(), 0.0);
 
-        if (deck->hasKeyword("SWCR")) {
+        if (deck.hasKeyword("SWCR")) {
             Opm::EclipseGridInspector insp(deck);
             std::array<int, 3> dims = insp.gridSize();
             int num_global_cells = dims[0]*dims[1]*dims[2];
             const std::vector<double>& swcr =
-                deck->getKeyword("SWCR").getSIDoubleData();
+                deck.getKeyword("SWCR").getSIDoubleData();
             if (int(swcr.size()) != num_global_cells) {
                 OPM_THROW(std::runtime_error, "SWCR field must have the same size as the "
                       "logical cartesian size of the grid: "
@@ -657,17 +657,17 @@ namespace Opm
     }
 
     template <int dim, class RPImpl, class RockType>
-    void ReservoirPropertyCommon<dim, RPImpl, RockType>::assignSOWCR(Opm::DeckConstPtr deck,
+    void ReservoirPropertyCommon<dim, RPImpl, RockType>::assignSOWCR(const Opm::Deck& deck,
                                                                      const std::vector<int>& global_cell)
     {
         sowcr_.assign(global_cell.size(), 0.0);
 
-        if (deck->hasKeyword("SOWCR")) {
+        if (deck.hasKeyword("SOWCR")) {
             Opm::EclipseGridInspector insp(deck);
             std::array<int, 3> dims = insp.gridSize();
             int num_global_cells = dims[0]*dims[1]*dims[2];
             const std::vector<double>& sowcr =
-                deck->getKeyword("SOWCR").getSIDoubleData();
+                deck.getKeyword("SOWCR").getSIDoubleData();
             if (int(sowcr.size()) != num_global_cells) {
                 OPM_THROW(std::runtime_error, "SOWCR field must have the same size as the "
                       "logical cartesian size of the grid: "
@@ -680,7 +680,7 @@ namespace Opm
     }
 
     template <int dim, class RPImpl, class RockType>
-    void ReservoirPropertyCommon<dim, RPImpl, RockType>::assignPermeability(Opm::DeckConstPtr deck,
+    void ReservoirPropertyCommon<dim, RPImpl, RockType>::assignPermeability(const Opm::Deck& deck,
                                                                             const std::vector<int>& global_cell,
                                                                             double perm_threshold)
     {
@@ -740,18 +740,18 @@ namespace Opm
 
 
     template <int dim, class RPImpl, class RockType>
-    void ReservoirPropertyCommon<dim, RPImpl, RockType>::assignRockTable(Opm::DeckConstPtr deck,
+    void ReservoirPropertyCommon<dim, RPImpl, RockType>::assignRockTable(const Opm::Deck& deck,
                                                           const std::vector<int>& global_cell)
     {
         const int nc = global_cell.size();
 
         cell_to_rock_.assign(nc, 0);
 
-        if (deck->hasKeyword("SATNUM")) {
+        if (deck.hasKeyword("SATNUM")) {
             Opm::EclipseGridInspector insp(deck);
             std::array<int, 3> dims = insp.gridSize();
             int num_global_cells = dims[0]*dims[1]*dims[2];
-            const std::vector<int>& satnum = deck->getKeyword("SATNUM").getIntData();
+            const std::vector<int>& satnum = deck.getKeyword("SATNUM").getIntData();
             if (int(satnum.size()) != num_global_cells) {
                 OPM_THROW(std::runtime_error, "SATNUM field must have the same size as the "
                       "logical cartesian size of the grid: "
@@ -762,11 +762,11 @@ namespace Opm
                 cell_to_rock_[c] = satnum[global_cell[c]] - 1;
             }
         }
-        else if (deck->hasKeyword("ROCKTYPE")) {
+        else if (deck.hasKeyword("ROCKTYPE")) {
             Opm::EclipseGridInspector insp(deck);
             std::array<int, 3> dims = insp.gridSize();
             int num_global_cells = dims[0]*dims[1]*dims[2];
-            const std::vector<int>& satnum = deck->getKeyword("ROCKTYPE").getIntData();
+            const std::vector<int>& satnum = deck.getKeyword("ROCKTYPE").getIntData();
             if (int(satnum.size()) != num_global_cells) {
                 OPM_THROW(std::runtime_error, "ROCKTYPE field must have the same size as the "
                       "logical cartesian size of the grid: "

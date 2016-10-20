@@ -44,12 +44,12 @@ namespace Opm
         typedef FluidStateBlackoil FluidState;
         typedef BlackoilFluidData FluidData;
 
-        void init(Opm::DeckConstPtr deck)
+        void init(const Opm::Deck& deck)
         {
             fmi_params_.init(deck);
             // FluidSystemBlackoil<>::init(parser);
             pvt_.init(deck);
-            const auto& densityRecord = deck->getKeyword("DENSITY").getRecord(0);
+            const auto& densityRecord = deck.getKeyword("DENSITY").getRecord(0);
             surface_densities_[Oil] = densityRecord.getItem("OIL").getSIDouble(0);
             surface_densities_[Water] = densityRecord.getItem("WATER").getSIDouble(0);
             surface_densities_[Gas] = densityRecord.getItem("GAS").getSIDouble(0);

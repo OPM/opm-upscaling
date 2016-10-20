@@ -44,7 +44,7 @@
 
 #include <opm/parser/eclipse/Units/Units.hpp>
 
-#include <opm/output/eclipse/CornerpointChopper.hpp>
+#include <opm/upscaling/CornerpointChopper.hpp>
 
 #include <opm/porsol/common/setupBoundaryConditions.hpp>
 
@@ -183,7 +183,7 @@ try
         double zstart_1 = rz();
         ch.chop(istart_1, istart_1 + ilen, jstart_1, jstart_1 + jlen, zstart_1, zstart_1 + zlen, false);
 
-        Opm::DeckConstPtr subdeck_1 = ch.subDeck();
+        auto subdeck_1 = ch.subDeck();
         Opm::SinglePhaseUpscaler upscaler_1;
         upscaler_1.init(subdeck_1, Opm::SinglePhaseUpscaler::Fixed, minpermSI,
 			residual_tolerance, linsolver_verbosity, linsolver_type, false);
@@ -206,7 +206,7 @@ try
         }   
         ch.chop(istart_2, istart_2 + ilen, jstart_2, jstart_2 + jlen, zstart_2, zstart_2 + zlen, false);
 	
-        Opm::DeckConstPtr subdeck_2 = ch.subDeck();
+        auto subdeck_2 = ch.subDeck();
         Opm::SinglePhaseUpscaler upscaler_2;
         upscaler_2.init(subdeck_2, Opm::SinglePhaseUpscaler::Fixed, minpermSI,
 			residual_tolerance, linsolver_verbosity, linsolver_type, false);

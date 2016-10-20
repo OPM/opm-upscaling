@@ -53,7 +53,7 @@
 
 #include <opm/parser/eclipse/Units/Units.hpp>
 
-#include <opm/output/eclipse/CornerpointChopper.hpp>
+#include <opm/upscaling/CornerpointChopper.hpp>
 #include <opm/output/eclipse/EclipseGridInspector.hpp>
 
 #include <opm/porsol/common/setupBoundaryConditions.hpp>
@@ -134,8 +134,8 @@ try
 
     Opm::ParseContext parseMode;
     // Original x/y resolution in terms of coordinate values (not indices)
-    Opm::ParserPtr parser(new Opm::Parser);
-    Opm::DeckConstPtr deck(parser->parseFile(gridfilename , parseMode)); // TODO: REFACTOR!!!! it is stupid to parse this again
+    Opm::Parser parser;
+    auto deck = parser.parseFile(gridfilename , parseMode); // TODO: REFACTOR!!!! it is stupid to parse this again
     Opm::EclipseGridInspector gridinspector(deck);
     std::array<double, 6> gridlimits=gridinspector.getGridLimits();
     double finegridxresolution = (gridlimits[1]-gridlimits[0])/dims[0];
@@ -185,7 +185,7 @@ try
 
                 OPM_THROW(std::logic_error, "Sub-decks not are not implemented by opm-parser. Refactor the calling code!?");
 		try {
-		    Opm::DeckConstPtr subdeck = ch.subDeck();
+		    auto subdeck = ch.subDeck();
 		    Opm::SinglePhaseUpscaler upscaler;
 		    upscaler.init(subdeck, Opm::SinglePhaseUpscaler::Fixed, minpermSI,
 				  residual_tolerance, linsolver_verbosity, linsolver_type, false);

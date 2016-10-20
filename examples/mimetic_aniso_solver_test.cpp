@@ -77,7 +77,7 @@
 
 namespace
 {
-    void build_grid(Opm::DeckConstPtr  deck,
+    void build_grid(const Opm::Deck&  deck,
                     const double       z_tol,
                     Dune::CpGrid&      grid,
                     std::array<int,3>& cartDims)
@@ -91,11 +91,11 @@ namespace
             cartDims[2] = g.dims[2] = insp.gridSize()[2];
         }
 
-        g.coord = &deck->getKeyword("COORD").getSIDoubleData()[0];
-        g.zcorn = &deck->getKeyword("ZCORN").getSIDoubleData()[0];
+        g.coord = &deck.getKeyword("COORD").getSIDoubleData()[0];
+        g.zcorn = &deck.getKeyword("ZCORN").getSIDoubleData()[0];
 
-        if (deck->hasKeyword("ACTNUM")) {
-            g.actnum = &deck->getKeyword("ACTNUM").getIntData()[0];
+        if (deck.hasKeyword("ACTNUM")) {
+            g.actnum = &deck.getKeyword("ACTNUM").getIntData()[0];
             grid.processEclipseFormat(g, z_tol, false, false);
         }
         else {
@@ -210,7 +210,7 @@ try
 
     auto parser = std::make_shared<Opm::Parser>();
 
-    Opm::DeckConstPtr
+    const Opm::Deck&
         deck(parser->parseFile(param.get<std::string>("filename"),
                                Opm::ParseContext()));
 

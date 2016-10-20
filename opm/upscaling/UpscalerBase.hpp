@@ -78,7 +78,7 @@ namespace Opm
 	void init(const Opm::parameter::ParameterGroup& param);
 
 	/// Initializes the upscaler from given arguments.
-	void init(Opm::DeckConstPtr deck,
+	void init(const Opm::Deck& deck,
                   BoundaryConditionType bctype,
                   double perm_threshold,
                   double residual_tolerance = 1e-8,

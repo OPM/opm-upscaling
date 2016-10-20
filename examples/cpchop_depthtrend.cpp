@@ -33,7 +33,7 @@
 
 #include <opm/parser/eclipse/Units/Units.hpp>
 
-#include <opm/output/eclipse/CornerpointChopper.hpp>
+#include <opm/upscaling/CornerpointChopper.hpp>
 
 #include <opm/porsol/common/setupBoundaryConditions.hpp>
 
@@ -173,7 +173,7 @@ try
 
         try { /* The upscaling may fail to converge on icky grids, lets just pass by those */
             if (upscale) {
-                Opm::DeckConstPtr subdeck = ch.subDeck();
+                auto subdeck = ch.subDeck();
                 Opm::SinglePhaseUpscaler upscaler;
                 upscaler.init(subdeck, Opm::SinglePhaseUpscaler::Fixed, minpermSI,
                               residual_tolerance, linsolver_verbosity, linsolver_type, false);

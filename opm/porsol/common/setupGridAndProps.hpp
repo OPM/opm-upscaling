@@ -83,8 +83,8 @@ namespace Opm
             std::string ecl_file = param.get<std::string>("filename");
 
             Opm::ParseContext parseContext;
-            Opm::ParserPtr parser(new Opm::Parser());
-            Opm::DeckConstPtr deck(parser->parseFile(ecl_file , parseContext));
+            Opm::Parser parser;
+            auto deck = parser.parseFile(ecl_file , parseContext);
             if (param.has("z_tolerance")) {
                 std::cerr << "****** Warning: z_tolerance parameter is obsolete, use PINCH in deck input instead\n";
             }
@@ -147,7 +147,7 @@ namespace Opm
     /// @todo Doc me!
     /// @param
     template <template <int> class ResProp>
-    inline void setupGridAndPropsEclipse(Opm::DeckConstPtr deck,
+    inline void setupGridAndPropsEclipse(const Opm::Deck& deck,
                                          bool periodic_extension,
                                          bool turn_normals,
                                          bool clip_z,

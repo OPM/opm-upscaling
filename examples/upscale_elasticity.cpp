@@ -295,8 +295,8 @@ int run(Params& p)
       grid.createCartesian(cells,cellsize);
     } else {
         Opm::ParseContext parseContext;
-        Opm::ParserPtr parser(new Opm::Parser());
-        Opm::DeckConstPtr deck(parser->parseFile(p.file , parseContext));
+        Opm::Parser parser;
+        auto deck = parser.parseFile(p.file , parseContext);
         Opm::EclipseGrid inputGrid(deck);
         grid.processEclipseFormat(inputGrid, false);
     }

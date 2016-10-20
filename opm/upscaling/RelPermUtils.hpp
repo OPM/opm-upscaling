@@ -84,7 +84,7 @@ namespace Opm {
       //!
       //! \return Deck object resulting from parsing input file.
       template <class String>
-      static std::shared_ptr<Deck>
+      static Deck
       parseEclipseFile(const String& eclipseFileName);
 
       //! \brief Default constructor.
@@ -111,7 +111,7 @@ namespace Opm {
       //! \param[in] maxPerm Maximum permeability.
       //! \param[in] minPoro Minimum porosity.
       //! \details Throws error string.
-      void sanityCheckInput(Opm::DeckConstPtr deck,
+      void sanityCheckInput(const Opm::Deck& deck,
                             const double      minPerm,
                             const double      maxPerm,
                             const double      minPoro);
@@ -130,7 +130,7 @@ namespace Opm {
       //!          linsolver_verbosity, linsolver_type, linsolver_max_iterations,
       //!          linsolver_smooth_steps, linsolver_prolongate_factor, minPerm
       //! \return Time used for tesselation.
-      double tesselateGrid(Opm::DeckConstPtr deck);
+      double tesselateGrid(const Opm::Deck& deck);
 
       //! \brief Find cell center pressure gradient for every cell.
       //! \details Uses the following options: gravity, waterDensity, oilDensity
@@ -188,7 +188,7 @@ namespace Opm {
   };
 
   template <class String>
-  std::shared_ptr<Deck>
+  Deck
   RelPermUpscaleHelper::parseEclipseFile(const String& eclipseFileName)
   {
     auto parser = Parser{};

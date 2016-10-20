@@ -51,7 +51,7 @@ public:
     typedef Opm::FluidSystems::BrineCO2</*Scalar=*/double, Opm::Benchmark3::CO2Tables> FluidSystem;
     typedef Opm::CompositionalFluidState<double, FluidSystem> CompositionalFluidState;
 	
-	void init(Opm::DeckConstPtr deck);
+	void init(const Opm::Deck& deck);
 
     void generateBlackOilTables(double temperature);
 
@@ -118,7 +118,7 @@ private:
 
 // ------------ Method implementations --------------
 
-void BlackoilCo2PVT::init(Opm::DeckConstPtr /* deck */)
+void BlackoilCo2PVT::init(const Opm::Deck& /* deck */)
 {
 	surfaceDensities_[Water]   = 1000.;
 	surfaceDensities_[Gas] = 2.0;

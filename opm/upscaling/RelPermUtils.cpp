@@ -387,7 +387,7 @@ void RelPermUpscaleHelper::upscaleSinglePhasePermeability()
     }
 }
 
-void RelPermUpscaleHelper::sanityCheckInput(Opm::DeckConstPtr deck,
+void RelPermUpscaleHelper::sanityCheckInput(const Opm::Deck& deck,
                                             const double      minPerm,
                                             const double      maxPerm,
                                             const double      minPoro)
@@ -400,24 +400,24 @@ void RelPermUpscaleHelper::sanityCheckInput(Opm::DeckConstPtr deck,
         using kw_satnum = ParserKeywords::SATNUM;
 
         // Check that we have the information we need from the eclipse file:
-        if (! (deck->hasKeyword<kw_poro >() &&
-               deck->hasKeyword<kw_permx>()))
+        if (! (deck.hasKeyword<kw_poro >() &&
+               deck.hasKeyword<kw_permx>()))
         {
             throw std::runtime_error("Error: Did not find complete set of "
                                      "PORO and PERMX in ECLIPSE file.");
         }
 
-        poros    = deck->getKeyword<kw_poro >().getSIDoubleData();
-        perms[0] = deck->getKeyword<kw_permx>().getSIDoubleData();
+        poros    = deck.getKeyword<kw_poro >().getSIDoubleData();
+        perms[0] = deck.getKeyword<kw_permx>().getSIDoubleData();
 
         EclipseGrid(deck).exportZCORN(zcorns);
 
         // Load anisotropic (only diagonal supported) input if present in grid
-        if (deck->hasKeyword<kw_permy>() && deck->hasKeyword<kw_permz>()) {
+        if (deck.hasKeyword<kw_permy>() && deck.hasKeyword<kw_permz>()) {
             anisotropic_input = true;
 
-            perms[1] = deck->getKeyword<kw_permy>().getSIDoubleData();
-            perms[2] = deck->getKeyword<kw_permz>().getSIDoubleData();
+            perms[1] = deck.getKeyword<kw_permy>().getSIDoubleData();
+            perms[2] = deck.getKeyword<kw_permz>().getSIDoubleData();
 
             if (isMaster) {
                 std::cout << "Info: PERMY and PERMZ present, going into "
@@ -427,8 +427,8 @@ void RelPermUpscaleHelper::sanityCheckInput(Opm::DeckConstPtr deck,
             }
         }
 
-        if (deck->hasKeyword<kw_satnum>()) {
-            satnums = deck->getKeyword<kw_satnum>().getIntData();
+        if (deck.hasKeyword<kw_satnum>()) {
+            satnums = deck.getKeyword<kw_satnum>().getIntData();
         }
         else {
             if (isMaster) {
@@ -647,7 +647,7 @@ void RelPermUpscaleHelper::setupBoundaryConditions()
         throw std::runtime_error("Invalid boundary condition. Only one of the letters f, l or p are allowed.");
 }
 
-double RelPermUpscaleHelper::tesselateGrid(Opm::DeckConstPtr deck)
+double RelPermUpscaleHelper::tesselateGrid(const Opm::Deck& deck)
 {
     const auto linsolver_tolerance         = to_double(options["linsolver_tolerance"]);
     const auto linsolver_verbosity         = to_int   (options["linsolver_verbosity"]);
