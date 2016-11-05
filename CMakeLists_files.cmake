@@ -48,6 +48,7 @@ list(APPEND MAIN_SOURCE_FILES
 	opm/upscaling/ParserAdditions.cpp
 	opm/upscaling/RelPermUtils.cpp
         opm/upscaling/initCPGrid.cpp
+        opm/upscaling/writeECLData.cpp
 	)
 
 # originally generated with the command:
@@ -221,4 +222,5 @@ list (APPEND PUBLIC_HEADER_FILES
 	opm/upscaling/UpscalingTraits.hpp
 	opm/upscaling/CornerpointChopper.hpp
         opm/upscaling/initCPGrid.hpp
+        opm/upscaling/writeECLData.hpp
 	)
