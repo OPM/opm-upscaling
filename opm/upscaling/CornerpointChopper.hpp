@@ -263,11 +263,11 @@ namespace Opm
             Opm::DeckKeyword specGridKw("SPECGRID");
             Opm::DeckRecord specGridRecord;
 
-            auto nxItem = Opm::DeckItem::make< int >("NX");
-            auto nyItem = Opm::DeckItem::make< int >("NY");
-            auto nzItem = Opm::DeckItem::make< int >("NZ");
-            auto numresItem = Opm::DeckItem::make< int >("NUMRES");
-            auto coordTypeItem = Opm::DeckItem::make< std::string >("COORD_TYPE");
+            auto nxItem = Opm::DeckItem("NX", int());
+            auto nyItem = Opm::DeckItem("NY", int());
+            auto nzItem = Opm::DeckItem("NZ", int());
+            auto numresItem = Opm::DeckItem("NUMRES", int());
+            auto coordTypeItem = Opm::DeckItem("COORD_TYPE", std::string());
 
             nxItem.push_back(new_dims_[0]);
             nyItem.push_back(new_dims_[1]);
@@ -360,7 +360,7 @@ namespace Opm
 
             Opm::DeckKeyword dataKw(keywordName);
             Opm::DeckRecord dataRecord;
-            auto dataItem = Opm::DeckItem::make< double >("DATA");
+            auto dataItem = Opm::DeckItem("DATA", double());
 
             for (size_t i = 0; i < data.size(); ++i) {
                 dataItem.push_back(data[i]);
@@ -383,7 +383,7 @@ namespace Opm
 
             Opm::DeckKeyword dataKw(keywordName);
             Opm::DeckRecord dataRecord;
-            auto dataItem = Opm::DeckItem::make< int >("DATA");
+            auto dataItem = Opm::DeckItem("DATA", int());
 
             for (size_t i = 0; i < data.size(); ++i) {
                 dataItem.push_back(data[i]);
