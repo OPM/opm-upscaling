@@ -40,6 +40,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <iomanip>
 
 
 namespace Opm
