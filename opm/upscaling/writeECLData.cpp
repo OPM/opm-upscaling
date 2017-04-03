@@ -30,6 +30,7 @@
 #ifdef HAVE_ERT // This one goes almost to the bottom of the file
 
 #include <ert/ecl/ecl_rst_file.h>
+#include <ert/ecl/ecl_type.h>
 #include <ert/util/ert_unique_ptr.hpp>
 
 
@@ -113,7 +114,7 @@ namespace Opm {
     using eclkw = ERT::ert_unique_ptr< ecl_kw_type, ecl_kw_free >;
     for (const auto&  elm : data) {
         if (elm.second.target == data::TargetType::RESTART_SOLUTION) {
-            eclkw kw( ecl_kw_alloc( elm.first.c_str() , nactive, ECL_FLOAT_TYPE ) );
+            eclkw kw( ecl_kw_alloc( elm.first.c_str() , nactive, ECL_FLOAT ) );
 
             for( int i = 0; i < nactive; i++ )
                 ecl_kw_iset_float( kw.get(), i, elm.second.data[ i ] );
