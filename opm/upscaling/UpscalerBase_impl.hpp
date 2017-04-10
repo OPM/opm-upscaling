@@ -101,6 +101,9 @@ namespace Opm
             if (!temp_param.has("use_unique_boundary_ids")) {
                 temp_param.insertParameter("use_unique_boundary_ids", "true");
             }
+            if (!temp_param.has("clip_z")) {
+                temp_param.insertParameter("clip_z", "true");
+            }
         }
         if (bctype_ == Periodic) {
             if (!temp_param.has("periodic_extension")) {
@@ -154,7 +157,7 @@ namespace Opm
 	// Faking some parameters depending on bc type.
         bool periodic_ext = (bctype_ == Periodic);
         bool turn_normals = false;
-        bool clip_z = (bctype_ == Periodic);
+        bool clip_z = (bctype_ == Linear || bctype_ == Periodic);
         bool unique_bids = (bctype_ == Linear || bctype_ == Periodic);
         std::string rock_list("no_list");
 	setupGridAndPropsEclipse(deck,

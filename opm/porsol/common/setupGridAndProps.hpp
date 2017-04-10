@@ -89,10 +89,11 @@ namespace Opm
                 std::cerr << "****** Warning: z_tolerance parameter is obsolete, use PINCH in deck input instead\n";
             }
             bool periodic_extension = param.getDefault<bool>("periodic_extension", false);
+            bool clip_z = param.getDefault<bool>("clip_z", false);
             bool turn_normals = param.getDefault<bool>("turn_normals", false);
             {
                 Opm::EclipseGrid inputGrid(deck);
-                grid.processEclipseFormat(inputGrid, periodic_extension, turn_normals);
+                grid.processEclipseFormat(inputGrid, periodic_extension, turn_normals, clip_z);
             }
             // Save EGRID file in case we are writing ECL output.
             if (param.getDefault("output_ecl", false)) {
