@@ -205,7 +205,7 @@ void test_flowsolver(const GI& g, const RI& r)
 int main(int argc, char** argv)
 try
 {
-    Opm::parameter::ParameterGroup param(argc, argv);
+    Opm::ParameterGroup param(argc, argv);
     Dune::MPIHelper::instance(argc, argv);
 
     auto parser = std::make_shared<Opm::Parser>();

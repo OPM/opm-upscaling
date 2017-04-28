@@ -67,7 +67,7 @@ namespace Opm
     /// @todo Doc me!
     /// @param
     template <template <int> class ResProp>
-    inline void setupGridAndProps(const Opm::parameter::ParameterGroup& param,
+    inline void setupGridAndProps(const Opm::ParameterGroup& param,
                                   Dune::CpGrid& grid,
                                   ResProp<3>& res_prop)
     {

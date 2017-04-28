@@ -75,7 +75,7 @@ namespace Opm
         virtual ~UpscalerBase() {;} ;
 
 	/// Initializes the upscaler from parameters.
-	void init(const Opm::parameter::ParameterGroup& param);
+	void init(const Opm::ParameterGroup& param);
 
 	/// Initializes the upscaler from given arguments.
 	void init(const Opm::Deck& deck,
@@ -144,9 +144,9 @@ namespace Opm
         template <class FluidInterface>
         permtensor_t upscaleEffectivePerm(const FluidInterface& fluid);
 
-	virtual void initImpl(const Opm::parameter::ParameterGroup& param);
+	virtual void initImpl(const Opm::ParameterGroup& param);
 
-	virtual void initFinal(const Opm::parameter::ParameterGroup& param);
+	virtual void initFinal(const Opm::ParameterGroup& param);
 
 	// ------- Data members -------
 	BoundaryConditionType bctype_;

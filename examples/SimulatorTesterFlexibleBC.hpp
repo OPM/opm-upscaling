@@ -51,7 +51,7 @@ namespace Opm
         typedef typename Super::GridInterface GI;
         typedef typename Super::Vector Vector;
 
-        virtual void initSources(const Opm::parameter::ParameterGroup& param)
+        virtual void initSources(const Opm::ParameterGroup& param)
         {
             // Zero-initializing first.
             int nc = this->ginterf_.numberOfCells();
@@ -99,7 +99,7 @@ namespace Opm
             }
         }
 
-	virtual void initBoundaryConditions(const Opm::parameter::ParameterGroup& param)
+	virtual void initBoundaryConditions(const Opm::ParameterGroup& param)
 	{
 	    setupBoundaryConditions(param, this->ginterf_, this->bcond_);
 	}

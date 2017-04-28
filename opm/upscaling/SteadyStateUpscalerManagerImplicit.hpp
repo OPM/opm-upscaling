@@ -137,7 +137,7 @@ namespace Opm
     class SteadyStateUpscalerManagerImplicit
     {
     public:
-        void upscale(const Opm::parameter::ParameterGroup& param)
+        void upscale(const Opm::ParameterGroup& param)
         {
             // Control structure.
             std::vector<double> saturations;

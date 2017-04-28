@@ -77,7 +77,7 @@ namespace Opm
 
 
     template <class Traits>
-    inline void SteadyStateUpscalerImplicit<Traits>::initImpl(const Opm::parameter::ParameterGroup& param)
+    inline void SteadyStateUpscalerImplicit<Traits>::initImpl(const Opm::ParameterGroup& param)
     {
         Super::initImpl(param);
         use_gravity_ = param.getDefault("use_gravity", use_gravity_);

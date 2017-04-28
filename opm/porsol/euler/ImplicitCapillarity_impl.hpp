@@ -86,7 +86,7 @@ namespace Opm
 
 
     template <class GI, class RP, class BC, template <class, class> class IP>
-    inline void ImplicitCapillarity<GI, RP, BC, IP>::init(const Opm::parameter::ParameterGroup& param)
+    inline void ImplicitCapillarity<GI, RP, BC, IP>::init(const Opm::ParameterGroup& param)
     {
 	method_viscous_ = param.getDefault("method_viscous", method_viscous_);
 	method_gravity_ = param.getDefault("method_gravity", method_gravity_);
@@ -99,7 +99,7 @@ namespace Opm
     }
 
     template <class GI, class RP, class BC, template <class, class> class IP>
-    inline void ImplicitCapillarity<GI, RP, BC, IP>::init(const Opm::parameter::ParameterGroup& param,
+    inline void ImplicitCapillarity<GI, RP, BC, IP>::init(const Opm::ParameterGroup& param,
                                                           const GI& g, const RP& r, const BC& b)
     {
 	init(param);

@@ -61,7 +61,7 @@ namespace Opm
 
 
     template <class Traits>
-    inline void UpscalerBase<Traits>::init(const Opm::parameter::ParameterGroup& param)
+    inline void UpscalerBase<Traits>::init(const Opm::ParameterGroup& param)
     {
 	initImpl(param);
 	initFinal(param);
@@ -71,7 +71,7 @@ namespace Opm
 
 
     template <class Traits>
-    inline void UpscalerBase<Traits>::initImpl(const Opm::parameter::ParameterGroup& param)
+    inline void UpscalerBase<Traits>::initImpl(const Opm::ParameterGroup& param)
     {
         // Request the boundary condition type parameter early since,
         // depending on the actual type, we may have to manufacture
@@ -96,7 +96,7 @@ namespace Opm
         // Ensure sufficient grid support for requested boundary
         // condition type.
         //
-	Opm::parameter::ParameterGroup temp_param = param;
+	Opm::ParameterGroup temp_param = param;
         if (bctype_ == Linear || bctype_ == Periodic) {
             if (!temp_param.has("use_unique_boundary_ids")) {
                 temp_param.insertParameter("use_unique_boundary_ids", "true");
@@ -119,7 +119,7 @@ namespace Opm
 
 
     template <class Traits>
-    inline void UpscalerBase<Traits>::initFinal(const Opm::parameter::ParameterGroup& param)
+    inline void UpscalerBase<Traits>::initFinal(const Opm::ParameterGroup& param)
     {
 	// Report any unused parameters.
 	std::cout << "====================   Unused parameters:   ====================\n";

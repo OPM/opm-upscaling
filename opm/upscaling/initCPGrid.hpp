@@ -25,7 +25,7 @@
 
 namespace Opm {
 
-    void initCPGrid(Dune::CpGrid& grid, const parameter::ParameterGroup& param);
+    void initCPGrid(Dune::CpGrid& grid, const ParameterGroup& param);
 
 }
 #endif

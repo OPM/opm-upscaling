@@ -48,7 +48,7 @@ namespace Opm
     /// It is assumed that the boundary ids are 1-6, similar to cartesian case/Yaspgrid,
     /// unless periodic, in which case we assume unique boundary ids.
     template <class GridInterface, class BCs>
-    inline void setupBoundaryConditions(const Opm::parameter::ParameterGroup& param,
+    inline void setupBoundaryConditions(const Opm::ParameterGroup& param,
 					const GridInterface& g,
 					BCs& bcs)
     {
@@ -180,7 +180,7 @@ namespace Opm
 
 
     template <class GridInterface, class BCs>
-    inline void setupRegionBasedConditions(const Opm::parameter::ParameterGroup& param,
+    inline void setupRegionBasedConditions(const Opm::ParameterGroup& param,
                                            const GridInterface& g,
                                            BCs& bcs)
     {

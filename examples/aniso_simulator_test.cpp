@@ -70,7 +70,7 @@ typedef SimulatorTesterFlexibleBC<SimTraits> Simulator;
 int main(int argc, char** argv)
 try
 {
-    Opm::parameter::ParameterGroup param(argc, argv);
+    Opm::ParameterGroup param(argc, argv);
     Dune::MPIHelper::instance(argc,argv);
 
 #ifdef USE_TBB

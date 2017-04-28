@@ -38,7 +38,7 @@ namespace Opm
         typedef typename Simulator::Grid Grid;
         typedef typename Simulator::Fluid Fluid;
 
-        virtual void init(const Opm::parameter::ParameterGroup& param,
+        virtual void init(const Opm::ParameterGroup& param,
                           const Grid& grid,
                           const Fluid& fluid,
                           typename Grid::Vector gravity,
@@ -56,7 +56,7 @@ namespace Opm
         typedef typename Simulator::Grid Grid;
         typedef typename Simulator::Fluid Fluid;
 
-        virtual void init(const Opm::parameter::ParameterGroup& param,
+        virtual void init(const Opm::ParameterGroup& param,
                           const Grid& grid,
                           const Fluid& fluid,
                           typename Grid::Vector gravity,
@@ -197,7 +197,7 @@ namespace Opm
         typedef typename Simulator::Grid Grid;
         typedef typename Simulator::Fluid Fluid;
 
-        virtual void init(const Opm::parameter::ParameterGroup& param,
+        virtual void init(const Opm::ParameterGroup& param,
                           const Grid& grid,
                           const Fluid& fluid,
                           typename Grid::Vector gravity,

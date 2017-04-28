@@ -51,7 +51,7 @@ try
 
     SinglePhaseUpscaler upscaler;
     {
-        auto param = Opm::parameter::ParameterGroup(argc, argv);
+        auto param = Opm::ParameterGroup(argc, argv);
 
         upscaler.init(param);
     }
