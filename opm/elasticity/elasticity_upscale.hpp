@@ -121,7 +121,7 @@ struct LinSolParams {
 
   //! \brief Parse command line parameters
   //! \param[in] param The parameter group to parse
-  void parse(Opm::parameter::ParameterGroup& param)
+  void parse(Opm::ParameterGroup& param)
   {
     std::string solver = param.getDefault<std::string>("linsolver_type","iterative");
     if (solver == "iterative")

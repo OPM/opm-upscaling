@@ -92,7 +92,7 @@ namespace Opm
 
 
     template <class GI, class RP, class BC>
-    inline void EulerUpstream<GI, RP, BC>::init(const Opm::parameter::ParameterGroup& param)
+    inline void EulerUpstream<GI, RP, BC>::init(const Opm::ParameterGroup& param)
     {
 	courant_number_ = param.getDefault("courant_number", courant_number_);
 	method_viscous_ = param.getDefault("method_viscous", method_viscous_);
@@ -108,7 +108,7 @@ namespace Opm
     }
 
     template <class GI, class RP, class BC>
-    inline void EulerUpstream<GI, RP, BC>::init(const Opm::parameter::ParameterGroup& param,
+    inline void EulerUpstream<GI, RP, BC>::init(const Opm::ParameterGroup& param,
 						const GI& g, const RP& r, const BC& b)
     {
 	init(param);

@@ -52,7 +52,7 @@ namespace Opm
     class BlackoilSimulator
     {
     public:
-        void init(const Opm::parameter::ParameterGroup& param);
+        void init(const Opm::ParameterGroup& param);
         void simulate();
 
         typedef GridT Grid;
@@ -117,7 +117,7 @@ namespace Opm
 template<class Grid, class Rock, class Fluid, class Wells, class FlowSolver, class TransportSolver>
 void
 BlackoilSimulator<Grid, Rock, Fluid, Wells, FlowSolver, TransportSolver>::
-init(const Opm::parameter::ParameterGroup& param)
+init(const Opm::ParameterGroup& param)
 {
     using namespace Opm;
     std::string fileformat = param.getDefault<std::string>("fileformat", "cartesian");

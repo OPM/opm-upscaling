@@ -57,7 +57,7 @@ namespace Opm
 
         /// @brief
         ///    Initializes run-time parameters of the solver.
-        void init(const Opm::parameter::ParameterGroup& param)
+        void init(const Opm::ParameterGroup& param)
         {
             // Initialize inflow mixture to a fixed, user-provided mix.
             typename FluidInterface::CompVec mix(0.0);

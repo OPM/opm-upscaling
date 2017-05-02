@@ -47,7 +47,7 @@
 #include <opm/upscaling/initCPGrid.hpp>
 
 
-void Opm::initCPGrid(Dune::CpGrid& grid, const Opm::parameter::ParameterGroup& param) {
+void Opm::initCPGrid(Dune::CpGrid& grid, const Opm::ParameterGroup& param) {
     std::string fileformat = param.get<std::string>("fileformat");
     if (fileformat == "sintef_legacy") {
         std::string grid_prefix = param.get<std::string>("grid_prefix");

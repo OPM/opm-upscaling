@@ -185,7 +185,7 @@ try
     }
 
     // Initialize.
-    Opm::parameter::ParameterGroup param(argc, argv);
+    Opm::ParameterGroup param(argc, argv);
     std::string gridfilename = param.get<std::string>("gridfilename");
     auto deck = Opm::RelPermUpscaleHelper::parseEclipseFile(gridfilename);
 

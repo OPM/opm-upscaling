@@ -71,7 +71,7 @@ namespace Opm
     }
 
     template <class GI, class RP, class BC>
-    inline void EulerUpstreamImplicit<GI, RP, BC>::init(const Opm::parameter::ParameterGroup& param)
+    inline void EulerUpstreamImplicit<GI, RP, BC>::init(const Opm::ParameterGroup& param)
     {
         check_sat_ = param.getDefault("check_sat", check_sat_);
         clamp_sat_ = param.getDefault("clamp_sat", clamp_sat_);
@@ -86,7 +86,7 @@ namespace Opm
     }
 
     template <class GI, class RP, class BC>
-    inline void EulerUpstreamImplicit<GI, RP, BC>::init(const Opm::parameter::ParameterGroup& param,
+    inline void EulerUpstreamImplicit<GI, RP, BC>::init(const Opm::ParameterGroup& param,
                                                         const GI& g, const RP& r, const BC& b)
     {
         init(param);

@@ -62,7 +62,7 @@ typedef Opm::BlackoilSimulator<Grid, Rock, Fluid, Wells, FlowSolver, TransportSo
 int main(int argc, char** argv)
 try
 {
-    Opm::parameter::ParameterGroup param(argc, argv);
+    Opm::ParameterGroup param(argc, argv);
     Dune::MPIHelper::instance(argc,argv);
 
     // Initialize.

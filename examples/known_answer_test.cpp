@@ -249,7 +249,7 @@ void test_flowsolver(const GI& g, const RI& r, double tol, int kind)
 int main(int argc, char** argv)
 try
 {
-    Opm::parameter::ParameterGroup param(argc, argv);
+    Opm::ParameterGroup param(argc, argv);
     Dune::MPIHelper::instance(argc,argv);
 
     // Make a Dune::CpGrid.

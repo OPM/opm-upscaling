@@ -150,7 +150,7 @@ struct Params {
 //! \brief Parse the command line arguments
 void parseCommandLine(int argc, char** argv, Params& p)
 {
-  Opm::parameter::ParameterGroup param(argc, argv);
+  Opm::ParameterGroup param(argc, argv);
   p.max[0]    = param.getDefault("xmax",-1);
   p.max[1]    = param.getDefault("ymax",-1);
   p.max[2]    = param.getDefault("zmax",-1);

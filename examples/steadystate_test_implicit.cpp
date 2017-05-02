@@ -83,7 +83,7 @@ try
     Dune::MPIHelper::instance(argc, argv);
 
     // Initialize.
-    Opm::parameter::ParameterGroup param(argc, argv);
+    Opm::ParameterGroup param(argc, argv);
 
     // MPIHelper::instance(argc,argv) ;
     typedef SteadyStateUpscalerImplicit<UpscalingTraitsBasicImplicit> upscaler_t;

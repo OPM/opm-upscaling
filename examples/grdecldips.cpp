@@ -65,7 +65,7 @@ int main(int argc, char** argv) try {
 
     Dune::MPIHelper::instance(argc, argv);
 
-    Opm::parameter::ParameterGroup param(argc, argv);
+    Opm::ParameterGroup param(argc, argv);
     
     std::string gridfilename = param.get<std::string>("gridfilename");
     double minCellVolume = param.getDefault("mincellvolume", 1e-8);

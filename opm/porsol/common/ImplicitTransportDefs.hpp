@@ -203,7 +203,7 @@ namespace Opm {
     public:
         LinearSolverISTLAMG()
         {
-            Opm::parameter::ParameterGroup params;
+            Opm::ParameterGroup params;
 
             params.insertParameter("linsolver_tolerance",
                                    boost::lexical_cast<std::string>(5.0e-9));

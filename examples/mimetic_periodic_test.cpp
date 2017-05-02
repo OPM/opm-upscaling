@@ -69,7 +69,7 @@ try
 
     Dune::CpGrid grid;
     {
-        Opm::parameter::ParameterGroup param(argc, argv);
+        Opm::ParameterGroup param(argc, argv);
         Opm::initCPGrid(grid , param);
         grid.setUniqueBoundaryIds(true);
     }

@@ -72,11 +72,11 @@ namespace Opm {
 	/// @brief
 	/// @todo Doc me
 	/// @param
-	void init(const Opm::parameter::ParameterGroup& param);
+	void init(const Opm::ParameterGroup& param);
 	/// @brief
 	/// @todo Doc me
 	/// @param
-	void init(const Opm::parameter::ParameterGroup& param,
+	void init(const Opm::ParameterGroup& param,
 		  const GridInterface& grid,
 		  const ReservoirProperties& resprop,
 		  const BoundaryConditions& boundary);

@@ -101,7 +101,7 @@ namespace Opm
 
 	/// @brief Initialization from parameters.
 	/// @param param a parameter object
-	void init(const Opm::parameter::ParameterGroup& param)
+	void init(const Opm::ParameterGroup& param)
 	{
 	    initControl(param);
 	    initGridAndProps(param);
@@ -146,14 +146,14 @@ namespace Opm
 	TransportSolver transport_solver_;
 
 
-	virtual void initControl(const Opm::parameter::ParameterGroup& param)
+	virtual void initControl(const Opm::ParameterGroup& param)
 	{
 	    simulation_steps_ = param.getDefault("simulation_steps", simulation_steps_);
 	    stepsize_ = Opm::unit::convert::from(param.getDefault("stepsize", stepsize_),
                                                   Opm::unit::day);
 	}
 
-	virtual void initGridAndProps(const Opm::parameter::ParameterGroup& param)
+	virtual void initGridAndProps(const Opm::ParameterGroup& param)
 	{
 	    setupGridAndProps(param, grid_, res_prop_);
 	    ginterf_.init(grid_);
@@ -163,7 +163,7 @@ namespace Opm
             gravity_[2] = param.getDefault("gz", 0.0); //Dune::unit::gravity);
 	}
 
-	virtual void initInitialConditions(const Opm::parameter::ParameterGroup& param)
+	virtual void initInitialConditions(const Opm::ParameterGroup& param)
 	{
             if (param.getDefault("init_saturation_from_file", false)) {
                 std::string filename = param.get<std::string>("init_saturation_filename");
@@ -191,12 +191,12 @@ namespace Opm
             }
 	}
 
-	virtual void initBoundaryConditions(const Opm::parameter::ParameterGroup& param)
+	virtual void initBoundaryConditions(const Opm::ParameterGroup& param)
 	{
 	    setupBoundaryConditions(param, ginterf_, bcond_);
 	}
 
-        virtual void initSources(const Opm::parameter::ParameterGroup& /* param */)
+        virtual void initSources(const Opm::ParameterGroup& /* param */)
         {
             int nc = ginterf_.numberOfCells();
 	    injection_rates_ = Opm::SparseVector<double>(nc);
@@ -207,7 +207,7 @@ namespace Opm
 //             injection_rates_psolver_[nc - 1] = -1.0;
         }
 
-	virtual void initSolvers(const Opm::parameter::ParameterGroup& param)
+	virtual void initSolvers(const Opm::ParameterGroup& param)
 	{
 	    // Initialize flow solver.
 	    flow_solver_.init(ginterf_, res_prop_, gravity_, bcond_);

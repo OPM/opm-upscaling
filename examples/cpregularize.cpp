@@ -82,7 +82,7 @@ try
 
     Dune::MPIHelper::instance(argc, argv);
   
-    Opm::parameter::ParameterGroup param(argc, argv);
+    Opm::ParameterGroup param(argc, argv);
     std::string gridfilename = param.get<std::string>("gridfilename");
     Opm::CornerPointChopper ch(gridfilename);
 
