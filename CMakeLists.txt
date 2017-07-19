@@ -83,20 +83,6 @@ macro (config_hook)
 		HAVE_UMFPACK
 		HAVE_SUPERLU
 		)
-	# check unversioned CpGrid api change
-	check_cxx_source_compiles("
-	#include <dune/grid/CpGrid.hpp>
-
-	int main()
-	{
-		Dune::CpGrid grid;
-		grid.readEclipseFormat(\"foo\", 1.0e-3, false, false);
-		return 0;
-	}
-	" HAVE_OLD_CPGRID_API)
-	if (HAVE_OLD_CPGRID_API)
-		add_definitions(-DHAVE_OLD_CPGRID_API)
-	endif()
 endmacro (config_hook)
 
 macro (prereqs_hook)
