@@ -336,7 +336,7 @@ class HexGeometry<2, cdim, GridImp>
       for (int i=0;i<4;++i) {
         typename GridImp::LeafGridView::template Codim<3>::Iterator it=start;
         for (; it != itend; ++it) {
-          if (mapper.map(*it) == q.v[i].i)
+          if (mapper.index(*it) == q.v[i].i)
             break;
         }
         BoundaryGrid::extract(c[i],it->geometry().corner(0),dir);
