@@ -1041,7 +1041,7 @@ IMPL_FUNC(void, setupSolvers(const LinSolParams& params))
                                                                                params.tol,
                                                                                params.restart,
                                                                                params.maxit,
-                                                                               verbose?2:(params.report?1:0), true)));
+                                                                               verbose?2:(params.report?1:0))));
         }
       }
     } else {
