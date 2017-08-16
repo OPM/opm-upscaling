@@ -103,7 +103,7 @@ namespace Opm
         class Face {
         public:
             typedef typename GI::DuneIntersectionIterator                   DuneIntersectionIter;
-            typedef typename GI::GridType::template Codim<0>::EntityPointer CellPtr;
+            typedef typename GI::GridType::Traits::template Codim<0>::EntityPointer CellPtr;
             typedef typename GI::GridType::ctype                            Scalar;
             typedef          Dune::FieldVector<Scalar, GI::GridType::dimension>   Vector;
             typedef          Dune::FieldVector<Scalar, GI::GridType::dimension-1> LocalVector;
