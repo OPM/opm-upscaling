@@ -191,7 +191,7 @@ struct AMG2Level {
     crit.setDefaultValuesIsotropic(3, zcells);
     CoarsePolicy coarsePolicy(args, crit);
     TransferPolicy policy(crit);
-    Dune::shared_ptr<Schwarz::type> fsp(Schwarz::setup2(op, gv, A, copy));
+    std::shared_ptr<Schwarz::type> fsp(Schwarz::setup2(op, gv, A, copy));
     copy = true;
     return std::shared_ptr<type>(new type(*op, fsp, policy, coarsePolicy, pre, post));
   }
