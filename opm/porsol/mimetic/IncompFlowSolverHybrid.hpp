@@ -1616,8 +1616,7 @@ namespace Opm {
         // ----------------------------------------------------------------
         {        
             
-            typedef Dune::Amg::KAMG<Operator,Vector,Smoother,Dune::Amg::SequentialInformation,
-                              Dune::CGSolver<Vector> >   Precond;
+            typedef Dune::Amg::KAMG<Operator,Vector,Smoother,Dune::Amg::SequentialInformation> Precond;
             // Adapted from upscaling.cc by Arne Rekdal, 2009
             Scalar residTol = residual_tolerance;
             if (!same_matrix) {
@@ -1642,7 +1641,10 @@ namespace Opm {
 #endif
                 criterion.setProlongationDampingFactor(prolong_factor);
                 criterion.setBeta(1e-10);
-                precond_.reset(new Precond(*opS_, criterion, smootherArgs, 2, smooth_steps, smooth_steps));
+                criterion.setNoPreSmoothSteps(smooth_steps);
+                criterion.setNoPostSmoothSteps(smooth_steps);
+                criterion.setGamma(2);
+                precond_.reset(new Precond(*opS_, criterion, smootherArgs));
             }
             // Construct solver for system of linear equations.
             Dune::CGSolver<Vector> linsolve(*opS_, dynamic_cast<Precond&>(*precond_), residTol, (maxit>0)?maxit:S_.N(), verbosity_level);
