@@ -141,6 +141,8 @@ struct Params {
   int cellsz;
   //! \brief verbose output
   bool verbose;
+  //! \brief Output wave speeds as data. For reg-test comparison purposes.
+  bool outputSpeeds;
   //! \brief Run a inspection only, currently 'mesh, results, load'
   std::string inspect;
   //! \brief Result template filename (input/output)
@@ -180,6 +182,7 @@ void parseCommandLine(int argc, char** argv, Params& p)
   p.resultfilename  = param.getDefault<std::string>("resultfilename","");
   p.output   = param.getDefault<std::string>("output","");
   p.verbose  = param.getDefault<bool>("verbose",false);
+  p.outputSpeeds = param.getDefault<bool>("output_wave_speeds",false);
   p.inspect  = param.getDefault<std::string>("inspect","");
   size_t i;
   if ((i=p.vtufile.find(".vtu")) != std::string::npos)
@@ -269,7 +272,9 @@ void writeOutput(const Params& p, Opm::time::StopWatch& watch, int cells,
 
   f << "#" << std::endl
     << "######################################################################" << std::endl
-    << C << std::endl;
+    << C;
+  if (p.outputSpeeds && upscaledRho > 0)
+    f << upscaledRho << " " << speeds << std::endl;
 }
 
 //! \brief Main solution loop. Allows templating over the AMG type

@@ -109,6 +109,7 @@ macro (add_test_upscale_elasticity gridname method)
                            ${abstol} ${reltol} 
                TEST_ARGS output=${RESULT_PATH}/upscale_elasticity_${method}_${gridname}.txt
                          gridfilename=${INPUT_DATA_PATH}/grids/${gridname}.grdecl
+                         output_wave_speeds=true
                          method=${method})
 endmacro (add_test_upscale_elasticity gridname method rows)
 
