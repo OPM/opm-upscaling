@@ -18,7 +18,9 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/geometry/referenceelements.hh>
+#if ! DUNE_VERSION_NEWER(DUNE_GEOMETRY, 2, 5)
 #include <dune/geometry/genericgeometry/matrixhelper.hh>
+#endif
 #include <dune/grid/common/mcmgmapper.hh>
 
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
@@ -334,7 +336,7 @@ class HexGeometry<2, cdim, GridImp>
       for (int i=0;i<4;++i) {
         typename GridImp::LeafGridView::template Codim<3>::Iterator it=start;
         for (; it != itend; ++it) {
-          if (mapper.map(*it) == q.v[i].i)
+          if (mapper.index(*it) == q.v[i].i)
             break;
         }
         BoundaryGrid::extract(c[i],it->geometry().corner(0),dir);
@@ -422,12 +424,16 @@ class HexGeometry<2, cdim, GridImp>
       LocalCoordinate x = refElement.position(0,0);
       LocalCoordinate dx;
       do {
-        using namespace Dune::GenericGeometry;
         // DF^n dx^n = F^n, x^{n+1} -= dx^n
         JacobianTransposed JT = jacobianTransposed(x);
         GlobalCoordinate z = global(x);
         z -= y;
+#if DUNE_VERSION_NEWER(DUNE_GEOMETRY, 2, 5)
+        Dune::Impl::FieldMatrixHelper<double>::template xTRightInvA<2, 2>(JT, z, dx );
+#else
+        using namespace Dune::GenericGeometry;
         MatrixHelper<DuneCoordTraits<double> >::template xTRightInvA<2, 2>(JT, z, dx );
+#endif
         x -= dx;
       } while (dx.two_norm2() > epsilon*epsilon);
       return x;
@@ -478,8 +484,12 @@ class HexGeometry<2, cdim, GridImp>
     ctype integrationElement(const LocalCoordinate& local) const
     {
       Dune::FieldMatrix<ctype, coorddimension, mydimension> Jt = jacobianTransposed(local);
+#if DUNE_VERSION_NEWER(DUNE_GEOMETRY, 2, 5)
+      return Dune::Impl::FieldMatrixHelper<double>::template sqrtDetAAT<2, 2>(Jt);
+#else
       using namespace Dune::GenericGeometry;
       return MatrixHelper<DuneCoordTraits<double> >::template sqrtDetAAT<2, 2>(Jt);
+#endif
     }
   private:
     //! \brief The coordinates of the corners

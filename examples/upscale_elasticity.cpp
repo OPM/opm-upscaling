@@ -501,11 +501,10 @@ try
       return runAMG<AMG2Level>(p);
     else
       return runAMG<AMG1>(p);
+  } catch (Dune::Exception &e) {
+    std::cerr << "Dune reported error: " << e << std::endl;
   } catch (const std::exception &e) {
     throw e;
-  }
-  catch (Dune::Exception &e) {
-    std::cerr << "Dune reported error: " << e << std::endl;
   }
   catch (...) {
     std::cerr << "Unknown exception thrown!" << std::endl;

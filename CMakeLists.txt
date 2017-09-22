@@ -77,26 +77,13 @@ include (CMakeLists_files.cmake)
 
 macro (config_hook)
 	opm_need_version_of ("dune-common")
+	opm_need_version_of ("dune-geometry")
 	opm_need_version_of ("dune-istl")
 	list (APPEND ${project}_CONFIG_IMPL_VARS
 		HAVE_LAPACK
 		HAVE_UMFPACK
 		HAVE_SUPERLU
 		)
-	# check unversioned CpGrid api change
-	check_cxx_source_compiles("
-	#include <dune/grid/CpGrid.hpp>
-
-	int main()
-	{
-		Dune::CpGrid grid;
-		grid.readEclipseFormat(\"foo\", 1.0e-3, false, false);
-		return 0;
-	}
-	" HAVE_OLD_CPGRID_API)
-	if (HAVE_OLD_CPGRID_API)
-		add_definitions(-DHAVE_OLD_CPGRID_API)
-	endif()
 endmacro (config_hook)
 
 macro (prereqs_hook)
@@ -106,47 +93,6 @@ macro (sources_hook)
 endmacro (sources_hook)
 
 macro (files_hook)
-	find_dune_version ("dune" "istl")
-	if((DUNE_ISTL_VERSION_MAJOR GREATER 2) OR
-		(DUNE_ISTL_VERSION_MAJOR EQUAL 2 AND DUNE_ISTL_VERSION_MINOR GREATER 2))
-		list (APPEND MAIN_SOURCE_FILES
-			opm/elasticity/boundarygrid.cpp
-			opm/elasticity/elasticity_preconditioners.cpp
-			opm/elasticity/material.cpp
-			opm/elasticity/materials.cpp
-			opm/elasticity/matrixops.cpp
-			opm/elasticity/meshcolorizer.cpp
-			opm/elasticity/mpc.cpp
-			)
-		list(APPEND PROGRAM_SOURCE_FILES examples/upscale_elasticity.cpp)
-		list (APPEND EXAMPLE_SOURCE_FILES examples/upscale_elasticity.cpp)
-		list (APPEND TEST_DATA_FILES
-			tests/input_data/reference_solutions/upscale_elasticity_mpc_EightCells.txt
-			tests/input_data/reference_solutions/upscale_elasticity_mortar_EightCells.txt
-		)
-		list (APPEND PUBLIC_HEADER_FILES
-			opm/elasticity/applier.hpp
-			opm/elasticity/asmhandler.hpp
-			opm/elasticity/asmhandler_impl.hpp
-			opm/elasticity/boundarygrid.hh
-			opm/elasticity/elasticity.hpp
-			opm/elasticity/elasticity_impl.hpp
-			opm/elasticity/elasticity_preconditioners.hpp
-			opm/elasticity/elasticity_upscale.hpp
-			opm/elasticity/elasticity_upscale_impl.hpp
-			opm/elasticity/logutils.hpp
-			opm/elasticity/material.hh
-			opm/elasticity/materials.hh
-			opm/elasticity/matrixops.hpp
-			opm/elasticity/mortar_evaluator.hpp
-			opm/elasticity/mortar_schur.hpp
-			opm/elasticity/mortar_schur_precond.hpp
-			opm/elasticity/mortar_utils.hpp
-			opm/elasticity/mpc.hh
-			opm/elasticity/shapefunctions.hpp
-			opm/elasticity/uzawa_solver.hpp
-			)
-	endif()
 endmacro (files_hook)
 
 macro (fortran_hook)

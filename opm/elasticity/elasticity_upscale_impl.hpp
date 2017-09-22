@@ -42,7 +42,7 @@ IMPL_FUNC(std::vector<BoundaryGrid::Vertex>,
   for (LeafVertexIterator it = start; it != itend; ++it) {
     if (isOnPlane(dir,it->geometry().corner(0),coord)) {
       BoundaryGrid::Vertex v;
-      v.i = mapper.map(*it);
+      v.i = mapper.index(*it);
       BoundaryGrid::extract(v.c,it->geometry().corner(0),log2(dir));
       result.push_back(v);
     }
@@ -378,7 +378,7 @@ IMPL_FUNC(void, fixPoint(Direction dir,
   // iterate over vertices
   for (VertexLeafIterator it = gv.leafGridView().template begin<dim>(); it != itend; ++it) {
     if (isOnPoint(it->geometry().corner(0),coord)) {
-      int indexi = mapper.map(*it);
+      int indexi = mapper.index(*it);
       A.updateFixedNode(indexi,std::make_pair(dir,value));
     }
   }
@@ -409,7 +409,7 @@ IMPL_FUNC(void, fixLine(Direction dir,
   // iterate over vertices
   for (VertexLeafIterator it = gv.leafGridView().template begin<dim>(); it != itend; ++it) {
     if (isOnLine(dir,it->geometry().corner(0),x,y)) {
-      int indexi = mapper.map(*it);
+      int indexi = mapper.index(*it);
       A.updateFixedNode(indexi,std::make_pair(XYZ,value));
     }
   }
@@ -1041,7 +1041,7 @@ IMPL_FUNC(void, setupSolvers(const LinSolParams& params))
                                                                                params.tol,
                                                                                params.restart,
                                                                                params.maxit,
-                                                                               verbose?2:(params.report?1:0), true)));
+                                                                               verbose?2:(params.report?1:0))));
         }
       }
     } else {

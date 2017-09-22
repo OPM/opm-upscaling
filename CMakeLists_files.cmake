@@ -47,8 +47,15 @@ list(APPEND MAIN_SOURCE_FILES
 	opm/porsol/euler/ImplicitCapillarity.cpp
 	opm/upscaling/ParserAdditions.cpp
 	opm/upscaling/RelPermUtils.cpp
-        opm/upscaling/initCPGrid.cpp
-        opm/upscaling/writeECLData.cpp
+ 	opm/upscaling/initCPGrid.cpp
+ 	opm/upscaling/writeECLData.cpp
+ 	opm/elasticity/boundarygrid.cpp
+ 	opm/elasticity/elasticity_preconditioners.cpp
+ 	opm/elasticity/material.cpp
+ 	opm/elasticity/materials.cpp
+ 	opm/elasticity/matrixops.cpp
+ 	opm/elasticity/meshcolorizer.cpp
+ 	opm/elasticity/mpc.cpp
 	)
 
 # originally generated with the command:
@@ -76,6 +83,8 @@ list (APPEND TEST_DATA_FILES
 	tests/input_data/reference_solutions/upscale_relperm_BCl_pts30_surfTens11_stone1_stone1_EightCells.txt
 	tests/input_data/reference_solutions/upscale_relperm_BCf_pts30_surfTens45_stone1_stone1_EightCells.txt
 	tests/input_data/reference_solutions/upscale_relperm_BCf_pts30_surfTens11_stoneAniso_stoneAniso_27cellsAniso.txt
+  tests/input_data/reference_solutions/upscale_elasticity_mpc_EightCells.txt
+  tests/input_data/reference_solutions/upscale_elasticity_mortar_EightCells.txt
   tests/input_data/reference_solutions/upscale_elasticity_mpc_EightCells.txt
   tests/input_data/reference_solutions/upscale_elasticity_mortar_EightCells.txt
 	)
@@ -109,6 +118,7 @@ list (APPEND EXAMPLE_SOURCE_FILES
 	examples/upscale_relpermvisc.cpp
 	examples/upscale_singlephase.cpp
 	examples/upscale_steadystate_implicit.cpp
+ 	examples/upscale_elasticity.cpp
 	tests/compareUpscaling.cpp
 	)
 
@@ -144,6 +154,7 @@ list (APPEND PROGRAM_SOURCE_FILES
 	examples/upscale_relpermvisc.cpp
 	examples/upscale_singlephase.cpp
 	examples/upscale_steadystate_implicit.cpp
+ 	examples/upscale_elasticity.cpp
 	)
 
 # originally generated with the command:
@@ -221,6 +232,26 @@ list (APPEND PUBLIC_HEADER_FILES
 	opm/upscaling/UpscalerBase_impl.hpp
 	opm/upscaling/UpscalingTraits.hpp
 	opm/upscaling/CornerpointChopper.hpp
-        opm/upscaling/initCPGrid.hpp
-        opm/upscaling/writeECLData.hpp
+  	opm/upscaling/initCPGrid.hpp
+ 	opm/upscaling/writeECLData.hpp
+ 	opm/elasticity/applier.hpp
+ 	opm/elasticity/asmhandler.hpp
+ 	opm/elasticity/asmhandler_impl.hpp
+ 	opm/elasticity/boundarygrid.hh
+ 	opm/elasticity/elasticity.hpp
+ 	opm/elasticity/elasticity_impl.hpp
+ 	opm/elasticity/elasticity_preconditioners.hpp
+ 	opm/elasticity/elasticity_upscale.hpp
+ 	opm/elasticity/elasticity_upscale_impl.hpp
+ 	opm/elasticity/logutils.hpp
+ 	opm/elasticity/material.hh
+ 	opm/elasticity/materials.hh
+ 	opm/elasticity/matrixops.hpp
+ 	opm/elasticity/mortar_evaluator.hpp
+ 	opm/elasticity/mortar_schur.hpp
+ 	opm/elasticity/mortar_schur_precond.hpp
+ 	opm/elasticity/mortar_utils.hpp
+ 	opm/elasticity/mpc.hh
+ 	opm/elasticity/shapefunctions.hpp
+ 	opm/elasticity/uzawa_solver.hpp
 	)
