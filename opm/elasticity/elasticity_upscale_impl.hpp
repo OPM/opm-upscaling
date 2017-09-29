@@ -43,7 +43,7 @@ IMPL_FUNC(std::vector<BoundaryGrid::Vertex>,
     if (isOnPlane(dir,it->geometry().corner(0),coord)) {
       BoundaryGrid::Vertex v;
       v.i = mapper.index(*it);
-      BoundaryGrid::extract(v.c,it->geometry().corner(0),log2(dir));
+      BoundaryGrid::extract(v.c,it->geometry().corner(0),log2(float(dir)));
       result.push_back(v);
     }
   }
@@ -66,7 +66,7 @@ IMPL_FUNC(BoundaryGrid, extractMasterFace(Direction dir,
   const LeafIndexSet& set = gv.leafGridView().indexSet();
 
   int c = 0;
-  int i = log2(dir);
+  int i = log2(float(dir));
   BoundaryGrid result;
   // we first group nodes into this map through the coordinate of lower left 
   // vertex. we then split this up into pillars for easy processing later
@@ -160,13 +160,13 @@ IMPL_FUNC(void, findBoundaries(double* min, double* max))
 IMPL_FUNC(void, addMPC(Direction dir, int slavenode,
                        const BoundaryGrid::Vertex& m))
 {
-  MPC* mpc = new MPC(slavenode,log2(dir)+1);
+  MPC* mpc = new MPC(slavenode,log2(float(dir))+1);
   if (m.i > -1) { // we matched a node exactly
-    mpc->addMaster(m.i,log2(dir)+1,1.f);
+    mpc->addMaster(m.i,log2(float(dir))+1,1.f);
   } else {
     std::vector<double> N = m.q->evalBasis(m.c[0],m.c[1]);
     for (int i=0;i<4;++i)
-      mpc->addMaster(m.q->v[i].i,log2(dir)+1,N[i]);
+      mpc->addMaster(m.q->v[i].i,log2(float(dir))+1,N[i]);
   }
   A.addMPC(mpc);
 }
@@ -390,7 +390,7 @@ IMPL_FUNC(bool, isOnPlane(Direction plane,
 {
   if (plane < X || plane > Z)
     return false;
-  int p = log2(plane);
+  int p = log2(float(plane));
   ctype delta = fabs(value-coord[p]);
   return delta < tol;
 }
@@ -421,8 +421,8 @@ IMPL_FUNC(bool, isOnLine(Direction dir,
 {
   if (dir < X || dir > Z)
     return false;
-  int ix = int(log2(dir)+1) % 3;
-  int iy = int(log2(dir)+2) % 3;
+  int ix = int(log2(float(dir))+1) % 3;
+  int iy = int(log2(float(dir))+2) % 3;
   ctype delta = x-coord[ix];
   if (delta > tol || delta < -tol)
     return false;
