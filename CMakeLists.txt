@@ -80,6 +80,7 @@ macro (config_hook)
 		HAVE_LAPACK
 		HAVE_UMFPACK
 		HAVE_SUPERLU
+		HAVE_SUITESPARSE_UMFPACK
 		)
 endmacro (config_hook)
 
