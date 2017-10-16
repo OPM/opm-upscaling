@@ -206,7 +206,7 @@ static int parseCommandLine(std::map<std::string,std::string>& options,
 //! \return Eclipse-style filename for requested component/fluid system combination.
 static std::string getEclipseOutputFile(const std::string& opfname, char comp, char sat)
 {
-    string fnbase = opfname.substr(0,opfname.find_first_of('.'));
+    string fnbase = opfname.substr(0,opfname.find_last_of('.'));
     return fnbase + "-" +comp + ".S" + sat + "OF";
 }
 
