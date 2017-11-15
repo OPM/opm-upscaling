@@ -105,8 +105,6 @@ list (APPEND EXAMPLE_SOURCE_FILES
 	examples/mimetic_aniso_solver_test.cpp
 	examples/mimetic_periodic_test.cpp
 	examples/mimetic_solver_test.cpp
-	examples/sim_blackoil_impes.cpp
-	examples/sim_co2_impes.cpp
 	examples/sim_steadystate_explicit.cpp
 	examples/sim_steadystate_implicit.cpp
 	examples/steadystate_test_implicit.cpp
@@ -143,8 +141,6 @@ list (APPEND PROGRAM_SOURCE_FILES
 	examples/cpregularize.cpp
 	examples/exp_variogram.cpp
 	examples/grdecldips.cpp
-	examples/sim_blackoil_impes.cpp
-	examples/sim_co2_impes.cpp
 	examples/steadystate_test_implicit.cpp
 	examples/upscale_avg.cpp
 	examples/upscale_cap.cpp
