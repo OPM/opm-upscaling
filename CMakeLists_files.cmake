@@ -32,11 +32,6 @@ list (APPEND TEST_SOURCE_FILES
 )
 
 list(APPEND MAIN_SOURCE_FILES
-  opm/porsol/blackoil/fluid/BlackoilPVT.cpp
-  opm/porsol/blackoil/fluid/MiscibilityDead.cpp
-  opm/porsol/blackoil/fluid/MiscibilityLiveGas.cpp
-  opm/porsol/blackoil/fluid/MiscibilityLiveOil.cpp
-  opm/porsol/blackoil/fluid/MiscibilityProps.cpp
   opm/porsol/common/blas_lapack.cpp
   opm/porsol/common/BoundaryPeriodicity.cpp
   opm/porsol/common/ImplicitTransportDefs.cpp
@@ -91,7 +86,6 @@ list (APPEND TEST_DATA_FILES
 list (APPEND EXAMPLE_SOURCE_FILES
   examples/aniso_implicitcap_test.cpp
   examples/aniso_simulator_test.cpp
-  examples/co2_blackoil_pvt.cpp
   examples/cpchop.cpp
   examples/cpchop_depthtrend.cpp
   examples/cpregularize.cpp
@@ -153,23 +147,6 @@ list (APPEND PROGRAM_SOURCE_FILES
 # originally generated with the command:
 # find opm -name '*.h*' -a ! -name '*-pch.hpp' -printf '\t%p\n' | sort
 list (APPEND PUBLIC_HEADER_FILES
-  opm/porsol/blackoil/BlackoilFluid.hpp
-  opm/porsol/blackoil/BlackoilInitialization.hpp
-  opm/porsol/blackoil/BlackoilSimulator.hpp
-  opm/porsol/blackoil/BlackoilWells.hpp
-  opm/porsol/blackoil/co2fluid/benchmark3co2tables.hh
-  opm/porsol/blackoil/co2fluid/BlackoilCo2PVT.hpp
-  opm/porsol/blackoil/ComponentTransport.hpp
-  opm/porsol/blackoil/fluid/BlackoilComponent.hpp
-  opm/porsol/blackoil/fluid/BlackoilDefs.hpp
-  opm/porsol/blackoil/fluid/BlackoilPVT.hpp
-  opm/porsol/blackoil/fluid/FluidMatrixInteractionBlackoil.hpp
-  opm/porsol/blackoil/fluid/FluidStateBlackoil.hpp
-  opm/porsol/blackoil/fluid/MiscibilityDead.hpp
-  opm/porsol/blackoil/fluid/MiscibilityLiveGas.hpp
-  opm/porsol/blackoil/fluid/MiscibilityLiveOil.hpp
-  opm/porsol/blackoil/fluid/MiscibilityProps.hpp
-  opm/porsol/blackoil/fluid/MiscibilityWater.hpp
   opm/porsol/common/BCRSMatrixBlockAssembler.hpp
   opm/porsol/common/blas_lapack.hpp
   opm/porsol/common/BoundaryConditions.hpp
@@ -211,8 +188,6 @@ list (APPEND PUBLIC_HEADER_FILES
   opm/porsol/mimetic/IncompFlowSolverHybrid.hpp
   opm/porsol/mimetic/MimeticIPAnisoRelpermEvaluator.hpp
   opm/porsol/mimetic/MimeticIPEvaluator.hpp
-  opm/porsol/mimetic/TpfaCompressibleAssembler.hpp
-  opm/porsol/mimetic/TpfaCompressible.hpp
   opm/upscaling/ParserAdditions.hpp
   opm/upscaling/SinglePhaseUpscaler.hpp
   opm/upscaling/SteadyStateUpscaler.hpp
