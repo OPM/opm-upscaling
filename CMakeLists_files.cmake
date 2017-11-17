@@ -115,15 +115,6 @@ list (APPEND ADDITIONAL_SOURCE_FILES
   benchmarks/upscale_relperm_benchmark.cpp
 )
 
-# originally generated with the command:
-# find attic -name '*.c*' -printf '\t%p\n' | sort
-list (APPEND ATTIC_FILES
-  attic/aniso_implicit_steadystate_test.cpp
-  attic/aniso_steadystate_test.cpp
-  attic/implicit_steadystate_test.cpp
-  attic/steadystate_test_explicit.cpp
-)
-
 # programs listed here will not only be compiled, but also marked for
 # installation
 list (APPEND PROGRAM_SOURCE_FILES
