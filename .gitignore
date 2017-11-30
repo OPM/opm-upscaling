@@ -37,7 +37,6 @@ CTestTestfile.cmake
 DartConfiguration.tcl
 Testing/
 *install.cmake
-*-config*.cmake
 *.pc
 install_manifest.txt
 

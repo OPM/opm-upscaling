@@ -7,7 +7,7 @@
 #       <command> refers to the command used to run the binary with input variables in a terminal
 #
 #    2) Add test that compares the output from the previous test:
-#       add_test(<testname> ${PROJECT_BINARY_DIR}/bin/compare_upscaling_results <path_to_refSoln> <path_to_newSoln>
+#       add_test(<testname> ${PROJECT_BINARY_DIR}/compare_upscaling_results <path_to_refSoln> <path_to_newSoln>
 #                ${tol} <number_of_result_rows> <number_of_result_cols>)
 #       This test should depend on the first test, so include:
 #       set_tests_properties(<test1> PROPERTIES DEPENDS <test2>)
@@ -27,7 +27,7 @@ set(reltol 1e-5)
 
 # Define some paths
 set(BASE_RESULT_PATH ${PROJECT_BINARY_DIR}/tests/results)
-set(INPUT_DATA_PATH ${PROJECT_BINARY_DIR}/tests/input_data)
+set(INPUT_DATA_PATH ${PROJECT_SOURCE_DIR}/tests/input_data)
 
 ###########################################################################
 # TEST: upscale_perm 
@@ -48,7 +48,7 @@ macro (add_test_upscale_perm gridname bcs rows)
   opm_add_test(${TEST_NAME} NO_COMPILE
                EXE_NAME upscale_perm
                DRIVER_ARGS ${INPUT_DATA_PATH} ${RESULT_PATH}
-                           ${CMAKE_BINARY_DIR}/bin
+                           ${CMAKE_BINARY_DIR}
                            upscale_perm_BC${bcs}_${gridname}
                            ${abstol} ${reltol} 
                TEST_ARGS -bc ${bcs}
@@ -80,7 +80,7 @@ macro (add_test_upscale_relperm testname gridname stonefiles rows cols)
   opm_add_test(${TEST_NAME} NO_COMPILE
                EXE_NAME upscale_relperm
                DRIVER_ARGS ${INPUT_DATA_PATH} ${RESULT_PATH}
-                           ${CMAKE_BINARY_DIR}/bin
+                           ${CMAKE_BINARY_DIR}
                            upscale_relperm_${testname}
                            ${abstol} ${reltol}
                TEST_ARGS ${test_args})
@@ -104,7 +104,7 @@ macro (add_test_upscale_elasticity gridname method)
   opm_add_test(${TEST_NAME} NO_COMPILE
                EXE_NAME upscale_elasticity
                DRIVER_ARGS ${INPUT_DATA_PATH} ${RESULT_PATH}
-                           ${CMAKE_BINARY_DIR}/bin
+                           ${CMAKE_BINARY_DIR}
                            upscale_elasticity_${method}_${gridname}
                            ${abstol} ${reltol} 
                TEST_ARGS output=${RESULT_PATH}/upscale_elasticity_${method}_${gridname}.txt
