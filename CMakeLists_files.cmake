@@ -138,7 +138,7 @@ list (APPEND PROGRAM_SOURCE_FILES
 # originally generated with the command:
 # find opm -name '*.h*' -a ! -name '*-pch.hpp' -printf '\t%p\n' | sort
 list (APPEND PUBLIC_HEADER_FILES
-  opm/core/utilitity/Average.hpp
+  opm/core/utility/Average.hpp
   opm/porsol/common/BCRSMatrixBlockAssembler.hpp
   opm/porsol/common/blas_lapack.hpp
   opm/porsol/common/BoundaryConditions.hpp
