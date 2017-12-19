@@ -15,7 +15,7 @@
 ###########################################################################
 
 # Mandatory call to project
-project(opm-upscaling CXX)
+project(opm-upscaling C CXX)
 
 cmake_minimum_required (VERSION 2.8)
 
