@@ -17,10 +17,6 @@
 #include <dune/grid/common/GridAdapter.hpp>
 
 #include <opm/core/grid.h>
-#include <opm/core/linalg/LinearSolverIstl.hpp>
-#include <opm/core/linalg/sparse_sys.h>
-#include <opm/core/pressure/tpfa/ifs_tpfa.h>
-#include <opm/core/pressure/tpfa/trans_tpfa.h>
 #include <opm/core/transport/implicit/NormSupport.hpp>
 #include <opm/core/transport/implicit/ImplicitTransport.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
@@ -197,36 +193,6 @@ namespace Opm {
             Dune::InverseOperatorResult res;
             solver.apply(x, bcpy, res);
         }
-    };
-
-    class LinearSolverISTLAMG {
-    public:
-        LinearSolverISTLAMG()
-        {
-            Opm::ParameterGroup params;
-
-            params.insertParameter("linsolver_tolerance",
-                                   boost::lexical_cast<std::string>(5.0e-9));
-
-            params.insertParameter("linsolver_verbosity",
-                                   boost::lexical_cast<std::string>(1));
-
-            params.insertParameter("linsolver_type",
-                                   boost::lexical_cast<std::string>(1));
-
-            ls_.reset(new LinearSolverIstl(params));
-        }
-
-        void
-        solve(struct CSRMatrix* A,
-              const double*     b,
-              double*           x)
-        {
-            ls_->solve(A->m, A->nnz, A->ia, A->ja, A->sa, b, x);
-        }
-
-    private:
-        std::unique_ptr<Opm::LinearSolverIstl> ls_;
     };
 
     class TransportSource {
