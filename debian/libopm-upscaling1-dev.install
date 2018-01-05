@@ -2,3 +2,4 @@ usr/lib/*/*.so
 usr/include/*
 usr/lib/dunecontrol/*
 usr/share/cmake/*
+usr/share/opm/cmake/Modules/*
