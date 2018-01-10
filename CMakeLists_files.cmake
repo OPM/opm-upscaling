@@ -32,6 +32,8 @@ list (APPEND TEST_SOURCE_FILES
 )
 
 list(APPEND MAIN_SOURCE_FILES
+  opm/core/transport/implicit/TransportSolverTwophaseImplicit.cpp
+  opm/core/transport/implicit/transport_source.c
   opm/porsol/common/blas_lapack.cpp
   opm/porsol/common/BoundaryPeriodicity.cpp
   opm/porsol/common/ImplicitTransportDefs.cpp
@@ -138,6 +140,17 @@ list (APPEND PROGRAM_SOURCE_FILES
 # originally generated with the command:
 # find opm -name '*.h*' -a ! -name '*-pch.hpp' -printf '\t%p\n' | sort
 list (APPEND PUBLIC_HEADER_FILES
+  opm/core/transport/implicit/CSRMatrixBlockAssembler.hpp
+  opm/core/transport/implicit/CSRMatrixUmfpackSolver.hpp
+  opm/core/transport/implicit/ImplicitAssembly.hpp
+  opm/core/transport/implicit/ImplicitTransport.hpp
+  opm/core/transport/implicit/JacobianSystem.hpp
+  opm/core/transport/implicit/NormSupport.hpp
+  opm/core/transport/implicit/SimpleFluid2pWrappingProps.hpp
+  opm/core/transport/implicit/SimpleFluid2pWrappingProps_impl.hpp
+  opm/core/transport/implicit/SinglePointUpwindTwoPhase.hpp
+  opm/core/transport/implicit/TransportSolverTwophaseImplicit.hpp
+  opm/core/transport/implicit/transport_source.h
   opm/core/utility/Average.hpp
   opm/porsol/common/BCRSMatrixBlockAssembler.hpp
   opm/porsol/common/blas_lapack.hpp
