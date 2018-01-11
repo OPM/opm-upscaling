@@ -45,7 +45,6 @@
 #include <opm/parser/eclipse/Units/Units.hpp>
 
 #include <opm/upscaling/writeECLData.hpp>
-#include <opm/core/utility/miscUtilities.hpp>
 #include <algorithm>
 #include <iostream>
 
@@ -150,6 +149,20 @@ namespace Opm
             }
             return dst;
         }
+
+        /// Make a a vector of interleaved water and oil saturations from
+        /// a vector of water saturations.
+        void waterSatToBothSat(const std::vector<double>& sw,
+                               std::vector<double>& sboth)
+        {
+            int num = sw.size();
+            sboth.resize(2*num);
+            for (int i = 0; i < num; ++i) {
+                sboth[2*i] = sw[i];
+                sboth[2*i + 1] = 1.0 - sw[i];
+            }
+        }
+
 
     } // anon namespace
 
@@ -264,7 +277,7 @@ namespace Opm
                                    + '-' + boost::lexical_cast<std::string>(boundary_saturation)
                                    + '-' + boost::lexical_cast<std::string>(fd[flow_direction])
                                    + '-' + boost::lexical_cast<std::string>(pressure_drop);
-                    Opm::toBothSat(saturation, ecl_sat);
+                    waterSatToBothSat(saturation, ecl_sat);
                     getCellPressure(ecl_press, this->ginterf_, this->flow_solver_.getSolution());
                     data::Solution solution;
                     solution.insert( "PRESSURE" , UnitSystem::measure::pressure , ecl_press , data::TargetType::RESTART_SOLUTION );
