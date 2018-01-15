@@ -32,7 +32,6 @@ list (APPEND TEST_SOURCE_FILES
 )
 
 list(APPEND MAIN_SOURCE_FILES
-  opm/core/transport/implicit/TransportSolverTwophaseImplicit.cpp
   opm/core/transport/implicit/transport_source.c
   opm/porsol/common/blas_lapack.cpp
   opm/porsol/common/BoundaryPeriodicity.cpp
@@ -149,7 +148,6 @@ list (APPEND PUBLIC_HEADER_FILES
   opm/core/transport/implicit/SimpleFluid2pWrappingProps.hpp
   opm/core/transport/implicit/SimpleFluid2pWrappingProps_impl.hpp
   opm/core/transport/implicit/SinglePointUpwindTwoPhase.hpp
-  opm/core/transport/implicit/TransportSolverTwophaseImplicit.hpp
   opm/core/transport/implicit/transport_source.h
   opm/core/utility/Average.hpp
   opm/porsol/common/BCRSMatrixBlockAssembler.hpp
