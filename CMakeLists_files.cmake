@@ -139,8 +139,6 @@ list (APPEND PROGRAM_SOURCE_FILES
 # originally generated with the command:
 # find opm -name '*.h*' -a ! -name '*-pch.hpp' -printf '\t%p\n' | sort
 list (APPEND PUBLIC_HEADER_FILES
-  opm/core/transport/implicit/CSRMatrixBlockAssembler.hpp
-  opm/core/transport/implicit/CSRMatrixUmfpackSolver.hpp
   opm/core/transport/implicit/ImplicitAssembly.hpp
   opm/core/transport/implicit/ImplicitTransport.hpp
   opm/core/transport/implicit/JacobianSystem.hpp
