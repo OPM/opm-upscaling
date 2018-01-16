@@ -143,8 +143,6 @@ list (APPEND PUBLIC_HEADER_FILES
   opm/core/transport/implicit/ImplicitTransport.hpp
   opm/core/transport/implicit/JacobianSystem.hpp
   opm/core/transport/implicit/NormSupport.hpp
-  opm/core/transport/implicit/SimpleFluid2pWrappingProps.hpp
-  opm/core/transport/implicit/SimpleFluid2pWrappingProps_impl.hpp
   opm/core/transport/implicit/SinglePointUpwindTwoPhase.hpp
   opm/core/transport/implicit/transport_source.h
   opm/core/utility/Average.hpp
