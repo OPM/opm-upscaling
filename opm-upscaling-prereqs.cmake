@@ -24,7 +24,6 @@ set (opm-upscaling_DEPS
   "dune-grid REQUIRED"
   "opm-common REQUIRED"
   "opm-grid REQUIRED"
-  "opm-core REQUIRED"
   "opm-output REQUIRED"
   )
 
