@@ -6,15 +6,13 @@ upstreams=(opm-common
            opm-parser
            opm-output
            opm-material
-           opm-grid
-           opm-core)
+           opm-grid)
 
 declare -A upstreamRev
 upstreamRev[opm-common]=master
 upstreamRev[libecl]=master
 upstreamRev[opm-parser]=master
 upstreamRev[opm-material]=master
-upstreamRev[opm-core]=master
 upstreamRev[opm-grid]=master
 upstreamRev[opm-output]=master
 
