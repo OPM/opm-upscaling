@@ -299,8 +299,12 @@ IMPL_FUNC(void, assembleBBlockMortar(const BoundaryGrid& b1,
   std::vector<std::vector<int> > lnodes = renumber(interface, n1+1,
                                                    n2+1, totalEqns);
   // get a reference element
+#if DUNE_VERSION_NEWER(DUNE_GEOMETRY, 2, 6)
+  auto gt = Dune::GeometryTypes::cube(2);
+#else
   Dune::GeometryType gt;
   gt.makeCube(2);
+#endif
   // get a quadrature rule
   int quadorder = std::max((1.0+n1+0.5)/2.0,(1.0+n2+0.5)/2.0);
   quadorder = std::max(quadorder, 2);
