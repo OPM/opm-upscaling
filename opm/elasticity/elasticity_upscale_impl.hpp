@@ -35,8 +35,12 @@ IMPL_FUNC(std::vector<BoundaryGrid::Vertex>,
   const LeafVertexIterator itend = gv.leafGridView().template end<dim>();
 
   // make a mapper for codim dim entities in the leaf grid 
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 6)
+  Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridType> mapper(gv, Dune::mcmgVertexLayout());
+#else
   Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridType,
                                             Dune::MCMGVertexLayout> mapper(gv);
+#endif
   // iterate over vertices and find slaves
   LeafVertexIterator start = gv.leafGridView().template begin<dim>();
   for (LeafVertexIterator it = start; it != itend; ++it) {
@@ -372,8 +376,12 @@ IMPL_FUNC(void, fixPoint(Direction dir,
   const VertexLeafIterator itend = gv.leafGridView().template end<dim>();
 
   // make a mapper for codim 0 entities in the leaf grid 
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 6)
+  Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridType> mapper(gv, Dune::mcmgVertexLayout());
+#else
   Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridType,
                                             Dune::MCMGVertexLayout> mapper(gv);
+#endif
 
   // iterate over vertices
   for (VertexLeafIterator it = gv.leafGridView().template begin<dim>(); it != itend; ++it) {
@@ -403,8 +411,12 @@ IMPL_FUNC(void, fixLine(Direction dir,
   const VertexLeafIterator itend = gv.leafGridView().template end<dim>();
 
   // make a mapper for codim 0 entities in the leaf grid 
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 6)
+  Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridType> mapper(gv, Dune::mcmgVertexLayout());
+#else
   Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridType,
                                             Dune::MCMGVertexLayout> mapper(gv);
+#endif
 
   // iterate over vertices
   for (VertexLeafIterator it = gv.leafGridView().template begin<dim>(); it != itend; ++it) {
