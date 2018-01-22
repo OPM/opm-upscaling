@@ -419,8 +419,12 @@ class HexGeometry<2, cdim, GridImp>
     LocalCoordinate local(const GlobalCoordinate& y) const
     {
       const ctype epsilon = 1e-10;
+#if DUNE_VERSION_NEWER(DUNE_GEOMETRY, 2, 6)
+      auto refElement = Dune::ReferenceElements<ctype,2>::cube();
+#else
       const Dune::ReferenceElement< ctype , 2 > & refElement =
         Dune::ReferenceElements< ctype, 2 >::general(type());
+#endif
       LocalCoordinate x = refElement.position(0,0);
       LocalCoordinate dx;
       do {
