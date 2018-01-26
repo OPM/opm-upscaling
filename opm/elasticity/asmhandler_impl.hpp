@@ -117,10 +117,14 @@ void ASMHandler<GridType>::extractValues(Dune::FieldVector<double,comp>& v,
 {
   v = 0;
   const LeafIndexSet& set = gv.leafGridView().indexSet();
-  Dune::GeometryType gt = it->type();
 
+#if DUNE_VERSION_NEWER(DUNE_GEOMETRY, 2, 6)
+  auto ref = Dune::ReferenceElements<double,dim>::cube();
+#else
+  Dune::GeometryType gt = it->type();
   const Dune::template ReferenceElement<double,dim> &ref =
                       Dune::ReferenceElements<double,dim>::general(gt);
+#endif
   int vertexsize = ref.size(dim);
   int l=0;
   for (int i=0;i<vertexsize;++i) {
@@ -386,10 +390,13 @@ void ASMHandler<GridType>::determineAdjacencyPattern()
   // iterate over cells
   int cell=0;
   for (LeafIterator it = gv.leafGridView().template begin<0>(); it != itend; ++it, ++cell) {
+#if DUNE_VERSION_NEWER(DUNE_GEOMETRY, 2, 6)
+  auto ref = Dune::ReferenceElements<double,dim>::cube();
+#else
     Dune::GeometryType gt = it->type();
-
     const Dune::template ReferenceElement<double,dim>& ref =
       Dune::ReferenceElements<double,dim>::general(gt);
+#endif
 
     int vertexsize = ref.size(dim);
     for (int i=0; i < vertexsize; i++) {

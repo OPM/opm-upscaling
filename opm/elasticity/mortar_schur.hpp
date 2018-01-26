@@ -26,11 +26,13 @@ namespace Elasticity {
   template<class T>
 class MortarBlockEvaluator : public Dune::LinearOperator<Vector, Vector> {
   public:
+#if ! DUNE_VERSION_NEWER(DUNE_ISTL, 2, 6)
     // define the category
     enum {
       //! \brief The category the preconditioner is part of.
       category=Dune::SolverCategory::sequential
     };
+#endif
 
     //! \brief Constructor
     //! \param[in] Ai Solver or preconditioner for A^-1
@@ -67,6 +69,13 @@ class MortarBlockEvaluator : public Dune::LinearOperator<Vector, Vector> {
       op.post(temp);
       B.usmtv(alpha, temp, y);
     }
+
+#if DUNE_VERSION_NEWER(DUNE_ISTL, 2, 6)
+    Dune::SolverCategory::Category category() const override
+    {
+      return Dune::SolverCategory::sequential;
+    }
+#endif
   protected:
     T& Ai;            //!< Reference to solver or evaluator for inverse operator
     const Matrix& B;  //!< Reference to the mortar coupling matrix

@@ -329,8 +329,12 @@ class HexGeometry<2, cdim, GridImp>
     //! \param[in] dir The direction of the normal vector on the face
     HexGeometry(const BoundaryGrid::Quad& q, const GridImp& gv, int dir)
     {
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 6)
+      Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridImp> mapper(gv, Dune::mcmgVertexLayout());
+#else
       Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridImp,
                                            Dune::MCMGVertexLayout> mapper(gv);
+#endif
       typename GridImp::LeafGridView::template Codim<3>::Iterator start=gv.leafGridView().template begin<3>();
       const typename GridImp::LeafGridView::template Codim<3>::Iterator itend = gv.leafGridView().template end<3>();
       for (int i=0;i<4;++i) {
@@ -419,8 +423,12 @@ class HexGeometry<2, cdim, GridImp>
     LocalCoordinate local(const GlobalCoordinate& y) const
     {
       const ctype epsilon = 1e-10;
+#if DUNE_VERSION_NEWER(DUNE_GEOMETRY, 2, 6)
+      auto refElement = Dune::ReferenceElements<ctype,2>::cube();
+#else
       const Dune::ReferenceElement< ctype , 2 > & refElement =
         Dune::ReferenceElements< ctype, 2 >::general(type());
+#endif
       LocalCoordinate x = refElement.position(0,0);
       LocalCoordinate dx;
       do {

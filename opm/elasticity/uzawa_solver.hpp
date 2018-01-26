@@ -71,6 +71,14 @@ class UzawaSolver : public Dune::InverseOperator<X,Y>
       MortarUtils::injectBlock(x, u2, B.N());
       MortarUtils::injectBlock(x, lambda2, B.M(), B.N());
     }
+
+#if DUNE_VERSION_NEWER(DUNE_ISTL, 2, 6)
+    Dune::SolverCategory::Category category() const override
+    {
+      return Dune::SolverCategory::sequential;
+    }
+#endif
+
   protected:
     OperatorPtr innersolver; //!< The inner solver
     OperatorPtr outersolver; //!< The outer solver

@@ -26,11 +26,13 @@ namespace Elasticity {
 
 class MortarEvaluator : public Dune::LinearOperator<Vector, Vector> {
   public:
+#if ! DUNE_VERSION_NEWER(DUNE_ISTL, 2, 6)
     // define the category
     enum {
       //! \brief The category the preconditioner is part of.
       category=Dune::SolverCategory::sequential
     };
+#endif
 
     //! \brief Constructor
     //! \param[in] Ai Evaluator for A^-1
@@ -72,6 +74,14 @@ class MortarEvaluator : public Dune::LinearOperator<Vector, Vector> {
       for (size_t i=A.N(); i < y.size(); ++i)
         y[i] += alpha*l2[i-A.N()];
     }
+
+#if DUNE_VERSION_NEWER(DUNE_ISTL, 2, 6)
+    Dune::SolverCategory::Category category() const override
+    {
+      return Dune::SolverCategory::sequential;
+    }
+#endif
+
   protected:
     const Matrix& A; //!< Reference to A matrix
     const Matrix& B; //!< Reference to the mortar coupling matrix
