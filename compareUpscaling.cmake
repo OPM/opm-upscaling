@@ -48,7 +48,7 @@ macro (add_test_upscale_perm gridname bcs rows)
   opm_add_test(${TEST_NAME} NO_COMPILE
                EXE_NAME upscale_perm
                DRIVER_ARGS ${INPUT_DATA_PATH} ${RESULT_PATH}
-                           ${CMAKE_BINARY_DIR}/bin
+                           ${PROJECT_BINARY_DIR}/bin
                            upscale_perm_BC${bcs}_${gridname}
                            ${abstol} ${reltol} 
                TEST_ARGS -bc ${bcs}
@@ -80,7 +80,7 @@ macro (add_test_upscale_relperm testname gridname stonefiles rows cols)
   opm_add_test(${TEST_NAME} NO_COMPILE
                EXE_NAME upscale_relperm
                DRIVER_ARGS ${INPUT_DATA_PATH} ${RESULT_PATH}
-                           ${CMAKE_BINARY_DIR}/bin
+                           ${PROJECT_BINARY_DIR}/bin
                            upscale_relperm_${testname}
                            ${abstol} ${reltol}
                TEST_ARGS ${test_args})
@@ -104,7 +104,7 @@ macro (add_test_upscale_elasticity gridname method)
   opm_add_test(${TEST_NAME} NO_COMPILE
                EXE_NAME upscale_elasticity
                DRIVER_ARGS ${INPUT_DATA_PATH} ${RESULT_PATH}
-                           ${CMAKE_BINARY_DIR}/bin
+                           ${PROJECT_BINARY_DIR}/bin
                            upscale_elasticity_${method}_${gridname}
                            ${abstol} ${reltol} 
                TEST_ARGS output=${RESULT_PATH}/upscale_elasticity_${method}_${gridname}.txt
