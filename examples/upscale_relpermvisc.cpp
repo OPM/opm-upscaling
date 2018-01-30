@@ -79,7 +79,7 @@
 
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
-#include <opm/core/utility/MonotCubicInterpolator.hpp>
+#include <opm/common/utility/numeric/MonotCubicInterpolator.hpp>
 
 #include <opm/upscaling/RelPermUtils.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>

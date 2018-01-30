@@ -28,7 +28,7 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
-#include <opm/core/utility/MonotCubicInterpolator.hpp>
+#include <opm/common/utility/numeric/MonotCubicInterpolator.hpp>
 
 #include <opm/upscaling/ParserAdditions.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>

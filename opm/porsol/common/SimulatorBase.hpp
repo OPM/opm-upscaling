@@ -39,7 +39,7 @@
 
 #include <opm/common/utility/parameters/ParameterGroup.hpp>
 
-#include <opm/core/utility/SparseVector.hpp>
+#include <opm/common/utility/numeric/SparseVector.hpp>
 #include <opm/core/utility/SparseTable.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 
