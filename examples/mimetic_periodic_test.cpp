@@ -36,7 +36,7 @@
 #include "config.h"
 
 #include <opm/parser/eclipse/Units/Units.hpp>
-#include <opm/core/utility/parameters/ParameterGroup.hpp>
+#include <opm/common/utility/parameters/ParameterGroup.hpp>
 
 #include <dune/grid/CpGrid.hpp>
 
