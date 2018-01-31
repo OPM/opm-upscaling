@@ -38,8 +38,8 @@
 
 
 #include <opm/porsol/euler/EulerUpstreamResidual.hpp>
-#include <opm/core/utility/parameters/ParameterGroup.hpp>
-#include <opm/core/utility/SparseVector.hpp>
+#include <opm/common/utility/parameters/ParameterGroup.hpp>
+#include <opm/common/utility/numeric/SparseVector.hpp>
 #include <opm/porsol/mimetic/IncompFlowSolverHybrid.hpp>
 #include <opm/porsol/mimetic/MimeticIPEvaluator.hpp>
 

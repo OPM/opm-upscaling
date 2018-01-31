@@ -42,7 +42,7 @@
 
 #include <dune/grid/CpGrid.hpp>
 
-#include <opm/core/utility/parameters/ParameterGroup.hpp>
+#include <opm/common/utility/parameters/ParameterGroup.hpp>
 
 #include <opm/upscaling/initCPGrid.hpp>
 

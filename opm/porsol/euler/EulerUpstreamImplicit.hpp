@@ -38,8 +38,8 @@ along with OpenRS.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/unordered_map.hpp>
 
-#include <opm/core/utility/SparseVector.hpp>
-#include <opm/core/utility/parameters/ParameterGroup.hpp>
+#include <opm/common/utility/numeric/SparseVector.hpp>
+#include <opm/common/utility/parameters/ParameterGroup.hpp>
 
 #include <opm/porsol/common/ImplicitTransportDefs.hpp>
 #include <opm/porsol/common/BCRSMatrixBlockAssembler.hpp>

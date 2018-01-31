@@ -36,7 +36,7 @@
 #ifndef OPENRS_SETUPBOUNDARYCONDITIONS_HEADER
 #define OPENRS_SETUPBOUNDARYCONDITIONS_HEADER
 
-#include <opm/core/utility/parameters/ParameterGroup.hpp>
+#include <opm/common/utility/parameters/ParameterGroup.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/porsol/common/BoundaryConditions.hpp>
 #include <opm/porsol/common/PeriodicHelpers.hpp>

@@ -56,7 +56,7 @@
 #include <dune/grid/CpGrid.hpp>
 
 #include <opm/parser/eclipse/Units/Units.hpp>
-#include <opm/core/utility/parameters/ParameterGroup.hpp>
+#include <opm/common/utility/parameters/ParameterGroup.hpp>
 
 #include <opm/output/eclipse/EclipseGridInspector.hpp>
 

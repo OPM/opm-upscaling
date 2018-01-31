@@ -46,7 +46,7 @@
 
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
-#include <opm/core/utility/MonotCubicInterpolator.hpp>
+#include <opm/common/utility/numeric/MonotCubicInterpolator.hpp>
 
 #include <opm/porsol/common/SimulatorTraits.hpp>
 #include <opm/porsol/euler/EulerUpstreamImplicit.hpp>

@@ -16,7 +16,7 @@
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
 
 #include <dune/common/fmatrix.hh>
-#include <opm/core/utility/parameters/ParameterGroup.hpp>
+#include <opm/common/utility/parameters/ParameterGroup.hpp>
 #include <dune/grid/common/mcmgmapper.hh>
 #include <dune/geometry/quadraturerules.hh>
 #include <dune/istl/ilu.hh>

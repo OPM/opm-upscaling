@@ -19,7 +19,7 @@
 #include <opm/core/grid.h>
 #include <opm/core/transport/implicit/NormSupport.hpp>
 #include <opm/core/transport/implicit/ImplicitTransport.hpp>
-#include <opm/core/utility/parameters/ParameterGroup.hpp>
+#include <opm/common/utility/parameters/ParameterGroup.hpp>
 
 #include <opm/porsol/common/ReservoirPropertyCapillary.hpp>
 
