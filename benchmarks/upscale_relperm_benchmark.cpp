@@ -113,7 +113,6 @@
 #include <opm/upscaling/RelPermUtils.hpp>
 
 #include <opm/parser/eclipse/Units/Units.hpp>
-#include <opm/common/Unused.hpp>
 
 // Choose model:
 //   - Small: MODEL_TYPE 1  (35751 active cells, ~5 MB)
@@ -180,11 +179,6 @@ try
     // Variables used for timing/profiling:
     clock_t start, finish;
     double timeused = 0.0;
-#ifdef HAVE_MPI
-    double timeused_tesselation = 0.0;
-#else
-    OPM_UNUSED double timeused_tesselation = 0.0;
-#endif
 
     clock_t global_start = clock(); // Timing used for benchmarking
 
@@ -388,7 +382,11 @@ try
      *      constant times cell height times factor 10^-7 to obtain bars (same as p_c)
      */
 
-    timeused_tesselation = helper.tesselateGrid(deck);
+#if HAVE_MPI
+    double timeused_tesselation = helper.tesselateGrid(deck);
+#else
+    helper.tesselateGrid(deck);
+#endif
 
     /* If gravity is to be included, calculate z-values of every cell: */
     if (includeGravity)
