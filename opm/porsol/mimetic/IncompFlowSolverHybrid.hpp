@@ -39,7 +39,7 @@
 #define OPENRS_INCOMPFLOWSOLVERHYBRID_HEADER
 
 #include <opm/common/ErrorMacros.hpp>
-#include <opm/core/utility/SparseTable.hpp>
+#include <opm/grid/utility/SparseTable.hpp>
 #include <opm/porsol/common/BoundaryConditions.hpp>
 #include <opm/porsol/common/Matrix.hpp>
 

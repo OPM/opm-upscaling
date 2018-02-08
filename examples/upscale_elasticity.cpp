@@ -38,7 +38,7 @@
 
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
-#include <opm/core/utility/StopWatch.hpp>
+#include <opm/grid/utility/StopWatch.hpp>
 #include <opm/common/utility/parameters/ParameterGroup.hpp>
 
 #include <opm/elasticity/elasticity_upscale.hpp>

@@ -14,7 +14,7 @@
 
 #include "meshcolorizer.hpp"
 
-#include <dune/grid/CpGrid.hpp>
+#include <opm/grid/CpGrid.hpp>
 
 #ifdef HAVE_OPENMP
 #include <omp.h>

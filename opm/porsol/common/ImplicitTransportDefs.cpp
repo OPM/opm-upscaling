@@ -21,7 +21,7 @@
 
 #include <opm/porsol/common/ImplicitTransportDefs.hpp>
 
-#include <opm/core/grid.h>
+#include <opm/grid/UnstructuredGrid.h>
 
 #include <algorithm>
 #include <cassert>

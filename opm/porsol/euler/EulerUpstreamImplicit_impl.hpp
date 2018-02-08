@@ -40,10 +40,10 @@
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/core/utility/Average.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
-#include <dune/grid/common/Volumes.hpp>
-#include <opm/core/utility/StopWatch.hpp>
+#include <opm/grid/common/Volumes.hpp>
+#include <opm/grid/utility/StopWatch.hpp>
 #include <opm/porsol/common/ImplicitTransportDefs.hpp>
-#include <opm/core/pressure/tpfa/trans_tpfa.h>
+#include <opm/grid/transmissibility/trans_tpfa.h>
 
 #include <cmath>
 #include <algorithm>

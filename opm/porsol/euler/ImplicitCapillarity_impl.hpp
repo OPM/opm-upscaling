@@ -40,8 +40,8 @@
 #include <opm/core/utility/Average.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/common/utility/numeric/RootFinders.hpp>
-#include <opm/core/utility/StopWatch.hpp>
-#include <dune/grid/common/Volumes.hpp>
+#include <opm/grid/utility/StopWatch.hpp>
+#include <opm/grid/common/Volumes.hpp>
 #include <opm/porsol/common/ReservoirPropertyFixedMobility.hpp>
 #include <opm/porsol/euler/MatchSaturatedVolumeFunctor.hpp>
 

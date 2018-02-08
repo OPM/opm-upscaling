@@ -53,7 +53,7 @@
 
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
-#include <dune/grid/CpGrid.hpp>
+#include <opm/grid/CpGrid.hpp>
 
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/common/utility/parameters/ParameterGroup.hpp>
