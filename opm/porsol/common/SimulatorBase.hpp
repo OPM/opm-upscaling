@@ -40,11 +40,11 @@
 #include <opm/common/utility/parameters/ParameterGroup.hpp>
 
 #include <opm/common/utility/numeric/SparseVector.hpp>
-#include <opm/core/utility/SparseTable.hpp>
+#include <opm/grid/utility/SparseTable.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 
-#include <dune/grid/common/Volumes.hpp>
-#include <dune/grid/CpGrid.hpp>
+#include <opm/grid/common/Volumes.hpp>
+#include <opm/grid/CpGrid.hpp>
 
 #include <opm/porsol/common/GridInterfaceEuler.hpp>
 #include <opm/porsol/common/ReservoirPropertyCapillary.hpp>

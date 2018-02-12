@@ -38,16 +38,7 @@
 
 
 
-
-//#include <cassert>
-//#include <cmath>
-//#include <algorithm>
-
-//#include <opm/common/ErrorMacros.hpp>
 #include <opm/core/utility/Average.hpp>
-//#include <opm/parser/eclipse/Units/Units.hpp>
-//#include <dune/grid/common/Volumes.hpp>
-
 #include <opm/porsol/common/Matrix.hpp>
 
 #ifdef USE_TBB

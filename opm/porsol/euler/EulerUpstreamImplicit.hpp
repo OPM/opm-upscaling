@@ -44,7 +44,7 @@ along with OpenRS.  If not, see <http://www.gnu.org/licenses/>.
 #include <opm/porsol/common/ImplicitTransportDefs.hpp>
 #include <opm/porsol/common/BCRSMatrixBlockAssembler.hpp>
 
-#include <dune/grid/common/GridAdapter.hpp>
+#include <opm/grid/common/GridAdapter.hpp>
 
 #include <opm/core/transport/implicit/ImplicitAssembly.hpp>
 #include <opm/core/transport/implicit/ImplicitTransport.hpp>

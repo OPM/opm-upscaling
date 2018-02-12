@@ -20,7 +20,7 @@
 #ifndef INIT_CPGRID_HPP
 #define INIT_CPGRID_HPP
 
-#include <dune/grid/CpGrid.hpp>
+#include <opm/grid/CpGrid.hpp>
 #include <opm/common/utility/parameters/ParameterGroup.hpp>
 
 namespace Opm {

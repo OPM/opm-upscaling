@@ -39,7 +39,7 @@
 #include <opm/upscaling/UpscalerBase.hpp>
 #include <opm/porsol/euler/EulerUpstream.hpp>
 #include <opm/porsol/euler/ImplicitCapillarity.hpp>
-#include <dune/grid/common/GridAdapter.hpp>
+#include <opm/grid/common/GridAdapter.hpp>
 #include <array>
 
 namespace Opm

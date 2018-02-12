@@ -14,9 +14,9 @@
 
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
-#include <dune/grid/common/GridAdapter.hpp>
+#include <opm/grid/common/GridAdapter.hpp>
 
-#include <opm/core/grid.h>
+#include <opm/grid/UnstructuredGrid.h>
 #include <opm/core/transport/implicit/NormSupport.hpp>
 #include <opm/core/transport/implicit/ImplicitTransport.hpp>
 #include <opm/common/utility/parameters/ParameterGroup.hpp>

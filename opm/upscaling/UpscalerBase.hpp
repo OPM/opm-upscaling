@@ -39,7 +39,7 @@
 
 #include <opm/common/utility/parameters/ParameterGroup.hpp>
 
-#include <dune/grid/CpGrid.hpp>
+#include <opm/grid/CpGrid.hpp>
 
 #include <opm/porsol/common/GridInterfaceEuler.hpp>
 #include <opm/porsol/common/BoundaryConditions.hpp>

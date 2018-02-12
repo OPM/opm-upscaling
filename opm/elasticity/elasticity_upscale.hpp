@@ -22,7 +22,7 @@
 #include <dune/istl/ilu.hh>
 #include <dune/istl/solvers.hh>
 #include <dune/istl/preconditioners.hh>
-#include <dune/grid/CpGrid.hpp>
+#include <opm/grid/CpGrid.hpp>
 #include <opm/elasticity/shapefunctions.hpp>
 
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>

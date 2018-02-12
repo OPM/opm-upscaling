@@ -51,10 +51,10 @@
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 #include <opm/common/utility/parameters/ParameterGroup.hpp>
-#include <opm/core/utility/StopWatch.hpp>
+#include <opm/grid/utility/StopWatch.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 
-#include <dune/grid/CpGrid.hpp>
+#include <opm/grid/CpGrid.hpp>
 
 #include <opm/porsol/common/BoundaryConditions.hpp>
 #include <opm/porsol/common/GridInterfaceEuler.hpp>

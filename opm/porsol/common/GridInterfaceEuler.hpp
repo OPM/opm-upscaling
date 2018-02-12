@@ -36,9 +36,9 @@
 #ifndef OPENRS_GRIDINTERFACEEULER_HEADER
 #define OPENRS_GRIDINTERFACEEULER_HEADER
 
-#include <opm/core/utility/SparseTable.hpp>
-#include <opm/core/utility/StopWatch.hpp>
-#include <dune/grid/CpGrid.hpp> // How to avoid this? Needed for the explicit mapper specialization below.
+#include <opm/grid/utility/SparseTable.hpp>
+#include <opm/grid/utility/StopWatch.hpp>
+#include <opm/grid/CpGrid.hpp> // How to avoid this? Needed for the explicit mapper specialization below.
 
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
 
