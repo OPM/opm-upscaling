@@ -24,7 +24,10 @@ set (opm-upscaling_DEPS
   "dune-grid REQUIRED"
   "opm-common REQUIRED"
   "opm-grid REQUIRED"
-  "opm-output REQUIRED"
   )
 
 find_package_deps(opm-upscaling)
+
+if(NOT HAVE_ECL_INPUT OR NOT HAVE_ECL_OUTPUT)
+  message(FATAL_ERROR "Eclipse input/output support required in opm-common")
+endif()
