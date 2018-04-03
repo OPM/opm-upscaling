@@ -38,6 +38,6 @@ parseRevisions
 printHeader opm-upscaling
 
 # Setup opm-data
-source $WORKSPACE/deps/opm-common/jenkins/setup-opm-data.sh
+source $WORKSPACE/deps/opm-common/jenkins/setup-opm-tests.sh
 
 build_module_full opm-upscaling
