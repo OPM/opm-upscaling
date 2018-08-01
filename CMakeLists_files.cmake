@@ -80,6 +80,7 @@ list (APPEND TEST_DATA_FILES
   tests/input_data/reference_solutions/upscale_elasticity_mortar_EightCells.txt
   tests/input_data/reference_solutions/upscale_elasticity_mpc_EightCells.txt
   tests/input_data/reference_solutions/upscale_elasticity_mortar_EightCells.txt
+  tests/input_data/reference_solutions/cpchop_PeriodicTilted.txt
 )
 
 # originally generated with the command:
