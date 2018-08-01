@@ -40,14 +40,10 @@ namespace Opm
     class CornerPointChopper
     {
     public:
-        CornerPointChopper(const std::string& file)
+        CornerPointChopper(const std::string& file) :
+          deck_(Parser{}.parseFile(file, ParseContext{})),
+          metricUnits_(Opm::UnitSystem::newMETRIC())
         {
-            Opm::ParseContext parseContext;
-            Opm::Parser parser;
-            deck_ = parser.parseFile(file , parseContext);
-
-            metricUnits_ = Opm::UnitSystem::newMETRIC();
-
             const auto& specgridRecord = deck_.getKeyword("SPECGRID").getRecord(0);
             dims_[0] = specgridRecord.getItem("NX").get< int >(0);
             dims_[1] = specgridRecord.getItem("NY").get< int >(0);

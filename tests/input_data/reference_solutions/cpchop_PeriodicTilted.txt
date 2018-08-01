@@ -1,0 +1,16 @@
+################################################################################################
+# Results from property analysis on subsamples
+#
+# Finished: Wed Aug  1 11:33:00 2018
+# Hostname: akvalung
+#
+# Options used:
+#     gridfilename: /home/akva/kode/opm/opm-upscaling/build/tests/input_data/grids/PeriodicTilted.grdecl
+#   i; min,len,max: 0 20 20
+#   j; min,len,max: 0 20 20
+#   z; min,len,max: 0 40 40
+#       subsamples: 1
+#      (auto) seed: 1533115973
+################################################################################################
+# id          porosity                 permx                   permy                   permz
+1	      0.33999965	       409.26845	       549.99606	       238.51632	

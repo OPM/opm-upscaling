@@ -93,6 +93,7 @@ try
     std::string bc = param.getDefault<std::string>("bc", "fixed");
     bool resettoorigin = param.getDefault("resettoorigin", true);
     boost::mt19937::result_type userseed = param.getDefault("seed", 0);
+    bool use_random = param.getDefault("use_random", true);
 
     int outputprecision = param.getDefault("outputprecision", 8);
     std::string filebase = param.getDefault<std::string>("filebase", "");
@@ -282,7 +283,7 @@ try
     // Note that end is included in interval for uniform_int.
     boost::uniform_int<> disti(imin, imax - ilen);
     boost::uniform_int<> distj(jmin, jmax - jlen);
-    boost::uniform_real<> distz(zmin, std::max(zmax - zlen, zmin));
+    boost::uniform_real<> distz(zmin, std::max(zmax - zlen, zmin+1e-6));
     boost::variate_generator<boost::mt19937&, boost::uniform_int<> > ri(gen, disti);
     boost::variate_generator<boost::mt19937&, boost::uniform_int<> > rj(gen, distj);
     boost::variate_generator<boost::mt19937&, boost::uniform_real<> > rz(gen, distz);
@@ -310,9 +311,9 @@ try
 
     int finished_subsamples = 0; // keep explicit count of successful subsamples
     for (int sample = 1; sample <= subsamples; ++sample) {
-        int istart = ri();
-        int jstart = rj();
-        double zstart = rz();
+        int istart = use_random ? ri() : 0;
+        int jstart = use_random ? rj() : 0;
+        double zstart = use_random ? rz() : zmin;
         ch.chop(istart, istart + ilen, jstart, jstart + jlen, zstart, zstart + zlen, resettoorigin);
         std::string subsampledgrdecl = filebase;
 

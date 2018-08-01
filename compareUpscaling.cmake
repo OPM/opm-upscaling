@@ -30,11 +30,11 @@ set(BASE_RESULT_PATH ${PROJECT_BINARY_DIR}/tests/results)
 set(INPUT_DATA_PATH ${PROJECT_BINARY_DIR}/tests/input_data)
 
 ###########################################################################
-# TEST: upscale_perm 
+# TEST: upscale_perm
 ###########################################################################
 
 # Define macro that performs the two steps mentioned above for upscale_perm
-# Input: 
+# Input:
 #   - gridname: basename (no extension) of grid model
 #   - bcs: Boundary condition type (f, l or p, or combinations of these)
 #   - rows: Number of rows in result file that is to be compared
@@ -50,18 +50,18 @@ macro (add_test_upscale_perm gridname bcs rows)
                DRIVER_ARGS ${INPUT_DATA_PATH} ${RESULT_PATH}
                            ${PROJECT_BINARY_DIR}/bin
                            upscale_perm_BC${bcs}_${gridname}
-                           ${abstol} ${reltol} 
+                           ${abstol} ${reltol}
                TEST_ARGS -bc ${bcs}
                          -output ${RESULT_PATH}/upscale_perm_BC${bcs}_${gridname}.txt
                          ${INPUT_DATA_PATH}/grids/${gridname}.grdecl)
 endmacro (add_test_upscale_perm)
 
 ###########################################################################
-# TEST: upscale_relperm 
+# TEST: upscale_relperm
 ###########################################################################
 
 # Define macro that performs the two steps mentioned above for upscale_relperm
-# Input: 
+# Input:
 #   - gridname: basename (no extension) of grid model
 #   - rows: Number of rows in result file that is to be compared
 # This macro assumes that ${gridname}.grdecl is found in directory ${INPUT_DATA_PATH}grids/
@@ -91,7 +91,7 @@ endmacro ()
 ###########################################################################
 
 # Define macro that performs the two steps mentioned above for upscale_elasticity
-# Input: 
+# Input:
 #   - gridname: basename (no extension) of grid model
 #   - method: method to apply
 # This macro assumes that ${gridname}.grdecl is found in directory ${INPUT_DATA_PATH}grids/
@@ -106,12 +106,35 @@ macro (add_test_upscale_elasticity gridname method)
                DRIVER_ARGS ${INPUT_DATA_PATH} ${RESULT_PATH}
                            ${PROJECT_BINARY_DIR}/bin
                            upscale_elasticity_${method}_${gridname}
-                           ${abstol} ${reltol} 
+                           ${abstol} ${reltol}
                TEST_ARGS output=${RESULT_PATH}/upscale_elasticity_${method}_${gridname}.txt
                          gridfilename=${INPUT_DATA_PATH}/grids/${gridname}.grdecl
                          output_wave_speeds=true
                          method=${method})
-endmacro (add_test_upscale_elasticity gridname method rows)
+endmacro ()
+
+# TEST: cpchop
+###########################################################################
+
+# Define macro that performs the two steps mentioned above for cpchop
+# Input:
+#   - gridname: basename (no extension) of grid model
+# This macro assumes that ${gridname}.grdecl is found in directory ${INPUT_DATA_PATH}grids/
+# and that cpcho_${gridname}.txt is found in ${INPUT_DATA_PATH}reference_solutions
+macro (add_test_cpchop gridname)
+  # Add test that runs cpchop and outputs the results to file
+  # Ensure unique output folder per test (because this folder is deleted in the test driver script)
+  set(TEST_NAME cpchop_${gridname})
+  set(RESULT_PATH ${BASE_RESULT_PATH}/${TEST_NAME})
+  opm_add_test(${TEST_NAME} NO_COMPILE
+               EXE_NAME cpchop
+               DRIVER_ARGS ${INPUT_DATA_PATH} ${RESULT_PATH}
+                           ${PROJECT_BINARY_DIR}/bin
+                           cpchop_${gridname}
+                           ${abstol} ${reltol}
+               TEST_ARGS resultfile=${RESULT_PATH}/cpchop_${gridname}.txt use_random=false
+                         gridfilename=${INPUT_DATA_PATH}/grids/${gridname}.grdecl)
+endmacro ()
 
 # Make sure that we build the helper executable before running tests
 # (the "tests" target is setup in OpmLibMain.cmake)
@@ -160,3 +183,5 @@ if((DUNE_ISTL_VERSION_MAJOR GREATER 2) OR
   add_test_upscale_elasticity(EightCells mpc)
   add_test_upscale_elasticity(EightCells mortar)
 endif()
+
+add_test_cpchop(PeriodicTilted)
