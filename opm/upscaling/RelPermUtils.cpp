@@ -701,7 +701,8 @@ void RelPermUpscaleHelper::calculateCellPressureGradients()
             grid.getIJK(ix, ijk);
             mt.activateCell(ijk);
 
-            const auto& cc = c->geometry().center();
+            const auto & geom = c->geometry(); //geometry() returns a copy that now lives on.
+            const auto & cc = geom.center();
             celldepth[ix]  = cc[ cc.size() - 1 ];
         }
     }
