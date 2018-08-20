@@ -384,7 +384,7 @@ int run(Params& p)
     }
 #endif
 
-#pragma omp parallel for schedule(static)
+//#pragma omp parallel for schedule(static)
     for (int i=0;i<6;++i) {
       std::cout << "processing case " << i+1 << "..." << std::endl;
       if (p.inspect == "results") {

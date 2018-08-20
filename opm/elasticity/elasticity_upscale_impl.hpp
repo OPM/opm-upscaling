@@ -991,7 +991,7 @@ IMPL_FUNC(void, setupSolvers(const LinSolParams& params))
             pc[i].reset(new AMG2Level<SSORSmoother>::type(*mpc));
         }
         for (int t=0;t<5;++t) {
-#pragma omp parallel for schedule(static)
+//#pragma omp parallel for schedule(static)
           for (int i=help.group(t).first; i < help.group(t).second; ++i)
             applyMortarBlock(i, B, T, *pc[copy?i:0]);
 
