@@ -38,7 +38,6 @@
 #include <opm/upscaling/RelPermUtils.hpp>
 #undef  UNITTEST_TRESPASS_PRIVATE_PROPERTY_DP
 
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
@@ -412,7 +411,7 @@ PORO
                 Opm::RelPermUpscaleHelper helper{mpi_rank, options};
                 {
                     auto parse = Opm::Parser{};
-                    auto deck  = parse.parseString(input, Opm::ParseContext{});
+                    auto deck  = parse.parseString(input);
 
                     const auto minPerm = 0;      // mD
                     const auto maxPerm = 10.0e3; // mD

@@ -37,7 +37,6 @@
 #include <opm/common/ErrorMacros.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 #include <opm/grid/CpGrid.hpp>
@@ -60,8 +59,7 @@ void Opm::initCPGrid(Dune::CpGrid& grid, const Opm::ParameterGroup& param) {
         bool periodic_extension = param.getDefault<bool>("periodic_extension", false);
         bool turn_normals = param.getDefault<bool>("turn_normals", false);
         Opm::Parser parser;
-        Opm::ParseContext parseContext;
-        auto deck = parser.parseFile(filename, parseContext);
+        auto deck = parser.parseFile(filename);
         Opm::EclipseGrid inputGrid(deck);
         grid.processEclipseFormat(inputGrid, periodic_extension , turn_normals );
     } else if (fileformat == "cartesian") {

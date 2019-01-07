@@ -21,7 +21,6 @@
 #define OPM_CORNERPOINTCHOPPER_HEADER_INCLUDED
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -41,7 +40,7 @@ namespace Opm
     {
     public:
         CornerPointChopper(const std::string& file) :
-          deck_(Parser{}.parseFile(file, ParseContext{})),
+          deck_(Parser{}.parseFile(file)),
           metricUnits_(Opm::UnitSystem::newMETRIC())
         {
             const auto& specgridRecord = deck_.getKeyword("SPECGRID").getRecord(0);

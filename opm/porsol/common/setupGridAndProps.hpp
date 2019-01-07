@@ -41,7 +41,6 @@
 #include <opm/grid/CpGrid.hpp>
 #include <opm/porsol/common/ReservoirPropertyCapillary.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
@@ -82,9 +81,8 @@ namespace Opm
         } else if (fileformat == "eclipse") {
             std::string ecl_file = param.get<std::string>("filename");
 
-            Opm::ParseContext parseContext;
             Opm::Parser parser;
-            auto deck = parser.parseFile(ecl_file , parseContext);
+            auto deck = parser.parseFile(ecl_file);
             if (param.has("z_tolerance")) {
                 std::cerr << "****** Warning: z_tolerance parameter is obsolete, use PINCH in deck input instead\n";
             }
