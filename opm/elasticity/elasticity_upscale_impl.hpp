@@ -19,7 +19,6 @@
 #endif
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
 namespace Opm {
 namespace Elasticity {
@@ -605,8 +604,7 @@ IMPL_FUNC(void, loadMaterialsFromGrid(const std::string& file))
     Poiss.insert(Poiss.begin(),cells,0.38f);
   } else {
     Opm::Parser parser;
-    Opm::ParseContext parseContext;
-    auto deck = parser.parseFile(file , parseContext);
+    auto deck = parser.parseFile(file);
     if (deck.hasKeyword("YOUNGMOD") && deck.hasKeyword("POISSONMOD")) {
       Emod = deck.getKeyword("YOUNGMOD").getRawDoubleData();
       Poiss = deck.getKeyword("POISSONMOD").getRawDoubleData();
@@ -766,8 +764,7 @@ IMPL_FUNC(void, loadMaterialsFromRocklist(const std::string& file,
     }
   } else {
     Opm::Parser parser;
-    Opm::ParseContext parseContext;
-    auto deck = parser.parseFile(file , parseContext);
+    auto deck = parser.parseFile(file);
     std::vector<int> satnum = deck.getKeyword("SATNUM").getIntData();
     std::vector<int> cells = gv.globalCell();
     for (size_t i=0;i<cells.size();++i) {

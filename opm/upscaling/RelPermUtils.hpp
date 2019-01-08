@@ -24,7 +24,6 @@
 #ifndef OPM_UPSCALING_RELPERM_UTILS_HPP
 #define OPM_UPSCALING_RELPERM_UTILS_HPP
 
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
@@ -194,7 +193,7 @@ namespace Opm {
     auto parser = Parser{};
     addNonStandardUpscalingKeywords(parser);
 
-    return parser.parseFile(eclipseFileName, ParseContext{});
+    return parser.parseFile(eclipseFileName);
   }
 }
 

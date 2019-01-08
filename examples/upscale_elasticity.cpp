@@ -33,7 +33,6 @@
 #endif
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
@@ -299,9 +298,8 @@ int run(Params& p)
       cellsize[2] = p.max[2] > -1?p.max[2]/cells[2]:1.0;
       grid.createCartesian(cells,cellsize);
     } else {
-        Opm::ParseContext parseContext;
         Opm::Parser parser;
-        auto deck = parser.parseFile(p.file , parseContext);
+        auto deck = parser.parseFile(p.file);
         Opm::EclipseGrid inputGrid(deck);
         grid.processEclipseFormat(inputGrid, false);
     }

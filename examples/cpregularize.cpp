@@ -35,7 +35,6 @@
 
 #include <config.h>
 
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
@@ -132,10 +131,9 @@ try
     std::vector<double> permz;
 
 
-    Opm::ParseContext parseMode;
     // Original x/y resolution in terms of coordinate values (not indices)
     Opm::Parser parser;
-    auto deck = parser.parseFile(gridfilename , parseMode); // TODO: REFACTOR!!!! it is stupid to parse this again
+    auto deck = parser.parseFile(gridfilename); // TODO: REFACTOR!!!! it is stupid to parse this again
     Opm::EclipseGridInspector gridinspector(deck);
     std::array<double, 6> gridlimits=gridinspector.getGridLimits();
     double finegridxresolution = (gridlimits[1]-gridlimits[0])/dims[0];

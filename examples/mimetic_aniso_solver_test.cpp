@@ -36,7 +36,6 @@
 #include "config.h"
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
@@ -210,9 +209,7 @@ try
 
     auto parser = std::make_shared<Opm::Parser>();
 
-    const Opm::Deck&
-        deck(parser->parseFile(param.get<std::string>("filename"),
-                               Opm::ParseContext()));
+    const Opm::Deck& deck(parser->parseFile(param.get<std::string>("filename")));
 
     // Make a grid
     Dune::CpGrid grid;

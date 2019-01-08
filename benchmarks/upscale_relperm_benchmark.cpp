@@ -264,8 +264,7 @@ try
     Opm::Parser parser;
     stringstream gridstringstream(stringstream::in | stringstream::out);
     inflate (eclipseInput, sizeof (eclipseInput) / sizeof (eclipseInput[0]), gridstringstream);
-    Opm::ParseContext mode;
-    auto deck = parser.parseString(gridstringstream.str(), mode);
+    auto deck = parser.parseString(gridstringstream.str());
 
     finish = clock();   timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
     if (helper.isMaster) cout << " (" << timeused <<" secs)" << endl;
