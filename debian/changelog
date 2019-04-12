@@ -1,23 +1,5 @@
-opm-upscaling (2013.10-2~precise) precise; urgency=low
+opm-upscaling (2019.04-rc1-1~xenial) xenial; urgency=low
 
   * New release
 
  -- Arne Morten Kvarving <arne.morten.kvarving@sintef.no>  Tue, 22 Oct 2013 12:21:11 +0200
-
-opm-upscaling (2013.03-3) precise; urgency=low
-
-  * Fix dependencies for -bin package
-
- -- Arne Morten Kvarving <arne.morten.kvarving@sintef.no>  Mon, 08 Apr 2013 17:08:46 +0200
-
-opm-upscaling (2013.03-2) precise; urgency=low
-
-  * Updated to be compatible with launchpad+precise
-
- -- Arne Morten Kvarving <arne.morten.kvarving@sintef.no>  Tue, 02 Apr 2013 14:07:04 +0200
-
-opm-upscaling (2013.03-1) precise; urgency=low
-
-  * Initial release
-
- -- Arne Morten Kvarving <arne.morten.kvarving@sintef.no>  Mon, 14 Jan 2013 15:33:54 +0100

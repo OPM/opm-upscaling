@@ -2,10 +2,10 @@
 # spec file for package opm-upscaling
 #
 
-%define tag final
+%define tag rc1
 
 Name:           opm-upscaling
-Version:        2018.10
+Version:        2019.04
 Release:        0
 Summary:        Open Porous Media - upscaling library
 License:        GPL-3.0
