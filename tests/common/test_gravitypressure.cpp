@@ -406,7 +406,7 @@ PORO
 
                 int m_argc = boost::unit_test::framework::master_test_suite().argc;
                 char** m_argv = boost::unit_test::framework::master_test_suite().argv;
-                Dune::MPIHelper& mhelper = Dune::MPIHelper::instance(m_argc, m_argv);
+                Dune::MPIHelper::instance(m_argc, m_argv);
 
                 Opm::RelPermUpscaleHelper helper{mpi_rank, options};
                 {
