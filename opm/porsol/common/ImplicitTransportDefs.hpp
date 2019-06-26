@@ -135,9 +135,9 @@ namespace Opm {
                   class PC ,
                   class DPC>
         void
-        pc(int c, const Sat& s, PC& pc, DPC& dpc) const {
+        pc(int c, const Sat& s, PC& pc_arg, DPC& dpc) const {
             const double s1 = s[0];
-            pc  = r_.capillaryPressure(c, s1);
+            pc_arg  = r_.capillaryPressure(c, s1);
             dpc = r_.capillaryPressureDeriv(c, s1);
         }
 
