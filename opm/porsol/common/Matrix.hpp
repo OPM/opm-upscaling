@@ -424,8 +424,8 @@ namespace Opm {
         ///    Initial matrix data.  Interpretation of this data is
         ///    dependent upon the @code StoragePolicy @endcode.
         template <typename DataPointer>
-        FullMatrix(int rows, int cols, DataPointer data)
-            : StoragePolicy<T>(rows * cols, data),
+        FullMatrix(int rows, int cols, DataPointer data_arg)
+            : StoragePolicy<T>(rows * cols, data_arg),
               OrderingPolicy(rows, cols)
         {}
 

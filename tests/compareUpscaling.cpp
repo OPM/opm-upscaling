@@ -29,7 +29,7 @@
 
 void readData(const char* fileName, std::vector<double> &dataVec){
     std::ifstream inFile (fileName, std::ifstream::in);
-    std::string line, value; 
+    std::string line, value;
     if(inFile.fail()){
         std::string fname = fileName;
         std::cout << "Could not open file " + fname << std::endl;
@@ -49,20 +49,20 @@ void startTest(const char* testFile, const char* compareFile,  double absoluteTo
     std::vector<double> testVec, compareVec;
     readData(testFile, testVec);
     readData(compareFile, compareVec);
-  
+
     if(testVec.size()!= compareVec.size()){
 	OPM_THROW(std::invalid_argument, "The upscaling files do not have the same number of values.");
     }
-  
-    double absDev, relDev; 
+
+    double absDev, relDev;
     for (size_t i = 0; i < testVec.size(); i++){
 
-	absDev = std::abs(testVec[i]-compareVec[i]); 
+	absDev = std::abs(testVec[i]-compareVec[i]);
 	relDev = absDev/double(std::max(std::abs(testVec[i]),std::abs(compareVec[i])));
 	
 	if (relDev > relativeTolerance && absDev > absoluteTolerance){
-	    for(size_t i = 0; i < testVec.size(); i++){
-		std::cout << "For data value " << i << "- The relative deviation is "<< relDev << " greater than the limit "<< relativeTolerance << std::endl; 
+	    for(auto val : testVec) {
+		std::cout << "For data value " << val << "- The relative deviation is "<< relDev << " greater than the limit "<< relativeTolerance << std::endl;
 		OPM_THROW(std::invalid_argument, "The relative deviation exceeded the limit.");
 	    }
 	}
@@ -73,13 +73,13 @@ void startTest(const char* testFile, const char* compareFile,  double absoluteTo
 
 
 void printHelp(){
-    std::cout << "The function takes four arguments: \n 1) Path to file 1 \n 2) Path to file 2 \n 3) The maximum absolute deviation that is acceptable. \n 4) The maximum relative deviation that is acceptable." << std::endl; 
+    std::cout << "The function takes four arguments: \n 1) Path to file 1 \n 2) Path to file 2 \n 3) The maximum absolute deviation that is acceptable. \n 4) The maximum relative deviation that is acceptable." << std::endl;
 }
 
 int main(int argc, const char ** argv){
     if(argc!=5){
 	printHelp();
-	return EXIT_FAILURE; 
+	return EXIT_FAILURE;
     }
     const char* testFileName = argv[1];
     const char* checkFileName = argv[2];
@@ -89,9 +89,9 @@ int main(int argc, const char ** argv){
 	startTest(testFileName, checkFileName, absoluteTolerance, relativeTolerance);
     }
     catch(std::exception& e){
-	std::cout << e.what() << std::endl; 
+	std::cout << e.what() << std::endl;
 	return EXIT_FAILURE;
     }
-  
+
     return 0;
 }

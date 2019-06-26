@@ -29,9 +29,9 @@ public:
   //! \param[in] ID      External material number
   //! \param[in] Emod    Young's modulus
   //! \param[in] Poisson Poisson's ratio
-  //! \param[in] rho     Mass density
-  Isotropic(int ID, double Emod, double Poisson, double rho = 0.0)
-    : Material(ID,rho)
+  //! \param[in] rho_    Mass density
+  Isotropic(int ID, double Emod, double Poisson, double rho_= 0.0)
+    : Material(ID,rho_)
   {
     E = Emod;
     nu = Poisson;

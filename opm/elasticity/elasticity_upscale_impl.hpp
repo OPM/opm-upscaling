@@ -312,7 +312,7 @@ IMPL_FUNC(void, assembleBBlockMortar(const BoundaryGrid& b1,
 
   // do the assembly loop
   typename Dune::QuadratureRule<ctype,2>::const_iterator r;
-  Dune::DynamicMatrix<ctype> E(ubasis.n,(n1+1)*(n2+1),0.0);
+  Dune::DynamicMatrix<ctype> lE(ubasis.n,(n1+1)*(n2+1),0.0);
   LoggerHelper help(interface.size(), 5, 1000);
   for (int g=0;g<5;++g) {
     for (int p=help.group(g).first;p<help.group(g).second;++p) {
@@ -321,7 +321,7 @@ IMPL_FUNC(void, assembleBBlockMortar(const BoundaryGrid& b1,
       for (size_t q=0;q<b1.colSize(p);++q) {
         const BoundaryGrid::Quad& qu = b1.getQuad(p,q);
         HexGeometry<2,2,GridType> hex(qu,gv,dir);
-        E = 0;
+        lE = 0;
         for (r = rule.begin(); r != rule.end();++r) {
           ctype detJ = hex.integrationElement(r->position());
           if (detJ < 0)
@@ -332,8 +332,8 @@ IMPL_FUNC(void, assembleBBlockMortar(const BoundaryGrid& b1,
           assert(loc[0] <= 1.0+1.e-4 && loc[0] >= 0.0 && loc[1] <= 1.0+1.e-4 && loc[1] >= 0.0);
           for (int i=0;i<ubasis.n;++i) {
             for (int j=0;j<lbasis.size();++j) {
-              E[i][j] += ubasis[i].evaluateFunction(r->position())*
-                         lbasis[j].evaluateFunction(loc)*detJ*r->weight();
+              lE[i][j] += ubasis[i].evaluateFunction(r->position())*
+                          lbasis[j].evaluateFunction(loc)*detJ*r->weight();
             }
           }
         }
@@ -349,7 +349,7 @@ IMPL_FUNC(void, assembleBBlockMortar(const BoundaryGrid& b1,
                   for (size_t j=0;j<lnodes[p].size();++j) {
                     int indexj = lnodes[p][j]*3+d;
                     if (indexj > -1)
-                      B[indexi][indexj+colofs] += alpha*E[i][j];
+                      B[indexi][indexj+colofs] += alpha*lE[i][j];
                   }
                 }
               }
@@ -359,7 +359,7 @@ IMPL_FUNC(void, assembleBBlockMortar(const BoundaryGrid& b1,
                 for (size_t j=0;j<lnodes[p].size();++j) {
                   int indexj = lnodes[p][j]*3+d;
                   if (indexj > -1)
-                    B[indexi][indexj+colofs] += alpha*E[i][j];
+                    B[indexi][indexj+colofs] += alpha*lE[i][j];
                 }
               }
             }
@@ -513,18 +513,18 @@ IMPL_FUNC(void, assemble(int loadcase, bool matrix))
             std::cout << " - Consider setting ctol larger than " << zdiff << std::endl;
           }
 
-          Dune::FieldMatrix<ctype,comp,dim*bfunc> B;
-          E.getBmatrix(B,r->position(),jacInvTra);
+          Dune::FieldMatrix<ctype,comp,dim*bfunc> lB;
+          E.getBmatrix(lB,r->position(),jacInvTra);
 
           if (matrix) {
-            E.getStiffnessMatrix(Aq,B,C,detJ*r->weight());
+            E.getStiffnessMatrix(Aq,lB,C,detJ*r->weight());
             K += Aq;
           }
 
           // load vector
           if (EP) {
             Dune::FieldVector<ctype,dim*bfunc> temp;
-            temp = Dune::FMatrixHelp::multTransposed(B,Dune::FMatrixHelp::mult(C,eps0));
+            temp = Dune::FMatrixHelp::multTransposed(lB,Dune::FMatrixHelp::mult(C,eps0));
             temp *= -detJ*r->weight();
             ES += temp;
           }
@@ -573,11 +573,11 @@ IMPL_FUNC(template<int comp> void,
 
       volume += detJ*r->weight();
 
-      Dune::FieldMatrix<ctype,comp,dim*bfunc> B;
-      E.getBmatrix(B,r->position(),jacInvTra);
+      Dune::FieldMatrix<ctype,comp,dim*bfunc> lB;
+      E.getBmatrix(lB,r->position(),jacInvTra);
 
       Dune::FieldVector<ctype,comp> s;
-      E.getStressVector(s,v,eps0,B,C);
+      E.getStressVector(s,v,eps0,lB,C);
       s *= detJ*r->weight();
       sigma += s;
     }
@@ -745,8 +745,8 @@ IMPL_FUNC(void, loadMaterialsFromRocklist(const std::string& file,
     for (size_t i=0;i<cache.size();++i)
       Emin = std::min(Emin,((Isotropic*)cache[i].get())->getE());
     for (size_t i=0;i<cache.size();++i) {
-      double E = ((Isotropic*)cache[i].get())->getE();
-      ((Isotropic*)cache[i].get())->setE(E*Escale/Emin);
+      double lE = ((Isotropic*)cache[i].get())->getE();
+      ((Isotropic*)cache[i].get())->setE(lE*Escale/Emin);
     }
   }
   std::vector<double> volume;
