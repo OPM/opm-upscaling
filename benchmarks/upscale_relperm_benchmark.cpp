@@ -172,7 +172,11 @@ static void inflate (const unsigned char* input, const int size, stringstream& o
     io::copy (filter, output);
 }
 
+#ifdef HAVE_MPI
 int main(int varnum, char** vararg)
+#else
+int main(int varnum, char**)
+#endif
 try
 {
 
