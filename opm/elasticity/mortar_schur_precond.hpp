@@ -62,7 +62,7 @@ class MortarSchurPre : public Dune::Preconditioner<Vector,Vector> {
     }
 
     //! \brief Preprocess preconditioner
-    virtual void pre(Vector& x, Vector& b)
+    void pre(Vector& x, Vector& b) override
     {
       // extract displacement DOFs
       Vector tempx, tempb;
@@ -76,7 +76,7 @@ class MortarSchurPre : public Dune::Preconditioner<Vector,Vector> {
     //! \brief Applies the preconditioner
     //! \param[out] v The resulting vector
     //! \param[in] d The vector to apply the preconditioner to
-    virtual void apply(Vector& v, const Vector& d)
+    void apply(Vector& v, const Vector& d) override
     {
       // multiplier block (second row)
       Vector temp;
@@ -99,7 +99,7 @@ class MortarSchurPre : public Dune::Preconditioner<Vector,Vector> {
     }
 
     //! \brief Dummy post-process function
-    virtual void post(Vector& x)
+    void post(Vector& x) override
     {
       Apre.post(x);
     }

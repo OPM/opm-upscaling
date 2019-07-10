@@ -46,7 +46,7 @@ class MortarBlockEvaluator : public Dune::LinearOperator<Vector, Vector> {
     //! \brief Apply the multiplier block
     //! \param[in] x The vector to apply the operator to
     //! \param[out] y The result of the operator evaluation
-    void apply(const Vector& x, Vector& y) const
+    void apply(const Vector& x, Vector& y) const override
     {
       y = 0;
       applyscaleadd(1.0, x, y);
@@ -56,7 +56,7 @@ class MortarBlockEvaluator : public Dune::LinearOperator<Vector, Vector> {
     //! \param[in] alpha The scalar to scale with
     //! \param[in] x The vector to apply the operator to
     //! \param[out] y The result of the operator evaluation
-    void applyscaleadd(field_type alpha, const Vector& x, Vector& y) const
+    void applyscaleadd(field_type alpha, const Vector& x, Vector& y) const override
     {
       Vector temp1(B.N());
       B.mv(x, temp1);
