@@ -1393,8 +1393,8 @@ namespace Opm {
             // Adapted from DuMux...
             Scalar residTol = residual_tolerance;
 
-            typedef Dune::BCRSMatrix <MatrixBlockType>        Matrix;
-            typedef Dune::BlockVector<VectorBlockType>        Vector;
+            typedef Dune::BCRSMatrix <MatrixBlockType>        MatrixT;
+            typedef Dune::BlockVector<VectorBlockType>        VectorT;
             typedef Dune::MatrixAdapter<Matrix,Vector,Vector> Adapter;
 
             // Regularize the matrix (only for pure Neumann problems...)
@@ -1404,11 +1404,11 @@ namespace Opm {
             Adapter opS(S_);
 
             // Construct preconditioner.
-            Dune::SeqILU0<Matrix,Vector,Vector> precond(S_, 1.0);
+            Dune::SeqILU0<MatrixT,VectorT,VectorT> precond(S_, 1.0);
 
             // Construct solver for system of linear equations.
-            Dune::CGSolver<Vector> linsolve(opS, precond, residTol,
-                                            (maxit>0)?maxit:S_.N(), verbosity_level);
+            Dune::CGSolver<VectorT> linsolve(opS, precond, residTol,
+                                             (maxit>0)?maxit:S_.N(), verbosity_level);
 
             Dune::InverseOperatorResult result;
             soln_ = 0.0;
@@ -1565,10 +1565,10 @@ namespace Opm {
                 opS_.reset(new Operator(S_));
 		
                 // Construct preconditioner.
-                typedef Dune::Amg::AggregationCriterion<Dune::Amg::SymmetricMatrixDependency<Matrix,CouplingMetric> > CriterionBase;
+                typedef Dune::Amg::AggregationCriterion<Dune::Amg::SymmetricMatrixDependency<Matrix,CouplingMetric> > CritBase;
 
-                typedef Dune::Amg::CoarsenCriterion<CriterionBase> Criterion;
-                Criterion criterion;
+                typedef Dune::Amg::CoarsenCriterion<CritBase> Crit;
+                Crit criterion;
                 criterion.setDebugLevel(verbosity_level);
 #if ANISOTROPIC_3D
                 criterion.setDefaultValuesAnisotropic(3, 2);
