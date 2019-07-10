@@ -276,7 +276,7 @@ try
     const double minPerm = atof(options["minPerm"].c_str());
     const double maxPerm = atof(options["maxPerm"].c_str());
     const double minPoro = atof(options["minPoro"].c_str());
-    start = clock();
+    //start = clock();
     helper.sanityCheckInput(deck, minPerm, maxPerm, minPoro);
 
     const Opm::DeckRecord& specgridRecord(deck.getKeyword("SPECGRID").getRecord(0));

@@ -543,7 +543,7 @@ try
    
    double largestSaturationInterval = Swor-Swir;
    
-   double Ptestvalue = Pcmax;
+   double Ptestvalue;
 
    vector<MonotCubicInterpolator> watersaturation_rocktype;
    for (unsigned int satidx=0; satidx <= maxSatnum; ++satidx) {

@@ -822,7 +822,7 @@ try
            cout << "Upscaling resistivity for Pc = " << Ptestvalue;
            flush(cout);
            
-           start = clock();
+           //start = clock();
            
            // Loop over each cell again to find saturations given this particular
            // capillary pressure:

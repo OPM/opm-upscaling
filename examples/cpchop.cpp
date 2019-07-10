@@ -429,7 +429,7 @@ try
                     // Upscale capillary pressure function
                     Opm::MonotCubicInterpolator WaterSaturationVsCapPressure;
                     double largestSaturationInterval = Swor-Swir;
-                    double Ptestvalue = Pcmax;
+                    double Ptestvalue;
                     while (largestSaturationInterval > (Swor-Swir)/double(nsatpoints)) {
                         if (Pcmax == Pcmin) {
                             // This is a dummy situation, we go through once and then 
