@@ -74,7 +74,7 @@ Material* Material::create(int ID, const std::string& file)
   f >> str;
   if (str == "ti") { // transverse isotropic material with unit axis in z-direction. 
       Dune::DynamicVector<double>mat(21,double(0));
-      double a,b,c,d,e,rho;
+      double a = 0.0, b = 0.0, c = 0.0, d = 0.0, e = 0.0, rho = 0.0;
       f >> a >> b >> c >> d >> e;
       f >> str2;
       if (str2 != "density") {
@@ -83,10 +83,9 @@ Material* Material::create(int ID, const std::string& file)
                     << "C44=C55=d, C66=e, C12=a-2e and C13=b. Then keyword density on next " << std::endl
                     << "line followed by material density (double) on last line." << std::endl;
           exit(1);
-          assert(0);
       }
       f >> rho;
-      mat[0] = a; mat[1] = a-2.f*e; mat[2] = b; 
+      mat[0] = a; mat[1] = a-2.0*e; mat[2] = b;
       mat[6] = a; mat[7] = b; mat[11] = c;
       mat[15] = d; mat[18] = d; mat[20] = e;
       return new  OrthotropicSym(ID,mat);
@@ -103,14 +102,13 @@ Material* Material::create(int ID, const std::string& file)
                     << "the next line need 21 entries for upper C matrix. Then keyword density on next " << std::endl
                     << "line followed by material density (double) on last line." << std::endl;
           exit(1);
-          assert(0);
       }
       
       f >> rho;
       return new  OrthotropicSym(ID,mat);
   }
   else {
-      double p1, p2, rho, E, nu;
+      double p1 = 0.0, p2 = 0.0, rho = 0.0, E = 0.0, nu = 0.0;
       f >> p1 >> p2;
       f >> str2;
       if (str2 != "density") {
@@ -118,11 +116,10 @@ Material* Material::create(int ID, const std::string& file)
                     << "\"lm\", \"en\" or \"vpvs\", the next line need 21 entries for upper C matrix. " << std::endl
                     << "Then keyword density on next line followed by material density (double) on last line." << std::endl;
           exit(1);
-          assert(0);
       }
       f >> rho;
       if (str == "vpvs") {
-          p1 = rho*p1*p1-4.f/3*rho*p2*p2;
+          p1 = rho*p1*p1-4.0/3*rho*p2*p2;
           p2 = rho*p2*p2;
           str = "km";
       }
