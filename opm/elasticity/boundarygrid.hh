@@ -362,7 +362,11 @@ class HexGeometry<2, cdim, GridImp>
     Dune::GeometryType type() const
     {
       Dune::GeometryType t;
+#if DUNE_VERSION_NEWER(DUNE_GEOMETRY, 2, 6)
+      t = Dune::GeometryTypes::cube(mydimension);
+#else
       t.makeCube(mydimension);
+#endif
       return t;
     }
 

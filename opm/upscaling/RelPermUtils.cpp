@@ -888,7 +888,7 @@ void RelPermUpscaleHelper::upscaleCapillaryPressure()
         to_double(options["saturationThreshold"]);
 
     auto largestSaturationInterval = Swor - Swir;
-    auto Ptestvalue                = Pcmax;
+    decltype(Pcmax) Ptestvalue;
 
     std::stringstream errstr;
 

@@ -42,7 +42,7 @@ class UzawaSolver : public Dune::InverseOperator<X,Y>
     //! \param[in] reduction Ignored
     //! \param[in] res The inverse operator result
     void apply(X& x, Y& b, double /* reduction */,
-               Dune::InverseOperatorResult& res)
+               Dune::InverseOperatorResult& res) override
     {
       apply(x, b, res);
     }
@@ -51,7 +51,7 @@ class UzawaSolver : public Dune::InverseOperator<X,Y>
     //! \param[in] x The solution vector
     //! \param[in] b The load vector
     //! \param[in] res The inverse operator result
-    void apply(X& x, Y& b, Dune::InverseOperatorResult& res)
+    void apply(X& x, Y& b, Dune::InverseOperatorResult& res) override
     {
       Vector lambda, lambda2, u, u2;
       MortarUtils::extractBlock(u, b, B.N());

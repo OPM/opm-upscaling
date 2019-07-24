@@ -81,7 +81,6 @@ struct TransportSource *
 create_transport_source(int nsrc, int nphase)
 /* ---------------------------------------------------------------------- */
 {
-    int                     status;
     struct TransportSource *src;
 
     if (nphase <= 0) {
@@ -97,6 +96,7 @@ create_transport_source(int nsrc, int nphase)
             src->pressure   = NULL;  src->flux       = NULL;
             src->saturation = NULL;  src->surfvolume = NULL;
 
+            int status;
             if (nsrc > 0) {
                 status = expand_source_tables(nsrc, src);
             } else {
@@ -140,14 +140,14 @@ append_transport_source(int                     c,
                         struct TransportSource *src)
 /* ---------------------------------------------------------------------- */
 {
-    int alloc, status;
+    int status;
 
     if (nphase != src->nphase) {
         return -1;
     }
 
     if (src->nsrc == src->cpty) {
-        alloc  = (src->cpty > 0) ? 2 * src->cpty : 1;
+        int alloc  = (src->cpty > 0) ? 2 * src->cpty : 1;
         status = expand_source_tables(alloc, src);
     } else {
         status = 1;

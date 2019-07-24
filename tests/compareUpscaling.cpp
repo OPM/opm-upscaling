@@ -54,19 +54,16 @@ void startTest(const char* testFile, const char* compareFile,  double absoluteTo
 	OPM_THROW(std::invalid_argument, "The upscaling files do not have the same number of values.");
     }
 
-    double absDev, relDev;
-    for (size_t i = 0; i < testVec.size(); i++){
+    for (size_t i = 0; i < testVec.size(); i++) {
+        double absDev = std::abs(testVec[i]-compareVec[i]);
+        double relDev = absDev/double(std::max(std::abs(testVec[i]),std::abs(compareVec[i])));
 
-	absDev = std::abs(testVec[i]-compareVec[i]);
-	relDev = absDev/double(std::max(std::abs(testVec[i]),std::abs(compareVec[i])));
-	
-	if (relDev > relativeTolerance && absDev > absoluteTolerance){
-	    for(auto val : testVec) {
-		std::cout << "For data value " << val << "- The relative deviation is "<< relDev << " greater than the limit "<< relativeTolerance << std::endl;
-		OPM_THROW(std::invalid_argument, "The relative deviation exceeded the limit.");
-	    }
-	}
-
+        if (relDev > relativeTolerance && absDev > absoluteTolerance){
+            for(auto val : testVec) {
+              std::cout << "For data value " << val << "- The relative deviation is "<< relDev << " greater than the limit "<< relativeTolerance << std::endl;
+              OPM_THROW(std::invalid_argument, "The relative deviation exceeded the limit.");
+            }
+        }
     }
 }
 

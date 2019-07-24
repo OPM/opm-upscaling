@@ -100,15 +100,9 @@ try
 
     std::string resultgrid = param.getDefault<std::string>("resultgrid", "regularizedgrid.grdecl");
 
-    double minperm = param.getDefault("minperm", 1e-9);
-    double minpermSI = Opm::unit::convert::from(minperm, Opm::prefix::milli*Opm::unit::darcy);
     if (param.has("z_tolerance")) {
         std::cerr << "****** Warning: z_tolerance parameter is obsolete, use PINCH in deck input instead\n";
     }
-    double residual_tolerance = param.getDefault("residual_tolerance", 1e-8);
-    double linsolver_verbosity = param.getDefault("linsolver_verbosity", 0);
-    double linsolver_type = param.getDefault("linsolver_type", 1);
-
     // Check for unused parameters (potential typos).
     if (param.anyUnused()) {
 	std::cout << "*****     WARNING: Unused parameters:     *****\n";
@@ -184,6 +178,12 @@ try
                 OPM_THROW(std::logic_error, "Sub-decks not are not implemented by opm-parser. Refactor the calling code!?");
 		try {
 		    auto subdeck = ch.subDeck();
+                    double minperm = param.getDefault("minperm", 1e-9);
+                    double minpermSI = Opm::unit::convert::from(minperm, Opm::prefix::milli*Opm::unit::darcy);
+                    double residual_tolerance = param.getDefault("residual_tolerance", 1e-8);
+                    double linsolver_verbosity = param.getDefault("linsolver_verbosity", 0);
+                    double linsolver_type = param.getDefault("linsolver_type", 1);
+
 		    Opm::SinglePhaseUpscaler upscaler;
 		    upscaler.init(subdeck, Opm::SinglePhaseUpscaler::Fixed, minpermSI,
 				  residual_tolerance, linsolver_verbosity, linsolver_type, false);

@@ -497,10 +497,6 @@ namespace Opm
     EulerUpstreamResidual<GI, RP, BC>::
     estimateCapPressureGradient(const FIt& f, const FIt& nbf) const
     {
-	typedef typename GI::CellIterator::FaceIterator Face;
-	typedef typename Face::Cell Cell;
-	typedef typename GI::Vector Vector;
-
 	// At nonperiodic boundaries, we return a zero gradient.
 	// That is (sort of) a trivial Neumann (noflow) condition for the capillary pressure.
 	if (f->boundary() && !pboundary_->satCond(*f).isPeriodic()) {
@@ -508,16 +504,16 @@ namespace Opm
 	}
 	// Find neighbouring cell and face: nbc and nbf.
 	// If we are not on a periodic boundary, nbf is of course equal to f.
-	Cell c = f->cell();
-	Cell nb = f->boundary() ? (f == nbf ? c : nbf->cell()) : f->neighbourCell();
+	auto c = f->cell();
+	auto nb = f->boundary() ? (f == nbf ? c : nbf->cell()) : f->neighbourCell();
 
 	// Estimate the gradient like a finite difference between
 	// cell centers, except that in order to handle periodic
 	// conditions we pass through the face centroid(s).
-	Vector cell_c = c.centroid();
-	Vector nb_c = nb.centroid();
-	Vector f_c = f->centroid();
-	Vector nbf_c = nbf->centroid();
+	auto cell_c = c.centroid();
+	auto nb_c = nb.centroid();
+	auto f_c = f->centroid();
+	auto nbf_c = nbf->centroid();
 	double d0 = (cell_c - f_c).two_norm();
 	double d1 = (nb_c - nbf_c).two_norm();
 	int cell = c.index();
@@ -525,7 +521,7 @@ namespace Opm
 	double cp0 = cap_pressures_[cell];
 	double cp1 = cap_pressures_[nbcell];
 	double val = (cp1 - cp0)/(d0 + d1);
-	Vector res = nb_c - nbf_c + f_c - cell_c;
+	auto res = nb_c - nbf_c + f_c - cell_c;
 	res /= res.two_norm();
 	res *= val;
 	return res;
