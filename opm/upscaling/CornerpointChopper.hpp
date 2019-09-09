@@ -40,7 +40,8 @@ namespace Opm
     {
     public:
         CornerPointChopper(const std::string& file) :
-          deck_(Parser{}.parseFile(file)),
+            parser_(Parser{}),
+            deck_(parser_.parseFile(file)),
           metricUnits_(Opm::UnitSystem::newMETRIC())
         {
             const auto& specgridRecord = deck_.getKeyword("SPECGRID").getRecord(0);
@@ -255,7 +256,7 @@ namespace Opm
         {
             Opm::Deck subDeck;
 
-            Opm::DeckKeyword specGridKw("SPECGRID");
+            Opm::DeckKeyword specGridKw(std::addressof(this->parser_.getKeyword("SPECGRID")));
             Opm::DeckRecord specGridRecord;
 
             auto nxItem = Opm::DeckItem("NX", int());
@@ -279,17 +280,17 @@ namespace Opm
             specGridKw.addRecord(std::move(specGridRecord));
 
             subDeck.addKeyword(std::move(specGridKw));
-            addDoubleKeyword_(subDeck, "COORD", /*dimension=*/"Length", new_COORD_);
-            addDoubleKeyword_(subDeck, "ZCORN", /*dimension=*/"Length", new_ZCORN_);
-            addIntKeyword_(subDeck, "ACTNUM", new_ACTNUM_);
-            addDoubleKeyword_(subDeck, "PORO", /*dimension=*/"1", new_PORO_);
-            addDoubleKeyword_(subDeck, "NTG", /*dimension=*/"1", new_NTG_);
-            addDoubleKeyword_(subDeck, "SWCR", /*dimension=*/"1", new_SWCR_);
-            addDoubleKeyword_(subDeck, "SOWCR", /*dimension=*/"1", new_SOWCR_);
-            addDoubleKeyword_(subDeck, "PERMX", /*dimension=*/"Permeability", new_PERMX_);
-            addDoubleKeyword_(subDeck, "PERMY", /*dimension=*/"Permeability", new_PERMY_);
-            addDoubleKeyword_(subDeck, "PERMZ", /*dimension=*/"Permeability", new_PERMZ_);
-            addIntKeyword_(subDeck, "SATNUM", new_SATNUM_);
+            addDoubleKeyword_(subDeck, this->parser_.getKeyword("COORD"), /*dimension=*/"Length", new_COORD_);
+            addDoubleKeyword_(subDeck, this->parser_.getKeyword("ZCORN"), /*dimension=*/"Length", new_ZCORN_);
+            addIntKeyword_(subDeck, this->parser_.getKeyword("ACTNUM"), new_ACTNUM_);
+            addDoubleKeyword_(subDeck, this->parser_.getKeyword("PORO"), /*dimension=*/"1", new_PORO_);
+            addDoubleKeyword_(subDeck, this->parser_.getKeyword("NTG"), /*dimension=*/"1", new_NTG_);
+            addDoubleKeyword_(subDeck, this->parser_.getKeyword("SWCR"), /*dimension=*/"1", new_SWCR_);
+            addDoubleKeyword_(subDeck, this->parser_.getKeyword("SOWCR"), /*dimension=*/"1", new_SOWCR_);
+            addDoubleKeyword_(subDeck, this->parser_.getKeyword("PERMX"), /*dimension=*/"Permeability", new_PERMX_);
+            addDoubleKeyword_(subDeck, this->parser_.getKeyword("PERMY"), /*dimension=*/"Permeability", new_PERMY_);
+            addDoubleKeyword_(subDeck, this->parser_.getKeyword("PERMZ"), /*dimension=*/"Permeability", new_PERMZ_);
+            addIntKeyword_(subDeck, this->parser_.getKeyword("SATNUM"), new_SATNUM_);
             return subDeck;
         }
         void writeGrdecl(const std::string& filename)
@@ -323,6 +324,7 @@ namespace Opm
         bool hasSOWCR() const {return !new_SOWCR_.empty(); }
 
     private:
+        Opm::Parser parser_;
         Opm::Deck deck_;
         Opm::UnitSystem metricUnits_;
 
@@ -345,15 +347,16 @@ namespace Opm
         int new_dims_[3];
         std::vector<int> new_to_old_cell_;
 
+
         void addDoubleKeyword_(Deck& subDeck,
-                               const std::string& keywordName,
+                               const ParserKeyword& keyword,
                                const std::string& dimensionString,
                                const std::vector<double>& data)
         {
             if (data.empty())
                 return;
 
-            Opm::DeckKeyword dataKw(keywordName);
+            Opm::DeckKeyword dataKw(&keyword);
             Opm::DeckRecord dataRecord;
             auto dataItem = Opm::DeckItem("DATA", double());
 
@@ -370,13 +373,13 @@ namespace Opm
         }
 
         void addIntKeyword_(Deck& subDeck,
-                               const std::string& keywordName,
-                               const std::vector<int>& data)
+                            const ParserKeyword& keyword,
+                            const std::vector<int>& data)
         {
             if (data.empty())
                 return;
 
-            Opm::DeckKeyword dataKw(keywordName);
+            Opm::DeckKeyword dataKw(&keyword);
             Opm::DeckRecord dataRecord;
             auto dataItem = Opm::DeckItem("DATA", int());
 
