@@ -410,7 +410,8 @@ void RelPermUpscaleHelper::sanityCheckInput(const Opm::Deck& deck,
         poros    = deck.getKeyword<kw_poro >().getSIDoubleData();
         perms[0] = deck.getKeyword<kw_permx>().getSIDoubleData();
 
-        EclipseGrid(deck).exportZCORN(zcorns);
+        EclipseGrid eg(deck);
+        zcorns = eg.getZCORN();
 
         // Load anisotropic (only diagonal supported) input if present in grid
         if (deck.hasKeyword<kw_permy>() && deck.hasKeyword<kw_permz>()) {
