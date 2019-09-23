@@ -256,7 +256,7 @@ namespace Opm
         {
             Opm::Deck subDeck;
 
-            Opm::DeckKeyword specGridKw(std::addressof(this->parser_.getKeyword("SPECGRID")));
+            Opm::DeckKeyword specGridKw(this->parser_.getKeyword("SPECGRID"));
             Opm::DeckRecord specGridRecord;
 
             auto nxItem = Opm::DeckItem("NX", int());
@@ -356,7 +356,7 @@ namespace Opm
             if (data.empty())
                 return;
 
-            Opm::DeckKeyword dataKw(&keyword);
+            Opm::DeckKeyword dataKw(keyword);
             Opm::DeckRecord dataRecord;
             auto dataItem = Opm::DeckItem("DATA", double());
 
@@ -379,7 +379,7 @@ namespace Opm
             if (data.empty())
                 return;
 
-            Opm::DeckKeyword dataKw(&keyword);
+            Opm::DeckKeyword dataKw(keyword);
             Opm::DeckRecord dataRecord;
             auto dataItem = Opm::DeckItem("DATA", int());
 
