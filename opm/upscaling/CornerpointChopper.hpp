@@ -358,14 +358,12 @@ namespace Opm
 
             Opm::DeckKeyword dataKw(keyword);
             Opm::DeckRecord dataRecord;
-            auto dataItem = Opm::DeckItem("DATA", double());
+            auto dimension = metricUnits_.parse(dimensionString);
+            auto dataItem = Opm::DeckItem("DATA", double(), { dimension }, { dimension });
 
             for (size_t i = 0; i < data.size(); ++i) {
                 dataItem.push_back(data[i]);
             }
-
-            auto dimension = metricUnits_.parse(dimensionString);
-            dataItem.push_backDimension(/*active=*/dimension, /*default=*/dimension);
 
             dataRecord.addItem(std::move(dataItem));
             dataKw.addRecord(std::move(dataRecord));
