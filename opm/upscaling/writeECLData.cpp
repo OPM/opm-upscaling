@@ -25,14 +25,69 @@
 #include <opm/upscaling/writeECLData.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 
+#include <opm/io/eclipse/OutputStream.hpp>
+#include <opm/output/eclipse/DoubHEAD.hpp>
+#include <opm/output/eclipse/InteHEAD.hpp>
+#include <opm/output/eclipse/LogiHEAD.hpp>
+
+#include <time.h>
+#include <chrono>
 #include <vector>
 
-#ifdef HAVE_ERT // This one goes almost to the bottom of the file
+namespace {
+  Opm::RestartIO::InteHEAD::Phases phases()
+  {
+    auto p = Opm::RestartIO::InteHEAD::Phases{};
 
-#include <ert/ecl/ecl_rst_file.h>
-#include <ert/ecl/ecl_type.h>
-#include <ert/util/ert_unique_ptr.hpp>
+    p.oil = p.water = true;
+    p.gas = false;
 
+    return p;
+  }
+
+  Opm::RestartIO::InteHEAD::TimePoint timeStamp(const time_t time_stamp)
+  {
+    return Opm::RestartIO::getSimulationTimePoint(time_stamp, 0.0);
+  }
+
+  std::vector<int>
+  createIntehead(const int nx, const int ny, const int nz, const int nactive,
+                 const time_t time_stamp)
+  {
+    const auto ih = ::Opm::RestartIO::InteHEAD{}
+      .dimensions         (nx, ny, nz)
+      .numActive          (nactive)
+      .unitConventions    (Opm::RestartIO::InteHEAD::UnitSystem::Metric)
+      .params_NWELZ       (155, 122, 130, 3)
+      .wellTableDimensions({ 0, 0, 0, 0 })
+      .calendarDate       (timeStamp(time_stamp))
+      .activePhases       (phases())
+      .variousParam       (201702, 100);
+
+    return ih.data();
+  }
+
+  std::vector<double>
+  createDoubHead(const time_t time_stamp, const double elapsed)
+  {
+    const auto dur = std::chrono::duration<
+      double, std::chrono::seconds::period>{ elapsed };
+
+    const auto start = std::chrono::system_clock::from_time_t(time_stamp)
+      - dur;
+
+    auto ts = Opm::RestartIO::DoubHEAD::TimeStamp {
+      std::chrono::time_point_cast<
+        std::chrono::system_clock::time_point::duration
+      >(start), dur
+    };
+
+    const auto dh = ::Opm::RestartIO::DoubHEAD{}
+    .timeStamp(ts);
+
+    return dh.data();
+  }
+}
 
 namespace Opm {
 
@@ -71,82 +126,26 @@ namespace Opm {
                     const std::string& output_dir,
                     const std::string& base_name) {
 
-    ecl_file_enum file_type = ECL_UNIFIED_RESTART_FILE;  // Alternatively ECL_RESTART_FILE for multiple restart files.
-    bool fmt_file           = false;
+    EclIO::OutputStream::Restart rstFile {
+      EclIO::OutputStream::ResultSet { output_dir, base_name },
+      current_step,
+      EclIO::OutputStream::Formatted { false },
+      EclIO::OutputStream::Unified   { true }
+    };
 
-    char * filename         = ecl_util_alloc_filename(output_dir.c_str() , base_name.c_str() , file_type , fmt_file , current_step );
-    int phases              = ECL_OIL_PHASE + ECL_WATER_PHASE;
-    ecl_rst_file_type * rst_file;
+    rstFile.write("INTEHEAD", createIntehead(nx, ny, nz, nactive, current_posix_time));
+    rstFile.write("DOUBHEAD", createDoubHead(current_posix_time, current_time));
 
-    if (current_step > 0 && file_type == ECL_UNIFIED_RESTART_FILE)
-      rst_file = ecl_rst_file_open_append( filename );
-    else
-      rst_file = ecl_rst_file_open_write( filename );
+    rstFile.message("STARTSOL");
 
-    {
-      ecl_rsthead_type rsthead_data = {};
-
-      const int num_wells    = 0;
-      const int niwelz       = 0;
-      const int nzwelz       = 0;
-      const int niconz       = 0;
-      const int ncwmax       = 0;
-
-      rsthead_data.nx        = nx;
-      rsthead_data.ny        = ny;
-      rsthead_data.nz        = nz;
-      rsthead_data.nwells    = num_wells;
-      rsthead_data.niwelz    = niwelz;
-      rsthead_data.nzwelz    = nzwelz;
-      rsthead_data.niconz    = niconz;
-      rsthead_data.ncwmax    = ncwmax;
-      rsthead_data.nactive   = nactive;
-      rsthead_data.phase_sum = phases;
-      rsthead_data.sim_time  = current_posix_time;
-
-      rsthead_data.sim_days = current_time * Opm::Metric::Time; //Data for doubhead
-
-      ecl_rst_file_fwrite_header( rst_file , current_step , &rsthead_data);
-    }
-
-    ecl_rst_file_start_solution( rst_file );
-
-    using eclkw = ERT::ert_unique_ptr< ecl_kw_type, ecl_kw_free >;
     for (const auto&  elm : data) {
-        if (elm.second.target == data::TargetType::RESTART_SOLUTION) {
-            eclkw kw( ecl_kw_alloc( elm.first.c_str() , nactive, ECL_FLOAT ) );
+      if (elm.second.target != data::TargetType::RESTART_SOLUTION)
+        continue;
 
-            for( int i = 0; i < nactive; i++ )
-                ecl_kw_iset_float( kw.get(), i, elm.second.data[ i ] );
-
-            ecl_rst_file_add_kw( rst_file, kw.get() );
-        }
+      const auto& val = elm.second.data;
+      rstFile.write(elm.first, std::vector<float>(val.begin(), val.end()));
     }
 
-    ecl_rst_file_end_solution( rst_file );
-    ecl_rst_file_close( rst_file );
-    free(filename);
+    rstFile.message("ENDSOL");
   }
 }
-
-#else // that is, we have not defined HAVE_ERT
-
-namespace Opm
-{
-
-    void writeECLData(int, int, int, int,
-                      data::Solution,
-                      const int,
-                      const double,
-                      time_t,
-                      const std::string&,
-                      const std::string&)
-    {
-        throw std::runtime_error(
-            "Cannot call writeECLData() without ERT library support. "
-            "Reconfigure opm-output with ERT support and recompile."
-            );
-    }
-}
-
-#endif
