@@ -91,7 +91,7 @@ namespace Opm
             bool turn_normals = param.getDefault<bool>("turn_normals", false);
             {
                 Opm::EclipseGrid inputGrid(deck);
-                grid.processEclipseFormat(inputGrid, periodic_extension, turn_normals, clip_z);
+                grid.processEclipseFormat(inputGrid, periodic_extension, turn_normals, clip_z, {}, {}, true);
             }
             // Save EGRID file in case we are writing ECL output.
             if (param.getDefault("output_ecl", false)) {
@@ -161,7 +161,7 @@ namespace Opm
     {
         Opm::EclipseGrid eg(deck);
         const std::string* rl_ptr = (rock_list == "no_list") ? 0 : &rock_list;
-        grid.processEclipseFormat(eg, periodic_extension, turn_normals, clip_z);
+        grid.processEclipseFormat(eg, periodic_extension, turn_normals, clip_z, {}, {}, true);
         res_prop.init(deck, grid.globalCell(), perm_threshold, rl_ptr, use_jfunction_scaling, sigma, theta);
         if (unique_bids) {
             grid.setUniqueBoundaryIds(true);
