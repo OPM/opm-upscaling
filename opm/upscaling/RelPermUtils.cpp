@@ -21,7 +21,8 @@
 
 #include <opm/upscaling/RelPermUtils.hpp>
 
-#include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 
 #include <opm/parser/eclipse/Units/Units.hpp>
 
