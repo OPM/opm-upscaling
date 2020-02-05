@@ -57,7 +57,7 @@ namespace {
     const auto ih = ::Opm::RestartIO::InteHEAD{}
       .dimensions         (nx, ny, nz)
       .numActive          (nactive)
-      .unitConventions    (Opm::RestartIO::InteHEAD::UnitSystem::Metric)
+      .unitConventions    (Opm::UnitSystem::newMETRIC())
       .params_NWELZ       (155, 122, 130, 3)
       .wellTableDimensions({ 0, 0, 0, 0, 0 })
       .calendarDate       (timeStamp(time_stamp))
