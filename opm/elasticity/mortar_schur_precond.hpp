@@ -36,14 +36,6 @@ namespace Elasticity {
   template<class PrecondElasticityBlock>
 class MortarSchurPre : public Dune::Preconditioner<Vector,Vector> {
   public:
-#if ! DUNE_VERSION_NEWER(DUNE_ISTL, 2, 6)
-    // define the category
-    enum {
-      //! \brief The category the preconditioner is part of.
-      category=Dune::SolverCategory::sequential
-    };
-#endif
-
     //! \brief Constructor
     //! \param[in] P The multiplier block with diagonal A approximation
     //! \param[in] B The mortar coupling matrix
@@ -104,12 +96,11 @@ class MortarSchurPre : public Dune::Preconditioner<Vector,Vector> {
       Apre.post(x);
     }
 
-#if DUNE_VERSION_NEWER(DUNE_ISTL, 2, 6)
     Dune::SolverCategory::Category category() const override
     {
       return Dune::SolverCategory::sequential;
     }
-#endif
+
   protected:
     //! \brief The preconditioner for the elasticity operator
     PrecondElasticityBlock& Apre;

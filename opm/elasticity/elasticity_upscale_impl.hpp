@@ -34,12 +34,7 @@ IMPL_FUNC(std::vector<BoundaryGrid::Vertex>,
   const LeafVertexIterator itend = gv.leafGridView().template end<dim>();
 
   // make a mapper for codim dim entities in the leaf grid 
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 6)
   Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridType> mapper(gv, Dune::mcmgVertexLayout());
-#else
-  Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridType,
-                                            Dune::MCMGVertexLayout> mapper(gv);
-#endif
   // iterate over vertices and find slaves
   LeafVertexIterator start = gv.leafGridView().template begin<dim>();
   for (LeafVertexIterator it = start; it != itend; ++it) {
@@ -298,12 +293,7 @@ IMPL_FUNC(void, assembleBBlockMortar(const BoundaryGrid& b1,
   std::vector<std::vector<int> > lnodes = renumber(interface, n1+1,
                                                    n2+1, totalEqns);
   // get a reference element
-#if DUNE_VERSION_NEWER(DUNE_GEOMETRY, 2, 6)
   auto gt = Dune::GeometryTypes::cube(2);
-#else
-  Dune::GeometryType gt;
-  gt.makeCube(2);
-#endif
   // get a quadrature rule
   int quadorder = std::max((1.0+n1+0.5)/2.0,(1.0+n2+0.5)/2.0);
   quadorder = std::max(quadorder, 2);
@@ -379,12 +369,7 @@ IMPL_FUNC(void, fixPoint(Direction dir,
   const VertexLeafIterator itend = gv.leafGridView().template end<dim>();
 
   // make a mapper for codim 0 entities in the leaf grid 
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 6)
   Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridType> mapper(gv, Dune::mcmgVertexLayout());
-#else
-  Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridType,
-                                            Dune::MCMGVertexLayout> mapper(gv);
-#endif
 
   // iterate over vertices
   for (VertexLeafIterator it = gv.leafGridView().template begin<dim>(); it != itend; ++it) {
@@ -414,12 +399,7 @@ IMPL_FUNC(void, fixLine(Direction dir,
   const VertexLeafIterator itend = gv.leafGridView().template end<dim>();
 
   // make a mapper for codim 0 entities in the leaf grid 
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 6)
   Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridType> mapper(gv, Dune::mcmgVertexLayout());
-#else
-  Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridType,
-                                            Dune::MCMGVertexLayout> mapper(gv);
-#endif
 
   // iterate over vertices
   for (VertexLeafIterator it = gv.leafGridView().template begin<dim>(); it != itend; ++it) {

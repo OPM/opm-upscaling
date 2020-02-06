@@ -23,11 +23,7 @@
 
 #include <dune/common/version.hh>
 
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
 #include <dune/common/parallel/mpihelper.hh>
-#else
-#include <dune/common/mpihelper.hh>
-#endif
 
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
@@ -226,11 +222,7 @@ try
     }
     double residual_tolerance = param.getDefault("residual_tolerance", 1e-8);
     int linsolver_verbosity = param.getDefault("linsolver_verbosity", 0);
-#if DUNE_VERSION_NEWER(DUNE_ISTL, 2, 3) || defined(HAS_DUNE_FAST_AMG)
     int linsolver_type = param.getDefault("linsolver_type", 3);
-#else
-    int linsolver_type = param.getDefault("linsolver_type", 1);
-#endif
 
     //  Guarantee initialization
     double Pcmax = -DBL_MAX, Pcmin = DBL_MAX;

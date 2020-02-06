@@ -18,9 +18,6 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/geometry/referenceelements.hh>
-#if ! DUNE_VERSION_NEWER(DUNE_GEOMETRY, 2, 5)
-#include <dune/geometry/genericgeometry/matrixhelper.hh>
-#endif
 #include <dune/grid/common/mcmgmapper.hh>
 
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
@@ -329,12 +326,7 @@ class HexGeometry<2, cdim, GridImp>
     //! \param[in] dir The direction of the normal vector on the face
     HexGeometry(const BoundaryGrid::Quad& q, const GridImp& gv, int dir)
     {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 6)
       Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridImp> mapper(gv, Dune::mcmgVertexLayout());
-#else
-      Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridImp,
-                                           Dune::MCMGVertexLayout> mapper(gv);
-#endif
       typename GridImp::LeafGridView::template Codim<3>::Iterator start=gv.leafGridView().template begin<3>();
       const typename GridImp::LeafGridView::template Codim<3>::Iterator itend = gv.leafGridView().template end<3>();
       for (int i=0;i<4;++i) {
@@ -362,11 +354,7 @@ class HexGeometry<2, cdim, GridImp>
     Dune::GeometryType type() const
     {
       Dune::GeometryType t;
-#if DUNE_VERSION_NEWER(DUNE_GEOMETRY, 2, 6)
       t = Dune::GeometryTypes::cube(mydimension);
-#else
-      t.makeCube(mydimension);
-#endif
       return t;
     }
 
@@ -427,12 +415,7 @@ class HexGeometry<2, cdim, GridImp>
     LocalCoordinate local(const GlobalCoordinate& y) const
     {
       const ctype epsilon = 1e-10;
-#if DUNE_VERSION_NEWER(DUNE_GEOMETRY, 2, 6)
       auto refElement = Dune::ReferenceElements<ctype,2>::cube();
-#else
-      const Dune::ReferenceElement< ctype , 2 > & refElement =
-        Dune::ReferenceElements< ctype, 2 >::general(type());
-#endif
       LocalCoordinate x = refElement.position(0,0);
       LocalCoordinate dx;
       do {
@@ -440,12 +423,7 @@ class HexGeometry<2, cdim, GridImp>
         JacobianTransposed JT = jacobianTransposed(x);
         GlobalCoordinate z = global(x);
         z -= y;
-#if DUNE_VERSION_NEWER(DUNE_GEOMETRY, 2, 5)
         Dune::Impl::FieldMatrixHelper<double>::template xTRightInvA<2, 2>(JT, z, dx );
-#else
-        using namespace Dune::GenericGeometry;
-        MatrixHelper<DuneCoordTraits<double> >::template xTRightInvA<2, 2>(JT, z, dx );
-#endif
         x -= dx;
       } while (dx.two_norm2() > epsilon*epsilon);
       return x;
@@ -496,13 +474,9 @@ class HexGeometry<2, cdim, GridImp>
     ctype integrationElement(const LocalCoordinate& local) const
     {
       Dune::FieldMatrix<ctype, coorddimension, mydimension> Jt = jacobianTransposed(local);
-#if DUNE_VERSION_NEWER(DUNE_GEOMETRY, 2, 5)
       return Dune::Impl::FieldMatrixHelper<double>::template sqrtDetAAT<2, 2>(Jt);
-#else
-      using namespace Dune::GenericGeometry;
-      return MatrixHelper<DuneCoordTraits<double> >::template sqrtDetAAT<2, 2>(Jt);
-#endif
     }
+
   private:
     //! \brief The coordinates of the corners
     GlobalCoordinate c[4];
