@@ -75,7 +75,11 @@ class MortarSchurPre : public Dune::Preconditioner<Vector,Vector> {
       MortarUtils::extractBlock(temp, d, M, N);
       Dune::InverseOperatorResult r;
       Vector temp2;
+#if DUNE_VERSION_NEWER(DUNE_ISTL, 2, 7)
+      temp2.resize(temp.size());
+#else
       temp2.resize(temp.size(), false);
+#endif
       Lpre.apply(temp2, temp, r);
       MortarUtils::injectBlock(v, temp2, M, N);
 
@@ -84,7 +88,11 @@ class MortarSchurPre : public Dune::Preconditioner<Vector,Vector> {
       if (!symmetric)
         B.mmv(temp2, temp);
 
+#if DUNE_VERSION_NEWER(DUNE_ISTL, 2, 7)
+      temp2.resize(N);
+#else
       temp2.resize(N, false);
+#endif
       temp2 = 0;
       Apre.apply(temp2, temp);
       MortarUtils::injectBlock(v, temp2, N);

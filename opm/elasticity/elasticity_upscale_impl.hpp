@@ -1071,7 +1071,11 @@ IMPL_FUNC(void, solve(int loadcase))
 {
   try {
     Dune::InverseOperatorResult r;
+#if DUNE_VERSION_NEWER(DUNE_ISTL, 2, 7)
+    u[loadcase].resize(b[loadcase].size());
+#else
     u[loadcase].resize(b[loadcase].size(), false);
+#endif
     u[loadcase] = 0;
     int solver=0;
 #ifdef HAVE_OPENMP
