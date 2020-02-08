@@ -272,11 +272,7 @@ namespace Opm
         }
 
         // Write data.
-#if DUNE_VERSION_NEWER(DUNE_GRID, 2, 3)
         Dune::VTKWriter<typename GridInterface::GridType::LeafGridView> vtkwriter(ginterf.grid().leafGridView());
-#else
-        Dune::VTKWriter<typename GridInterface::GridType::LeafGridView> vtkwriter(ginterf.grid().leafView());
-#endif
         vtkwriter.addCellData(saturation, "saturation");
         vtkwriter.addCellData(cell_pressure, "pressure");
         vtkwriter.addCellData(cap_pressure, "capillary pressure");

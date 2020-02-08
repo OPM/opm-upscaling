@@ -24,7 +24,11 @@ class MortarUtils {
     //! \param[in] start The first index in the range
     static void extractBlock(Vector& x, const Vector& y, int len, int start=0)
     {
+#if DUNE_VERSION_NEWER(DUNE_ISTL, 2, 7)
+      x.resize(len);
+#else
       x.resize(len,false);
+#endif
       std::copy(y.begin()+start,y.begin()+len+start,x.begin());
     }
 

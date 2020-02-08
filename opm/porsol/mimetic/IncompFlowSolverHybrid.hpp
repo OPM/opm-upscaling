@@ -64,9 +64,7 @@
 #include <dune/istl/owneroverlapcopy.hh>
 #include <dune/istl/paamg/amg.hh>
 #include <dune/common/version.hh>
-#if DUNE_VERSION_NEWER(DUNE_ISTL, 2, 3)
 #include <dune/istl/paamg/fastamg.hh>
-#endif
 #include <dune/istl/paamg/kamg.hh>
 #include <dune/istl/paamg/pinfo.hh>
 
@@ -688,15 +686,8 @@ namespace Opm {
 				      linsolver_maxit, prolongate_factor, same_matrix,smooth_steps);
                 break;
             case 3: // CG preconditioned with AMG that uses less memory badwidth
-#if defined(HAS_DUNE_FAST_AMG) || DUNE_VERSION_NEWER(DUNE_ISTL, 2, 3)
                 solveLinearSystemFastAMG(residual_tolerance, linsolver_verbosity, 
                              linsolver_maxit, prolongate_factor, same_matrix,smooth_steps);
-#else
-                if(linsolver_verbosity)
-                    std::cerr<<"Fast AMG is not available; falling back to CG preconditioned with the normal one."<<std::endl;
-                solveLinearSystemAMG(residual_tolerance, linsolver_verbosity, 
-				     linsolver_maxit, prolongate_factor, same_matrix, smooth_steps);
-#endif
                 break;
             default:
                 std::cerr << "Unknown linsolver_type: " << linsolver_type << '\n';
@@ -1404,7 +1395,11 @@ namespace Opm {
             Adapter opS(S_);
 
             // Construct preconditioner.
+#if DUNE_VERSION_NEWER(DUNE_ISTL, 2, 7)
+            Dune::SeqILU<MatrixT,VectorT,VectorT> precond(S_, 1.0);
+#else
             Dune::SeqILU0<MatrixT,VectorT,VectorT> precond(S_, 1.0);
+#endif
 
             // Construct solver for system of linear equations.
             Dune::CGSolver<VectorT> linsolve(opS, precond, residTol,
@@ -1466,7 +1461,11 @@ namespace Opm {
       typedef Dune::SeqOverlappingSchwarz<Matrix,Vector,Dune::MultiplicativeSchwarzMode> Smoother;
 #else
 #if SMOOTHER_ILU
+#if DUNE_VERSION_NEWER(DUNE_ISTL, 2, 7)
+        typedef Dune::SeqILU<Matrix,Vector,Vector>         Smoother;
+#else
         typedef Dune::SeqILU0<Matrix,Vector,Vector>        Smoother;
+#endif
 #else
         typedef Dune::SeqSSOR<Matrix,Vector,Vector>        Smoother;
 #endif
@@ -1545,7 +1544,6 @@ namespace Opm {
 
         }
 
-#if defined(HAS_DUNE_FAST_AMG) || DUNE_VERSION_NEWER(DUNE_ISTL, 2, 3)
 
         // ----------------------------------------------------------------
         void solveLinearSystemFastAMG(double residual_tolerance, int verbosity_level,
@@ -1608,7 +1606,6 @@ namespace Opm {
             }
 
         }
-#endif
 
         // ----------------------------------------------------------------
         void solveLinearSystemKAMG(double residual_tolerance, int verbosity_level,
