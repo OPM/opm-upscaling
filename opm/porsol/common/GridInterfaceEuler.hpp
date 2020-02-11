@@ -46,12 +46,12 @@
 #include <dune/grid/common/mcmgmapper.hh>
 
 #include <boost/iterator/iterator_facade.hpp>
-#include <boost/scoped_ptr.hpp>
 
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 #include <climits>
 #include <iostream>
+#include <memory>
 
 
 
@@ -495,7 +495,7 @@ namespace Opm
         }
     private:
         const DuneGrid* pgrid_;
-        boost::scoped_ptr<Mapper> pmapper_;
+        std::unique_ptr<Mapper> pmapper_;
         int num_faces_;
         int max_faces_per_cell_;
 	Opm::SparseTable<int> face_indices_;
