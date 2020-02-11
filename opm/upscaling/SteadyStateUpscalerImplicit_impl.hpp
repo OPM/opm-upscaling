@@ -200,8 +200,8 @@ namespace Opm
         std::vector<double> pore_vol;
         pore_vol.reserve(num_cells);
         double tot_pore_vol = 0.0;
-        typedef typename GridInterface::CellIterator CellIter;
-        for (CellIter c = this->ginterf_.cellbegin(); c != this->ginterf_.cellend(); ++c) {
+        typedef typename GridInterface::CellIterator CellIterT;
+        for (CellIterT c = this->ginterf_.cellbegin(); c != this->ginterf_.cellend(); ++c) {
             double cell_pore_vol = c->volume()*this->res_prop_.porosity(c->index());
             pore_vol.push_back(cell_pore_vol);
             tot_pore_vol += cell_pore_vol;
@@ -403,10 +403,10 @@ namespace Opm
     template <class Traits>
     double SteadyStateUpscalerImplicit<Traits>::lastSaturationUpscaled() const
     {
-        typedef typename GridInterface::CellIterator CellIter;
+        typedef typename GridInterface::CellIterator CellIterT;
         double pore_vol = 0.0;
         double sat_vol = 0.0;
-        for (CellIter c = this->ginterf_.cellbegin(); c != this->ginterf_.cellend(); ++c) {
+        for (CellIterT c = this->ginterf_.cellbegin(); c != this->ginterf_.cellend(); ++c) {
             double cell_pore_vol = c->volume()*this->res_prop_.porosity(c->index());
             pore_vol += cell_pore_vol;
             sat_vol += cell_pore_vol*last_saturation_state_[c->index()];
@@ -435,8 +435,8 @@ namespace Opm
 
         initSatLimits(s_orig);
         std::vector<double> cap_press(num_cells, 0.0);
-        typedef typename UpscalerBase<Traits>::ResProp ResProp;
-        MatchSaturatedVolumeFunctor<GridInterface, ResProp> func(this->ginterf_, this->res_prop_, s_orig, cap_press);
+        typedef typename UpscalerBase<Traits>::ResProp ResPropT;
+        MatchSaturatedVolumeFunctor<GridInterface, ResPropT> func(this->ginterf_, this->res_prop_, s_orig, cap_press);
         double cap_press_range = 1e2;
         double mod_low = 1e100;
         double mod_high = -1e100;
@@ -459,8 +459,8 @@ namespace Opm
                                                                 const FlowSol& flow_solution,
                                                                 const std::vector<double>& saturations) const
     {
-        typedef typename GridInterface::CellIterator CellIter;
-        typedef typename CellIter::FaceIterator FaceIter;
+        typedef typename GridInterface::CellIterator CellIterT;
+        typedef typename CellIterT::FaceIterator FaceIterT;
 
         double side1_flux = 0.0;
         double side2_flux = 0.0;
@@ -475,8 +475,8 @@ namespace Opm
         // This is for the periodic case, so that we are sure all fractional flows have
         // been set in frac_flow_by_bid.
         for (int pass = 0; pass < 2; ++pass) {
-            for (CellIter c = this->ginterf_.cellbegin(); c != this->ginterf_.cellend(); ++c) {
-                for (FaceIter f = c->facebegin(); f != c->faceend(); ++f) {
+            for (CellIterT c = this->ginterf_.cellbegin(); c != this->ginterf_.cellend(); ++c) {
+                for (FaceIterT f = c->facebegin(); f != c->faceend(); ++f) {
                     if (f->boundary()) {
                         double flux = flow_solution.outflux(f);
                         const SatBC& sc = this->bcond_.satCond(f);
