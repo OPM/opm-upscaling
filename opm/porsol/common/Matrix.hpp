@@ -39,7 +39,6 @@
 #include <algorithm>
 #include <ostream>
 #include <vector>
-#include <boost/bind.hpp>
 
 #include <dune/common/fvector.hh>
 #include <opm/common/ErrorMacros.hpp>
@@ -519,7 +518,7 @@ namespace Opm {
         void operator*= (const T& scalar)
         {
             std::transform(data(), data() + this->size(),
-                           data(), boost::bind(std::multiplies<T>(), _1, scalar));
+                           data(), [scalar](const T& input) { return input*scalar; } );
         }
 
         /// @brief

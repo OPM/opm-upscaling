@@ -39,7 +39,6 @@
 #include <algorithm>
 #include <vector>
 
-#include <boost/bind.hpp>
 #include <array>
 
 #include <opm/common/ErrorMacros.hpp>
@@ -163,7 +162,7 @@ namespace Opm {
             Vector sz2(sz.size());
 
             std::transform(sz.begin(), sz.end(), sz2.begin(),
-                           boost::bind(std::multiplies<vt>(), _1, _1));
+                           [](const vt& input) { return input*input; });
 
             Binv_ .allocate(sz2.begin(), sz2.end());
             gflux_.allocate(sz .begin(), sz .end());
@@ -346,7 +345,7 @@ namespace Opm {
         {
             const int ci = c->index();
             std::transform(Binv_[ci].begin(), Binv_[ci].end(), Binv.data(),
-                           boost::bind(std::multiplies<Scalar>(), _1, totmob));
+                           [totmob](const Scalar& input) { return input*totmob; });
         }
 
         /// @brief
@@ -540,9 +539,10 @@ namespace Opm {
         void gravityFlux(const CellIter& c,
                          Vector&         gflux) const
         {
+            Scalar mob_dens = mob_dens_;
             std::transform(gflux_[c->index()].begin(), gflux_[c->index()].end(),
                            gflux.begin(),
-                           boost::bind(std::multiplies<Scalar>(), _1, mob_dens_));
+                           [mob_dens](const Scalar& input) { return input*mob_dens; });
         }
 
     private:

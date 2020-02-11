@@ -40,8 +40,6 @@
 #include <algorithm>
 #include <vector>
 
-#include <boost/bind.hpp>
-
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/grid/utility/SparseTable.hpp>
 
@@ -162,12 +160,13 @@ namespace Opm {
             Vector sz2(sz.size());
 
             std::transform(sz.begin(), sz.end(), sz2.begin(),
-                           boost::bind(std::multiplies<vt>(), _1, _1));
+                           [](const vt& input) { return input*input; });
 
             second_term_.allocate(sz2.begin(), sz2.end());
 
+            int idim = int(dim);
             std::transform(sz.begin(), sz.end(), sz2.begin(),
-                           boost::bind(std::multiplies<vt>(), _1, int(dim)));
+                           [idim](const vt& input) { return input*idim; });
 
             n_.allocate(sz2.begin(), sz2.end());
 
