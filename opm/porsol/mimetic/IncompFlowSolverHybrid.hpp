@@ -47,7 +47,6 @@
 
 #include <boost/unordered_map.hpp>
 #include <boost/bind.hpp>
-#include <boost/scoped_ptr.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <dune/common/fvector.hh>
@@ -74,6 +73,7 @@
 #include <algorithm>
 #include <functional>
 #include <map>
+#include <memory>
 #include <numeric>
 #include <ostream>
 #include <stdexcept>
@@ -1474,9 +1474,9 @@ namespace Opm {
 
 
         // --------- storing the AMG operator and preconditioner --------
-        boost::scoped_ptr<Operator> opS_;
+        std::unique_ptr<Operator> opS_;
         typedef Dune::Preconditioner<Vector,Vector>   PrecondBase;
-        boost::scoped_ptr<PrecondBase> precond_;
+        std::unique_ptr<PrecondBase> precond_;
 
 
         // ----------------------------------------------------------------
