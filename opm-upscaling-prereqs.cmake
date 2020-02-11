@@ -8,8 +8,6 @@ set (opm-upscaling_CONFIG_VAR
 set (opm-upscaling_DEPS
   # compile with C99 support if available
   "C99"
-  # compile with C++0x/11 support if available
-  "CXX11Features"
   # various runtime library enhancements
   "Boost 1.44.0
     COMPONENTS date_time filesystem system iostreams unit_test_framework REQUIRED"
