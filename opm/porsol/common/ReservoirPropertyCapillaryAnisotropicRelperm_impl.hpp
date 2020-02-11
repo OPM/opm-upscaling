@@ -36,8 +36,6 @@
 #ifndef OPENRS_RESERVOIRPROPERTYCAPILLARYANISOTROPICRELPERM_IMPL_HEADER
 #define OPENRS_RESERVOIRPROPERTYCAPILLARYANISOTROPICRELPERM_IMPL_HEADER
 
-#include <boost/lambda/lambda.hpp>
-
 namespace Opm
 {
 
@@ -86,9 +84,8 @@ namespace Opm
 	if (rock_index != -1) {
 	    assert (rock_index < int(Super::rock_.size()));
 	    Super::rock_[rock_index].kr(phase_index, saturation, phase_mob);
-	    //using namespace boost::lambda;
 	    std::transform(phase_mob.data(), phase_mob.data() + dim*dim,
-			   phase_mob.data(), boost::lambda::_1/visc);
+			   phase_mob.data(), [visc](double param) { return param / visc; });
 	} else {
 	    // HACK: With no rocks, we use quadratic relperm functions.
 	    double kr = phase_index == 0 ? saturation*saturation : (1.0 - saturation)*(1.0 - saturation);
