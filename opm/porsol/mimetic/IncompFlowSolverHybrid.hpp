@@ -46,7 +46,6 @@
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
 
 #include <unordered_map>
-#include <boost/bind.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <dune/common/fvector.hh>
@@ -1711,7 +1710,7 @@ namespace Opm {
 
                 std::transform(pi.begin(), pi.end(),
                                pi.begin(),
-                               boost::bind(std::minus<Scalar>(), p[c0], _1));
+                               [p, c0](const double& input) { return p[c0] - input; });
 
                 // Recover fluxes from local system
                 //    Bv = Bv_g + Cp - D\pi

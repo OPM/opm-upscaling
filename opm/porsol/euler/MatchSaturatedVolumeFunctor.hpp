@@ -37,7 +37,6 @@
 #define OPENRS_MATCHSATURATEDVOLUMEFUNCTOR_HEADER
 
 
-#include <boost/bind.hpp>
 #include <utility>
 #include <vector>
 #include <algorithm>
@@ -88,7 +87,7 @@ namespace Opm
         double operator()(double dp) const
         {
             std::transform(cap_press_.begin(), cap_press_.end(), cp_new_.begin(),
-                           boost::bind(std::plus<double>(), dp, _1));
+                           [dp](const double& input) { return input + dp; });
             computeSaturations();
             std::pair<double, double> vols = poreSatVolumes(grid_, rp_, sat_);
             return (vols.second - orig_satvol_)/vols.first;
