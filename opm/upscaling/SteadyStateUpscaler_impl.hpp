@@ -37,7 +37,6 @@
 #define OPM_STEADYSTATEUPSCALER_IMPL_HEADER
 
 
-#include <boost/lexical_cast.hpp>
 #include <opm/porsol/common/MatrixInverse.hpp>
 #include <opm/porsol/common/SimulatorUtilities.hpp>
 #include <opm/porsol/common/ReservoirPropertyFixedMobility.hpp>
@@ -207,9 +206,9 @@ namespace Opm
                                this->flow_solver_.getSolution(),
                                saturation,
                                std::string("output-steadystate")
-                               + '-' + boost::lexical_cast<std::string>(count)
-                               + '-' + boost::lexical_cast<std::string>(flow_direction)
-                               + '-' + boost::lexical_cast<std::string>(iter));
+                               + '-' + std::to_string(count)
+                               + '-' + std::to_string(flow_direction)
+                               + '-' + std::to_string(iter));
             }
 
             // Comparing old to new.

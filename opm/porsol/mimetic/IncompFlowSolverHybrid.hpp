@@ -46,7 +46,6 @@
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
 
 #include <unordered_map>
-#include <boost/lexical_cast.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -670,7 +669,7 @@ namespace Opm {
             assembleDynamic(r, sat, bc, src);
 //             static int count = 0;
 //             ++count;
-//             printSystem(std::string("linsys_mimetic-") + boost::lexical_cast<std::string>(count));
+//             printSystem(std::string("linsys_mimetic-") + std::to_string(count));
             switch (linsolver_type) {
             case 0: // ILU0 preconditioned CG
               solveLinearSystem(residual_tolerance, linsolver_verbosity, linsolver_maxit);

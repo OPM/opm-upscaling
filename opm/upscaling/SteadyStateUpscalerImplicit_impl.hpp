@@ -37,7 +37,6 @@
 #define OPM_STEADYSTATEUPSCALERIMPLICIT_IMPL_HEADER
 
 
-#include <boost/lexical_cast.hpp>
 #include <opm/porsol/common/MatrixInverse.hpp>
 #include <opm/porsol/common/SimulatorUtilities.hpp>
 #include <opm/porsol/common/ReservoirPropertyFixedMobility.hpp>
@@ -267,16 +266,16 @@ namespace Opm
                                    this->flow_solver_.getSolution(),
                                    saturation,
                                    std::string("output-steadystate")
-                                   + '-' + boost::lexical_cast<std::string>(count)
-                                   + '-' + boost::lexical_cast<std::string>(flow_direction)
-                                   + '-' + boost::lexical_cast<std::string>(it_count));
+                                   + '-' + std::to_string(count)
+                                   + '-' + std::to_string(flow_direction)
+                                   + '-' + std::to_string(it_count));
                 }
                 if (output_ecl_) {
                     const char* fd = "xyz";
                     std::string basename = std::string("ecldump-steadystate")
-                                   + '-' + boost::lexical_cast<std::string>(boundary_saturation)
-                                   + '-' + boost::lexical_cast<std::string>(fd[flow_direction])
-                                   + '-' + boost::lexical_cast<std::string>(pressure_drop);
+                                   + '-' + std::to_string(boundary_saturation)
+                                   + '-' + std::to_string(fd[flow_direction])
+                                   + '-' + std::to_string(pressure_drop);
                     waterSatToBothSat(saturation, ecl_sat);
                     getCellPressure(ecl_press, this->ginterf_, this->flow_solver_.getSolution());
                     data::Solution solution;
