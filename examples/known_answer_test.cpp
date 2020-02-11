@@ -72,9 +72,6 @@
 #include <iomanip>
 #include <iostream>
 
-#include <boost/lexical_cast.hpp>
-
-
 
 // ------------ Specifying the solution ------------
 
@@ -236,8 +233,7 @@ void test_flowsolver(const GI& g, const RI& r, double tol, int kind)
     Dune::VTKWriter<typename GI::GridType::LeafGridView> vtkwriter(g.grid().leafGridView());
     vtkwriter.addCellData(cell_velocity_flat, "velocity", GI::GridType::dimension);
     vtkwriter.addCellData(cell_pressure, "pressure");
-    vtkwriter.write("testsolution-" + boost::lexical_cast<std::string>(0),
-                    Dune::VTK::ascii);
+    vtkwriter.write("testsolution-" + std::to_string(0), Dune::VTK::ascii);
 }
 
 

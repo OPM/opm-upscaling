@@ -134,8 +134,7 @@ void test_flowsolver(const GI& g, const RI& r)
     Dune::VTKWriter<typename GI::GridType::LeafGridView> vtkwriter(g.grid().leafGridView());
     vtkwriter.addCellData(cell_velocity_flat, "velocity", dim);
     vtkwriter.addCellData(cell_pressure, "pressure");
-    vtkwriter.write("testsolution-" + boost::lexical_cast<std::string>(0),
-                    Dune::VTK::ascii);
+    vtkwriter.write("testsolution-" + std::to_string(0), Dune::VTK::ascii);
 #else    
     solver.printSystem("system");
     typedef typename FlowSolver::SolutionType FlowSolution;

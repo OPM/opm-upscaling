@@ -29,8 +29,6 @@
 #include <string>
 #include <vector>
 
-#include <boost/lexical_cast.hpp>
-
 namespace Opm {
     template <class Vector>
     class MaxNormStl {

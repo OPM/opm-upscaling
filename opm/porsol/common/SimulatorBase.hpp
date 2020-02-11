@@ -62,7 +62,6 @@
 
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
 
-#include <boost/lexical_cast.hpp>
 #include <dune/grid/yaspgrid.hh>
 
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>

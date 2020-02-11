@@ -88,9 +88,9 @@ namespace Opm
                                this->res_prop_,
                                this->flow_solver_.getSolution(),
                                saturation,
-                               "testsolution-" + boost::lexical_cast<std::string>(i));
+                               "testsolution-" + std::to_string(i));
 
-                writeField(saturation, "saturation-" + boost::lexical_cast<std::string>(i));
+                writeField(saturation, "saturation-" + std::to_string(i));
 
                 // Comparing old to new.
                 int num_cells = saturation.size();
