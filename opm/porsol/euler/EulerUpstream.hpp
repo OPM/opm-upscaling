@@ -38,8 +38,6 @@ along with OpenRS.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <opm/porsol/euler/EulerUpstreamResidual.hpp>
 
-#include <boost/unordered_map.hpp>
-
 #include <opm/common/utility/parameters/ParameterGroup.hpp>
 #include <opm/common/utility/numeric/SparseVector.hpp>
 

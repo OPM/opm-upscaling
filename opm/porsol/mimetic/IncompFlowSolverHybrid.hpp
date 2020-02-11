@@ -45,7 +45,7 @@
 
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
 
-#include <boost/unordered_map.hpp>
+#include <unordered_map>
 #include <boost/bind.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/lexical_cast.hpp>
@@ -900,7 +900,7 @@ namespace Opm {
 
     private:
         typedef std::pair<int,int>                 DofID;
-        typedef boost::unordered_map<int,DofID> BdryIdMapType;
+        typedef std::unordered_map<int,DofID> BdryIdMapType;
         typedef BdryIdMapType::const_iterator      BdryIdMapIterator;
 
         const GridInterface* pgrid_;

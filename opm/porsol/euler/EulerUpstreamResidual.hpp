@@ -38,8 +38,6 @@
 
 
 
-#include <boost/unordered_map.hpp>
-
 #include <opm/common/utility/parameters/ParameterGroup.hpp>
 #include <opm/common/utility/numeric/SparseVector.hpp>
 
