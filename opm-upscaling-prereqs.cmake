@@ -10,7 +10,7 @@ set (opm-upscaling_DEPS
   "C99"
   # various runtime library enhancements
   "Boost 1.44.0
-    COMPONENTS date_time filesystem system iostreams unit_test_framework REQUIRED"
+    COMPONENTS date_time system iostreams unit_test_framework REQUIRED"
   # matrix library
   "BLAS REQUIRED"
   "LAPACK REQUIRED"

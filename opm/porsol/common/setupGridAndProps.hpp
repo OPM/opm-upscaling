@@ -45,7 +45,7 @@
 
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
 
-#include <boost/filesystem.hpp>
+#include <opm/common/utility/FileSystem.hpp>
 
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
@@ -97,7 +97,7 @@ namespace Opm
             if (param.getDefault("output_ecl", false)) {
                 OPM_THROW(std::runtime_error, "Saving to EGRID files is not yet implemented");
                 /*
-                boost::filesystem::path ecl_path(ecl_file);
+                Opm::filesystem::path ecl_path(ecl_file);
                 const std::vector<int>& globalCell = grid.globalCell();
                 ecl_path.replace_extension(".EGRID");
                 parser.saveEGRID(ecl_path.string() , (int) globalCell.size() , &globalCell[0]);
