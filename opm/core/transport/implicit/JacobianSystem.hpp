@@ -100,7 +100,7 @@ namespace Opm {
             assign(const Scalar& a, const BaseVec& x, BaseVec& y) {
                 ::std::transform(x.begin(), x.end(),
                                  y.begin(),
-                                 [&a](auto x) { return a * x; });
+                                 [&a](auto z) { return a * z; });
             }
         };
 
