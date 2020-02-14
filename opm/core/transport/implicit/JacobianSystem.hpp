@@ -98,10 +98,9 @@ namespace Opm {
             template <class Scalar>
             static void
             assign(const Scalar& a, const BaseVec& x, BaseVec& y) {
-                typedef typename BaseVec::value_type VT;
                 ::std::transform(x.begin(), x.end(),
                                  y.begin(),
-                                 ::std::bind2nd(::std::multiplies<VT>(), a));
+                                 [&a](auto x) { return a * x; });
             }
         };
 
