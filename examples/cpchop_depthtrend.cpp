@@ -45,10 +45,7 @@
 
 #include <sys/utsname.h>
 
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_int.hpp>
-#include <boost/random/uniform_real.hpp>
-#include <boost/random/variate_generator.hpp>
+#include <random>
 
 /**
    This program is a variant of cpchop. Instead of subsampling randomly, 
@@ -93,7 +90,7 @@ try
     double zlen = param.getDefault("zlen", zresolution);
     bool upscale = param.getDefault("upscale", true);
     bool resettoorigin = param.getDefault("resettoorigin", true);
-    boost::mt19937::result_type userseed = param.getDefault("seed", 0);
+    std::mt19937::result_type userseed = param.getDefault("seed", 0);
 
     int outputprecision = param.getDefault("outputprecision", 8);
     std::string filebase = param.getDefault<std::string>("filebase", "");
@@ -122,8 +119,7 @@ try
 			      jmin, jlen, jmax,
 			      zmin, zlen, zmax);
 
-    // Random number generator from boost.
-    boost::mt19937 gen;
+    std::mt19937 gen;
     
     // Seed the random number generators with the current time, unless specified on command line
     // Warning: Current code does not allow 0 for the seed!!
@@ -136,10 +132,10 @@ try
         
 
     // Note that end is included in interval for uniform_int.
-    boost::uniform_int<> disti(imin, imax - ilen);
-    boost::uniform_int<> distj(jmin, jmax - jlen);
-    boost::variate_generator<boost::mt19937&, boost::uniform_int<> > ri(gen, disti);
-    boost::variate_generator<boost::mt19937&, boost::uniform_int<> > rj(gen, distj);
+    std::uniform_int_distribution<> disti(imin, imax - ilen);
+    std::uniform_int_distribution<> distj(jmin, jmax - jlen);
+    auto ri = [&disti, &gen] { return disti(gen); };
+    auto rj = [&distj, &gen] { return distj(gen); };
     
     // Storage for results
     std::vector<double> zstarts;
