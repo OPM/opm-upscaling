@@ -1709,7 +1709,7 @@ namespace Opm {
 
                 std::transform(pi.begin(), pi.end(),
                                pi.begin(),
-                               [p, c0](const double& input) { return p[c0] - input; });
+                               [&p, c0](const double& input) { return p[c0] - input; });
 
                 // Recover fluxes from local system
                 //    Bv = Bv_g + Cp - D\pi
