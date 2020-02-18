@@ -53,7 +53,8 @@ namespace Opm
 	  linsolver_prolongate_factor_(1.0),
 	  linsolver_verbosity_(0),
           linsolver_type_(3),
-          linsolver_smooth_steps_(1)
+          linsolver_smooth_steps_(1),
+          gravity_(0.0)
     {
     }
 
@@ -92,6 +93,7 @@ namespace Opm
         linsolver_maxit_ = param.getDefault("linsolver_max_iterations", linsolver_maxit_);
         linsolver_prolongate_factor_ = param.getDefault("linsolver_prolongate_factor", linsolver_prolongate_factor_);
         linsolver_smooth_steps_ = param.getDefault("linsolver_smooth_steps", linsolver_smooth_steps_);
+        gravity_ = param.getDefault("gravity", gravity_);
 
         // Ensure sufficient grid support for requested boundary
         // condition type.
