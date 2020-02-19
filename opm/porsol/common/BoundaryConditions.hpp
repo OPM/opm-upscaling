@@ -39,7 +39,7 @@
 
 #include <vector>
 #include <ostream>
-#include <boost/mpl/if.hpp>
+#include <type_traits>
 #include <opm/common/ErrorMacros.hpp>
 #include <dune/common/fvector.hh>
 
@@ -340,14 +340,14 @@ namespace Opm
 
     template <bool FC = false, bool SC = false, bool ZC = false, int numComponents = 3>
     class BasicBoundaryConditions : public PeriodicConditionHandler,
-        private boost::mpl::if_c<FC, std::vector<FlowBC>, DummyVec<FlowBC> >::type,
-        private boost::mpl::if_c<SC, std::vector<SatBC>,  DummyVec<SatBC>  >::type,
-        private boost::mpl::if_c<ZC, std::vector<SurfvolBC<numComponents> >, DummyVec<SurfvolBC<numComponents> > >::type
+        private std::conditional<FC, std::vector<FlowBC>, DummyVec<FlowBC> >::type,
+        private std::conditional<SC, std::vector<SatBC>,  DummyVec<SatBC>  >::type,
+        private std::conditional<ZC, std::vector<SurfvolBC<numComponents> >, DummyVec<SurfvolBC<numComponents> > >::type
     {
     public:
-	typedef typename boost::mpl::if_c<FC, std::vector<FlowBC>, DummyVec<FlowBC> >::type FlowConds;
-	typedef typename boost::mpl::if_c<SC,  std::vector<SatBC>, DummyVec<SatBC>  >::type SatConds;
-	typedef typename boost::mpl::if_c<ZC, std::vector<SurfvolBC<numComponents> >, DummyVec<SurfvolBC<numComponents> > >::type SurfvolConds;
+	typedef typename std::conditional<FC, std::vector<FlowBC>, DummyVec<FlowBC> >::type FlowConds;
+	typedef typename std::conditional<SC,  std::vector<SatBC>, DummyVec<SatBC>  >::type SatConds;
+	typedef typename std::conditional<ZC, std::vector<SurfvolBC<numComponents> >, DummyVec<SurfvolBC<numComponents> > >::type SurfvolConds;
 	const static bool HasFlowConds = FC;
 	const static bool HasSatConds = SC;
 	const static bool HasSurfvolConds = SC;
