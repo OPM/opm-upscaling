@@ -35,7 +35,7 @@
 
 #ifndef OPM_STEADYSTATEUPSCALERIMPLICIT_IMPL_HEADER
 #define OPM_STEADYSTATEUPSCALERIMPLICIT_IMPL_HEADER
-
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <opm/porsol/common/MatrixInverse.hpp>
 #include <opm/porsol/common/SimulatorUtilities.hpp>
