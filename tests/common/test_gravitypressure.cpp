@@ -231,7 +231,7 @@ PORO
                     into.insert(other.begin(), other.end());
                 }
 
-                return into;
+                return std::move(into);
             }
         } // detail
 
