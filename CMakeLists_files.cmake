@@ -26,8 +26,8 @@
 # originally generated with the command:
 # find tests -name '*.cpp' -a ! -wholename '*/not-unit/*' -printf '\t%p\n' | sort
 list (APPEND TEST_SOURCE_FILES
-  tests/common/boundaryconditions_test.cpp
-  tests/common/matrix_test.cpp
+  tests/common/test_boundaryconditions.cpp
+  tests/common/test_matrix.cpp
   tests/common/test_gravitypressure.cpp
 )
 
