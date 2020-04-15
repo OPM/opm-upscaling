@@ -60,6 +60,7 @@ endmacro (dir_hook)
 # we cannot generate dune.module since it is read by dunecontrol before
 # the build starts, so it makes sense to keep the data there then.
 include (OpmInit)
+OpmSetPolicies()
 
 set(USE_OPENMP_DEFAULT ON)
 
