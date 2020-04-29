@@ -2,7 +2,7 @@
 # spec file for package opm-upscaling
 #
 
-%define tag rc2
+%define tag rc3
 
 Name:           opm-upscaling
 Version:        2020.04
