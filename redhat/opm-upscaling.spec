@@ -20,7 +20,7 @@ BuildRequires:  zlib-devel
 BuildRequires:  openmpi-devel trilinos-openmpi-devel ptscotch-openmpi-devel scotch-devel opm-common-openmpi-devel opm-grid-openmpi-devel opm-material-openmpi-devel
 BuildRequires:  mpich-devel trilinos-mpich-devel ptscotch-mpich-devel opm-common-mpich-devel opm-grid-mpich-devel opm-material-mpich-devel
 BuildRequires: cmake3
-%{?!el8:BuildRequires: devtoolset-6-toolchain boost148-devel}
+%{?!el8:BuildRequires: devtoolset-8-toolchain boost148-devel}
 %{?el8:BuildRequires: boost-devel}
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Requires:       libopm-upscaling1 = %{version}
