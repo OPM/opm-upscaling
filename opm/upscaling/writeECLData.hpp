@@ -23,6 +23,8 @@
 
 #include <string>
 
+#include <time.h>
+
 #include <opm/output/data/Solution.hpp>
 
 namespace Opm
