@@ -7,7 +7,7 @@ Build-Depends: build-essential, debhelper (>= 9),
                gfortran, libsuitesparse-dev,
                libdune-common-dev, libdune-istl-dev, cmake, libtinyxml-dev, bc,
                git, zlib1g-dev, libtool, libopm-material-dev,
-               libopm-grid-dev, libdune-grid-dev,
+               libopm-grid-dev, libdune-grid-dev, libscotchmetis-dev, libscotchparmetis-dev,
                doxygen, texlive-latex-extra, texlive-latex-recommended, ghostscript,
                libboost-iostreams-dev, pkg-config,
                libopm-common-dev, libtrilinos-zoltan-dev, mpi-default-dev, mpi-default-bin
