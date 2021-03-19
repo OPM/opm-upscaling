@@ -59,7 +59,7 @@ namespace {
       .numActive          (nactive)
       .unitConventions    (Opm::UnitSystem::newMETRIC())
       .params_NWELZ       (155, 122, 130, 3)
-      .wellTableDimensions({ 0, 0, 0, 0, 0 })
+      .wellTableDimensions({ 0, 0, 0, 0, 0, 0, 0 })
       .calendarDate       (timeStamp(time_stamp))
       .activePhases       (phases())
       .variousParam       (201702, 100);
