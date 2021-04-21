@@ -297,7 +297,7 @@ int run(Params& p)
         Opm::Parser parser;
         auto deck = parser.parseFile(p.file);
         Opm::EclipseGrid inputGrid(deck);
-        grid.processEclipseFormat(&inputGrid, false);
+        grid.processEclipseFormat(&inputGrid, nullptr, false);
     }
     ElasticityUpscale<GridType, AMG> upscale(grid, p.ctol, p.Emin, p.file,
                                              p.rocklist, p.verbose);
