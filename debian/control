@@ -24,8 +24,17 @@ Multi-Arch: foreign
 Depends: libopm-upscaling1 (= ${binary:Version})
 Provides: libopm-upscaling-dev
 Suggests: libopm-upscaling-doc
-Description: OPM upscaling library -- development files
- This module implements single-phase and steady-state upscaling methods.
+Description: Porous media upscaling tools -- applications
+ The Open Porous Media (OPM) software suite provides libraries and
+ tools for modeling and simulation of porous media processes, especially
+ for simulating CO2 sequestration and improved and enhanced oil recovery.
+ .
+ opm-upscaling provides tools for single phase and relative permeability
+ upscaling. During upscaling effective parameters (like porosity,
+ permeability, and capillary pressure) for a simulation on a coarser scale
+ are computed from properties of a simulation on a fine scale.
+ .
+ Package provides the upscaling applications.
 
 Package: libopm-upscaling1-bin
 Section: libdevel
@@ -34,8 +43,17 @@ Multi-Arch: foreign
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Provides: libopm-upscaling-bin
 Suggests: libopm-upscaling-doc
-Description: OPM upscaling library -- applications
- This module implements single-phase and steady-state upscaling methods.
+Description: Porous media upscaling tools -- applications
+ The Open Porous Media (OPM) software suite provides libraries and
+ tools for modeling and simulation of porous media processes, especially
+ for simulating CO2 sequestration and improved and enhanced oil recovery.
+ .
+ opm-upscaling provides tools for single phase and relative permeability
+ upscaling. During upscaling effective parameters (like porosity,
+ permeability, and capillary pressure) for a simulation on a coarser scale
+ are computed from properties of a simulation on a fine scale.
+ .
+ Package provides the upscaling applications.
 
 Package: libopm-upscaling1
 Section: libs
@@ -44,16 +62,34 @@ Architecture: any
 Multi-Arch: same
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Provides: libopm-upscaling
-Description: OPM upscaling library
- This module implements single-phase and steady-state upscaling methods.
+Description: Porous media upscaling tools -- library
+ The Open Porous Media (OPM) software suite provides libraries and
+ tools for modeling and simulation of porous media processes, especially
+ for simulating CO2 sequestration and improved and enhanced oil recovery.
+ .
+ opm-upscaling provides tools for single phase and relative permeability
+ upscaling. During upscaling effective parameters (like porosity,
+ permeability, and capillary pressure) for a simulation on a coarser scale
+ are computed from properties of a simulation on a fine scale.
+ .
+ Package provides the shared library used by the upscaling applications.
 
 Package: libopm-upscaling1-doc
 Section: doc
 Architecture: all
 Multi-Arch: foreign
 Provides: libopm-upscaling-doc
-Description: OPM upscaling library -- documentation
- This module implements single-phase and steady-state upscaling methods.
+Description: Porous media upscaling tools -- documentation
+ The Open Porous Media (OPM) software suite provides libraries and
+ tools for modeling and simulation of porous media processes, especially
+ for simulating CO2 sequestration and improved and enhanced oil recovery.
+ .
+ opm-upscaling provides tools for single phase and relative permeability
+ upscaling. During upscaling effective parameters (like porosity,
+ permeability, and capillary pressure) for a simulation on a coarser scale
+ are computed from properties of a simulation on a fine scale.
+ .
+ Package provides the documentation of the source code.
 
 Package: libopm-upscaling1-dbg
 Section: debug
@@ -61,5 +97,14 @@ Architecture: any
 Multi-Arch: foreign
 Provides: libopm-upscaling-dbg
 Depends: libopm-upscaling1 (= ${binary:Version}), libopm-upscaling1-bin (=${binary:Version}), ${misc:Depends}
-Description: OPM upscaling library -- debug symbols
- This module implements single-phase and steady-state upscaling methods.
+Description: Porous media upscaling tools -- debug symbols
+ The Open Porous Media (OPM) software suite provides libraries and
+ tools for modeling and simulation of porous media processes, especially
+ for simulating CO2 sequestration and improved and enhanced oil recovery.
+ .
+ opm-upscaling provides tools for single phase and relative permeability
+ upscaling. During upscaling effective parameters (like porosity,
+ permeability, and capillary pressure) for a simulation on a coarser scale
+ are computed from properties of a simulation on a fine scale.
+ .
+ Package provides the upscaling debug symbols.
