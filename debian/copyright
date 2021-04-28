@@ -1,13 +1,44 @@
-License: GPL-3+
- This package is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 3 of the License, or
- (at your option) any later version.
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: opm-upscaling
+Upstream-Contact: opm@opm-project.org
+Source: <https://github.com/OPM/opm-upscaling>
+Files-Excluded: external
+    redhat
+    debian
+    .git*
+    jenkins
+    .clang-format
+    travis
+    .hgsubstate
 
+Files: *
+Copyright: 2008-2019, Equinor ASA
+  2012-2018, Dr. Blatt - HPC-Simulation-Sofware & Services
+  2011-2013, IWS University Stuttgart
+  2013-2018, Andreas Lauser
+  2010-2015, NORCE AS
+  2009-2016, SINTEF Digital, Mathematics and Cybernetics
+License: GPL-3.0+
+
+Files: debian/*
+Copyright: 2018-2021, Equinor ASA
+  2013-2017, SINTEF Digital, Mathematics and Cybernetics
+  2021 Debian Science Team
+  
+License: GPL-3.0+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ .
  This package is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
-
+ .
  You should have received a copy of the GNU General Public License
- along with this program. If not, see <http://www.gnu.org/licenses/>
+ along with this program. If not, see <https://www.gnu.org/licenses/>.
+ .
+ On Debian systems, the complete text of the GNU General
+ Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
+
