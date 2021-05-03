@@ -1,0 +1,34 @@
+.TH UPSCALE_CAP "29" "April 2021" "upscale_cap 2020.04" "User Commands"
+.SH NAME
+upscale_cap \- Upscale capillary pressure and water saturation.
+.SH SYNOPSIS
+upscale_cap [option value] [grid file] [rock file 1] [rock file 2] [rock file 3] ...
+.SH DESCRIPTION
+Upscale the capillary pressure function and water saturation, both for the whole geometry, and on a per rocktype basis.
+
+Example usage:
+
+upscale_cap grid.grdecl swof1.inc swof2.inc
+
+For isotropic input, the rock file has four coloumns, and looks like this:
+
+-- Stone 1
+-- Sw           Krw             Kro     J-func
+  1.42000E-01  0.00000E+00  1.00000E+00  2.25999E+00
+  2.79250E-01  1.93652E-03  5.03619E-01  5.76122E-02
+  4.14850E-01  1.09648E-02  2.36036E-01  -1.23421E-02
+  6.14150E-01  4.10007E-02  3.95006E-02  -8.96693E-02
+  7.26100E-01  1.41398E-01  9.30808E-03  -1.19849E-01
+  9.48000E-01  8.40000E-01  0.00000E+00  -1.42553E+00
+
+.SH OPTIONS
+\fB\-points\fR Number of saturation points to upscale for, uniformly distributed. Defaults to 30.
+\fB\-jFunctionCurve\fR If upscaleBothPhases is false and input is isotropic,the column number in the stone-files that represent the Leverett J-function. Defaults to 4.
+\fB\-surfaceTension\fR Surface tension in dynes/cm to use in J-function/Pc conversion. Contact angle is not supported, and \cos \theta=1 is effectively used. Defaults to 11.
+\fB\-output\fR Filename for where to write upscaled values.
+\fB\-maxPermContrast\fR Maximal permeability contrast in model. Defaults to 1e7.
+\fB\-minPerm\fR Minimum value allowed for phase permeability. Defaults to 1e-12.
+.SH "REPORTING BUGS"
+Report on github repository <https://github.com/OPM/opm-upscaling/issues>
+.SH "SEE ALSO"
+upscale_relperm
