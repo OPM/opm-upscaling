@@ -1,0 +1,20 @@
+.TH UPSCALE_STEADYSTATE_IMPLICIT "29" "April 2021" "upscale_steadystate_implicit 2020.04" "User Commands"
+.SH NAME
+upscale_steadystate_implicit \- Upscale two-phase relative permeability
+.SH SYNOPSIS
+upscale_steadystate_implicit [option=value] [option=value] ...  
+.SH DESCRIPTION
+Upscale two-phase relative permeability for different saturations and pressure gradients. For each saturation point, the model is initialized with capillary equilibrium. Then for each pressure drop points, the transport solver is run until steady state is reached and relative permeabilities are computed from the phase mobilities.
+
+Example usage:
+
+upscale_steadystate_implicit fileformat=eclipse filename=grid.grdecl rock_list=rocklist.txt boudary_condition_type=0
+.SH OPTIONS
+\fB\fileformat\fR Grid format, eclipse or cartiesian. Defaults to cartesian.
+\fB\filename\fR Grid filename.
+\fB\rock_list\fR A file with a list of one file name per satnum specifying two phase properties for each rock type.
+\fB\boundary_condition_type\fR Boundary condition type.
+.SH "REPORTING BUGS"
+Report on github repository <https://github.com/OPM/opm-upscaling/issues>
+.SH "SEE ALSO"
+upscale_relperm

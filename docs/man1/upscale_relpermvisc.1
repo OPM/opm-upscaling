@@ -1,0 +1,38 @@
+.TH UPSCALE_RELPERMVISC "29" "April 2021" "upscale_relpermvisc 2020.04" "User Commands"
+.SH NAME
+upscale_relpermvisc \- Upscale two-phase relative permeability
+.SH SYNOPSIS
+upscale_relpermvisc [option=value] [grid file] [rock file 1] [rock file 2] [rock file 3] ...
+.SH DESCRIPTION
+Upscale two-phase relative permeability in the capillary limit for lithofacies models described by Eclipse corner point grids.
+
+Example usage:
+
+upscale_relpermvisc -bc p grid.grdecl swof1.inc swof2.inc
+
+For isotropic input, the rock file has four coloumns, and looks like this:
+
+-- Stone 1
+-- Sw           Krw             Kro     J-func
+  1.42000E-01  0.00000E+00  1.00000E+00  2.25999E+00
+  2.79250E-01  1.93652E-03  5.03619E-01  5.76122E-02
+  4.14850E-01  1.09648E-02  2.36036E-01  -1.23421E-02
+  6.14150E-01  4.10007E-02  3.95006E-02  -8.96693E-02
+  7.26100E-01  1.41398E-01  9.30808E-03  -1.19849E-01
+  9.48000E-01  8.40000E-01  0.00000E+00  -1.42553E+00
+
+.SH OPTIONS
+\fB\-bc\fR Which boundary conditions to use. Possible values are p (periodic), f (fixed) or l (linear). Defaults to f.
+\fB\-points\fR Number of saturation points to upscale for, uniformly distributed. Defaults to 30.
+\fB\-waterViscosity\fR Viscosity of water given in Pascal seconds (1000 cP = 1 Pa s).
+\fB\-oilViscosity\fR Viscosity of oil given in Pascal seconds (1000 cP = 1 Pa s).
+\fB\-waterCurve\fR The column number in the rock files that represent relative permeability for water. Defaults to 2.
+\fB\-oilCurve\fR The column number in the rock files that represent relative permeability for oil. Defaults to 3.
+\fB\-outputWater\fR Filename for where to write upscaled values for water relperm. If not supplied, output will only go to the terminal (standard out).
+\fB\-outputOil\fR Filename for where to write upscaled values for oil relperm. If not supplied, output will only go to the terminal (standard out).
+\fB\-interpolate\fR If this option is used, the outputted values will be interpolated values using the supplied number of points (integer larger than 0). Monotone cubic interpolation is used, and will thus produce a smooth curve for a few number of saturation points.
+\fB\-minPerm\fR Minimum floating point value allowed for phase permeability in computations. If set to zero, some models can end up singular. Defaults to 1e-12.
+.SH "REPORTING BUGS"
+Report on github repository <https://github.com/OPM/opm-upscaling/issues>
+.SH "SEE ALSO"
+upscale_relperm
