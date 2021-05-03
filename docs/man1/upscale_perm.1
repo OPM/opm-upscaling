@@ -1,0 +1,18 @@
+.TH UPSCALE_PERM "29" "April 2021" "upscale_perm 2020.04" "User Commands"
+.SH NAME
+upscale_perm \- Upscale permeability
+.SH SYNOPSIS
+upscale_perm [option value] [grid file]
+.SH DESCRIPTION
+Upscale permeability to one effective permeability tensor for the whole model.
+
+Example usage:
+
+upscale_perm -bc p -output upscaledperm.txt grid.grdecl
+.SH OPTIONS
+\fB\-bc\fR Which boundary conditions to use. Possible values are p (periodic), f (fixed) or l (linear). Defaults to f.
+\fB\-output\fR Filename for where to write upscaled values.
+.SH "REPORTING BUGS"
+Report on github repository <https://github.com/OPM/opm-upscaling/issues>
+.SH "SEE ALSO"
+upscale_perm
