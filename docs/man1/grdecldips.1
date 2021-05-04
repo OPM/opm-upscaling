@@ -1,0 +1,17 @@
+.TH GRDECLDIPS "29" "April 2021" "grdecldips 2020.04" "User Commands"
+.SH NAME
+grdecldips \- Compute dip for cells
+.SH SYNOPSIS
+grdecldips gridfilename=cornerpointgrid.grdecl [option=value]
+.SH DESCRIPTION
+Utility for computing dip cell by cell.
+
+Example usage:
+
+grdecldips gridfilename=grid.grdecl mincellvolume=1e-8 listallcells=false output=filename.txt
+.SH OPTIONS
+\fB\mincellcolume\fR Only compute dip for cells with volume larger than specified volume.
+\fB\listallcells\fR Boolean for listing all cells.
+\fB\output\fR File name to print output.
+.SH "REPORTING BUGS"
+Report on github repository <https://github.com/OPM/opm-upscaling/issues>

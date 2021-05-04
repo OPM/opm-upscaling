@@ -1,0 +1,32 @@
+.TH CPCHOP_DEPTHTREND "29" "April 2021" "cpchop_depthtrend 2020.04" "User Commands"
+.SH NAME
+cpchop_depthtrend \- Upscale simple statistics
+.SH SYNOPSIS
+cpchop_depthtrend gridfilename=cornerpointgrid.grdecl [option=value]
+.SH DESCRIPTION
+This program is a variant of cpchop. Instead of subsampling randomly, it picks subsamples downwards in a model. It is specifically designed for extracting laterally extensive subsamples in specified intervals downwards through a model, in order to analyze depth trends in porosity in particular.
+
+Example usage:
+
+cpchop_depthtrend gridfilename=cornerpointgrid.grdecl subsamples=100 ilen=5 jlen=5 zlen=5
+.SH OPTIONS
+\fB\zresolution\fR Vertical distance between subsamples. Defaults to 1.
+\fB\subsamples\fR Number of subsamples. Defaults to 1.
+\fB\filebase\fR If supplied, grdecl-files for each subsample will be written to files named using this filebase, it may include directory names.
+\fB\resultfile\fR Name of a textfile to output table of results per subsample to.
+\fB\ilen\fR Length in i-direction of subsample, specified in number of cells. Defaults to all cells in i-direction.
+\fB\jlen\fR Length in j-direction of subsample, specified in number of cells. Defaults to all cells in j-direction.
+\fB\zlen\fR Length in z-direction of subsample, specified in the grids length unit (typically cm or m). Defaults to full height.
+\fB\imin\fR Can be used to limit the search area for random subsamples. Defaults to minimum i in inputgrid (full model).
+\fB\imax\fR Can be used to limit the search area for random subsamples. Defaults to maximum i in inputgrid (full model).
+\fB\jmin\fR Analog to imin, but in j-direction. Defaults to minimum j in inputgrid (full model).
+\fB\jmax\fR Analog to imax, but in j-direction. Defaults to maximum j in inputgrid (full model).
+\fB\zmin\fR Analog to imin, but in z-direction and specified in the grids length unit. Defaults to minimum in inputgrid.
+\fB\zmax\fR Analog to imax, but in z-direction and specified in the grids length unit. Defaults to maximum in inputgrid.
+\fB\upscale\fR Boolean for whether to do upscaling on the subsamples, either true or false. If the objective is to obtain a grdecl-file for the subsample, set to false for run time. Defaults to true.
+\fB\bc\fR Boundary condition type for upscaling, either fixed or periodic. Defaults to fixed.
+\fB\resettoorigin\fR If true, outputted grdecl-file will have its ZCORN-values and COORDS-values shifted so that the model is defined at the origin. If false, the outputted grdecl-file will be located in its original position. Defaults to true.
+.SH "REPORTING BUGS"
+Report on github repository <https://github.com/OPM/opm-upscaling/issues>
+.SH "SEE ALSO"
+cpchop

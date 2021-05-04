@@ -1,0 +1,15 @@
+.TH UPSCALE_RELPERM_BENCHMARK "29" "April 2021" "upscale_relperm_benchmark 2020.04" "User Commands"
+.SH NAME
+upscale_relperm_benchmark \- Benchmark version of upscale_relperm.
+.SH SYNOPSIS
+upscale_relperm_benchmark [option value] [grid file]
+.SH DESCRIPTION
+This is a benchmark version of upscale_relperm. Input data (grid file, rock file and reference solution) is not provided from command line, but is built in at compiler time by embedding hexadecimal (1 byte) input data files. No command line options are supported, and no output of data is given.
+
+Example usage:
+
+upscale_relperm_benchmark
+.SH "REPORTING BUGS"
+Report on github repository <https://github.com/OPM/opm-upscaling/issues>
+.SH "SEE ALSO"
+upscale_relperm

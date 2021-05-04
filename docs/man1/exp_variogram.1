@@ -1,0 +1,21 @@
+.TH EXP_VARIOGRAM "29" "April 2021" "exp_variogram 2020.04" "User Commands"
+.SH NAME
+exp_variogram \- compute variogram for a cornerpoint grid with properties.
+.SH SYNOPSIS
+exp_variogram gridfilename=cornerpointgrid.grdecl [option=value]
+.SH DESCRIPTION
+This program computes data for an experimental variogram from a cornerpoint geometry with properties. This works by choosing pairs of volumes chosen randomly, and comparing their distance with the difference in their properties (poro or perm). Direction for pairing is set from the command line.
+.SH OPTIONS
+\fB\ilen\fR Length in i-direction of subsample, specified in number of cells. Defaults to all cells in i-direction.
+\fB\jlen\fR Length in j-direction of subsample, specified in number of cells. Defaults to all cells in j-direction.
+\fB\zlen\fR Length in z-direction of subsample, specified in the grids length unit (typically cm or m). Defaults to full height.
+\fB\imin\fR Can be used to limit the search area for random subsamples. Defaults to minimum i in inputgrid (full model).
+\fB\imax\fR Can be used to limit the search area for random subsamples. Defaults to maximum i in inputgrid (full model).
+\fB\jmin\fR Analog to imin, but in j-direction. Defaults to minimum j in inputgrid (full model).
+\fB\jmax\fR Analog to imax, but in j-direction. Defaults to maximum j in inputgrid (full model).
+\fB\zmin\fR Analog to imin, but in z-direction and specified in the grids length unit. Defaults to minimum in inputgrid.
+\fB\zmax\fR Analog to imax, but in z-direction and specified in the grids length unit. Defaults to maximum in inputgrid.
+\fB\pairs\fR Number of pairs. Defaults to 100.
+.SH "REPORTING BUGS"
+Report on github repository <https://github.com/OPM/opm-upscaling/issues>
+
