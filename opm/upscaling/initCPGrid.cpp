@@ -57,7 +57,7 @@ void Opm::initCPGrid(Dune::CpGrid& grid, const Opm::ParameterGroup& param) {
         Opm::Parser parser;
         auto deck = parser.parseFile(filename);
         Opm::EclipseGrid inputGrid(deck);
-        grid.processEclipseFormat(&inputGrid, nullptr, periodic_extension , turn_normals );
+        grid.processEclipseFormat(&inputGrid, nullptr, periodic_extension , turn_normals, false, true );
     } else if (fileformat == "cartesian") {
         std::array<int, 3> dims = {{ param.getDefault<int>("nx", 1),
                                      param.getDefault<int>("ny", 1),
