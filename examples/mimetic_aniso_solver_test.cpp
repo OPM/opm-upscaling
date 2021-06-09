@@ -73,7 +73,6 @@
 namespace
 {
     void build_grid(const Opm::Deck&  deck,
-                    const double       z_tol,
                     Dune::CpGrid&      grid,
                     std::array<int,3>& cartDims)
     {
@@ -91,14 +90,14 @@ namespace
 
         if (deck.hasKeyword("ACTNUM")) {
             g.actnum = &deck.getKeyword("ACTNUM").getIntData()[0];
-            grid.processEclipseFormat(g, z_tol, false, false);
+            grid.processEclipseFormat(g, false, false);
         }
         else {
             const auto dflt_actnum =
                 std::vector<int>(g.dims[0] * g.dims[1] * g.dims[2], 1);
 
             g.actnum = dflt_actnum.data();
-            grid.processEclipseFormat(g, z_tol, false, false);
+            grid.processEclipseFormat(g, false, false);
         }
     }
 } // namespace anonymous
@@ -210,10 +209,8 @@ try
     // Make a grid
     Dune::CpGrid grid;
     {
-        const auto z_tol = param.getDefault<double>("z_tolerance", 0.0);
-
         std::array<int,3> cartDims;
-        build_grid(deck, z_tol, grid, cartDims);
+        build_grid(deck, grid, cartDims);
     }
 
     // Make the grid interface
