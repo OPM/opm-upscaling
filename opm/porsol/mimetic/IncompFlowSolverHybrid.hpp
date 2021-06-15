@@ -1136,14 +1136,11 @@ namespace Opm {
         // ----------------------------------------------------------------
         {
             const   Opm::SparseTable<int>& cf = flowSolution_.cellFaces_;
-            typedef Opm::SparseTable<int>::row_type::const_iterator fi;
 
             for (int c = 0; c < cf.size(); ++c) {
                 const int nf = cf[c].size();
-                fi fb = cf[c].begin(), fe = cf[c].end();
-
-                for (fi f = fb; f != fe; ++f) {
-                    S_.incrementrowsize(*f, nf - 1);
+                for (auto& f : cf[c]) {
+                    S_.incrementrowsize(f, nf - 1);
                 }
             }
         }
@@ -1234,14 +1231,13 @@ namespace Opm {
         // ----------------------------------------------------------------
         {
             const   Opm::SparseTable<int>& cf = flowSolution_.cellFaces_;
-            typedef Opm::SparseTable<int>::row_type::const_iterator fi;
 
             // Compute actual connections (the non-zero structure).
             for (int c = 0; c < cf.size(); ++c) {
-                fi fb = cf[c].begin(), fe = cf[c].end();
+                auto fb = cf[c].begin(), fe = cf[c].end();
 
-                for (fi i = fb; i != fe; ++i) {
-                    for (fi j = fb; j != fe; ++j) {
+                for (auto i = fb; i != fe; ++i) {
+                    for (auto j = fb; j != fe; ++j) {
                         S_.addindex(*i, *j);
                     }
                 }
@@ -1825,10 +1821,8 @@ namespace Opm {
                             const L2G&                   l2g)
         // ----------------------------------------------------------------
         {
-            typedef typename L2G::const_iterator it;
-
             int r = 0;
-            for (it i = l2g.begin(); i != l2g.end(); ++i, ++r) {
+            for (auto i = l2g.begin(); i != l2g.end(); ++i, ++r) {
                 // Indirection for periodic BC handling.
                 int ii = *i;
 
@@ -1878,7 +1872,7 @@ namespace Opm {
                     //
                 default:
                     int c = 0;
-                    for (it j = l2g.begin(); j != l2g.end(); ++j, ++c) {
+                    for (auto j = l2g.begin(); j != l2g.end(); ++j, ++c) {
                         // Indirection for periodic BC handling.
                         int jj = *j;
 

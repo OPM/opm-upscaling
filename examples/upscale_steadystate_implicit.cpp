@@ -357,7 +357,7 @@ try
         } {
             init_sat.resize(num_cells, saturations[satidx]);
         }
-        const Opm::SparseTable<double>::row_type pressdrops = all_pdrops[satidx];
+        auto pressdrops = all_pdrops[satidx];
         int num_pressdrops = pressdrops.size();
         for (int pidx = 0; pidx < num_pressdrops; ++pidx) {
             upscaler.initSatLimits(init_sat);

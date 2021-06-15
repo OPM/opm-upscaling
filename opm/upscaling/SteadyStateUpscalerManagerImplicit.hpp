@@ -230,7 +230,7 @@ namespace Opm
                      init_sat.resize(num_cells, saturations[i]);
                 }
 
-                const Opm::SparseTable<double>::row_type pdrops = all_pdrops[i];
+                auto pdrops = all_pdrops[i];
                 int num_pdrops = pdrops.size();
                 for (int j = 0; j < num_pdrops; ++j) {
                     upscaler.initSatLimits(init_sat);
