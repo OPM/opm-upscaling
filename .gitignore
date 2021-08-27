@@ -70,3 +70,7 @@ examples/grdecldips
 data
 steadystate_test_implicit
 steadystate_test_explicit
+
+# Build directory in source.
+build/
+
