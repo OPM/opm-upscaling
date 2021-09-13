@@ -33,8 +33,9 @@ IMPL_FUNC(std::vector<BoundaryGrid::Vertex>,
   std::vector<BoundaryGrid::Vertex> result;
   const LeafVertexIterator itend = gv.leafGridView().template end<dim>();
 
-  // make a mapper for codim dim entities in the leaf grid 
-  Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridType> mapper(gv, Dune::mcmgVertexLayout());
+  // make a mapper for codim dim entities in the leaf grid
+  using LeafGridView = Dune::GridView<Dune::DefaultLeafGridViewTraits<GridType>>;
+  Dune::MultipleCodimMultipleGeomTypeMapper<LeafGridView>  mapper(gv.leafGridView(), Dune::mcmgVertexLayout());
   // iterate over vertices and find slaves
   LeafVertexIterator start = gv.leafGridView().template begin<dim>();
   for (LeafVertexIterator it = start; it != itend; ++it) {
@@ -369,7 +370,8 @@ IMPL_FUNC(void, fixPoint(Direction dir,
   const VertexLeafIterator itend = gv.leafGridView().template end<dim>();
 
   // make a mapper for codim 0 entities in the leaf grid 
-  Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridType> mapper(gv, Dune::mcmgVertexLayout());
+  using LeafGridView = Dune::GridView<Dune::DefaultLeafGridViewTraits<GridType>>;
+  Dune::MultipleCodimMultipleGeomTypeMapper<LeafGridView> mapper(gv.leafGridView(), Dune::mcmgVertexLayout());
 
   // iterate over vertices
   for (VertexLeafIterator it = gv.leafGridView().template begin<dim>(); it != itend; ++it) {
@@ -398,8 +400,9 @@ IMPL_FUNC(void, fixLine(Direction dir,
   typedef typename GridType::LeafGridView::template Codim<dim>::Iterator VertexLeafIterator;
   const VertexLeafIterator itend = gv.leafGridView().template end<dim>();
 
-  // make a mapper for codim 0 entities in the leaf grid 
-  Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridType> mapper(gv, Dune::mcmgVertexLayout());
+  // make a mapper for codim 0 entities in the leaf grid
+  using LeafGridView = Dune::GridView<Dune::DefaultLeafGridViewTraits<GridType>>;
+  Dune::MultipleCodimMultipleGeomTypeMapper<LeafGridView> mapper(gv, Dune::mcmgVertexLayout());
 
   // iterate over vertices
   for (VertexLeafIterator it = gv.leafGridView().template begin<dim>(); it != itend; ++it) {
