@@ -19,6 +19,7 @@
 #include <dune/common/fmatrix.hh>
 #include <dune/geometry/referenceelements.hh>
 #include <dune/grid/common/mcmgmapper.hh>
+#include <dune/grid/common/defaultgridview.hh>
 
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
@@ -326,11 +327,12 @@ class HexGeometry<2, cdim, GridImp>
     //! \param[in] dir The direction of the normal vector on the face
     HexGeometry(const BoundaryGrid::Quad& q, const GridImp& gv, int dir)
     {
-      Dune::LeafMultipleCodimMultipleGeomTypeMapper<GridImp> mapper(gv, Dune::mcmgVertexLayout());
-      typename GridImp::LeafGridView::template Codim<3>::Iterator start=gv.leafGridView().template begin<3>();
-      const typename GridImp::LeafGridView::template Codim<3>::Iterator itend = gv.leafGridView().template end<3>();
+      using LeafGridView = Dune::GridView<Dune::DefaultLeafGridViewTraits<GridImp>>;
+      Dune::MultipleCodimMultipleGeomTypeMapper<LeafGridView> mapper(gv.leafGridView(), Dune::mcmgVertexLayout());
+      typename LeafGridView::template Codim<3>::Iterator start=gv.leafGridView().template begin<3>();
+      const typename LeafGridView::template Codim<3>::Iterator itend = gv.leafGridView().template end<3>();
       for (int i=0;i<4;++i) {
-        typename GridImp::LeafGridView::template Codim<3>::Iterator it=start;
+        typename LeafGridView::template Codim<3>::Iterator it=start;
         for (; it != itend; ++it) {
           if (mapper.index(*it) == q.v[i].i)
             break;

@@ -44,6 +44,7 @@
 
 #include <dune/common/fvector.hh>
 #include <dune/grid/common/mcmgmapper.hh>
+#include <dune/grid/common/defaultgridview.hh>
 
 #include <boost/iterator/iterator_facade.hpp>
 
@@ -58,17 +59,11 @@
 namespace Opm
 {
 
-    /// General cell layout.
-    template<int dim>
-    struct AllCellsLayout {
-        bool contains(Dune::GeometryType gt) { return gt.dim() == dim; }
-    };
-
     /// Mapper for general grids.
     template <class DuneGrid>
     struct GICellMapper
     {
-        typedef Dune::LeafMultipleCodimMultipleGeomTypeMapper<DuneGrid, AllCellsLayout> Type;
+        using Type = Dune::MultipleCodimMultipleGeomTypeMapper<Dune::GridView<Dune::DefaultLeafGridViewTraits<DuneGrid>>>;
     };
 
     /// A mapper for Dune::CpGrid cells only.
@@ -83,16 +78,6 @@ namespace Opm
             return e.index();
         }
     };
-
-    /// Specialization of mapper selector for Dune::CpGrid for more performance.
-    /// Perhaps a case of premature optimization, it does not seem to give a
-    /// big boost.
-    template <>
-    struct GICellMapper<Dune::CpGrid>
-    {
-        typedef CpGridCellMapper Type;
-    };
-
 
     namespace GIE
     {
@@ -180,7 +165,7 @@ namespace Opm
             /// @return
             Index cellIndex() const
             {
-                return pgrid_->mapper().map(*iter_->inside());
+                return pgrid_->mapper().index(*iter_->inside());
             }
 
             /// @brief
@@ -199,7 +184,7 @@ namespace Opm
                 if (iter_->boundary()) {
                     return BoundaryMarkerIndex;
                 } else {
-                    return pgrid_->mapper().map(*iter_->outside());
+                    return pgrid_->mapper().index(*iter_->outside());
                 }
             }
 
@@ -364,7 +349,7 @@ namespace Opm
 
             Index index() const
             {
-                return pgrid_->mapper().map(*iter_);
+                return pgrid_->mapper().index(*iter_);
             }
         protected:
             const GridInterface* pgrid_;
@@ -433,7 +418,7 @@ namespace Opm
         {
         }
         explicit GridInterfaceEuler(const DuneGrid& grid, bool build_facemap = true)
-            : pgrid_(&grid), pmapper_(new Mapper(grid)), num_faces_(0), max_faces_per_cell_(0)
+            : pgrid_(&grid), pmapper_(new Mapper(grid.leafGridView(), Dune::mcmgElementLayout())), num_faces_(0), max_faces_per_cell_(0)
         {
             if (build_facemap) {
                 buildFaceIndices();
@@ -442,7 +427,7 @@ namespace Opm
         void init(const DuneGrid& grid, bool build_facemap = true)
         {
             pgrid_ = &grid;
-            pmapper_.reset(new Mapper(grid));
+            pmapper_.reset(new Mapper(grid.leafGridView(), Dune::mcmgElementLayout()));
             if (build_facemap) {
                 buildFaceIndices();
             }
