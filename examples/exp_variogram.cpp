@@ -111,7 +111,7 @@ try
         exit(1);
     }
     if (zlen <= 0.0) {
-        std::cerr << "Eror: zlen (" << zlen <<") must be greater than zero\n";
+        std::cerr << "Error: zlen (" << zlen <<") must be greater than zero\n";
         exit(1);
     }
 

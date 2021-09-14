@@ -122,7 +122,7 @@ namespace {
             << "                                     points. Suggested value: 1000.\n\n"
             << "  -rock<int>cemexp <float>        -- Cementation exponent can be set on a per rocktype basis\n"
             << "  -rock<int>satexp <float>        -- Saturation exponent can be set on a per rocktype basis\n\n"
-            << "Jfunctions are data files with two colums of numbers. The first column is water\n"
+            << "Jfunctions are data files with two columns of numbers. The first column is water\n"
             << "saturation, the second is the J-function. The first Jfunction, Jfunc1.data\n"
             << "corresponds to the first rock type defined in the eclipsefile's SATNUM. The\n"
             << "second correspond to the second rock type and so on. If just one Jfunc is\n"
