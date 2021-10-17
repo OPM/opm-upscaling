@@ -47,10 +47,12 @@ macro (add_test_upscale_perm gridname bcs rows)
   set(RESULT_PATH ${BASE_RESULT_PATH}/${TEST_NAME})
   opm_add_test(${TEST_NAME} NO_COMPILE
                EXE_NAME upscale_perm
-               DRIVER_ARGS ${INPUT_DATA_PATH} ${RESULT_PATH}
-                           ${PROJECT_BINARY_DIR}/bin
-                           upscale_perm_BC${bcs}_${gridname}
-                           ${abstol} ${reltol}
+               DRIVER_ARGS -i ${INPUT_DATA_PATH}
+                           -r ${RESULT_PATH}
+                           -b ${PROJECT_BINARY_DIR}/bin
+                           -n upscale_perm_BC${bcs}_${gridname}
+                           -a ${abstol}
+                           -t ${reltol}
                TEST_ARGS -bc ${bcs}
                          -output ${RESULT_PATH}/upscale_perm_BC${bcs}_${gridname}.txt
                          ${INPUT_DATA_PATH}/grids/${gridname}.grdecl)
@@ -79,10 +81,12 @@ macro (add_test_upscale_relperm testname gridname stonefiles rows cols)
   endforeach()
   opm_add_test(${TEST_NAME} NO_COMPILE
                EXE_NAME upscale_relperm
-               DRIVER_ARGS ${INPUT_DATA_PATH} ${RESULT_PATH}
-                           ${PROJECT_BINARY_DIR}/bin
-                           upscale_relperm_${testname}
-                           ${abstol} ${reltol}
+               DRIVER_ARGS -i ${INPUT_DATA_PATH}
+                           -r ${RESULT_PATH}
+                           -b ${PROJECT_BINARY_DIR}/bin
+                           -n upscale_relperm_${testname}
+                           -a ${abstol}
+                           -t ${reltol}
                TEST_ARGS ${test_args})
 endmacro ()
 
@@ -103,10 +107,12 @@ macro (add_test_upscale_elasticity gridname method)
   set(RESULT_PATH ${BASE_RESULT_PATH}/${TEST_NAME})
   opm_add_test(${TEST_NAME} NO_COMPILE
                EXE_NAME upscale_elasticity
-               DRIVER_ARGS ${INPUT_DATA_PATH} ${RESULT_PATH}
-                           ${PROJECT_BINARY_DIR}/bin
-                           upscale_elasticity_${method}_${gridname}
-                           ${abstol} ${reltol}
+               DRIVER_ARGS -i ${INPUT_DATA_PATH}
+                           -r ${RESULT_PATH}
+                           -b ${PROJECT_BINARY_DIR}/bin
+                           -n upscale_elasticity_${method}_${gridname}
+                           -a ${abstol}
+                           -t ${reltol}
                TEST_ARGS output=${RESULT_PATH}/upscale_elasticity_${method}_${gridname}.txt
                          gridfilename=${INPUT_DATA_PATH}/grids/${gridname}.grdecl
                          output_wave_speeds=true
@@ -128,10 +134,12 @@ macro (add_test_cpchop gridname)
   set(RESULT_PATH ${BASE_RESULT_PATH}/${TEST_NAME})
   opm_add_test(${TEST_NAME} NO_COMPILE
                EXE_NAME cpchop
-               DRIVER_ARGS ${INPUT_DATA_PATH} ${RESULT_PATH}
-                           ${PROJECT_BINARY_DIR}/bin
-                           cpchop_${gridname}
-                           ${abstol} ${reltol}
+               DRIVER_ARGS -i ${INPUT_DATA_PATH}
+                           -r ${RESULT_PATH}
+                           -b ${PROJECT_BINARY_DIR}/bin
+                           -n cpchop_${gridname}
+                           -a ${abstol}
+                           -t ${reltol}
                TEST_ARGS resultfile=${RESULT_PATH}/cpchop_${gridname}.txt use_random=false
                          gridfilename=${INPUT_DATA_PATH}/grids/${gridname}.grdecl)
 endmacro ()
