@@ -2,7 +2,7 @@
 # spec file for package opm-upscaling
 #
 
-%define tag rc1
+%define tag rc2
 
 Name:           opm-upscaling
 Version:        2021.10
