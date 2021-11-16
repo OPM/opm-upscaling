@@ -23,18 +23,31 @@ For isotropic input, the rock file has four coloumns, and looks like this:
 
 .SH OPTIONS
 \fB\-bc\fR Which boundary conditions to use. Possible values are p (periodic), f (fixed) or l (linear). Defaults to f.
+.br
 \fB\-points\fR Number of saturation points to upscale for, uniformly distributed. Defaults to 30.
+.br
 \fB\-upscaleBothPhases\fR Whether to upscale both phases or not. Defaults to true.
+.br
 \fB\-relPermCurve\fR If upscaleBothPhases is false and input is isotropic, this specifies the column number in the rock-files to be upscaled. Defaults to 2.
+.br
 \fB\-jFunctionCurve\fR If upscaleBothPhases is false and input is isotropic,the column number in the stone-files that represent the Leverett J-function. Defaults to 4.
+.br
 \fB\-gravity\fR Gravitational acceleration, in m/s². Use 9.8 for standard gravity. Defaults to 0.
+.br
 \fB\-fluids\fR Which two-phase fluid system we are dealing with. Possible values are ow (oil/water) and go (gas/oil). Defaults to ow.
+.br
 \fB\-surfaceTension\fR Surface tension in dynes/cm to use in J-function/Pc conversion. Contact angle is not supported, and \cos \theta=1 is effectively used. Defaults to 11.
+.br
 \fB\-waterDensity\fR Density of water, in g/cm³. Only relevant for non-zero gravity. If fluids is set to go (gas/oil), this should be set to density of gas. Defaults to 1.0.
+.br
 \fB\-oilDensity\fR Density of oil, in g/cm³. Only relevant for non-zero gravity. Defaults to 0.6.
+.br
 \fB\-output\fR Filename for where to write upscaled values.
+.br
 \fB\-doEclipseCheck\fR Check that input curves includes critical saturation points, i.e. saturation points where relperms are 0. See critRelpermThresh. Defaults to true.
+.br
 \fB\-critRelpermThresh\fR If minimum relperm value is less than this value, it is set to 0. Only applicable if doEclipseCheck is true. Defaults to 1e-6.
+.br
 \fB\-interpolate\fR If this option is used, the outputted values will be interpolated values using the supplied number of points (integer larger than 0). Monotone cubic interpolation is used, and will thus produce a smooth curve for a few number of saturation points.
 .SH "REPORTING BUGS"
 Report on github repository <https://github.com/OPM/opm-upscaling/issues>
