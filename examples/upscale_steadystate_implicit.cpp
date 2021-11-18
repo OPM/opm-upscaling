@@ -256,15 +256,15 @@ try
     std::vector<std::string> rockfiles;
     std::vector<std::vector<double> > rocksatendpoints_ = getExtremeSats(rock_list,rockfiles);
 
-    std::vector<double>  poros = deck.getKeyword("PORO").getSIDoubleData();  
+    std::vector<double>  poros = deck["PORO"].back().getSIDoubleData();  
     // Anisotropic relperm not yet implemented in steadystate_implicit
     //bool anisorocks = param.getDefault("anisotropicrocks", false);
     std::vector<int> satnums(poros.size(), 1); 
     if (deck.hasKeyword("SATNUM")) {
-        satnums = deck.getKeyword("SATNUM").getIntData();
+        satnums = deck["SATNUM"].back().getIntData();
     } 
     else if (deck.hasKeyword("ROCKTYPE")) {
-        satnums = deck.getKeyword("ROCKTYPE").getIntData();
+        satnums = deck["ROCKTYPE"].back().getIntData();
     } 
     else { 
         std::cout << "Warning: SATNUM or ROCKTYPE not found in input file, assuming only one rocktype" << std::endl; 

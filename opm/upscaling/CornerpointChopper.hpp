@@ -44,13 +44,13 @@ namespace Opm
             deck_(parser_.parseFile(file)),
           metricUnits_(Opm::UnitSystem::newMETRIC())
         {
-            const auto& specgridRecord = deck_.getKeyword("SPECGRID").getRecord(0);
+            const auto& specgridRecord = deck_["SPECGRID"].back().getRecord(0);
             dims_[0] = specgridRecord.getItem("NX").get< int >(0);
             dims_[1] = specgridRecord.getItem("NY").get< int >(0);
             dims_[2] = specgridRecord.getItem("NZ").get< int >(0);
 
             int layersz = 8*dims_[0]*dims_[1];
-            const std::vector<double>& ZCORN = deck_.getKeyword("ZCORN").getRawDoubleData();
+            const std::vector<double>& ZCORN = deck_["ZCORN"].back().getRawDoubleData();
             botmax_ = *std::max_element(ZCORN.begin(), ZCORN.begin() + layersz/2);
             topmin_ = *std::min_element(ZCORN.begin() + dims_[2]*layersz - layersz/2,
                                         ZCORN.begin() + dims_[2]*layersz);
@@ -140,7 +140,7 @@ namespace Opm
             new_dims_[1] = jmax - jmin;
 
             // Filter the coord field
-            const std::vector<double>& COORD = deck_.getKeyword("COORD").getRawDoubleData();
+            const std::vector<double>& COORD = deck_["COORD"].back().getRawDoubleData();
             int num_coord = COORD.size();
             if (num_coord != 6*(dims_[0] + 1)*(dims_[1] + 1)) {
                 std::cerr << "Error! COORD size (" << COORD.size() << ") not consistent with SPECGRID\n";
@@ -173,7 +173,7 @@ namespace Opm
             // coordinate of the bottom surface, while zmax must be less than or
             // equal to the lowest coordinate of the top surface.
             int layersz = 8*dims_[0]*dims_[1];
-            const std::vector<double>& ZCORN = deck_.getKeyword("ZCORN").getRawDoubleData();
+            const std::vector<double>& ZCORN = deck_["ZCORN"].back().getRawDoubleData();
             int num_zcorn = ZCORN.size();
             if (num_zcorn != layersz*dims_[2]) {
                 std::cerr << "Error! ZCORN size (" << ZCORN.size() << ") not consistent with SPECGRID\n";
@@ -429,7 +429,7 @@ namespace Opm
         void filterDoubleField(const std::string& keyword, std::vector<double>& output_field)
         {
             if (deck_.hasKeyword(keyword)) {
-                const std::vector<double>& field = deck_.getKeyword(keyword).getRawDoubleData();
+                const std::vector<double>& field = deck_[keyword].back().getRawDoubleData();
                 filterField(field, output_field);
             }
         }
@@ -437,7 +437,7 @@ namespace Opm
         void filterIntegerField(const std::string& keyword, std::vector<int>& output_field)
         {
             if (deck_.hasKeyword(keyword)) {
-                const std::vector<int>& field = deck_.getKeyword(keyword).getIntData();
+                const std::vector<int>& field = deck_[keyword].back().getIntData();
                 filterField(field, output_field);
             }
         }

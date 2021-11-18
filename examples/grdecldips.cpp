@@ -87,7 +87,7 @@ int main(int argc, char** argv) try {
      * Find dips for every cell.
      */
 
-    const auto& specgridRecord = deck.getKeyword("SPECGRID").getRecord(0);
+    const auto& specgridRecord = deck["SPECGRID"].back().getRecord(0);
     vector<int>  griddims(3);
     griddims[0] = specgridRecord.getItem("NX").get< int >(0);
     griddims[1] = specgridRecord.getItem("NY").get< int >(0);

@@ -408,8 +408,8 @@ void RelPermUpscaleHelper::sanityCheckInput(const Opm::Deck& deck,
                                      "PORO and PERMX in ECLIPSE file.");
         }
 
-        poros    = deck.getKeyword<kw_poro >().getSIDoubleData();
-        perms[0] = deck.getKeyword<kw_permx>().getSIDoubleData();
+        poros    = deck.get<kw_poro >().back().getSIDoubleData();
+                        perms[0] = deck.get<kw_permx>().back().getSIDoubleData();
 
         EclipseGrid eg(deck);
         zcorns = eg.getZCORN();
@@ -418,8 +418,8 @@ void RelPermUpscaleHelper::sanityCheckInput(const Opm::Deck& deck,
         if (deck.hasKeyword<kw_permy>() && deck.hasKeyword<kw_permz>()) {
             anisotropic_input = true;
 
-            perms[1] = deck.getKeyword<kw_permy>().getSIDoubleData();
-            perms[2] = deck.getKeyword<kw_permz>().getSIDoubleData();
+            perms[1] = deck.get<kw_permy>().back().getSIDoubleData();
+            perms[2] = deck.get<kw_permz>().back().getSIDoubleData();
 
             if (isMaster) {
                 std::cout << "Info: PERMY and PERMZ present, going into "
@@ -430,7 +430,7 @@ void RelPermUpscaleHelper::sanityCheckInput(const Opm::Deck& deck,
         }
 
         if (deck.hasKeyword<kw_satnum>()) {
-            satnums = deck.getKeyword<kw_satnum>().getIntData();
+            satnums = deck.get<kw_satnum>().back().getIntData();
         }
         else {
             if (isMaster) {

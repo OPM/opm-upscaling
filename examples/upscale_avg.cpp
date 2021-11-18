@@ -189,7 +189,7 @@ int main(int varnum, char** vararg) try {
     if (atoi(options["use_actnum"].c_str())>0) {
         if (deck.hasKeyword("ACTNUM")) {
             use_actnum = true;
-            actnum = deck.getKeyword("ACTNUM").getIntData();
+            actnum = deck["ACTNUM"].back().getIntData();
             cout << actnum[0] << " " << actnum[1] << endl;
         }
         else {
@@ -223,7 +223,7 @@ int main(int varnum, char** vararg) try {
     }
 
     // Global number of cells (includes inactive cells)
-    const auto& specgridRecord = deck.getKeyword("SPECGRID").getRecord(0);
+    const auto& specgridRecord = deck["SPECGRID"].back().getRecord(0);
     vector<int>  griddims(3);
     griddims[0] = specgridRecord.getItem("NX").get< int >(0);
     griddims[1] = specgridRecord.getItem("NY").get< int >(0);
@@ -256,16 +256,16 @@ int main(int varnum, char** vararg) try {
     vector<double> poros, ntgs;
     vector<double> permxs, permys, permzs;
     if (doporosity) {
-        poros = deck.getKeyword("PORO").getRawDoubleData();
+        poros = deck["PORO"].back().getRawDoubleData();
     }
     if (dontg) {
-        ntgs = deck.getKeyword("NTG").getRawDoubleData();
+        ntgs = deck["NTG"].back().getRawDoubleData();
     }
     if (doperm) {
-        permxs = deck.getKeyword("PERMX").getRawDoubleData();
+        permxs = deck["PERMX"].back().getRawDoubleData();
         if (anisotropic_input) {
-            permys = deck.getKeyword("PERMY").getRawDoubleData();
-            permzs = deck.getKeyword("PERMZ").getRawDoubleData();
+            permys = deck["PERMY"].back().getRawDoubleData();
+            permzs = deck["PERMZ"].back().getRawDoubleData();
         }
         
     }
@@ -414,12 +414,12 @@ int main(int varnum, char** vararg) try {
     vector<int> satnums;
     if (deck.hasKeyword("SATNUM")) {
         dosatnums = true;
-        satnums = deck.getKeyword("SATNUM").getIntData();
+        satnums = deck["SATNUM"].back().getIntData();
     } // If SATNUM was not present, maybe ROCKTYPE is there, 
     // if so, we will use it as SATNUM.
     else if (deck.hasKeyword("ROCKTYPE")) {
         dosatnums = true;
-        satnums = deck.getKeyword("ROCKTYPE").getIntData();
+        satnums = deck["ROCKTYPE"].back().getIntData();
     }
 
 
