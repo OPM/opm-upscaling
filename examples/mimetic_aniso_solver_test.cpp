@@ -85,11 +85,11 @@ namespace
             cartDims[2] = g.dims[2] = insp.gridSize()[2];
         }
 
-        g.coord = &deck.getKeyword("COORD").getSIDoubleData()[0];
-        g.zcorn = &deck.getKeyword("ZCORN").getSIDoubleData()[0];
+        g.coord = &deck["COORD"].back().getSIDoubleData()[0];
+        g.zcorn = &deck["ZCORN"].back().getSIDoubleData()[0];
 
         if (deck.hasKeyword("ACTNUM")) {
-            g.actnum = &deck.getKeyword("ACTNUM").getIntData()[0];
+            g.actnum = &deck["ACTNUM"].back().getIntData()[0];
             grid.processEclipseFormat(g, false, false);
         }
         else {

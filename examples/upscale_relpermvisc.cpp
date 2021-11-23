@@ -355,16 +355,16 @@ try
         exit(1); 
     } 
     
-    vector<double> poros  = deck.getKeyword("PORO").getRawDoubleData();
-    vector<double> permxs = deck.getKeyword("PERMX").getRawDoubleData();
+    vector<double> poros  = deck["PORO"].back().getRawDoubleData();
+    vector<double> permxs = deck["PERMX"].back().getRawDoubleData();
  
     // Load anisotropic (only diagonal supported) input if present in grid
     vector<double> permys, permzs;
     
     if (deck.hasKeyword("PERMY") && deck.hasKeyword("PERMZ")) {
         anisotropic_input = true;
-        permys = deck.getKeyword("PERMY").getRawDoubleData();
-        permzs = deck.getKeyword("PERMZ").getRawDoubleData();
+        permys = deck["PERMY"].back().getRawDoubleData();
+        permzs = deck["PERMZ"].back().getRawDoubleData();
         if (isMaster) cout << "Info: PERMY and PERMZ present, going into anisotropic input mode, no J-functions\n"; 
         if (isMaster) cout << "      Options -relPermCurve and -jFunctionCurve is meaningless.\n"; 
     } 
@@ -374,10 +374,10 @@ try
     vector<int> satnums(poros.size(), 1); 
     
     if (deck.hasKeyword("SATNUM")) {
-        satnums = deck.getKeyword("SATNUM").getIntData();
+        satnums = deck["SATNUM"].back().getIntData();
     } 
     else if (deck.hasKeyword("ROCKTYPE")) {
-        satnums = deck.getKeyword("ROCKTYPE").getIntData();
+        satnums = deck["ROCKTYPE"].back().getIntData();
     } 
     else { 
         if (isMaster) cout << "Warning: SATNUM or ROCKTYPE not found in input file, assuming only one rocktype" << endl; 

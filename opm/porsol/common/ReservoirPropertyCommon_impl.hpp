@@ -195,49 +195,49 @@ namespace Opm
             // 1st row: [kxx, kxy, kxz]
             if (deck.hasKeyword("PERMX" )) {
                 kmap[xx] = tensor.size();
-                tensor.push_back(&deck.getKeyword("PERMX").getSIDoubleData());
+                tensor.push_back(&deck["PERMX"].back().getSIDoubleData());
 
                 setScalarPermIfNeeded(kmap, xx, yy, zz);
             }
             if (deck.hasKeyword("PERMXY")) {
                 kmap[xy] = kmap[yx] = tensor.size();  // Enforce symmetry.
-                tensor.push_back(&deck.getKeyword("PERMXY").getSIDoubleData());
+                tensor.push_back(&deck["PERMXY"].back().getSIDoubleData());
             }
             if (deck.hasKeyword("PERMXZ")) {
                 kmap[xz] = kmap[zx] = tensor.size();  // Enforce symmetry.
-                tensor.push_back(&deck.getKeyword("PERMXZ").getSIDoubleData());
+                tensor.push_back(&deck["PERMXZ"].back().getSIDoubleData());
             }
 
             // -----------------------------------------------------------
             // 2nd row: [kyx, kyy, kyz]
             if (deck.hasKeyword("PERMYX")) {
                 kmap[yx] = kmap[xy] = tensor.size();  // Enforce symmetry.
-                tensor.push_back(&deck.getKeyword("PERMYX").getSIDoubleData());
+                tensor.push_back(&deck["PERMYX"].back().getSIDoubleData());
             }
             if (deck.hasKeyword("PERMY" )) {
                 kmap[yy] = tensor.size();
-                tensor.push_back(&deck.getKeyword("PERMY").getSIDoubleData());
+                tensor.push_back(&deck["PERMY"].back().getSIDoubleData());
 
                 setScalarPermIfNeeded(kmap, yy, zz, xx);
             }
             if (deck.hasKeyword("PERMYZ")) {
                 kmap[yz] = kmap[zy] = tensor.size();  // Enforce symmetry.
-                tensor.push_back(&deck.getKeyword("PERMYZ").getSIDoubleData());
+                tensor.push_back(&deck["PERMYZ"].back().getSIDoubleData());
             }
 
             // -----------------------------------------------------------
             // 3rd row: [kzx, kzy, kzz]
             if (deck.hasKeyword("PERMZX")) {
                 kmap[zx] = kmap[xz] = tensor.size();  // Enforce symmetry.
-                tensor.push_back(&deck.getKeyword("PERMZX").getSIDoubleData());
+                tensor.push_back(&deck["PERMZX"].back().getSIDoubleData());
             }
             if (deck.hasKeyword("PERMZY")) {
                 kmap[zy] = kmap[yz] = tensor.size();  // Enforce symmetry.
-                tensor.push_back(&deck.getKeyword("PERMZY").getSIDoubleData());
+                tensor.push_back(&deck["PERMZY"].back().getSIDoubleData());
             }
             if (deck.hasKeyword("PERMZ" )) {
                 kmap[zz] = tensor.size();
-                tensor.push_back(&deck.getKeyword("PERMZ").getSIDoubleData());
+                tensor.push_back(&deck["PERMZ"].back().getSIDoubleData());
 
                 setScalarPermIfNeeded(kmap, zz, xx, yy);
             }
@@ -599,7 +599,7 @@ namespace Opm
             Opm::EclipseGridInspector insp(deck);
             std::array<int, 3> dims = insp.gridSize();
             int num_global_cells = dims[0]*dims[1]*dims[2];
-            const std::vector<double>& poro = deck.getKeyword("PORO").getSIDoubleData();
+            const std::vector<double>& poro = deck["PORO"].back().getSIDoubleData();
             if (int(poro.size()) != num_global_cells) {
                 OPM_THROW(std::runtime_error, "PORO field must have the same size as the "
                       "logical cartesian size of the grid: "
@@ -621,7 +621,7 @@ namespace Opm
             Opm::EclipseGridInspector insp(deck);
             std::array<int, 3> dims = insp.gridSize();
             int num_global_cells = dims[0]*dims[1]*dims[2];
-            const std::vector<double>& ntg = deck.getKeyword("NTG").getSIDoubleData();
+            const std::vector<double>& ntg = deck["NTG"].back().getSIDoubleData();
             if (int(ntg.size()) != num_global_cells) {
                 OPM_THROW(std::runtime_error, "NTG field must have the same size as the "
                       "logical cartesian size of the grid: "
@@ -644,7 +644,7 @@ namespace Opm
             std::array<int, 3> dims = insp.gridSize();
             int num_global_cells = dims[0]*dims[1]*dims[2];
             const std::vector<double>& swcr =
-                deck.getKeyword("SWCR").getSIDoubleData();
+                deck["SWCR"].back().getSIDoubleData();
             if (int(swcr.size()) != num_global_cells) {
                 OPM_THROW(std::runtime_error, "SWCR field must have the same size as the "
                       "logical cartesian size of the grid: "
@@ -667,7 +667,7 @@ namespace Opm
             std::array<int, 3> dims = insp.gridSize();
             int num_global_cells = dims[0]*dims[1]*dims[2];
             const std::vector<double>& sowcr =
-                deck.getKeyword("SOWCR").getSIDoubleData();
+                deck["SOWCR"].back().getSIDoubleData();
             if (int(sowcr.size()) != num_global_cells) {
                 OPM_THROW(std::runtime_error, "SOWCR field must have the same size as the "
                       "logical cartesian size of the grid: "
@@ -751,7 +751,7 @@ namespace Opm
             Opm::EclipseGridInspector insp(deck);
             std::array<int, 3> dims = insp.gridSize();
             int num_global_cells = dims[0]*dims[1]*dims[2];
-            const std::vector<int>& satnum = deck.getKeyword("SATNUM").getIntData();
+            const std::vector<int>& satnum = deck["SATNUM"].back().getIntData();
             if (int(satnum.size()) != num_global_cells) {
                 OPM_THROW(std::runtime_error, "SATNUM field must have the same size as the "
                       "logical cartesian size of the grid: "
@@ -766,7 +766,7 @@ namespace Opm
             Opm::EclipseGridInspector insp(deck);
             std::array<int, 3> dims = insp.gridSize();
             int num_global_cells = dims[0]*dims[1]*dims[2];
-            const std::vector<int>& satnum = deck.getKeyword("ROCKTYPE").getIntData();
+            const std::vector<int>& satnum = deck["ROCKTYPE"].back().getIntData();
             if (int(satnum.size()) != num_global_cells) {
                 OPM_THROW(std::runtime_error, "ROCKTYPE field must have the same size as the "
                       "logical cartesian size of the grid: "

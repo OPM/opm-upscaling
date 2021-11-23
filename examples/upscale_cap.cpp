@@ -243,11 +243,11 @@ try
        usageandexit();  
    }  
    
-   vector<int>   satnums = deck.getKeyword("SATNUM").getIntData();  
-   vector<double>  poros = deck.getKeyword("PORO").getRawDoubleData();
-   vector<double> permxs = deck.getKeyword("PERMX").getRawDoubleData();
+   vector<int>   satnums = deck["SATNUM"].back().getIntData();  
+   vector<double>  poros = deck["PORO"].back().getRawDoubleData();
+   vector<double> permxs = deck["PERMX"].back().getRawDoubleData();
    vector<int>  griddims(3);
-   const auto& specgridRecord = deck.getKeyword("SPECGRID").getRecord(0);
+   const auto& specgridRecord = deck["SPECGRID"].back().getRecord(0);
    griddims[0] = specgridRecord.getItem("NX").get< int >(0);
    griddims[1] = specgridRecord.getItem("NY").get< int >(0);
    griddims[2] = specgridRecord.getItem("NZ").get< int >(0);
