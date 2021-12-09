@@ -1,4 +1,4 @@
-.TH UPSCALE_STEADYSTATE_IMPLICIT "29" "April 2021" "upscale_steadystate_implicit 2020.04" "User Commands"
+.TH UPSCALE_STEADYSTATE_IMPLICIT "1" "October 2021" "upscale_steadystate_implicit 2021.10" "User Commands"
 .SH NAME
 upscale_steadystate_implicit \- Upscale two-phase relative permeability
 .SH SYNOPSIS
@@ -10,10 +10,13 @@ Example usage:
 
 upscale_steadystate_implicit fileformat=eclipse filename=grid.grdecl rock_list=rocklist.txt boudary_condition_type=0
 .SH OPTIONS
-\fB\fileformat\fR Grid format, eclipse or cartiesian. Defaults to cartesian.
-\fB\filename\fR Grid filename.
-\fB\rock_list\fR A file with a list of one file name per satnum specifying two phase properties for each rock type.
-\fB\boundary_condition_type\fR Boundary condition type.
+\fBfileformat\fR Grid format, eclipse or cartiesian. Defaults to cartesian.
+.br
+\fBfilename\fR Grid filename.
+.br
+\fBrock_list\fR A file with a list of one file name per satnum specifying two phase properties for each rock type.
+.br
+\fBboundary_condition_type\fR Boundary condition type.
 .SH "REPORTING BUGS"
 Report on github repository <https://github.com/OPM/opm-upscaling/issues>
 .SH "SEE ALSO"

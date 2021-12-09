@@ -1,4 +1,4 @@
-.TH UPSCALE_COND "29" "April 2021" "upscale_cond 2020.04" "User Commands"
+.TH UPSCALE_COND "1" "October 2021" "upscale_cond 2021.10" "User Commands"
 .SH NAME
 upscale_cond \- Upscale electrical resistivity/conductivity
 .SH SYNOPSIS
@@ -12,20 +12,35 @@ upscale_cond -bc p grid.grdecl Jfunc1.datan Jfunc2.data
 
 .SH OPTIONS
 \fB\-bc\fR Which boundary conditions to use. Possible values are p (periodic), f (fixed) or l (linear). Defaults to f.
+.br
 \fB\-points\fR Number of saturation points to upscale for, uniformly distributed. Defaults to 30.
+.br
 \fB\-resistivityCutoff\fR Cut-off value for resistivity. Defaults to 10000.
+.br
 \fB\-lithologyCoeff\fR Archie parameter. Defaults to 1.0.
+.br
 \fB\-cementationExponent\fR Archie parameter. Defaults to 1.8.
+.br
 \fB\-saturationExponent\fR Archie parameter. Defaults to 2.3.
+.br
 \fB\-waterresistivity\fR Resistivity of formation water.
+.br
 \fB\-mudresistivity\fR Resistivity of mud. Defaults to 1.4.
+.br
 \fB\-mud1rocktype\fR First mud rock type, 0 if there are no mud types. Defaults to 0.
+.br
 \fB\-mud2rocktype\fR Second mud rock type. Defaults to 0.
+.br
 \fB\-jFunctionCurve\fR Which column in the supplied J-files corresponds to the J-function values. Defaults to 2.
+.br
 \fB\-surfaceTension\fR Surface tension in dynes/cm to use in J-function/Pc conversion. Defaults to 11.
+.br
 \fB\-output\fR Filename for where to write upscaled values.
+.br
 \fB\-interpolate\fR If supplied and > 1, the output will be interpolated using monotone cubic interpolation on a uniform grid with the specified number of points. Suggested value: 1000.
+.br
 \fB\-rock<int>cemexp <float>\fR Cementation exponent can be set on a per rocktype basis.
+.br
 \fB\-rock<int>satexp <float>\fR Saturation exponent can be set on a per rocktype basis.
 .SH "REPORTING BUGS"
 Report on github repository <https://github.com/OPM/opm-upscaling/issues>

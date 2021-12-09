@@ -126,3 +126,6 @@ foreach(benchmark ${OPM_BENCHMARKS})
 		install(TARGETS ${benchmark} DESTINATION bin)
 	endif()
 endforeach()
+
+install(DIRECTORY doc/man1 DESTINATION ${CMAKE_INSTALL_MANDIR}
+  FILES_MATCHING PATTERN "*.1")
