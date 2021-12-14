@@ -112,7 +112,7 @@
 
 #include <opm/upscaling/RelPermUtils.hpp>
 
-#include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 
 // Choose model:
 //   - Small: MODEL_TYPE 1  (35751 active cells, ~5 MB)

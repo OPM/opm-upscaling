@@ -35,7 +35,7 @@
 
 #include "config.h"
 
-#include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 #include <opm/common/utility/parameters/ParameterGroup.hpp>
 
 #include <opm/grid/CpGrid.hpp>

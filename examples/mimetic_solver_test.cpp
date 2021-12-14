@@ -56,7 +56,7 @@
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 #include <opm/common/utility/parameters/ParameterGroup.hpp>
-#include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/grid/CpGrid.hpp>
 

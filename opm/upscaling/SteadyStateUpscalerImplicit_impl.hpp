@@ -41,7 +41,7 @@
 #include <opm/porsol/common/SimulatorUtilities.hpp>
 #include <opm/porsol/common/ReservoirPropertyFixedMobility.hpp>
 #include <opm/porsol/euler/MatchSaturatedVolumeFunctor.hpp>
-#include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/upscaling/writeECLData.hpp>
 #include <algorithm>

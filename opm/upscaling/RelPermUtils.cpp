@@ -21,10 +21,10 @@
 
 #include <opm/upscaling/RelPermUtils.hpp>
 
-#include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
 
-#include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 
 #include <algorithm>
 #include <cmath>

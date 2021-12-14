@@ -28,8 +28,8 @@
 #include <dune/common/version.hh>
 #include <dune/common/parallel/mpihelper.hh>
 
-#include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Deck/Deck.hpp>
 
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 

@@ -21,7 +21,7 @@
 
 #include <opm/json/JsonObject.hpp>
 
-#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
+#include <opm/input/eclipse/Parser/ParserKeyword.hpp>
 
 namespace {
     void add_RHO(Opm::Parser& parser)

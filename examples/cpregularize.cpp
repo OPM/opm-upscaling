@@ -35,8 +35,8 @@
 
 #include <config.h>
 
-#include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Deck/Deck.hpp>
 
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
 
@@ -46,7 +46,7 @@
 
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
-#include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/upscaling/CornerpointChopper.hpp>
 #include <opm/output/eclipse/EclipseGridInspector.hpp>
