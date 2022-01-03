@@ -35,7 +35,7 @@
 #ifndef OPM_UPSCALERBASE_HEADER
 #define OPM_UPSCALERBASE_HEADER
 
-#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Deck/Deck.hpp>
 
 #include <opm/common/utility/parameters/ParameterGroup.hpp>
 

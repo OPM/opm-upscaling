@@ -39,7 +39,7 @@
 
 #include <opm/upscaling/SteadyStateUpscaler.hpp>
 #include <opm/upscaling/UpscalingTraits.hpp>
-#include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 #include <opm/grid/utility/SparseTable.hpp>
 #include <cmath>
 #include <fstream>

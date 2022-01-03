@@ -59,7 +59,7 @@
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 #include <opm/common/utility/numeric/MonotCubicInterpolator.hpp>
-#include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/upscaling/RelPermUtils.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>

@@ -23,7 +23,7 @@
 #endif
 
 #include <opm/upscaling/writeECLData.hpp>
-#include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/io/eclipse/OutputStream.hpp>
 #include <opm/output/eclipse/DoubHEAD.hpp>

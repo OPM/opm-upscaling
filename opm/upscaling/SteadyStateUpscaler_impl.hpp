@@ -40,7 +40,7 @@
 #include <opm/porsol/common/MatrixInverse.hpp>
 #include <opm/porsol/common/SimulatorUtilities.hpp>
 #include <opm/porsol/common/ReservoirPropertyFixedMobility.hpp>
-#include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 #include <algorithm>
 #include <iostream>
 

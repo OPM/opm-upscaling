@@ -37,11 +37,11 @@
 #define OPM_SETUPGRIDANDPROPS_HEADER
 
 #include <opm/common/utility/parameters/ParameterGroup.hpp>
-#include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 #include <opm/grid/CpGrid.hpp>
 #include <opm/porsol/common/ReservoirPropertyCapillary.hpp>
-#include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Deck/Deck.hpp>
 
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
 

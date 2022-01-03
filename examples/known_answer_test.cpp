@@ -48,7 +48,7 @@
 
 #include <opm/common/utility/parameters/ParameterGroup.hpp>
 #include <opm/grid/utility/StopWatch.hpp>
-#include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/grid/CpGrid.hpp>
 

@@ -37,8 +37,8 @@
 #define OPENRS_RESERVOIRPROPERTYCOMMON_IMPL_HEADER
 
 #include <opm/output/eclipse/EclipseGridInspector.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
 #include <fstream>
 #include <array>

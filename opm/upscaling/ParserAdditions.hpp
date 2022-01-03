@@ -20,7 +20,7 @@
 #ifndef OPM_UPSCALING_PARSER_ADDITIONS_HPP
 #define OPM_UPSCALING_PARSER_ADDITIONS_HPP
 
-#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
 
 namespace Opm {
 

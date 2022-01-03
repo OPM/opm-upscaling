@@ -22,7 +22,7 @@
 
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/grid/utility/SparseTable.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Deck/Deck.hpp>
 #include <dune/common/fvector.hh>
 
 #include <vector>

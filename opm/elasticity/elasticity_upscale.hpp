@@ -42,8 +42,8 @@
 #include <opm/elasticity/mortar_schur_precond.hpp>
 #include <opm/elasticity/uzawa_solver.hpp>
 
-#include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Deck/Deck.hpp>
 
 namespace Opm {
 namespace Elasticity {
