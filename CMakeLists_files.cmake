@@ -131,7 +131,6 @@ list (APPEND PROGRAM_SOURCE_FILES
   examples/upscale_perm.cpp
   examples/upscale_relperm.cpp
   examples/upscale_relpermvisc.cpp
-  examples/upscale_singlephase.cpp
   examples/upscale_steadystate_implicit.cpp
   examples/upscale_elasticity.cpp
 )
