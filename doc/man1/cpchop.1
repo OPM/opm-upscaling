@@ -46,6 +46,26 @@ in inputgrid (full model).
 \fBbc\fR Boundary condition type for upscaling, either fixed or periodic. Defaults to fixed.
 .br
 \fBresettoorigin\fR If true, outputted grdecl-file will have its ZCORN-values and COORDS-values shifted so that the model is defined at the origin. If false, the outputted grdecl-file will be located in its original position. Defaults to true.
+.br
+\fBseed\fR Provide a seed number. Defaults to 0.
+.br
+\fBminperm\fR Minimum permeability. Defaults to 1e-9.
+.br
+\fBdips\fR Whether to do dip averaging. Outputs dip and azimuth for each subsample. Defaults to false.
+.br
+\fBazimuthdisplacement\fR Add or subtract value for dip, assumes dips is set to true. Defaults to zero.
+.br
+\fBsatnumvolumes\fR Count volumes per satnum/rocktype. Defaults to false.
+.br
+\fBmincellvolume\fR Ignore cells with volume below threshold. Defaults to 1e-9.
+.br
+\fBendpoints\fR Upscale saturation end-points. Defaults to false.
+.br
+\fBcappres\fR Upscale capillary pressure. Defaults to false.
+.br
+\fBrock_list\fR Provide a rock list for end-point upscaling.
+.br
+\fBanisotropirocks\fR Directional saturation functions. Defaults to false.
 .SH "REPORTING BUGS"
 Report on github repository <https://github.com/OPM/opm-upscaling/issues>
 .SH "SEE ALSO"
