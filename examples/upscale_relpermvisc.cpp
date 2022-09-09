@@ -1218,8 +1218,6 @@ try
                 
                 fracFlowRatioTestvalue = fracFlowRatioPoints[pointidx];
                 
-                double accPhasePerm = 0.0; // accumulated, can be used for debugging
-                
                 double maxPhasePerm = 0.0;
                 
                 vector<double> phasePermValues;
@@ -1301,7 +1299,6 @@ try
                     zero(cellperm);
                     if (! anisotropic_input) {
                         double cellPhasePerm = max(minPhasePerm, phasePermValues[cell_idx]);
-                        accPhasePerm += cellPhasePerm;
                         double kval = max(minPhasePerm, cellPhasePerm);
                         cellperm(0,0) = kval;
                         cellperm(1,1) = kval;
@@ -1312,7 +1309,6 @@ try
                         phasePermValuesDiag[cell_idx][0] = max(minPhasePerm, phasePermValuesDiag[cell_idx][0]);
                         phasePermValuesDiag[cell_idx][1] = max(minPhasePerm, phasePermValuesDiag[cell_idx][1]);
                         phasePermValuesDiag[cell_idx][2] = max(minPhasePerm, phasePermValuesDiag[cell_idx][2]);
-                        accPhasePerm += phasePermValuesDiag[cell_idx][0]; // not correct anyway                   
                         cellperm(0,0) = phasePermValuesDiag[cell_idx][0];
                         cellperm(1,1) = phasePermValuesDiag[cell_idx][1];
                         cellperm(2,2) = phasePermValuesDiag[cell_idx][2];
