@@ -53,12 +53,13 @@ class LoggerHelper {
     //! \param[in] prefix The prefix for the logging
     void log(int it, const std::string& prefix)
     {
-      if(per_chunk == -1)
+      if (per_chunk == -1)
         return;
 #ifdef HAVE_OPENMP
-      if (omp_get_num_threads() == 1)
+      if (omp_get_num_threads() != 1)
+        return;
 #endif
-        std::cout << prefix << it  << '/' << max << std::endl;
+      std::cout << prefix << it  << '/' << max << std::endl;
     }
   protected:
     std::vector<int> groups; //!< Group start/end offsets
