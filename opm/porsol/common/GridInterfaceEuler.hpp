@@ -511,7 +511,7 @@ namespace Opm
 
             // First pass: enumerate internal faces.
             int cellno = 0; fpos.push_back(0);
-            int tot_ncf = 0, tot_ncf2 = 0, max_ncf = 0;
+            int tot_ncf = 0, max_ncf = 0;
             for (CI c = cellbegin(); c != cellend(); ++c, ++cellno) {
                 const int c0 = c->index();
                 assert((0 <= c0) && (c0 < nc) && (cell[c0] == -1));
@@ -534,7 +534,6 @@ namespace Opm
                 fpos.push_back(int(faces.size()));
                 max_ncf  = std::max(max_ncf, ncf);
                 tot_ncf  += ncf;
-                tot_ncf2 += ncf * ncf;
             }
             assert(cellno == nc);
 
