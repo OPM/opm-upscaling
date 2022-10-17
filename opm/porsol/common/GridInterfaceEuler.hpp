@@ -88,7 +88,7 @@ namespace Opm
         class Face {
         public:
             typedef typename GI::DuneIntersectionIterator                   DuneIntersectionIter;
-            typedef typename GI::GridType::Traits::template Codim<0>::EntityPointer CellPtr;
+            typedef typename GI::GridType::Traits::template Codim<0>::Entity CellPtr;
             typedef typename GI::GridType::ctype                            Scalar;
             typedef          Dune::FieldVector<Scalar, GI::GridType::dimension>   Vector;
             typedef          Dune::FieldVector<Scalar, GI::GridType::dimension-1> LocalVector;
@@ -165,7 +165,7 @@ namespace Opm
             /// @return
             Index cellIndex() const
             {
-                return pgrid_->mapper().index(*iter_->inside());
+                return pgrid_->mapper().index(iter_->inside());
             }
 
             /// @brief
@@ -184,7 +184,8 @@ namespace Opm
                 if (iter_->boundary()) {
                     return BoundaryMarkerIndex;
                 } else {
-                    return pgrid_->mapper().index(*iter_->outside());
+                    return pgrid_->mapper().index(
+                                                  iter_->outside());
                 }
             }
 
@@ -304,17 +305,17 @@ namespace Opm
         };
 
 
-        template <class GridInterface, class EntityPointerType>
+        template <class GridInterface, class EntityType>
         class Cell
         {
         public:
             Cell()
-                : pgrid_(0), iter_()
+                : pgrid_(0), cell_()
             {
             }
             Cell(const GridInterface& grid,
-                 const EntityPointerType& it)
-                : pgrid_(&grid), iter_(it)
+                 const EntityType& cell)
+                : pgrid_(&grid), cell_(cell)
             {
             }
             typedef          GIE::FaceIterator<GridInterface> FaceIterator;
@@ -324,36 +325,36 @@ namespace Opm
 
             FaceIterator facebegin() const
             {
-                return FaceIterator(*pgrid_, iter_->ileafbegin(), 0);
+                return FaceIterator(*pgrid_, cell_.ileafbegin(), 0);
             }
 
             FaceIterator faceend() const
             {
-                return FaceIterator(*pgrid_, iter_->ileafend(),
+                return FaceIterator(*pgrid_, cell_.ileafend(),
                                     FaceIterator::LocalEndIndex);
             }
 
             Scalar volume() const
             {
-                return iter_->geometry().volume();
+                return cell_.geometry().volume();
             }
 
             Vector centroid() const
             {
 //                 typedef Dune::ReferenceElements<Scalar, GridInterface::GridType::dimension> RefElems;
 //                 Vector localpt
-//                     = RefElems::general(iter_->type()).position(0,0);
-//                 return iter_->geometry().global(localpt);
-                return iter_->geometry().center();
+//                     = RefElems::general(cell_->type()).position(0,0);
+//                 return cell_->geometry().global(localpt);
+                return cell_.geometry().center();
             }
 
             Index index() const
             {
-                return pgrid_->mapper().index(*iter_);
+                return pgrid_->mapper().index(cell_);
             }
         protected:
             const GridInterface* pgrid_;
-            EntityPointerType iter_;
+            EntityType cell_;
         };
 
 
@@ -385,12 +386,12 @@ namespace Opm
             /// Used by iterator facade.
             bool equal(const CellIterator& other) const
             {
-                return CellType::iter_ == other.CellType::iter_;
+                return CellType::cell_ == other.CellType::cell_;
             }
             /// Used by iterator facade.
             void increment()
             {
-                ++CellType::iter_;
+                ++CellType::cell_;
             }
         };
 
