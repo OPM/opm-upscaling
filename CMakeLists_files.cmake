@@ -124,7 +124,6 @@ list (APPEND PROGRAM_SOURCE_FILES
   examples/cpregularize.cpp
   examples/exp_variogram.cpp
   examples/grdecldips.cpp
-  examples/steadystate_test_implicit.cpp
   examples/upscale_avg.cpp
   examples/upscale_cap.cpp
   examples/upscale_cond.cpp
