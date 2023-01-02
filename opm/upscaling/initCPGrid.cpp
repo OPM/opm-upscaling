@@ -67,7 +67,7 @@ void Opm::initCPGrid(Dune::CpGrid& grid, const Opm::ParameterGroup& param) {
                                           param.getDefault<double>("dz", 1.0) }};
         grid.createCartesian(dims, cellsz);
     } else {
-        OPM_THROW(std::runtime_error, "Unknown file format string: " << fileformat);
+        OPM_THROW(std::runtime_error, "Unknown file format string: " + fileformat);
     }
 }
 
