@@ -93,15 +93,15 @@ namespace Opm
 	    // For this type of rock, the specification is a line with two file names.
 	    std::istringstream specstream(specification);
 	    std::string rockname[2];
-	    specstream >> rockname[0] >> rockname[1];
-	    for (int i = 0; i < 2; ++i) {
-		std::string rockfilename = directory + rockname[i];
-		std::ifstream rock_stream(rockfilename.c_str());
-		if (!rock_stream) {
-		    OPM_THROW(std::runtime_error, "Could not open file " << rockfilename);
-		}
-		readAnisoFormat(rock_stream, i);
-	    }
+        specstream >> rockname[0] >> rockname[1];
+        for (int i = 0; i < 2; ++i) {
+        std::string rockfilename = directory + rockname[i];
+        std::ifstream rock_stream(rockfilename.c_str());
+        if (!rock_stream) {
+            OPM_THROW(std::runtime_error, "Could not open file " + rockfilename);
+        }
+        readAnisoFormat(rock_stream, i);
+        }
 	}
 
     private:
