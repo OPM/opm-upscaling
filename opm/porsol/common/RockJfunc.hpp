@@ -153,7 +153,7 @@ namespace Opm
             std::string rockfilename = directory + rockname;
             std::ifstream rock_stream(rockfilename.c_str());
             if (!rock_stream) {
-                OPM_THROW(std::runtime_error, "Could not open file " << rockfilename);
+                OPM_THROW(std::runtime_error, "Could not open file " + rockfilename);
             }
 	    readStatoilFormat(rock_stream);
 	}
