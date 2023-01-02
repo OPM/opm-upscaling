@@ -538,7 +538,7 @@ namespace Opm
             std::string filename = grid_prefix + "-poro.dat";
             std::ofstream file(filename.c_str());
             if (!file) {
-                OPM_THROW(std::runtime_error, "Could not open file " << filename);
+                OPM_THROW(std::runtime_error, "Could not open file " + filename);
             }
             file << num_cells << '\n';
             std::copy(porosity_.begin(), porosity_.end(), std::ostream_iterator<double>(file, "\n"));
@@ -548,7 +548,7 @@ namespace Opm
             std::string filename = grid_prefix + "-perm.dat";
             std::ofstream file(filename.c_str());
             if (!file) {
-                OPM_THROW(std::runtime_error, "Could not open file " << filename);
+                OPM_THROW(std::runtime_error, "Could not open file " + filename);
             }
             file << num_cells << '\n';
             switch (permeability_kind_) {
@@ -601,9 +601,11 @@ namespace Opm
             int num_global_cells = dims[0]*dims[1]*dims[2];
             const std::vector<double>& poro = deck["PORO"].back().getSIDoubleData();
             if (int(poro.size()) != num_global_cells) {
-                OPM_THROW(std::runtime_error, "PORO field must have the same size as the "
-                      "logical cartesian size of the grid: "
-                      << poro.size() << " != " << num_global_cells);
+                OPM_THROW(std::runtime_error,
+                          "PORO field must have the same size as the "
+                          "logical cartesian size of the grid: " +
+                          std::to_string(poro.size()) + " != " +
+                          std::to_string(num_global_cells));
             }
             for (int c = 0; c < int(porosity_.size()); ++c) {
                 porosity_[c] = poro[global_cell[c]];
@@ -623,9 +625,11 @@ namespace Opm
             int num_global_cells = dims[0]*dims[1]*dims[2];
             const std::vector<double>& ntg = deck["NTG"].back().getSIDoubleData();
             if (int(ntg.size()) != num_global_cells) {
-                OPM_THROW(std::runtime_error, "NTG field must have the same size as the "
-                      "logical cartesian size of the grid: "
-                      << ntg.size() << " != " << num_global_cells);
+                OPM_THROW(std::runtime_error,
+                          "NTG field must have the same size as the "
+                          "logical cartesian size of the grid: " +
+                          std::to_string(ntg.size()) + " != " +
+                          std::to_string(num_global_cells));
             }
             for (int c = 0; c < int(ntg_.size()); ++c) {
                 ntg_[c] = ntg[global_cell[c]];
@@ -646,9 +650,11 @@ namespace Opm
             const std::vector<double>& swcr =
                 deck["SWCR"].back().getSIDoubleData();
             if (int(swcr.size()) != num_global_cells) {
-                OPM_THROW(std::runtime_error, "SWCR field must have the same size as the "
-                      "logical cartesian size of the grid: "
-                      << swcr.size() << " != " << num_global_cells);
+                OPM_THROW(std::runtime_error,
+                          "SWCR field must have the same size as the "
+                          "logical cartesian size of the grid: " +
+                          std::to_string(swcr.size()) + " != " +
+                          std::to_string(num_global_cells));
             }
             for (int c = 0; c < int(swcr_.size()); ++c) {
                 swcr_[c] = swcr[global_cell[c]];
@@ -669,9 +675,11 @@ namespace Opm
             const std::vector<double>& sowcr =
                 deck["SOWCR"].back().getSIDoubleData();
             if (int(sowcr.size()) != num_global_cells) {
-                OPM_THROW(std::runtime_error, "SOWCR field must have the same size as the "
-                      "logical cartesian size of the grid: "
-                      << sowcr.size() << " != " << num_global_cells);
+                OPM_THROW(std::runtime_error,
+                          "SOWCR field must have the same size as the "
+                          "logical cartesian size of the grid: " +
+                          std::to_string(sowcr.size()) + " != " +
+                          std::to_string(num_global_cells));
             }
             for (int c = 0; c < int(sowcr_.size()); ++c) {
                 sowcr_[c] = sowcr[global_cell[c]];
@@ -702,9 +710,11 @@ namespace Opm
         permeability_kind_ = fillTensor(deck, tensor, kmap);
         for (int i = 1; i < int(tensor.size()); ++i) {
             if (int(tensor[i]->size()) != num_global_cells) {
-                OPM_THROW(std::runtime_error, "All permeability fields must have the same size as the "
-                      "logical cartesian size of the grid: "
-                      << (tensor[i]->size()) << " != " << num_global_cells);
+                OPM_THROW(std::runtime_error,
+                          "All permeability fields must have the same size as the "
+                          "logical cartesian size of the grid: " +
+                          std::to_string(tensor[i]->size()) + " != " +
+                          std::to_string(num_global_cells));
             }
         }
 
@@ -753,9 +763,11 @@ namespace Opm
             int num_global_cells = dims[0]*dims[1]*dims[2];
             const std::vector<int>& satnum = deck["SATNUM"].back().getIntData();
             if (int(satnum.size()) != num_global_cells) {
-                OPM_THROW(std::runtime_error, "SATNUM field must have the same size as the "
-                      "logical cartesian size of the grid: "
-                      << satnum.size() << " != " << num_global_cells);
+                OPM_THROW(std::runtime_error,
+                          "SATNUM field must have the same size as the "
+                          "logical cartesian size of the grid: " +
+                          std::to_string(satnum.size()) + " != " +
+                          std::to_string(num_global_cells));
             }
             for (int c = 0; c < nc; ++c) {
                 // Note: SATNUM is FORTRANish, ranging from 1 to n, therefore we subtract one.
@@ -768,9 +780,11 @@ namespace Opm
             int num_global_cells = dims[0]*dims[1]*dims[2];
             const std::vector<int>& satnum = deck["ROCKTYPE"].back().getIntData();
             if (int(satnum.size()) != num_global_cells) {
-                OPM_THROW(std::runtime_error, "ROCKTYPE field must have the same size as the "
-                      "logical cartesian size of the grid: "
-                      << satnum.size() << " != " << num_global_cells);
+                OPM_THROW(std::runtime_error,
+                          "ROCKTYPE field must have the same size as the "
+                          "logical cartesian size of the grid: " +
+                          std::to_string(satnum.size()) + " != " +
+                          std::to_string(num_global_cells));
             }
             for (int c = 0; c < nc; ++c) {
                 // Note: ROCKTYPE is FORTRANish, ranging from 1 to n, therefore we subtract one.
@@ -787,7 +801,7 @@ namespace Opm
     {
         std::ifstream rl(rock_list_file.c_str());
         if (!rl) {
-            OPM_THROW(std::runtime_error, "Could not open file " << rock_list_file);
+            OPM_THROW(std::runtime_error, "Could not open file " + rock_list_file);
         }
         int num_rocks = -1;
         rl >> num_rocks;
