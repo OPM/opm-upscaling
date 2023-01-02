@@ -83,7 +83,7 @@ namespace Opm
 	} else if (flow_bc_type == "periodic") {
 	    OPM_THROW(std::runtime_error, "Periodic conditions not here yet.");
 	} else {
-	    OPM_THROW(std::runtime_error, "Unknown flow boundary condition type " << flow_bc_type);
+        OPM_THROW(std::runtime_error, "Unknown flow boundary condition type " + flow_bc_type);
 	}
 	bcs.resize(7);
 	bcs.flowCond(1) = FlowBC(bct, leftval);
@@ -107,7 +107,8 @@ namespace Opm
 	// Caution: This enum is copied from Upscaler.hpp.
 	enum BoundaryConditionType { Fixed = 0, Linear = 1, Periodic = 2, PeriodicSingleDirection = 3, Noflow = 4 };
         if (bct < 0 || bct > 2) {
-            OPM_THROW(std::runtime_error, "Illegal boundary condition type (0-2 are legal): " << bct); // Later on, we may allow 3 and 4.
+            OPM_THROW(std::runtime_error,
+                      "Illegal boundary condition type (0-2 are legal): " + std::to_string(bct)); // Later on, we may allow 3 and 4.
         }
 	BoundaryConditionType bctype = static_cast<BoundaryConditionType>(bct);
         assert(pddir >=0 && pddir <= 2);
