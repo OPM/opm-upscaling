@@ -272,7 +272,7 @@ namespace Opm
 		}
 		break;
 	    default:
-		OPM_THROW(std::runtime_error, "Unknown boundary type: " << bctype_);
+        OPM_THROW(std::runtime_error, "Unknown boundary type: " + std::to_string(bctype_));
 	    }
 	    double delta = computeDelta(pdd);
 	    for (int i = 0; i < Dimension; ++i) {
