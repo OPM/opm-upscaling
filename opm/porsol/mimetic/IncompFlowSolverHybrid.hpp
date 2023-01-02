@@ -1405,8 +1405,11 @@ namespace Opm {
             // face/contact pressure values (soln_).
             linsolve.apply(soln_, rhs_, result);
             if (!result.converged) {
-                OPM_THROW(std::runtime_error, "Linear solver failed to converge in " << result.iterations << " iterations.\n"
-                      << "Residual reduction achieved is " << result.reduction << '\n');
+                OPM_THROW(std::runtime_error,
+                          "Linear solver failed to converge in " +
+                          std::to_string(result.iterations) + " iterations.\n"
+                          "Residual reduction achieved is " +
+                          std::to_string(result.reduction) + '\n');
             }
         }
 
@@ -1531,8 +1534,11 @@ namespace Opm {
             // face/contact pressure values (soln_).
             linsolve.apply(soln_, rhs_, result);
             if (!result.converged) {
-                OPM_THROW(std::runtime_error, "Linear solver failed to converge in " << result.iterations << " iterations.\n"
-                      << "Residual reduction achieved is " << result.reduction << '\n');
+                OPM_THROW(std::runtime_error,
+                          "Linear solver failed to converge in " +
+                          std::to_string(result.iterations) + " iterations.\n"
+                          "Residual reduction achieved is " +
+                          std::to_string(result.reduction) + '\n');
             }
 
         }
@@ -1594,8 +1600,11 @@ namespace Opm {
             // face/contact pressure values (soln_).
             linsolve.apply(soln_, rhs_, result);
             if (!result.converged) {
-                OPM_THROW(std::runtime_error, "Linear solver failed to converge in " << result.iterations << " iterations.\n"
-                      << "Residual reduction achieved is " << result.reduction << '\n');
+                OPM_THROW(std::runtime_error,
+                          "Linear solver failed to converge in " +
+                          std::to_string(result.iterations) + " iterations.\n"
+                          "Residual reduction achieved is " +
+                          std::to_string(result.reduction) + '\n');
             }
 
         }
@@ -1657,8 +1666,11 @@ namespace Opm {
             // face/contact pressure values (soln_).
             linsolve.apply(soln_, rhs_, result);
             if (!result.converged) {
-                OPM_THROW(std::runtime_error, "Linear solver failed to converge in " << result.iterations << " iterations.\n"
-                      << "Residual reduction achieved is " << result.reduction << '\n');
+                OPM_THROW(std::runtime_error,
+                          "Linear solver failed to converge in " +
+                          std::to_string(result.iterations) + " iterations.\n"
+                          "Residual reduction achieved is " +
+                          std::to_string(result.reduction) + '\n');
             }
 
         }
