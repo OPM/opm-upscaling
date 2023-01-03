@@ -12,6 +12,8 @@
 
 #include "mpc.hh"
 
+#include <ostream>
+
 namespace Opm {
 namespace Elasticity {
 
@@ -79,6 +81,11 @@ std::ostream& operator<< (std::ostream& s, const MPC& mpc)
     s <<"*("<< mpc.master[i].node <<","<< mpc.master[i].dof <<")";
   }
   return s << std::endl;
+}
+
+std::ostream& operator<< (std::ostream& s, const MPC::DOF& d)
+{
+  return s <<"u_"<< char('w'+d.dof) <<" in node "<< d.node;
 }
 
 }
