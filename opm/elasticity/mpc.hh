@@ -14,7 +14,7 @@
 
 #include <map>
 #include <vector>
-#include <iostream>
+#include <iosfwd>
 #include <set>
 
 namespace Opm {
@@ -75,10 +75,7 @@ public:
     DOF(int n, int d, double c = double(0)) : node(n), dof(d), coeff(c) {}
 
     //! \brief Global stream operator printing a DOF instance.
-    friend std::ostream& operator<<(std::ostream& s, const DOF& d)
-    {
-      return s <<"u_"<< char('w'+d.dof) <<" in node "<< d.node;
-    }
+    friend std::ostream& operator<<(std::ostream& s, const DOF& d);
 
     int  node;  //!< Node number identifying this DOF
     int  dof;   //!< Local DOF number within \a node

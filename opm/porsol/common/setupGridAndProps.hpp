@@ -135,7 +135,8 @@ namespace Opm
             OPM_MESSAGE("Warning: For generated cartesian grids, we use uniform reservoir properties.");
             res_prop.init(grid.size(0), default_poro, default_perm);
         } else {
-            OPM_THROW(std::runtime_error, "Unknown file format string: " << fileformat);
+            OPM_THROW(std::runtime_error,
+                      "Unknown file format string: " + fileformat);
         }
         if (param.getDefault("use_unique_boundary_ids", false)) {
             grid.setUniqueBoundaryIds(true);
