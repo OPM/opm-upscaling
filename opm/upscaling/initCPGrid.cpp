@@ -32,8 +32,9 @@
 
 #include <opm/common/ErrorMacros.hpp>
 
-#include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include <opm/grid/CpGrid.hpp>
 
