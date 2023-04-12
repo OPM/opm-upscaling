@@ -1388,11 +1388,7 @@ namespace Opm {
             Adapter opS(S_);
 
             // Construct preconditioner.
-#if DUNE_VERSION_NEWER(DUNE_ISTL, 2, 7)
             Dune::SeqILU<MatrixT,VectorT,VectorT> precond(S_, 1.0);
-#else
-            Dune::SeqILU0<MatrixT,VectorT,VectorT> precond(S_, 1.0);
-#endif
 
             // Construct solver for system of linear equations.
             Dune::CGSolver<VectorT> linsolve(opS, precond, residTol,
@@ -1457,11 +1453,7 @@ namespace Opm {
       typedef Dune::SeqOverlappingSchwarz<Matrix,Vector,Dune::MultiplicativeSchwarzMode> Smoother;
 #else
 #if SMOOTHER_ILU
-#if DUNE_VERSION_NEWER(DUNE_ISTL, 2, 7)
         typedef Dune::SeqILU<Matrix,Vector,Vector>         Smoother;
-#else
-        typedef Dune::SeqILU0<Matrix,Vector,Vector>        Smoother;
-#endif
 #else
         typedef Dune::SeqSSOR<Matrix,Vector,Vector>        Smoother;
 #endif

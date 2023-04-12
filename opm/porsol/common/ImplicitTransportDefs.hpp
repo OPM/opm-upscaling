@@ -176,15 +176,9 @@ namespace Opm {
                                 ScalarBlockVector,
                                 ScalarBlockVector> opA(A);
 
-#if DUNE_VERSION_NEWER(DUNE_ISTL, 2, 7)
             Dune::SeqILU<ScalarBCRSMatrix,
                           ScalarBlockVector,
                           ScalarBlockVector> precond(A, 1.0);
-#else
-            Dune::SeqILU0<ScalarBCRSMatrix,
-                          ScalarBlockVector,
-                          ScalarBlockVector> precond(A, 1.0);
-#endif
 
             int maxit  = A.N();
             double tol = 5.0e-7;

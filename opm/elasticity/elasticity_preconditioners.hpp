@@ -55,11 +55,7 @@ typedef Dune::SeqSSOR<Matrix, Vector, Vector> SSORSmoother;
 typedef Dune::SeqJac<Matrix, Vector, Vector> JACSmoother;
 
 //! \brief ILU0 AMG smoother
-#if DUNE_VERSION_NEWER(DUNE_ISTL, 2, 7)
 typedef Dune::SeqILU<Matrix, Vector, Vector> ILUSmoother;
-#else
-typedef Dune::SeqILU0<Matrix, Vector, Vector> ILUSmoother;
-#endif
 
 //! \brief Schwarz + ILU0 AMG smoother
 typedef Dune::SeqOverlappingSchwarz<Matrix,Vector,
