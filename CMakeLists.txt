@@ -112,20 +112,5 @@ include (${CMAKE_CURRENT_SOURCE_DIR}/compareUpscaling.cmake)
 # encode test cases so they can be embedded in the benchmark executables
 include (${PROJECT_SOURCE_DIR}/EmbedCases.cmake)
 
-# Setup static benchmarks
-include(OpmStaticTargets)
-opm_from_git(${PROJECT_SOURCE_DIR} benchmarks ${VCS_SHA1} benchmarks)
-add_dependencies(benchmarks-static opm-grid-static)
-
-# Copy static benchmarks to main project binary directory
-foreach(benchmark ${OPM_BENCHMARKS})
-  add_custom_command(TARGET benchmarks-static POST_BUILD
-                     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/static/benchmarks/src/benchmarks-static-build/bin/${benchmark}
-                                                      ${CMAKE_BINARY_DIR}/bin/${benchmark}-static)
-	if(INSTALL_BENCHMARKS)
-		install(TARGETS ${benchmark} DESTINATION bin)
-	endif()
-endforeach()
-
 install(DIRECTORY doc/man1 DESTINATION ${CMAKE_INSTALL_MANDIR}
   FILES_MATCHING PATTERN "*.1")
