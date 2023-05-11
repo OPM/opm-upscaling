@@ -34,5 +34,5 @@ TEST_ARGS="$@"
 rm -Rf ${RESULT_PATH}
 mkdir -p ${RESULT_PATH}
 
-${BINPATH}/${EXE_NAME} ${TEST_ARGS}
+OMP_NUM_THREADS=1 ${BINPATH}/${EXE_NAME} ${TEST_ARGS}
 ${BINPATH}/compareUpscaling ${INPUT_DATA_PATH}/reference_solutions/${TEST_NAME}.txt ${RESULT_PATH}/${TEST_NAME}.txt ${ABS_TOL} ${REL_TOL}
