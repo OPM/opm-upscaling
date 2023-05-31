@@ -363,7 +363,6 @@ try
                 std::vector<double> cellVolumes, cellPoreVolumes;
                 cellVolumes.resize(satnums.size(), 0.0);
                 cellPoreVolumes.resize(satnums.size(), 0.0);
-                int tesselatedCells = 0;
                 //double maxSinglePhasePerm = 0;
                 double Swirvolume = 0;
                 double Sworvolume = 0;
@@ -400,7 +399,6 @@ try
                         Swirvolume += minSw * cellPoreVolumes[cell_idx];
                         Sworvolume += maxSw * cellPoreVolumes[cell_idx];
                     }
-                    ++tesselatedCells; // keep count.
                 }
 
                 // If upscling=false, we still (may) want to have porosities together with endpoints
