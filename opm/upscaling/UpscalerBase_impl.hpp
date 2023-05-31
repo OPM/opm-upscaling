@@ -296,16 +296,9 @@ namespace Opm
 	double side1_area = 0.0;
 	double side2_area = 0.0;
 
-	int num_faces = 0;
-	int num_bdyfaces = 0;
-	int num_side1 = 0;
-	int num_side2 = 0;
-
 	for (CellIter c = ginterf_.cellbegin(); c != ginterf_.cellend(); ++c) {
 	    for (FaceIter f = c->facebegin(); f != c->faceend(); ++f) {
-		++num_faces;
 		if (f->boundary()) {
-		    ++num_bdyfaces;
 		    int canon_bid = bcond_.getCanonicalBoundaryId(f->boundaryId());
 		    if ((canon_bid - 1)/2 == flow_dir) {
 			double flux = flow_solution.outflux(f);
@@ -313,7 +306,6 @@ namespace Opm
 			double norm_comp = f->normal()[flow_dir];
 			// std::cout << "bid " << f->boundaryId() << "   area " << area << "   n " << norm_comp << std::endl;
 			if (canon_bid - 1 == 2*flow_dir) {
-			    ++num_side1;
 			    if (flow_dir == pdrop_dir && flux > 0.0) {
 #ifdef VERBOSE
 			      std::cerr << "Flow may be in wrong direction at bid: " << f->boundaryId()<<" (canonical: "<<canon_bid
@@ -325,7 +317,6 @@ namespace Opm
 			    side1_area += area;
 			} else {
 			    assert(canon_bid - 1 == 2*flow_dir + 1);
-			    ++num_side2;
 			    if (flow_dir == pdrop_dir && flux < 0.0) {
 #ifdef VERBOSE
 				std::cerr << "Flow may be in wrong direction at bid: " << f->boundaryId()
@@ -340,8 +331,6 @@ namespace Opm
 		}
 	    }
 	}
-// 	std::cout << "Faces: " << num_faces << "   Boundary faces: " << num_bdyfaces
-// 		  << "   Side 1 faces: " << num_side1 << "   Side 2 faces: " << num_side2 << std::endl;
 	// q is the average velocity.
 	return 0.5*(side1_flux/side1_area + side2_flux/side2_area);
     }
