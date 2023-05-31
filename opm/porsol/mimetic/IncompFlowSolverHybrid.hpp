@@ -155,7 +155,7 @@ namespace Opm {
         ///    and usually @code T @endcode is an alias for @code
         ///    double @endcode.
         template<typename T>
-        class axpby : public std::binary_function<T,T,T> {
+        class axpby {
         public:
             /// @brief Constructor.
             /// @param [in] a

@@ -44,7 +44,7 @@
 namespace Opm {
     namespace ImplicitTransportDefault {
         template <typename T>
-        class MaxAbs : public ::std::binary_function <double, T, double> {
+        class MaxAbs {
         public:
             double
             operator()(double x, const T& y) {
@@ -56,7 +56,7 @@ namespace Opm {
         };
 
         template <typename T>
-        class SumAbs : public ::std::binary_function <double, T, double> {
+        class SumAbs {
         public:
             double
             operator()(double x, const T& y) {
@@ -68,7 +68,7 @@ namespace Opm {
         };
 
         template <typename T>
-        class Euclid : public ::std::binary_function <double, T, double> {
+        class Euclid {
         public:
             double
             operator()(double x, const T& y) {
