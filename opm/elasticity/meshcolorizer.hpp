@@ -44,7 +44,14 @@ class MeshColorizer {
     }
 
     //! \brief Calculate the coloring
-    void calcGroups();
+    void calcGroups(){
+        tg[0].resize(1);
+        tg[0].reserve(grid.size(0));
+        for (int i = 0; i < grid.size(0); ++i)
+            tg[0][0].push_back(i);
+        tg[1].clear();
+      
+    }
   private:
     IntMat tg[2]; //!< The color groups
     const GridType& grid; //!< Reference to grid being colored

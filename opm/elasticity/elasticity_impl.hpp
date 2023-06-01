@@ -71,6 +71,21 @@ void Elasticity<GridType>::getBmatrix(Dune::FieldMatrix<ctype,components,funcdim
       B[i][j] = temp[k%rows][k/rows];
 }
 
+
+    template<class GridType>
+    template<int funcdims>
+void Elasticity<GridType>::getBVector(Dune::FieldVector<ctype,funcdims>& Bvector,
+                                      const Dune::FieldVector<ctype,dim>& point)
+{
+    P1ShapeFunctionSet<ctype,ctype,dim> basis 
+        = P1ShapeFunctionSet<ctype,ctype,dim>::instance();
+
+    Dune::FieldMatrix<ctype,funcdims,dim> N;
+    for (int i=0;i < funcdims; i++){
+        Bvector[i] = basis[i].evaluateFunction(point);
+    }
+}
+    
   template <class GridType>
     template<int comp, int funcdim>
 void Elasticity<GridType>::getStiffnessMatrix(
