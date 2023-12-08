@@ -142,7 +142,7 @@ namespace Opm {
       if (elm.second.target != data::TargetType::RESTART_SOLUTION)
         continue;
 
-      const auto& val = elm.second.data;
+      const auto& val = elm.second.data<double>();
       rstFile.write(elm.first, std::vector<float>(val.begin(), val.end()));
     }
 
