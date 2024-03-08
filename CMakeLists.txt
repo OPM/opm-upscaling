@@ -14,10 +14,10 @@
 #                                                                         #
 ###########################################################################
 
+cmake_minimum_required (VERSION 3.10)
+
 # Mandatory call to project
 project(opm-upscaling C CXX)
-
-cmake_minimum_required (VERSION 3.10)
 
 option(SIBLING_SEARCH "Search for other modules in sibling directories?" ON)
 option(INSTALL_BENCHMARKS "Install benchmark applications?" OFF)
