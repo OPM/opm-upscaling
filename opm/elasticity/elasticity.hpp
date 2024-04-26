@@ -35,6 +35,10 @@ class Elasticity {
     //! \param[in] point (Reference) coordinates of quadrature point 
     //! \param[in] Jinv Jacobian matrix in quadrature point
     //! \param[out] B The B matrix
+      template<int funcdim>
+    void getBVector(Dune::FieldVector<ctype,funcdim>& BVector,
+                    const Dune::FieldVector<ctype,dim>& point);
+  
       template<int components, int funcdim>
     void getBmatrix(Dune::FieldMatrix<ctype,components,funcdim>& B,
                     const Dune::FieldVector<ctype,dim>& point,
