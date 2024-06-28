@@ -45,10 +45,7 @@
 
 void Opm::initCPGrid(Dune::CpGrid& grid, const Opm::ParameterGroup& param) {
     std::string fileformat = param.get<std::string>("fileformat");
-    if (fileformat == "sintef_legacy") {
-        std::string grid_prefix = param.get<std::string>("grid_prefix");
-        grid.readSintefLegacyFormat(grid_prefix);
-    } else if (fileformat == "eclipse") {
+    if (fileformat == "eclipse") {
         std::string filename = param.get<std::string>("filename");
         if (param.has("z_tolerance")) {
             std::cerr << "****** Warning: z_tolerance parameter is obsolete, use PINCH in deck input instead\n";

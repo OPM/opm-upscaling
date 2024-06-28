@@ -75,12 +75,7 @@ namespace Opm
         // Initialize grid and reservoir properties.
         // Parts copied from Dune::CpGrid::init().
         std::string fileformat = param.getDefault<std::string>("fileformat", "cartesian");
-        if (fileformat == "sintef_legacy") {
-            std::string grid_prefix = param.get<std::string>("grid_prefix");
-            grid.readSintefLegacyFormat(grid_prefix);
-            OPM_MESSAGE("Warning: We do not yet read legacy reservoir properties. Using defaults.");
-            res_prop.init(grid.size(0));
-        } else if (fileformat == "eclipse") {
+        if (fileformat == "eclipse") {
             std::string ecl_file = param.get<std::string>("filename");
 
             Opm::Parser parser;
