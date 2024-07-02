@@ -478,7 +478,7 @@ try
      // to avoid division by zero and to avoid special handling of negative
      // capillary pressure in the code above.
      std::transform(Pvalues.begin(), Pvalues.end(), Pvalues.begin(),
-                    std::bind1st(std::multiplies<double>(), surfaceTension));
+                    [surfaceTension](const double val) { return val*surfaceTension; });
 
     /*
      * Step 9a: Verify results
