@@ -489,19 +489,19 @@ class HexGeometry<2, cdim, GridImp>
 
 //! \brief Find the vertex in the vector with minimum X and minimum Y
 //! \returns The requested vertex
-BoundaryGrid::Vertex minXminY(std::vector<BoundaryGrid::Vertex>& in);
+BoundaryGrid::Vertex minXminY(const std::vector<BoundaryGrid::Vertex>& in);
 
 //! \brief Find the vertex in the vector with maximum X and minimum Y
 //! \returns The requested vertex
-BoundaryGrid::Vertex maxXminY(std::vector<BoundaryGrid::Vertex>& in);
+BoundaryGrid::Vertex maxXminY(const std::vector<BoundaryGrid::Vertex>& in);
 
 //! \brief Find the vertex in the vector with maximum X and maximum Y
 //! \returns The requested vertex
-BoundaryGrid::Vertex maxXmaxY(std::vector<BoundaryGrid::Vertex>& in);
+BoundaryGrid::Vertex maxXmaxY(const std::vector<BoundaryGrid::Vertex>& in);
 
 //! \brief Find the vertex in the vector with minimum X and maximum Y
 //! \returns The requested vertex
-BoundaryGrid::Vertex minXmaxY(std::vector<BoundaryGrid::Vertex>& in);
+BoundaryGrid::Vertex minXmaxY(const std::vector<BoundaryGrid::Vertex>& in);
 
 }
 }
