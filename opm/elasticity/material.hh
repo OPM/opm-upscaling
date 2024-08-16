@@ -19,8 +19,7 @@
 
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
-namespace Opm {
-namespace Elasticity {
+namespace Opm::Elasticity {
 
 
 /*!
@@ -43,6 +42,7 @@ protected:
   { 
     return os;
   }
+
 public:
   //! \brief Empty virtual destructor.
   virtual ~Material() {}
@@ -95,12 +95,12 @@ public:
   //! \param[in] ID ID of the material
   //! \param[in] file The URL to the rocklist
   static Material* create(int ID, const std::string& file);
+
 private:
   int  id;  //!< External material number
   double rho; //!< Mass density
 };
 
-}
-}
+} // namespace Opm::Elasticity
 
 #endif

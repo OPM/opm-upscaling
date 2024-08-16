@@ -51,12 +51,12 @@ namespace Opm
         typedef typename Super::GridInterface GI;
         typedef typename Super::Vector Vector;
 
-        virtual void initSources(const Opm::ParameterGroup& param)
+        void initSources(const Opm::ParameterGroup& param) override
         {
             // Zero-initializing first.
             int nc = this->ginterf_.numberOfCells();
-	    this->injection_rates_ = Opm::SparseVector<double>(nc);
-	    this->injection_rates_psolver_.resize(nc, 0.0);
+            this->injection_rates_ = Opm::SparseVector<double>(nc);
+            this->injection_rates_psolver_.resize(nc, 0.0);
 
 //             this->injection_rates_.addElement(1.0, 0);
 //             this->injection_rates_psolver_[0] = 1.0;
@@ -99,10 +99,10 @@ namespace Opm
             }
         }
 
-	virtual void initBoundaryConditions(const Opm::ParameterGroup& param)
-	{
-	    setupBoundaryConditions(param, this->ginterf_, this->bcond_);
-	}
+        void initBoundaryConditions(const Opm::ParameterGroup& param) override
+        {
+            setupBoundaryConditions(param, this->ginterf_, this->bcond_);
+        }
 
     private:
         bool isInside(const Vector& low, const Vector& high, const Vector& pt)
