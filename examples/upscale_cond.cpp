@@ -214,12 +214,6 @@ try
      if found, replace default values with command line values.
    */
 
-   /* Check first if there is anything on the command line to look for */
-   if (varnum == 1) {
-       if (isMaster) cout << "Error: No Eclipsefile or J-functions found on command line." << endl;
-      usageandexit();
-   }
-
    /* Loop over all command line options in order to look 
       for options. 
 

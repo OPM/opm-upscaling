@@ -470,13 +470,6 @@ try
    */
    auto options = defineOptions();
 
-   /* Check first if there is anything on the command line to look for */
-   if (varnum == 1) {
-      if (mpi_rank == 0)
-        cout << "Error: No Eclipsefile or stonefiles found on command line." << endl;
-      usageandexit();
-   }
-
    /*
       'argeclindex' is so that vararg[argeclindex] = the eclipse filename.
    */
