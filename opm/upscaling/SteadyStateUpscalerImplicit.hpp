@@ -40,7 +40,6 @@
 #include <opm/porsol/euler/EulerUpstream.hpp>
 #include <opm/porsol/euler/ImplicitCapillarity.hpp>
 #include <opm/grid/common/GridAdapter.hpp>
-#include <array>
 
 namespace Opm
 {
@@ -100,7 +99,7 @@ namespace Opm
 
     protected:
         // ------- Typedefs -------
-   typedef typename Traits::template TransportSolver<GridInterface, typename Super::BCs>::Type TransportSolver;
+        typedef typename Traits::template TransportSolver<GridInterface, typename Super::BCs>::Type TransportSolver;
 
         // ------- Methods -------
         template <class FlowSol>
@@ -109,8 +108,7 @@ namespace Opm
                                const FlowSol& flow_solution,
                                const std::vector<double>& saturations) const;
         /// Override from superclass.
-        virtual void initImpl(const Opm::ParameterGroup& param);
-
+        void initImpl(const Opm::ParameterGroup& param) override;
 
         // ------- Data members -------
         std::vector<double> last_saturation_state_;

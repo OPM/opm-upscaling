@@ -699,7 +699,7 @@ namespace Opm {
         class FaceFluxes
         {
         public:
-            FaceFluxes(int sz)
+            explicit FaceFluxes(int sz)
                 : fluxes_(sz, 0.0), visited_(sz, 0), max_modification_(0.0)
             {
             }

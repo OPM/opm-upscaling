@@ -51,7 +51,7 @@ namespace Opm {
     template <int np = 2>
     class ReservoirState {
     public:
-        ReservoirState(const UnstructuredGrid* g)
+        explicit ReservoirState(const UnstructuredGrid* g)
             : press_ (g->number_of_cells),
               fpress_(g->number_of_faces),
               flux_  (g->number_of_faces),
@@ -114,7 +114,7 @@ namespace Opm {
 
     class TwophaseFluidWrapper {
     public:
-        TwophaseFluidWrapper(const Opm::ReservoirPropertyCapillary<3>& r)
+        explicit TwophaseFluidWrapper(const Opm::ReservoirPropertyCapillary<3>& r)
             : r_(r)
         {}
 

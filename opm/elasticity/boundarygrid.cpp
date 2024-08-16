@@ -348,7 +348,7 @@ std::vector<double> BoundaryGrid::Quad::evalBasis(double xi, double eta) const
   return res;
 }
 
-BoundaryGrid::Vertex minXminY(std::vector<BoundaryGrid::Vertex>& in)
+BoundaryGrid::Vertex minXminY(const std::vector<BoundaryGrid::Vertex>& in)
 {
   // find the nodes with minimal X
   // then find the minimum Y among these 
@@ -358,7 +358,7 @@ BoundaryGrid::Vertex minXminY(std::vector<BoundaryGrid::Vertex>& in)
   return *s.begin();
 }
 
-BoundaryGrid::Vertex maxXminY(std::vector<BoundaryGrid::Vertex>& in)
+BoundaryGrid::Vertex maxXminY(const std::vector<BoundaryGrid::Vertex>& in)
 {
   // find the nodes with maximum X
   // then find the minimum Y among these 
@@ -368,7 +368,7 @@ BoundaryGrid::Vertex maxXminY(std::vector<BoundaryGrid::Vertex>& in)
   return *(s.end()-2);
 }
 
-BoundaryGrid::Vertex maxXmaxY(std::vector<BoundaryGrid::Vertex>& in)
+BoundaryGrid::Vertex maxXmaxY(const std::vector<BoundaryGrid::Vertex>& in)
 {
   // find the nodes with maximum X
   // then find the maximum Y among these 
@@ -378,7 +378,7 @@ BoundaryGrid::Vertex maxXmaxY(std::vector<BoundaryGrid::Vertex>& in)
   return *(s.end()-1);
 }
 
-BoundaryGrid::Vertex minXmaxY(std::vector<BoundaryGrid::Vertex>& in)
+BoundaryGrid::Vertex minXmaxY(const std::vector<BoundaryGrid::Vertex>& in)
 {
   // find the nodes with minimum X
   // then find the maximum Y among these 

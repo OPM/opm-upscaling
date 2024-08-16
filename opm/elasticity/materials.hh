@@ -14,9 +14,7 @@
 
 #include "material.hh"
 
-
-namespace Opm {
-namespace Elasticity {
+namespace Opm::Elasticity {
 
 /*!
   \brief Isotropic linear elastic material.
@@ -38,16 +36,16 @@ public:
   }
 
   //! \brief Empty virtual destructor.
-  virtual ~Isotropic() {}
+  ~Isotropic() override {}
 
   //! \brief Returns the number of parameters describing this material.
-  virtual int numPar() const
+  int numPar() const override
   {
     return 2;
   }
 
   //! \brief Returns the \a ipar'th parameter describing this material.
-  virtual double getPar(int ipar = 1) const
+  double getPar(int ipar = 1) const override
   {
     return ipar == 1 ? E : nu;
   }
@@ -68,17 +66,18 @@ public:
   //! \brief Establishes the full constitutive matrix for this material.
   //! \param[out] C The constitutive matrix
   //! \param[in] invers If \e true, set up the inverse matrix instead
-  virtual bool getConstitutiveMatrix(Dune::FieldMatrix<double,6,6>& C,
-                                     bool invers = false) const;
+  bool getConstitutiveMatrix(Dune::FieldMatrix<double,6,6>& C,
+                             bool invers = false) const override;
 
   //! \brief Establishes the full constitutive matrix for this material.
   //! \param[out] C The constitutive matrix
   //! \param[in] invers If \e true, set up the inverse matrix instead
-  virtual bool getConstitutiveMatrix(Dune::FieldMatrix<double,3,3>& C,
-                                     bool invers = false) const;
+  bool getConstitutiveMatrix(Dune::FieldMatrix<double,3,3>& C,
+                             bool invers = false) const override;
+
 protected:
   //! \brief Prints the material properties to a stream.
-  virtual std::ostream& write(std::ostream& os) const;
+  std::ostream& write(std::ostream& os) const override;
 
 private:
   double E;  //!< Young's modulus
@@ -101,32 +100,32 @@ public:
                double Gxy, double Gxz = double(-1), double Gyz = double(-1));
 
   //! \brief Empty virtual destructor.
-  virtual ~OrthotropicD() {}
+  ~OrthotropicD() override {}
 
   //! \brief Returns the number of parameters describing this material.
-  virtual int numPar() const
+  int numPar() const override
   {
     return 6;
   }
 
   //! \brief Returns the \a ipar'th parameter describing this material.
-  virtual double getPar(int ipar = 1) const;
+  double getPar(int ipar = 1) const override;
 
   //! \brief Establishes the full constitutive matrix for this material.
   //! \param[out] C The constitutive matrix
   //! \param[in] invers If \e true, set up the inverse matrix instead
-  virtual bool getConstitutiveMatrix(Dune::FieldMatrix<double,6,6>& C,
-				     bool invers = false) const;
+  bool getConstitutiveMatrix(Dune::FieldMatrix<double,6,6>& C,
+                             bool invers = false) const override;
 
   //! \brief Establishes the full constitutive matrix for this material.
   //! \param[out] C The constitutive matrix
   //! \param[in] invers If \e true, set up the inverse matrix instead
-  virtual bool getConstitutiveMatrix(Dune::FieldMatrix<double,3,3>& C,
-				     bool invers = false) const;
+  bool getConstitutiveMatrix(Dune::FieldMatrix<double,3,3>& C,
+                             bool invers = false) const override;
 
 protected:
   //! \brief Prints the material properties to a stream.
-  virtual std::ostream& write(std::ostream& os) const;
+  std::ostream& write(std::ostream& os) const override;
 
 private:
   double E[6]; //!< The diagonal of the constitutive matrix
@@ -142,37 +141,37 @@ public:
   OrthotropicSym(int ID, const Dune::DynamicVector<double>& Cu);
 
   //! \brief Empty virtual destructor.
-  virtual ~OrthotropicSym() {}
+  ~OrthotropicSym() override {}
 
   //! \brief Returns the number of parameters describing this material.
-  virtual int numPar() const
+  int numPar() const override
   {
     return 21;
   }
 
   //! \brief Returns the \a ipar'th parameter describing this material.
-  virtual double getPar(int ipar = 1) const;
+  double getPar(int ipar = 1) const override;
 
   //! \brief Establishes the full constitutive matrix for this material.
   //! \param[out] C The constitutive matrix
   //! \param[in] invers If \e true, set up the inverse matrix instead
-  virtual bool getConstitutiveMatrix(Dune::FieldMatrix<double,6,6>& C,
-				     bool invers = false) const;
+  bool getConstitutiveMatrix(Dune::FieldMatrix<double,6,6>& C,
+                             bool invers = false) const override;
 
   //! \brief Establishes the full constitutive matrix for this material.
   //! \param[out] C The constitutive matrix
   //! \param[in] invers If \e true, set up the inverse matrix instead
-  virtual bool getConstitutiveMatrix(Dune::FieldMatrix<double,3,3>& C,
-				     bool invers = false) const;
+  bool getConstitutiveMatrix(Dune::FieldMatrix<double,3,3>& C,
+                             bool invers = false) const override;
+
 protected:
   //! \brief Prints the material properties to a stream.
-  virtual std::ostream& write(std::ostream& os) const;
+  std::ostream& write(std::ostream& os) const override;
 
 private:
   double Cupper[21]; //!< Upper triangle of the symmetric constitutive matrix
 };
 
-}
-}
+} // namespace Opm::Elasticity
 
 #endif

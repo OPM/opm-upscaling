@@ -150,7 +150,7 @@ class TensorProductFunction
 
     //! \brief Construct a tensor-product function
     //! \param[in] funcs_ The functions
-    TensorProductFunction(const Dune::FieldVector<ftype, dim>& funcs_)
+    explicit TensorProductFunction(const Dune::FieldVector<ftype, dim>& funcs_)
       : funcs(funcs_) {}
 
     //! \brief Evaluate the function
@@ -279,7 +279,7 @@ public:
 
     PNShapeFunctionSet(int n1, int n2, int n3=0)
     {
-      int dims[3] = {n1, n2, n3};
+      const int dims[3] = {n1, n2, n3};
       cfuncs.resize(dim);
       for (int i=0; i < dim; ++i) {
         std::vector<double> grid;

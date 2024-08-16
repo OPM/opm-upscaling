@@ -30,7 +30,7 @@ class MeshColorizer {
   public:
     //! \brief Default constructor
     //! \param[in] grid_ The grid to colorize
-    MeshColorizer(const GridType& grid_) :
+    explicit MeshColorizer(const GridType& grid_) :
       grid(grid_)
     {
       calcGroups();

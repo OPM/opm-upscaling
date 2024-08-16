@@ -214,12 +214,6 @@ try
      if found, replace default values with command line values.
    */
 
-   /* Check first if there is anything on the command line to look for */
-   if (varnum == 1) {
-       if (isMaster) cout << "Error: No Eclipsefile or J-functions found on command line." << endl;
-      usageandexit();
-   }
-
    /* Loop over all command line options in order to look 
       for options. 
 
@@ -360,8 +354,10 @@ try
              Jtmp = MonotCubicInterpolator(vararg[JFindex + i], 1, jFunctionCurve); 
          }
          catch (const char * errormessage) {
-             if (isMaster) cerr << "Error: " << errormessage << endl;
-             if (isMaster) cerr << "Check filename and -jFunctionCurve" << endl;
+             if (isMaster) {
+                 cerr << "Error: " << errormessage << endl
+                      << "Check filename and -jFunctionCurve" << endl;
+             }
              usageandexit();
          }
          
@@ -394,8 +390,10 @@ try
              Jtmp = MonotCubicInterpolator(vararg[JFindex], 1, jFunctionCurve);
          }
          catch (const char * errormessage) {
-             if (isMaster) cerr << "Error: " << errormessage << endl;
-             if (isMaster) cerr << "Check filename and -jFunctionCurve" << endl;
+             if (isMaster) {
+                 cerr << "Error: " << errormessage << endl
+                      << "Check filename and -jFunctionCurve" << endl;
+             }
              usageandexit();
          }
 
@@ -528,8 +526,10 @@ try
        ++tesselatedCells; // keep count.
    }
 
-   if (isMaster) cout << "Pcmin:    " << Pcmin << endl;
-   if (isMaster) cout << "Pcmax:    " << Pcmax << endl;
+   if (isMaster) {
+       cout << "Pcmin:    " << Pcmin << endl
+            << "Pcmax:    " << Pcmax << endl;
+   }
 
    if (Pcmin > Pcmax) {
        if (isMaster) cerr << "ERROR: No legal capillary pressures found for this system. Exiting..." << endl;

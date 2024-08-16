@@ -46,7 +46,7 @@ namespace Opm {
         enum { DofPerCell = Model::DofPerCell };
 
     public:
-        ImplicitAssembly(Model& model)
+        explicit ImplicitAssembly(Model& model)
             : model_(model),
               nconn_(-1)   ,
               asm_buffer_()

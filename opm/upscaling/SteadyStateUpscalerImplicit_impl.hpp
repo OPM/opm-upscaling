@@ -233,7 +233,6 @@ namespace Opm
         double ecl_time = 0.0;
         std::vector<double> ecl_sat;
         std::vector<double> ecl_press;
-        std::vector<double> init_saturation(saturation);
         while ((!stationary) && (it_count < max_it_)) { // && transport_cost < max_transport_cost_)
             // Run transport solver.
             std::cout << "Running transport step " << it_count << " with stepsize "
@@ -242,7 +241,6 @@ namespace Opm
                                                               this->flow_solver_.getSolution(), injection);
             // Run pressure solver.
             if (converged) {
-                init_saturation = saturation;
                 // this->flow_solver_.solve(this->res_prop_, saturation, this->bcond_, src,
                 //                          this->residual_tolerance_, this->linsolver_verbosity_, this->linsolver_type_);
                 // max_mod = this->flow_solver_.postProcessFluxes();
@@ -324,7 +322,6 @@ namespace Opm
                 }
             } else {
                 std::cerr << "Cutting time step\n";
-                init_saturation = saturation_old;
                 stepsize=stepsize/2.0;
             }
             ++it_count;
@@ -466,9 +463,6 @@ namespace Opm
         double side1_flux_oil = 0.0;
         double side2_flux_oil = 0.0;
         std::map<int, double> frac_flow_by_bid;
-        int num_cells = this->ginterf_.numberOfCells();
-        std::vector<double> cell_inflows_w(num_cells, 0.0);
-        std::vector<double> cell_outflows_w(num_cells, 0.0);
 
         // Two passes: First pass, deal with outflow, second pass, deal with inflow.
         // This is for the periodic case, so that we are sure all fractional flows have
@@ -497,7 +491,6 @@ namespace Opm
                                 assert(sc.isDirichlet());
                                 frac_flow = this->res_prop_.fractionalFlow(c->index(), sc.saturation());
                             }
-                            cell_inflows_w[c->index()] += flux*frac_flow;
                             side1_flux += flux*frac_flow;
                             side1_flux_oil += flux*(1.0 - frac_flow);
                         } else if (flux >= 0.0 && pass == 0) {
@@ -507,7 +500,6 @@ namespace Opm
                                 frac_flow_by_bid[f->boundaryId()] = frac_flow;
                                 // std::cout << "Inserted bid " << f->boundaryId() << std::endl;
                             }
-                            cell_outflows_w[c->index()] += flux*frac_flow;
                             side2_flux += flux*frac_flow;
                             side2_flux_oil += flux*(1.0 - frac_flow);
                         }

@@ -202,9 +202,8 @@ void writeOutput(const Params& p, Opm::time::StopWatch& watch, int cells,
 {
   // get current time
   time_t rawtime;
-  struct tm* timeinfo;
   time(&rawtime);
-  timeinfo = localtime(&rawtime);
+  const struct tm* timeinfo = localtime(&rawtime);
 
   // get hostname
   char hostname[1024];
@@ -444,7 +443,7 @@ int run(Params& p)
 
     return 0;
   }
-  catch (Dune::Exception &e) {
+  catch (const Dune::Exception &e) {
     throw e;
   }
   catch (...) {
@@ -496,7 +495,7 @@ try
       return runAMG<AMG2Level>(p);
     else
       return runAMG<AMG1>(p);
-  } catch (Dune::Exception &e) {
+  } catch (const Dune::Exception &e) {
     std::cerr << "Dune reported error: " << e << std::endl;
   } catch (const std::exception &e) {
     throw e;

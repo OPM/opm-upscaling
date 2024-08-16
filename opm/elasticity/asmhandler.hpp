@@ -45,7 +45,7 @@ class ASMHandler {
 
     //! \brief The default constructor
     //! \param[in] gv_ The grid the operator is assembled over
-    ASMHandler(const GridType& gv_) : gv(gv_), maxeqn(0)
+    explicit ASMHandler(const GridType& gv_) : gv(gv_), maxeqn(0)
     {
     }
 

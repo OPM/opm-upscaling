@@ -170,7 +170,7 @@ void ASMHandler<GridType>::expandSolution(Vector& result, const Vector& u)
   l = 0;
   for (int i=0;i<nodes;++i) {
     for (int j=0;j<dim;++j) {
-      MPC* mpc = getMPC(i,j);
+      const MPC* mpc = getMPC(i,j);
       if (mpc) {
         for (size_t n=0;n<mpc->getNoMaster();++n) {
           int idx = mpc->getMaster(n).node*dim+mpc->getMaster(n).dof-1;
@@ -322,7 +322,7 @@ void ASMHandler<GridType>::preprocess()
     fixIt it2 = fixedNodes.find(indexi);
     if (it2 == fixedNodes.end()) {
       for (int i=0;i<dim;++i) {
-        MPC* mpc = getMPC(indexi,i);
+        const MPC* mpc = getMPC(indexi,i);
         if (!mpc)
           meqn[indexi*dim+i] = maxeqn++;
         else
@@ -334,7 +334,7 @@ void ASMHandler<GridType>::preprocess()
         if (it2->second.first & flag)
           meqn[indexi*dim+i] = -1;
         else {
-          MPC* mpc = getMPC(indexi,i);
+          const MPC* mpc = getMPC(indexi,i);
           if (!mpc)
             meqn[indexi*dim+i] = maxeqn++;
           else
@@ -390,7 +390,7 @@ void ASMHandler<GridType>::determineAdjacencyPattern()
     for (int i=0; i < vertexsize; i++) {
       int indexi = set.subIndex(*it,i,dim);
       for (int k=0;k<dim;++k) {
-        MPC* mpc = getMPC(indexi,k);
+        const MPC* mpc = getMPC(indexi,k);
         if (mpc) {
           for (size_t l=0;l<mpc->getNoMaster();++l) {
             nodeAdjacency(it,vertexsize,

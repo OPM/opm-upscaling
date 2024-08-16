@@ -24,7 +24,7 @@ struct OperatorApplier
 {
   //! \brief Constructor
   //! \param[in] t The preconditioner or inverse operator
-  OperatorApplier(T& t) : A(t)
+  explicit OperatorApplier(T& t) : A(t)
   {
   }
 

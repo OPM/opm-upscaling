@@ -160,13 +160,6 @@ try
    // Reference: http://www.spe.org/spe-site/spe/spe/papers/authors/Metric_Standard.pdf
 
 
-   /* Check first if there is anything on the command line to look for */
-   if (varnum == 1) {
-      cout << "Error: No Eclipsefile or stonefiles found on command line." << endl;
-      usageandexit();
-   }
-
-
    /* Loop over all command line options in order to look 
       for options. 
 

@@ -726,10 +726,10 @@ IMPL_FUNC(void, loadMaterialsFromRocklist(const std::string& file,
   if (Escale > 0) {
     Emin=1e10;
     for (size_t i=0;i<cache.size();++i)
-      Emin = std::min(Emin,((Isotropic*)cache[i].get())->getE());
+      Emin = std::min(Emin,static_cast<Isotropic*>(cache[i].get())->getE());
     for (size_t i=0;i<cache.size();++i) {
-      double lE = ((Isotropic*)cache[i].get())->getE();
-      ((Isotropic*)cache[i].get())->setE(lE*Escale/Emin);
+      double lE = static_cast<Isotropic*>(cache[i].get())->getE();
+      static_cast<Isotropic*>(cache[i].get())->setE(lE*Escale/Emin);
     }
   }
   std::vector<double> volume;
@@ -1084,7 +1084,7 @@ IMPL_FUNC(void, solve(int loadcase))
     tsolver[solver]->apply(u[loadcase], b[loadcase], r);
 
     std::cout << "\tsolution norm: " << u[loadcase].two_norm() << std::endl;
-  } catch (Dune::ISTLError& e) {
+  } catch (const Dune::ISTLError& e) {
     std::cerr << "exception thrown " << e << std::endl;
   }
 }

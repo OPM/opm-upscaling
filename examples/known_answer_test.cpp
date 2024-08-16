@@ -99,7 +99,7 @@ namespace Opm
     class FunctionBoundaryConditions : public PeriodicConditionHandler
     {
     public:
-        FunctionBoundaryConditions(BoundaryFunc bfunc)
+        explicit FunctionBoundaryConditions(BoundaryFunc bfunc)
             : bfunc_(bfunc)
         {
         }
