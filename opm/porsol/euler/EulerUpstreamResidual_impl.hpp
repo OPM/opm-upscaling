@@ -289,7 +289,7 @@ namespace Opm
         struct IndirectRange
         {
             typedef Iter Iterator;
-            IndirectRange(const std::vector<Iter>& iters)
+            explicit IndirectRange(const std::vector<Iter>& iters)
                 : iters_(iters), beg_(0), end_(iters_.size() - 1)
             {
                 assert(iters_.size() >= 2);
@@ -329,7 +329,7 @@ namespace Opm
         template <class Updater>
         struct UpdateLoopBody
         {
-            UpdateLoopBody(const Updater& upd)
+            explicit UpdateLoopBody(const Updater& upd)
                 : updater(upd)
             {
             }

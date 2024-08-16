@@ -248,7 +248,7 @@ namespace Opm
         {
         }
 
-        PeriodicConditionHandler(int num_different_boundary_ids)
+        explicit PeriodicConditionHandler(int num_different_boundary_ids)
 	    : periodic_partner_bid_(num_different_boundary_ids, 0),
 	      canonical_bid_(num_different_boundary_ids, 0)
         {
@@ -333,7 +333,7 @@ namespace Opm
     {
     public:
 	DummyVec() {}
-	DummyVec(int) {}
+    explicit DummyVec(int) {}
 	void resize(int) {}
 	void clear() {}
     };
@@ -356,7 +356,7 @@ namespace Opm
 	{
         }
 
-        BasicBoundaryConditions(int num_different_boundary_ids)
+        explicit BasicBoundaryConditions(int num_different_boundary_ids)
 	    : PeriodicConditionHandler(num_different_boundary_ids),
 	      FlowConds(num_different_boundary_ids),
 	      SatConds(num_different_boundary_ids),

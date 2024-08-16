@@ -126,7 +126,7 @@ namespace Opm {
         template <class BaseVec>
         class VectorSizeSetter {
         public:
-            VectorSizeSetter(BaseVec& v) : v_(v) {}
+            explicit VectorSizeSetter(BaseVec& v) : v_(v) {}
 
             void
             setSize(::std::size_t ndof, ::std::size_t m) {

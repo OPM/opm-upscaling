@@ -104,7 +104,7 @@ namespace Opm {
               template <class> class VAsgn >
     class ImplicitTransport {
     public:
-        ImplicitTransport(Model& model)
+        explicit ImplicitTransport(Model& model)
             : model_(model),
               asm_  (model)
         {}

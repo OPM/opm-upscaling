@@ -29,7 +29,7 @@ class Elasticity {
 
     //! \brief Default constructor
     //! \param[in] gv_ The grid we are doing the calculations on
-    Elasticity(const GridType& gv_) : gv(gv_) {}
+    explicit Elasticity(const GridType& gv_) : gv(gv_) {}
 
     //! \brief Returns the B matrix in a quadrature point
     //! \param[in] point (Reference) coordinates of quadrature point 

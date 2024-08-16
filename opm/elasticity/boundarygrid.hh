@@ -197,7 +197,7 @@ class BoundaryGrid {
     struct VertexLess {
         //! \brief Default constructor.
         //! \param[in] comp Direction to use for comparison. -1 to use index
-        VertexLess(int comp) : dir(comp) {}
+        explicit VertexLess(int comp) : dir(comp) {}
 
         //! \brief The comparison operator
         bool operator()(const Vertex& q1, const Vertex& q2)
@@ -215,7 +215,7 @@ class BoundaryGrid {
     struct BoundedPredicate {
       //! \brief Default constructor
       //! \param[in] coord_ The coordinates to check
-      BoundedPredicate(const FaceCoord& coord_) : coord(coord_) {}
+      explicit BoundedPredicate(const FaceCoord& coord_) : coord(coord_) {}
 
       //! \brief The comparison operator
       bool operator()(const Quad& q)
@@ -345,7 +345,7 @@ class HexGeometry<2, cdim, GridImp>
 
     //! \brief Construct integration element
     //! \param[in] q Quad describing element
-    HexGeometry(const BoundaryGrid::Quad& q)
+    explicit HexGeometry(const BoundaryGrid::Quad& q)
     {
       for (int i=0;i<4;++i)
         c[i] = q.v[i].c;

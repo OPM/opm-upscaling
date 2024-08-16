@@ -115,7 +115,7 @@ namespace Opm {
         ///    in the model.  Used to set the size of certain internal
         ///    working std::arrays.  A cell with @f$n_f@f$ faces results in
         ///    an inner product matrix of size @f$n_f \times n_f@f$.
-        MimeticIPEvaluator(const int max_nf)
+        explicit MimeticIPEvaluator(const int max_nf)
             : max_nf_(max_nf         ),
               fa_    (max_nf * max_nf),
               t1_    (max_nf * dim   ),

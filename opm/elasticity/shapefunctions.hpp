@@ -150,7 +150,7 @@ class TensorProductFunction
 
     //! \brief Construct a tensor-product function
     //! \param[in] funcs_ The functions
-    TensorProductFunction(const Dune::FieldVector<ftype, dim>& funcs_)
+    explicit TensorProductFunction(const Dune::FieldVector<ftype, dim>& funcs_)
       : funcs(funcs_) {}
 
     //! \brief Evaluate the function

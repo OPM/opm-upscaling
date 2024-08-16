@@ -39,7 +39,7 @@ namespace Opm
     class CornerPointChopper
     {
     public:
-        CornerPointChopper(const std::string& file) :
+        explicit CornerPointChopper(const std::string& file) :
             parser_(Parser{}),
             deck_(parser_.parseFile(file)),
           metricUnits_(Opm::UnitSystem::newMETRIC())

@@ -45,7 +45,7 @@ namespace Opm {
     template <class Mobility>
     class ReservoirPropertyFixedMobility {
     public:
-        ReservoirPropertyFixedMobility(const std::vector<Mobility>& mobs)
+        explicit ReservoirPropertyFixedMobility(const std::vector<Mobility>& mobs)
             : mobs_(mobs)
         {
         }
