@@ -323,7 +323,7 @@ namespace Opm
         std::cout << "Seconds taken by transport solver: " << clock.secsSinceStart() << std::endl;
 #endif // VERBOSE
         {
-            std::vector<double>& sat = state.saturation();
+            const std::vector<double>& sat = state.saturation();
             for (int i=0; i < mygrid_.numCells(); ++i){
                 saturation[i] = sat[2*i];
             }

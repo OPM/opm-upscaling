@@ -1084,7 +1084,7 @@ IMPL_FUNC(void, solve(int loadcase))
     tsolver[solver]->apply(u[loadcase], b[loadcase], r);
 
     std::cout << "\tsolution norm: " << u[loadcase].two_norm() << std::endl;
-  } catch (Dune::ISTLError& e) {
+  } catch (const Dune::ISTLError& e) {
     std::cerr << "exception thrown " << e << std::endl;
   }
 }

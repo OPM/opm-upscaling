@@ -217,22 +217,22 @@ namespace Opm
             new_ZCORN_.resize(8*new_dims_[0]*new_dims_[1]*new_dims_[2], 1e100);
             new_to_old_cell_.resize(new_dims_[0]*new_dims_[1]*new_dims_[2], -1);
             int cellcount = 0;
-            int delta[3] = { 1, 2*dims_[0], 4*dims_[0]*dims_[1] };
-            int new_delta[3] = { 1, 2*new_dims_[0], 4*new_dims_[0]*new_dims_[1] };
+            const int delta[3] = { 1, 2*dims_[0], 4*dims_[0]*dims_[1] };
+            const int new_delta[3] = { 1, 2*new_dims_[0], 4*new_dims_[0]*new_dims_[1] };
             for (int k = kmin; k < kmax; ++k) {
                 for (int j = jmin; j < jmax; ++j) {
                     for (int i = imin; i < imax; ++i) {
                         new_to_old_cell_[cellcount++] = dims_[0]*dims_[1]*k + dims_[0]*j + i;
                         int old_ix = 2*(i*delta[0] + j*delta[1] + k*delta[2]);
                         int new_ix = 2*((i-imin)*new_delta[0] + (j-jmin)*new_delta[1] + (k-kmin)*new_delta[2]);
-                        int old_indices[8] = { old_ix, old_ix + delta[0],
-                                               old_ix + delta[1], old_ix + delta[1] + delta[0],
-                                               old_ix + delta[2], old_ix + delta[2] + delta[0],
-                                               old_ix + delta[2] + delta[1], old_ix + delta[2] + delta[1] + delta[0] };
-                        int new_indices[8] = { new_ix, new_ix + new_delta[0],
-                                               new_ix + new_delta[1], new_ix + new_delta[1] + new_delta[0],
-                                               new_ix + new_delta[2], new_ix + new_delta[2] + new_delta[0],
-                                               new_ix + new_delta[2] + new_delta[1], new_ix + new_delta[2] + new_delta[1] + new_delta[0] };
+                        const int old_indices[8] = {old_ix, old_ix + delta[0],
+                                                    old_ix + delta[1], old_ix + delta[1] + delta[0],
+                                                    old_ix + delta[2], old_ix + delta[2] + delta[0],
+                                                    old_ix + delta[2] + delta[1], old_ix + delta[2] + delta[1] + delta[0] };
+                        const int new_indices[8] = {new_ix, new_ix + new_delta[0],
+                                                    new_ix + new_delta[1], new_ix + new_delta[1] + new_delta[0],
+                                                    new_ix + new_delta[2], new_ix + new_delta[2] + new_delta[0],
+                                                    new_ix + new_delta[2] + new_delta[1], new_ix + new_delta[2] + new_delta[1] + new_delta[0] };
                         for (int cc = 0; cc < 8; ++cc) {
                             new_ZCORN_[new_indices[cc]] = std::min(zmax, std::max(zmin, ZCORN[old_indices[cc]])) - z_origin_correction;
                         }

@@ -201,7 +201,7 @@ namespace Opm
                     s.preservoir_properties_->phaseMobility(triv_phase, cell[ups_cell],
                                                           cell_sat[ups_cell], m_ups[triv_phase].mob);
                     // Compute gravity flow of the nontrivial phase.
-                    double sign_G[2] = { -1.0, 1.0 };
+                    const double sign_G[2] = { -1.0, 1.0 };
                     double grav_flux_nontriv = sign_G[triv_phase]*loc_area
                         *inner(loc_normal, m_ups[triv_phase].multiply(grav_influence));
                     // Find flow direction of nontrivial phase.
