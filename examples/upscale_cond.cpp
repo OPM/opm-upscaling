@@ -360,8 +360,10 @@ try
              Jtmp = MonotCubicInterpolator(vararg[JFindex + i], 1, jFunctionCurve); 
          }
          catch (const char * errormessage) {
-             if (isMaster) cerr << "Error: " << errormessage << endl;
-             if (isMaster) cerr << "Check filename and -jFunctionCurve" << endl;
+             if (isMaster) {
+                 cerr << "Error: " << errormessage << endl
+                      << "Check filename and -jFunctionCurve" << endl;
+             }
              usageandexit();
          }
          
@@ -394,8 +396,10 @@ try
              Jtmp = MonotCubicInterpolator(vararg[JFindex], 1, jFunctionCurve);
          }
          catch (const char * errormessage) {
-             if (isMaster) cerr << "Error: " << errormessage << endl;
-             if (isMaster) cerr << "Check filename and -jFunctionCurve" << endl;
+             if (isMaster) {
+                 cerr << "Error: " << errormessage << endl
+                      << "Check filename and -jFunctionCurve" << endl;
+             }
              usageandexit();
          }
 
@@ -528,8 +532,10 @@ try
        ++tesselatedCells; // keep count.
    }
 
-   if (isMaster) cout << "Pcmin:    " << Pcmin << endl;
-   if (isMaster) cout << "Pcmax:    " << Pcmax << endl;
+   if (isMaster) {
+       cout << "Pcmin:    " << Pcmin << endl
+            << "Pcmax:    " << Pcmax << endl;
+   }
 
    if (Pcmin > Pcmax) {
        if (isMaster) cerr << "ERROR: No legal capillary pressures found for this system. Exiting..." << endl;

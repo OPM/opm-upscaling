@@ -365,8 +365,10 @@ try
         anisotropic_input = true;
         permys = deck["PERMY"].back().getRawDoubleData();
         permzs = deck["PERMZ"].back().getRawDoubleData();
-        if (isMaster) cout << "Info: PERMY and PERMZ present, going into anisotropic input mode, no J-functions\n"; 
-        if (isMaster) cout << "      Options -relPermCurve and -jFunctionCurve is meaningless.\n"; 
+        if (isMaster) {
+            cout << "Info: PERMY and PERMZ present, going into anisotropic input mode, no J-functions\n"
+                 << "      Options -relPermCurve and -jFunctionCurve is meaningless.\n";
+        }
     } 
     
     
@@ -513,13 +515,17 @@ try
                     Krwtmp = MonotCubicInterpolator(ROCKFILENAME, 1, relPermCurves[waterPhaseIndex]); 
                 }
                 catch (const char * errormessage) {
-                    if (isMaster) cerr << "Error: " << errormessage << " Filename: " << ROCKFILENAME << endl;
-                    if (isMaster) cerr << "Check filename and -waterCurve" << endl;
+                    if (isMaster) {
+                        cerr << "Error: " << errormessage << " Filename: " << ROCKFILENAME << endl
+                             << "Check filename and -waterCurve" << endl;
+                    }
                     usageandexit();
                 }
                 if (!Krwtmp.isStrictlyMonotone()) {
-                    if (isMaster) cerr << "Error: Data in column " << relPermCurves[waterPhaseIndex] << " of file " << ROCKFILENAME << endl <<
-                        "       was not strictly monotone. Exiting." << endl;
+                    if (isMaster) {
+                        cerr << "Error: Data in column " << relPermCurves[waterPhaseIndex] << " of file " << ROCKFILENAME << endl <<
+                                "       was not strictly monotone. Exiting." << endl;
+                    }
                     usageandexit();
                 }
                 MonotCubicInterpolator Krotmp;
@@ -527,27 +533,35 @@ try
                     Krotmp = MonotCubicInterpolator(ROCKFILENAME, 1, relPermCurves[oilPhaseIndex]); 
                 }
                 catch (const char * errormessage) {
-                    if (isMaster) cerr << "Error: " << errormessage << " Filename: " << ROCKFILENAME <<  endl;
-                    if (isMaster) cerr << "Check filename and -oilCurve" << endl;
+                    if (isMaster) {
+                        cerr << "Error: " << errormessage << " Filename: " << ROCKFILENAME <<  endl
+                             << "Check filename and -oilCurve" << endl;
+                    }
                     usageandexit();
                 }
                 
                 if (!Krotmp.isStrictlyMonotone()) {
-                    if (isMaster) cerr << "Error: Data in column " << relPermCurves[oilPhaseIndex] << " of file " << ROCKFILENAME << endl <<
-                        "       was not strictly monotone. Exiting." << endl;
+                    if (isMaster) {
+                        cerr << "Error: Data in column " << relPermCurves[oilPhaseIndex] << " of file " << ROCKFILENAME << endl <<
+                                "       was not strictly monotone. Exiting." << endl;
+                    }
                     usageandexit();
                 }
                 
                 if ((Krwtmp.isStrictlyIncreasing() && Krotmp.isStrictlyIncreasing()) || (Krwtmp.isStrictlyDecreasing() && Krotmp.isStrictlyDecreasing())) {
-                    if (isMaster) cerr << "Error: Input relperm curves are both increasing or decreasing in file " << ROCKFILENAME << endl;
+                    if (isMaster) {
+                        cerr << "Error: Input relperm curves are both increasing or decreasing in file " << ROCKFILENAME << endl;
+                    }
                     usageandexit();
                 }
                 
                 Krw.push_back(Krwtmp); 
                 Kro.push_back(Krotmp); 
                 
-                if (isMaster) cout << "Loaded rock file: " << ROCKFILENAME  
-                                   << ", for stone type " << i+1 << endl; 
+                if (isMaster) {
+                    cout << "Loaded rock file: " << ROCKFILENAME
+                         << ", for stone type " << i+1 << endl;
+                }
                 
                 rockTypeNames.push_back(ROCKFILENAME); 
             }
@@ -557,7 +571,9 @@ try
             // Check if rock files exists and is readable:
             ifstream rockfile(ROCKFILENAME, ios::in);
             if (rockfile.fail()) {
-                if (isMaster) cerr << "Error: Filename " << ROCKFILENAME << " not found or not readable." << endl;
+                if (isMaster) {
+                    cerr << "Error: Filename " << ROCKFILENAME << " not found or not readable." << endl;
+                }
                 usageandexit();
             }
             rockfile.close();
@@ -566,13 +582,17 @@ try
                 Krwtmp = MonotCubicInterpolator(ROCKFILENAME, 1, relPermCurves[waterPhaseIndex]); 
             }
             catch (const char * errormessage) {
-                if (isMaster) cerr << "Error: " << errormessage << " Filename: " << ROCKFILENAME << endl;
-                if (isMaster) cerr << "Check filename and -waterCurve" << endl;
+                if (isMaster) {
+                    cerr << "Error: " << errormessage << " Filename: " << ROCKFILENAME << endl
+                         << "Check filename and -waterCurve" << endl;
+                }
                 usageandexit();
             }
             if (!Krwtmp.isStrictlyMonotone()) {
-                if (isMaster) cerr << "Error: Data in column " << relPermCurves[waterPhaseIndex] << " of file " << ROCKFILENAME << endl <<
-                    "       was not strictly monotone. Exiting." << endl;
+                if (isMaster) {
+                    cerr << "Error: Data in column " << relPermCurves[waterPhaseIndex] << " of file " << ROCKFILENAME << endl <<
+                            "       was not strictly monotone. Exiting." << endl;
+                }
                 usageandexit();
             }
             MonotCubicInterpolator Krotmp;
@@ -580,17 +600,23 @@ try
                 Krotmp = MonotCubicInterpolator(ROCKFILENAME, 1, relPermCurves[oilPhaseIndex]); 
             }
             catch (const char * errormessage) {
-                if (isMaster) cerr << "Error: " << errormessage << " Filename: " << ROCKFILENAME <<  endl;
-                if (isMaster) cerr << "Check filename and -oilCurve" << endl;
+                if (isMaster) {
+                    cerr << "Error: " << errormessage << " Filename: " << ROCKFILENAME <<  endl
+                         << "Check filename and -oilCurve" << endl;
+                }
                 usageandexit();
             }
             if (!Krotmp.isStrictlyMonotone()) {
-                if (isMaster) cerr << "Error: Data in column " << relPermCurves[oilPhaseIndex] << " of file " << ROCKFILENAME << endl <<
-                    "       was not strictly monotone. Exiting." << endl;
+                if (isMaster) {
+                    cerr << "Error: Data in column " << relPermCurves[oilPhaseIndex] << " of file " << ROCKFILENAME << endl <<
+                            "       was not strictly monotone. Exiting." << endl;
+                }
                 usageandexit();
             }
             if ((Krwtmp.isStrictlyIncreasing() && Krotmp.isStrictlyIncreasing()) || (Krwtmp.isStrictlyDecreasing() && Krotmp.isStrictlyDecreasing())) {
-                if (isMaster) cerr << "Error: Input relperm curves are both increasing or decreasing in file " << ROCKFILENAME << endl;
+                if (isMaster) {
+                    cerr << "Error: Input relperm curves are both increasing or decreasing in file " << ROCKFILENAME << endl;
+                }
                 usageandexit();
             }
             for (int i=0 ; i < stone_types; ++i) { //Insert the same input curves for all rock types
@@ -599,8 +625,10 @@ try
                 rockTypeNames.push_back(ROCKFILENAME); 
             }
                        
-            if (isMaster) cout << "Loaded rock file: " << ROCKFILENAME  
-                               << ", for all stone types" << endl; 
+            if (isMaster) {
+                cout << "Loaded rock file: " << ROCKFILENAME
+                     << ", for all stone types" << endl;
+            }
         }
         else { 
             cerr << "Error:  Wrong number of stone-functions provided. " << endl 
@@ -623,12 +651,16 @@ try
                 ifstream waterfile(WATERFILENAME, ios::in);
                 ifstream oilfile(OILFILENAME, ios::in);
                 if (waterfile.fail()) {
-                    if (isMaster) cerr << "Error: Filename " << WATERFILENAME << " not found or not readable." << endl;
+                    if (isMaster) {
+                        cerr << "Error: Filename " << WATERFILENAME << " not found or not readable." << endl;
+                    }
                     usageandexit();
                 }
                 waterfile.close(); 
                 if (oilfile.fail()) {
-                    if (isMaster) cerr << "Error: Filename " << OILFILENAME << " not found or not readable." << endl;
+                    if (isMaster) {
+                        cerr << "Error: Filename " << OILFILENAME << " not found or not readable." << endl;
+                    }
                     usageandexit();
                 }
                 oilfile.close(); 
@@ -640,23 +672,31 @@ try
                     Krwztmp = MonotCubicInterpolator(WATERFILENAME, 2, 5); 
                 }
                 catch (const char * errormessage) {
-                    if (isMaster) cerr << "Error: " << errormessage << " Filename: " << WATERFILENAME << endl;
-                    if (isMaster) cerr << "Check filename and relpermcurves" << endl;
+                    if (isMaster) {
+                        cerr << "Error: " << errormessage << " Filename: " << WATERFILENAME << endl
+                             << "Check filename and relpermcurves" << endl;
+                    }
                     usageandexit();
                 }
                 if (!Krwxtmp.isStrictlyMonotone()) {
-                    if (isMaster) cerr << "Error: Data in column " << 3 << " of file " << WATERFILENAME << endl <<
-                        "       was not strictly monotone. Exiting." << endl;
+                    if (isMaster) {
+                        cerr << "Error: Data in column " << 3 << " of file " << WATERFILENAME << endl <<
+                                "       was not strictly monotone. Exiting." << endl;
+                    }
                     usageandexit();
                 }
                 if (!Krwytmp.isStrictlyMonotone()) {
-                    if (isMaster) cerr << "Error: Data in column " << 4 << " of file " << WATERFILENAME << endl <<
-                        "       was not strictly monotone. Exiting." << endl;
+                    if (isMaster) {
+                        cerr << "Error: Data in column " << 4 << " of file " << WATERFILENAME << endl <<
+                                "       was not strictly monotone. Exiting." << endl;
+                    }
                     usageandexit();
                 }
                 if (!Krwztmp.isStrictlyMonotone()) {
-                    if (isMaster) cerr << "Error: Data in column " << 5 << " of file " << WATERFILENAME << endl <<
-                        "       was not strictly monotone. Exiting." << endl;
+                    if (isMaster) {
+                        cerr << "Error: Data in column " << 5 << " of file " << WATERFILENAME << endl <<
+                                "       was not strictly monotone. Exiting." << endl;
+                    }
                     usageandexit();
                 }
                 try {
@@ -665,29 +705,39 @@ try
                     Kroztmp = MonotCubicInterpolator(OILFILENAME, 2, 5); 
                 }
                 catch (const char * errormessage) {
-                    if (isMaster) cerr << "Error: " << errormessage << " Filename: " << OILFILENAME << endl;
-                    if (isMaster) cerr << "Check filename and relpermcurves" << endl;
+                    if (isMaster) {
+                        cerr << "Error: " << errormessage << " Filename: " << OILFILENAME << endl
+                             << "Check filename and relpermcurves" << endl;
+                    }
                     usageandexit();
                 }
                 if (!Kroxtmp.isStrictlyMonotone()) {
-                    if (isMaster) cerr << "Error: Data in column " << 3 << " of file " << OILFILENAME << endl <<
-                        "       was not strictly monotone. Exiting." << endl;
+                    if (isMaster) {
+                        cerr << "Error: Data in column " << 3 << " of file " << OILFILENAME << endl <<
+                                "       was not strictly monotone. Exiting." << endl;
+                    }
                     usageandexit();
                 }
                 if (!Kroytmp.isStrictlyMonotone()) {
-                    if (isMaster) cerr << "Error: Data in column " << 4 << " of file " << OILFILENAME << endl <<
-                        "       was not strictly monotone. Exiting." << endl;
+                    if (isMaster) {
+                        cerr << "Error: Data in column " << 4 << " of file " << OILFILENAME << endl <<
+                                "       was not strictly monotone. Exiting." << endl;
+                    }
                     usageandexit();
                 }
                 if (!Kroztmp.isStrictlyMonotone()) {
-                    if (isMaster) cerr << "Error: Data in column " << 5 << " of file " << OILFILENAME << endl <<
-                        "       was not strictly monotone. Exiting." << endl;
+                    if (isMaster) {
+                        cerr << "Error: Data in column " << 5 << " of file " << OILFILENAME << endl <<
+                                "       was not strictly monotone. Exiting." << endl;
+                    }
                     usageandexit();
                 }
                 Krwx.push_back(Krwxtmp); Krwy.push_back(Krwytmp); Krwz.push_back(Krwztmp); 
                 Krox.push_back(Kroxtmp); Kroy.push_back(Kroytmp); Kroz.push_back(Kroztmp); 
-                if (isMaster) cout << "Loaded rock files: " << WATERFILENAME << " and " 
-                                   << OILFILENAME  << ", for stone type " << rockidx << endl; 
+                if (isMaster) {
+                    cout << "Loaded rock files: " << WATERFILENAME << " and "
+                         << OILFILENAME  << ", for stone type " << rockidx << endl;
+                }
                 rockTypeNames.push_back(WATERFILENAME);       
                 rockTypeNames.push_back(OILFILENAME);       
             }
@@ -699,12 +749,16 @@ try
             ifstream waterfile(WATERFILENAME, ios::in);
             ifstream oilfile(OILFILENAME, ios::in);
             if (waterfile.fail()) {
-                if (isMaster) cerr << "Error: Filename " << WATERFILENAME << " not found or not readable." << endl;
+                if (isMaster) {
+                    cerr << "Error: Filename " << WATERFILENAME << " not found or not readable." << endl;
+                }
                 usageandexit();
             }
             waterfile.close(); 
             if (oilfile.fail()) {
-                if (isMaster) cerr << "Error: Filename " << OILFILENAME << " not found or not readable." << endl;
+                if (isMaster) {
+                    cerr << "Error: Filename " << OILFILENAME << " not found or not readable." << endl;
+                }
                 usageandexit();
             }
             oilfile.close(); 
@@ -715,23 +769,31 @@ try
                 Krwztmp = MonotCubicInterpolator(WATERFILENAME, 2, 5); 
             }
             catch (const char * errormessage) {
-                if (isMaster) cerr << "Error: " << errormessage << " Filename: " << WATERFILENAME << endl;
-                if (isMaster) cerr << "Check filename and relpermcurves" << endl;
+                if (isMaster) {
+                    cerr << "Error: " << errormessage << " Filename: " << WATERFILENAME << endl
+                         << "Check filename and relpermcurves" << endl;
+                }
                 usageandexit();
             }
             if (!Krwxtmp.isStrictlyMonotone()) {
-                if (isMaster) cerr << "Error: Data in column " << 3 << " of file " << WATERFILENAME << endl <<
-                    "       was not strictly monotone. Exiting." << endl;
+                if (isMaster) {
+                    cerr << "Error: Data in column " << 3 << " of file " << WATERFILENAME << endl <<
+                            "       was not strictly monotone. Exiting." << endl;
+                }
                 usageandexit();
             }
             if (!Krwytmp.isStrictlyMonotone()) {
-                if (isMaster) cerr << "Error: Data in column " << 4 << " of file " << WATERFILENAME << endl <<
-                    "       was not strictly monotone. Exiting." << endl;
+                if (isMaster) {
+                    cerr << "Error: Data in column " << 4 << " of file " << WATERFILENAME << endl <<
+                            "       was not strictly monotone. Exiting." << endl;
+                }
                 usageandexit();
             }
             if (!Krwztmp.isStrictlyMonotone()) {
-                if (isMaster) cerr << "Error: Data in column " << 5 << " of file " << WATERFILENAME << endl <<
-                    "       was not strictly monotone. Exiting." << endl;
+                if (isMaster) {
+                    cerr << "Error: Data in column " << 5 << " of file " << WATERFILENAME << endl <<
+                            "       was not strictly monotone. Exiting." << endl;
+                }
                 usageandexit();
             }
             MonotCubicInterpolator Kroxtmp, Kroytmp, Kroztmp;
@@ -741,23 +803,31 @@ try
                 Kroztmp = MonotCubicInterpolator(OILFILENAME, 2, 5); 
             }
             catch (const char * errormessage) {
-                if (isMaster) cerr << "Error: " << errormessage << " Filename: " << OILFILENAME << endl;
-                if (isMaster) cerr << "Check filename and relpermcurves" << endl;
+                if (isMaster) {
+                    cerr << "Error: " << errormessage << " Filename: " << OILFILENAME << endl
+                         << "Check filename and relpermcurves" << endl;
+                }
                 usageandexit();
             }
             if (!Kroxtmp.isStrictlyMonotone()) {
-                if (isMaster) cerr << "Error: Data in column " << 3 << " of file " << OILFILENAME << endl <<
-                    "       was not strictly monotone. Exiting." << endl;
+                if (isMaster) {
+                    cerr << "Error: Data in column " << 3 << " of file " << OILFILENAME << endl <<
+                            "       was not strictly monotone. Exiting." << endl;
+                }
                 usageandexit();
             }
             if (!Kroytmp.isStrictlyMonotone()) {
-                if (isMaster) cerr << "Error: Data in column " << 4 << " of file " << OILFILENAME << endl <<
-                    "       was not strictly monotone. Exiting." << endl;
+                if (isMaster) {
+                    cerr << "Error: Data in column " << 4 << " of file " << OILFILENAME << endl <<
+                            "       was not strictly monotone. Exiting." << endl;
+                }
                 usageandexit();
             }
             if (!Kroztmp.isStrictlyMonotone()) {
-                if (isMaster) cerr << "Error: Data in column " << 5 << " of file " << OILFILENAME << endl <<
-                    "       was not strictly monotone. Exiting." << endl;
+                if (isMaster) {
+                    cerr << "Error: Data in column " << 5 << " of file " << OILFILENAME << endl <<
+                            "       was not strictly monotone. Exiting." << endl;
+                }
                 usageandexit();
             }
             for (int i=0 ; i < 2*stone_types; i+=2) {  
@@ -766,9 +836,10 @@ try
                 rockTypeNames.push_back(WATERFILENAME);       
                 rockTypeNames.push_back(OILFILENAME);       
             }
-            if (isMaster) cout << "Loaded rock files: " << WATERFILENAME << " and " 
-                               << OILFILENAME  << ", for all stone types" << endl; 
- 
+            if (isMaster) {
+                cout << "Loaded rock files: " << WATERFILENAME << " and "
+                     << OILFILENAME  << ", for all stone types" << endl;
+            }
         }
         else { 
             cerr << "Error:  Wrong number of stone-functions provided. " << endl 
@@ -892,7 +963,9 @@ try
        Swir = 0.0;
    }
    if (Swir < 0.0 || Swir > 1.0 || Swor < 0.0 || Swor > 1.0) {
-       if (isMaster) cerr << "ERROR: Swir/Swor unsensible. Check your input. Exiting";
+       if (isMaster) {
+           cerr << "ERROR: Swir/Swor unsensible. Check your input. Exiting";
+       }
        usageandexit();
    }      
 
@@ -1014,7 +1087,9 @@ try
         }  
     } 
     
-    if (isMaster) cout << endl << "Lower fracflowratio: " << fracflowratioMin << ", Upper fracflowratio: " << fracflowratioMax << endl; 
+    if (isMaster) {
+        cout << endl << "Lower fracflowratio: " << fracflowratioMin << ", Upper fracflowratio: " << fracflowratioMax << endl;
+    }
     // Now upscale fractional flow vs water saturation 
     // (i.e., populate the vector WaterSaturationVsFractionalFlow)
  
@@ -1048,7 +1123,9 @@ try
             
         // Check for saneness of fracFlowRatioTestvalue
         if (std::isnan(fracFlowRatioTestvalue) || std::isinf(fracFlowRatioTestvalue)) {
-            if (isMaster) cerr << "ERROR: fracFlowRatioTestvalue was inf or nan." << endl;
+            if (isMaster) {
+                cerr << "ERROR: fracFlowRatioTestvalue was inf or nan." << endl;
+            }
             break; // Jump out out while-loop, just print the results up to now and exit
         }
  
