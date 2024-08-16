@@ -119,14 +119,14 @@ namespace Opm {
                    const ImplicitTransportDetails::NRControl& ctrl    ,
                    ReservoirState&                            state   ,
                    LinearSolver&                              linsolve,
-                   ImplicitTransportDetails::NRReport&        rpt     ) {
-            bool init;
+                   ImplicitTransportDetails::NRReport&        rpt     )
+        {
             typedef typename JacobianSystem::vector_type vector_type;
             typedef typename JacobianSystem::matrix_type matrix_type;
 
             asm_.createSystem(g, sys_);
             model_.initStep(state, g, sys_);
-            init = model_.initIteration(state, g, sys_);
+            model_.initIteration(state, g, sys_);
 
             MZero<matrix_type>::zero(sys_.writableMatrix());
             VZero<vector_type>::zero(sys_.vector().writableResidual());
@@ -157,7 +157,7 @@ namespace Opm {
                     VNorm<vector_type>::norm(sys_.vector().increment());
 
                 // Begin line search
-                double residual=VNorm<vector_type>::norm(sys_.vector().residual());
+                double residual;
                 int lin_it=0;
                 bool finished=rpt.norm_res<ctrl.atol;
                 double alpha=2.0;
@@ -172,7 +172,7 @@ namespace Opm {
                                                sys_.vector().writableSolution());
 
                     sys_.vector().addIncrement();
-                    init = model_.initIteration(state, g, sys_);
+                    bool init = model_.initIteration(state, g, sys_);
                     if (init) {
                         MZero<matrix_type>::zero(sys_.writableMatrix());
                         VZero<vector_type>::zero(sys_.vector().writableResidual());
