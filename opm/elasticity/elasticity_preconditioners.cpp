@@ -44,7 +44,7 @@ Schwarz::type* Schwarz::setup2(std::shared_ptr<Operator>& op,
   int nel2 = gv.logicalCartesianSize()[1];
   rows.resize(nel1/cps*nel2/cps);
 
-  auto set = gv.leafGridView().indexSet();
+  const auto& set = gv.leafGridView().indexSet();
   for (auto it  = gv.leafGridView().begin<0>(), e = gv.leafGridView().end<0>();
             it != e; ++it) {
     std::array<int, 3> ijk;
