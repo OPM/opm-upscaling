@@ -54,7 +54,7 @@ namespace {
   createIntehead(const int nx, const int ny, const int nz, const int nactive,
                  const time_t time_stamp)
   {
-    const auto ih = ::Opm::RestartIO::InteHEAD{}
+    return ::Opm::RestartIO::InteHEAD{}
       .dimensions         (nx, ny, nz)
       .numActive          (nactive)
       .unitConventions    (Opm::UnitSystem::newMETRIC())
@@ -62,9 +62,8 @@ namespace {
       .wellTableDimensions({ 0, 0, 0, 0, 0, 0, 0 })
       .calendarDate       (timeStamp(time_stamp))
       .activePhases       (phases())
-      .variousParam       (201702, 100);
-
-    return ih.data();
+      .variousParam       (201702, 100)
+      .data();
   }
 
   std::vector<double>
@@ -82,10 +81,9 @@ namespace {
       >(start), dur
     };
 
-    const auto dh = ::Opm::RestartIO::DoubHEAD{}
-    .timeStamp(ts);
-
-    return dh.data();
+    return ::Opm::RestartIO::DoubHEAD{}
+      .timeStamp(ts)
+      .data();
   }
 }
 
