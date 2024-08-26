@@ -56,6 +56,12 @@ class ASMHandler {
        delete it->second;
    }
 
+   //! \brief No copying of this class
+   ASMHandler(const ASMHandler&) = delete;
+
+   //! \brief No copying of this class
+   ASMHandler& operator=(const ASMHandler&) = delete;
+
     //! \brief A vectorial node value
     typedef Dune::FieldVector<double,dim> NodeValue;
 
@@ -227,11 +233,6 @@ class ASMHandler {
 
     //! \brief The number of equations in the system
     size_t maxeqn;
-  private:
-    //! \brief No copying of this class
-    ASMHandler(const ASMHandler&) {}
-    //! \brief No copying of this class
-    ASMHandler& operator=(const ASMHandler&) {}
 };
 
 }
