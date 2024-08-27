@@ -44,12 +44,12 @@ Schwarz::type* Schwarz::setup2(std::shared_ptr<Operator>& op,
   int nel2 = gv.logicalCartesianSize()[1];
   rows.resize(nel1/cps*nel2/cps);
 
-  auto set = gv.leafGridView().indexSet();
+  const auto& set = gv.leafGridView().indexSet();
   for (auto it  = gv.leafGridView().begin<0>(), e = gv.leafGridView().end<0>();
             it != e; ++it) {
     std::array<int, 3> ijk;
     gv.getIJK(set.index(*it), ijk);
-    const int rowix = (ijk[0]/cps) + (nel1/cps)*(ijk[1]/cps);
+    auto rowix = [&ijk,nel1]{ return (ijk[0]/cps) + (nel1/cps)*(ijk[1]/cps); };
     // loop over nodes
     for (int n=0;n<8;++n) {
       int idx = set.subIndex(*it, n, 3);
@@ -59,11 +59,11 @@ Schwarz::type* Schwarz::setup2(std::shared_ptr<Operator>& op,
           for (size_t q=0;q<mpc->getNoMaster();++q) {
             int idx2 = A.getEquationForDof(mpc->getMaster(q).node, m);
             if (idx2 > -1)
-              rows[rowix].insert(idx2);
+              rows[rowix()].insert(idx2);
           }
         } else {
           if (A.getEquationForDof(idx, m) > -1)
-            rows[rowix].insert(A.getEquationForDof(idx, m));
+            rows[rowix()].insert(A.getEquationForDof(idx, m));
         }
       }
     }

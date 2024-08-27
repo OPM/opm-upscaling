@@ -16,7 +16,7 @@
 
 #include <opm/grid/CpGrid.hpp>
 
-#ifdef HAVE_OPENMP
+#if _OPENMP
 #include <omp.h>
 #endif
 
@@ -26,12 +26,12 @@ void MeshColorizer<Dune::CpGrid>::calcGroups()
   int nel1 = grid.logicalCartesianSize()[0];
   int nel2 = grid.logicalCartesianSize()[1];
   int nel3 = grid.logicalCartesianSize()[2];
-  int threads=1;
-  int stripsize=0;
-  int remainder=0;
-  int dir=0, mul=1;
+  int threads;
+  int stripsize;
+  int remainder = 0;
+  int dir, mul;
 
-#ifdef HAVE_OPENMP
+#if _OPENMP
   threads = omp_get_max_threads();
   int parts = threads > 1 ? 2*threads : 1;
   dir = getStripDirection(nel1,nel2,nel3,parts);
@@ -53,6 +53,8 @@ void MeshColorizer<Dune::CpGrid>::calcGroups()
     << "\n\tstripsize " << stripsize
     << "\n\t# of strips " << els/stripsize
     << "\n\tremainder " << remainder << std::endl;
+#else
+  threads = 1;
 #endif
 
   if (threads == 1) {
