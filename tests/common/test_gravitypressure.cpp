@@ -458,7 +458,7 @@ PORO
 // Actual test suite below
 // =====================================================================
 
-BOOST_AUTO_TEST_SUITE()
+BOOST_AUTO_TEST_SUITE(GravityPressure)
 
 BOOST_AUTO_TEST_CASE (BaseCase)
 {
