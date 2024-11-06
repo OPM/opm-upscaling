@@ -479,7 +479,7 @@ namespace Opm {
         /// @param [in] m
         ///    Assignment right hand side.
         template <template<typename> class OtherSP, class OtherOP>
-        bool operator==(const FullMatrix<T, OtherSP, OtherOP>& m)
+        bool operator==(const FullMatrix<T, OtherSP, OtherOP>& m) const
         {
             if (numRows() != m.numRows() || numCols() != m.numCols()) {
                 return false;

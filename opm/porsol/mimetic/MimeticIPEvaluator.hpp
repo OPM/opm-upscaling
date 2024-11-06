@@ -86,7 +86,7 @@ namespace Opm {
     public:
         /// @brief
         ///    The number of space dimensions.
-        enum { dim = GridInterface::Dimension };
+        static constexpr int dim = GridInterface::Dimension;
         /// @brief
         ///    The iterator type for iterating over grid cells.
         typedef typename GridInterface::CellIterator CellIter;
