@@ -110,7 +110,12 @@ class ASMHandler {
                     const Dune::FieldVector<double,esize>* S,
                     const LeafIterator& cell,
                     Vector* b=NULL);
-    void addMatElement(int i,int j,double val){ A[i][j] += val;}  
+
+    void addMatElement(const int i, const int j, const double val)
+    {
+      A[i][j] += val;
+    }
+
     //! \brief Extract values corresponding to cell
     //! \param[in] u The global load vector
     //! \param[in] it An iterator to the cell we want to extract values for

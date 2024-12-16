@@ -81,7 +81,7 @@ void Elasticity<GridType>::getBVector(Dune::FieldVector<ctype,funcdims>& Bvector
         = P1ShapeFunctionSet<ctype,ctype,dim>::instance();
 
     Dune::FieldMatrix<ctype,funcdims,dim> N;
-    for (int i=0;i < funcdims; i++){
+    for (int i = 0; i < funcdims; i++) {
         Bvector[i] = basis[i].evaluateFunction(point);
     }
 }
