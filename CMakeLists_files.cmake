@@ -212,6 +212,7 @@ list (APPEND PUBLIC_HEADER_FILES
   opm/elasticity/material.hh
   opm/elasticity/materials.hh
   opm/elasticity/matrixops.hpp
+  opm/elasticity/meshcolorizer.hpp
   opm/elasticity/mortar_evaluator.hpp
   opm/elasticity/mortar_schur.hpp
   opm/elasticity/mortar_schur_precond.hpp
