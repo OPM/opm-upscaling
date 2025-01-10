@@ -246,12 +246,15 @@ namespace Opm
 
         std::vector<double>     faceflux(numhf);
 
-        for (int c = 0, i = 0; c < cgrid->number_of_cells; ++c){
-            for (; i < cgrid->cell_facepos[c + 1]; ++i) {
-                int f= cgrid->cell_faces[i];
-                double outflux = pressure_sol.outflux(i);
-                double sgn = 2.0*(cgrid->face_cells[2*f + 0] == c) - 1;
-                faceflux[f] = sgn * outflux;
+        {
+            auto i = grid_size_t(0);
+            for (int c = 0; c < cgrid->number_of_cells; ++c){
+                for (; i < cgrid->cell_facepos[c + 1]; ++i) {
+                    int f= cgrid->cell_faces[i];
+                    double outflux = pressure_sol.outflux(i);
+                    double sgn = 2.0*(cgrid->face_cells[2*f + 0] == c) - 1;
+                    faceflux[f] = sgn * outflux;
+                }
             }
         }
         int num_db=direclet_hfaces_.size();
