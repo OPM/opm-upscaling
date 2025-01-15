@@ -296,7 +296,8 @@ namespace Opm {
                 store_.drho() = fluid_.density(0) - fluid_.density(1);
             }
 
-            for (int c = 0, i = 0; c < g.number_of_cells; ++c) {
+            auto i = grid_size_t(0);
+            for (int c = 0; c < g.number_of_cells; ++c) {
                 for (; i < g.cell_facepos[c + 1]; ++i) {
                     const int f = g.cell_faces[i];
                     const int p = 1 - (g.face_cells[2*f + 0] == c);
@@ -481,7 +482,8 @@ namespace Opm {
                 store_.trans(f) = 0.0;
             }
 
-            for (int c = 0, i = 0; c < g.number_of_cells; ++c) {
+            auto i = grid_size_t(0);
+            for (int c = 0; c < g.number_of_cells; ++c) {
                 for (; i < g.cell_facepos[c + 1]; ++i) {
                     int f = g.cell_faces[i];
 
@@ -666,8 +668,9 @@ namespace Opm {
         computeStaticGravity(const Grid& g) {
 
             const int d = g.dimensions;
+            auto i = grid_size_t(0);
 
-            for (int c = 0, i = 0; c < g.number_of_cells; ++c) {
+            for (int c = 0; c < g.number_of_cells; ++c) {
                 const double* cc = g.cell_centroids + (c * d);
 
                 for (; i < g.cell_facepos[c + 1]; ++i) {

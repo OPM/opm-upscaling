@@ -107,13 +107,13 @@ namespace Opm {
         template <class Grid>
         int
         countConnections(const Grid& g, int c) const {
-            int i, f, c1, c2, n;
+            int n = 0;
 
-            for (i = g.cell_facepos[c + 0], n = 0;
+            for (auto i = g.cell_facepos[c + 0];
                  i < g.cell_facepos[c + 1]; ++i) {
-                f  = g.cell_faces[i];
-                c1 = g.face_cells[2*f + 0];
-                c2 = g.face_cells[2*f + 1];
+                const auto f  = g.cell_faces[i];
+                const auto c1 = g.face_cells[2*f + 0];
+                const auto c2 = g.face_cells[2*f + 1];
 
                 n += (c1 >= 0) && (c2 >= 0);
             }
@@ -145,7 +145,7 @@ namespace Opm {
             connections.reserve  (nconn + 1);
             connections.push_back(c);
 
-            for (int i = g.cell_facepos[c + 0];
+            for (auto i = g.cell_facepos[c + 0];
                  i     < g.cell_facepos[c + 1]; ++i) {
                 int f  = g.cell_faces[i];
                 int c1 = g.face_cells[2*f + 0];
@@ -180,11 +180,11 @@ namespace Opm {
             model_.initResidual(c, F);
             F += ndof;
 
-            for (int i = g.cell_facepos[c + 0];
+            for (auto i = g.cell_facepos[c + 0];
                  i     < g.cell_facepos[c + 1]; ++i) {
-                int f  = g.cell_faces[i];
-                int c1 = g.face_cells[2*f + 0];
-                int c2 = g.face_cells[2*f + 1];
+                auto f  = g.cell_faces[i];
+                auto c1 = g.face_cells[2*f + 0];
+                auto c2 = g.face_cells[2*f + 1];
 
                 if ((c1 >= 0) && (c2 >= 0)) {
                     model_.fluxConnection(state, g, dt, c, f, J1, J2, F);
@@ -212,11 +212,11 @@ namespace Opm {
             sys.matasm().assembleBlock(ndof, c, c, J1);  J1 += ndof2;
 
             // Assemble connection contributions.
-            for (int i = g.cell_facepos[c + 0];
+            for (auto i = g.cell_facepos[c + 0];
                  i     < g.cell_facepos[c + 1]; ++i) {
-                int f  = g.cell_faces[i];
-                int c1 = g.face_cells[2*f + 0];
-                int c2 = g.face_cells[2*f + 1];
+                auto f  = g.cell_faces[i];
+                auto c1 = g.face_cells[2*f + 0];
+                auto c2 = g.face_cells[2*f + 1];
 
                 c2 = (c1 == c) ? c2 : c1;
 
