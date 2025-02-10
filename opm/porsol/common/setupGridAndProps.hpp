@@ -88,7 +88,12 @@ namespace Opm
             bool turn_normals = param.getDefault<bool>("turn_normals", false);
             {
                 Opm::EclipseGrid inputGrid(deck);
-                grid.processEclipseFormat(&inputGrid, nullptr, periodic_extension, turn_normals, clip_z, true);
+                grid.processEclipseFormat(&inputGrid, /* ecl_state = */ nullptr,
+                                          periodic_extension,
+                                          turn_normals,
+                                          clip_z,
+                                          /* pinchActive = */ true,
+                                          /* edge_conformal = */ false);
             }
             // Save EGRID file in case we are writing ECL output.
             if (param.getDefault("output_ecl", false)) {
@@ -157,10 +162,18 @@ namespace Opm
                                          Dune::CpGrid& grid,
                                          ResProp<3>& res_prop)
     {
-        Opm::EclipseGrid eg(deck);
+        const Opm::EclipseGrid eg(deck);
         const std::string* rl_ptr = (rock_list == "no_list") ? 0 : &rock_list;
-        grid.processEclipseFormat(&eg, nullptr, periodic_extension, turn_normals, clip_z, true);
+
+        grid.processEclipseFormat(&eg, /* ecl_state = */ nullptr,
+                                  periodic_extension,
+                                  turn_normals,
+                                  clip_z,
+                                  /* pinchActive = */ true,
+                                  /* edge_conformal = */ false);
+
         res_prop.init(deck, grid.globalCell(), perm_threshold, rl_ptr, use_jfunction_scaling, sigma, theta);
+
         if (unique_bids) {
             grid.setUniqueBoundaryIds(true);
         }
