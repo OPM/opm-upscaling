@@ -1054,7 +1054,7 @@ IMPL_FUNC(void, setupSolvers(const LinSolParams& params))
     if (B.N()) 
       A.getOperator() = MatrixOps::augment(A.getOperator(), B,
                                            0, A.getOperator().M(), true);
-#if HAVE_UMFPACK || HAVE_SUPERLU
+#if HAVE_SUITESPARSE_UMFPACK || HAVE_SUPERLU
     tsolver.push_back(SolverPtr(new LUSolver(A.getOperator(),
                                              verbose?2:(params.report?1:0))));
     for (int i=1;i<numsolvers;++i)
