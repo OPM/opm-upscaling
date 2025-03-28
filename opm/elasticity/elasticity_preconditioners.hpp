@@ -37,7 +37,7 @@
 namespace Opm {
 namespace Elasticity {
 
-#if defined(HAVE_UMFPACK)
+#if defined(HAVE_SUITESPARSE_UMFPACK)
 typedef Dune::UMFPack<Matrix> LUSolver;
 #elif defined(HAVE_SUPERLU)
 typedef Dune::SuperLU<Matrix> LUSolver;

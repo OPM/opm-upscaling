@@ -79,7 +79,6 @@ macro (config_hook)
 	opm_need_version_of ("dune-istl")
 	list (APPEND ${project}_CONFIG_IMPL_VARS
 		HAVE_LAPACK
-		HAVE_UMFPACK
 		HAVE_SUPERLU
 		HAVE_SUITESPARSE_UMFPACK
 		)
