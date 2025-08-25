@@ -72,7 +72,7 @@
 
 namespace
 {
-    void build_grid(const Opm::Deck&  deck,
+    void build_grid(const Opm::Deck&   deck,
                     Dune::CpGrid&      grid,
                     std::array<int,3>& cartDims)
     {
@@ -90,14 +90,18 @@ namespace
 
         if (deck.hasKeyword("ACTNUM")) {
             g.actnum = &deck["ACTNUM"].back().getIntData()[0];
-            grid.processEclipseFormat(g, false, false);
+            grid.processEclipseFormat(g, /* remove_ij_boundary = */ false,
+                                      /* turn_normals = */ false,
+                                      /* edge_conformal = */ false);
         }
         else {
             const auto dflt_actnum =
                 std::vector<int>(g.dims[0] * g.dims[1] * g.dims[2], 1);
 
             g.actnum = dflt_actnum.data();
-            grid.processEclipseFormat(g, false, false);
+            grid.processEclipseFormat(g, /* remove_ij_boundary = */ false,
+                                      /* turn_normals = */ false,
+                                      /* edge_conformal = */ false);
         }
     }
 } // namespace anonymous
