@@ -12,11 +12,13 @@ then
   echo -e "\t\t -a <tol>      Absolute tolerance in comparison"
   echo -e "\t\t -t <tol>      Relative tolerance in comparison"
   echo -e "\t\t -e <filename> Simulator binary to use"
+  echo -e "\t\t -p <nproc > Number of processors to use"
   exit 1
 fi
 
 OPTIND=1
-while getopts "i:r:b:n:a:t:e:" OPT
+NPROC=1
+while getopts "i:r:b:n:a:t:e:p:" OPT
 do
   case "${OPT}" in
     i) INPUT_DATA_PATH=${OPTARG} ;;
@@ -26,6 +28,7 @@ do
     a) ABS_TOL=${OPTARG} ;;
     t) REL_TOL=${OPTARG} ;;
     e) EXE_NAME=${OPTARG} ;;
+    p) NPROC=${OPTARG} ;;
   esac
 done
 shift $(($OPTIND-1))
@@ -34,5 +37,10 @@ TEST_ARGS="$@"
 rm -Rf ${RESULT_PATH}
 mkdir -p ${RESULT_PATH}
 
-OMP_NUM_THREADS=1 ${BINPATH}/${EXE_NAME} ${TEST_ARGS}
+if test $NPROC -gt 1
+then
+  OMP_NUM_THREADS=1 mpirun -np ${NPROC} ${BINPATH}/${EXE_NAME} ${TEST_ARGS}
+else
+  OMP_NUM_THREADS=1 ${BINPATH}/${EXE_NAME} ${TEST_ARGS}
+fi
 ${BINPATH}/compareUpscaling ${INPUT_DATA_PATH}/reference_solutions/${TEST_NAME}.txt ${RESULT_PATH}/${TEST_NAME}.txt ${ABS_TOL} ${REL_TOL}
