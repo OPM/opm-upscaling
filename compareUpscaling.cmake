@@ -68,10 +68,14 @@ endmacro (add_test_upscale_perm)
 #   - rows: Number of rows in result file that is to be compared
 # This macro assumes that ${gridname}.grdecl is found in directory ${INPUT_DATA_PATH}grids/
 # and that upscale_perm_BC${bcs}_${gridname}.txt is found in ${INPUT_DATA_PATH}reference_solutions
-macro (add_test_upscale_relperm testname gridname stonefiles rows cols)
+macro (add_test_upscale_relperm testname gridname stonefiles rows cols nproc)
   # Add test that runs upscale_perm and outputs the results to file
   # Ensure unique output folder per test (because this folder is deleted in the test driver script)
-  set(TEST_NAME upscale_relperm_${testname})
+  if (${nproc} GREATER 1)
+    set(TEST_NAME upscale_relperm_${testname}_np${nproc})
+  else()
+    set(TEST_NAME upscale_relperm_${testname})
+  endif()
   set(RESULT_PATH ${BASE_RESULT_PATH}/${TEST_NAME})
   set(test_args ${ARGN}
                 -output ${RESULT_PATH}/upscale_relperm_${testname}.txt
@@ -87,7 +91,9 @@ macro (add_test_upscale_relperm testname gridname stonefiles rows cols)
                            -n upscale_relperm_${testname}
                            -a ${abstol}
                            -t ${reltol}
+                           -p ${nproc}
                TEST_ARGS ${test_args})
+  set_tests_properties(${TEST_NAME} PROPERTIES PROCESSORS ${nproc})
 endmacro ()
 
 ###########################################################################
@@ -162,7 +168,7 @@ add_test_upscale_perm(Hummocky flp 9)
 
 # Add tests for different models
 add_test_upscale_relperm(BCf_pts20_surfTens11_stonefile_benchmark_stonefile_benchmark_benchmark_tiny_grid
-                         benchmark_tiny_grid stonefile_benchmark.txt 20 8
+                         benchmark_tiny_grid stonefile_benchmark.txt 20 8 1
                          -bc f -points 20 -relPermCurve 2 -upscaleBothPhases true
                          -jFunctionCurve 3 -surfaceTension 11 -gravity 0.0
                          -waterDensity 1.0 -oilDensity 0.6 -interpolate 0
@@ -173,17 +179,24 @@ add_test_upscale_relperm(BCf_pts20_surfTens11_stonefile_benchmark_stonefile_benc
                          -krowxswirr -1 -krowyswirr -1 -krowzswirr -1
                          -doEclipseCheck true -critRelpermThresh 1e-6)
 add_test_upscale_relperm(BCf_pts30_surfTens11_stone1_stone1_EightCells
-                         EightCells stone1.txt 30 8)
+                         EightCells stone1.txt 30 8 1)
 add_test_upscale_relperm(BCf_pts20_surfTens11_stone1_stone1_EightCells
-                         EightCells stone1.txt 30 8 -points 20)
+                         EightCells stone1.txt 30 8 1 -points 20)
 add_test_upscale_relperm(BCl_pts30_surfTens11_stone1_stone1_EightCells
-                         EightCells stone1.txt 30 20 -bc l)
+                         EightCells stone1.txt 30 20 1 -bc l)
 add_test_upscale_relperm(BCf_pts30_surfTens45_stone1_stone1_EightCells
-                         EightCells stone1.txt 30 8 -surfaceTension 45)
+                         EightCells stone1.txt 30 8 1 -surfaceTension 45)
 add_test_upscale_relperm(BCf_pts30_surfTens11_stone1_stone2_EightCells
-                         EightCells "stone1.txt;stone2.txt" 30 8)
+                         EightCells "stone1.txt;stone2.txt" 30 8 1)
 add_test_upscale_relperm(BCf_pts30_surfTens11_stoneAniso_stoneAniso_27cellsAniso
-                         27cellsAniso stoneAniso.txt 30 8)
+                         27cellsAniso stoneAniso.txt 30 8 1)
+
+if(MPI_FOUND)
+add_test_upscale_relperm(BCf_pts30_surfTens11_stone1_stone1_EightCells
+                         EightCells stone1.txt 30 8 4)
+  add_test_upscale_relperm(BCf_pts30_surfTens11_stoneAniso_stoneAniso_27cellsAniso
+                           27cellsAniso stoneAniso.txt 30 8 4)
+endif()
 
 if((DUNE_ISTL_VERSION_MAJOR GREATER 2) OR
    (DUNE_ISTL_VERSION_MAJOR EQUAL 2 AND DUNE_ISTL_VERSION_MINOR GREATER 2))
