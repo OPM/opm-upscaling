@@ -54,7 +54,8 @@ namespace Opm
 	  linsolver_verbosity_(0),
           linsolver_type_(3),
           linsolver_smooth_steps_(1),
-          gravity_(0.0)
+          gravity_(0.0),
+          grid_(MPI_COMM_SELF)
     {
     }
 
