@@ -28,8 +28,8 @@ class MortarBlockEvaluator : public Dune::LinearOperator<Vector, Vector> {
   public:
 
     //! \brief Constructor
-    //! \param[in] Ai Solver or preconditioner for A^-1
-    //! \param[in] B The mortar coupling matrix
+    //! \param[in] Ai_ Solver or preconditioner for A^-1
+    //! \param[in] B_ The mortar coupling matrix
     MortarBlockEvaluator(T& Ai_,
                          const Matrix& B_) :
       Ai(Ai_), B(B_), op(Ai)

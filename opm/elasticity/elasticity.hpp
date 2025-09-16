@@ -31,14 +31,17 @@ class Elasticity {
     //! \param[in] gv_ The grid we are doing the calculations on
     explicit Elasticity(const GridType& gv_) : gv(gv_) {}
 
-    //! \brief Returns the B matrix in a quadrature point
-    //! \param[in] point (Reference) coordinates of quadrature point 
-    //! \param[in] Jinv Jacobian matrix in quadrature point
-    //! \param[out] B The B matrix
+    //! \brief Returns the vector of basis function values in a quadrature point
+    //! \param[out] BVector The vector of basis function values
+    //! \param[in] point (Reference) coordinates of quadrature point
       template<int funcdim>
     void getBVector(Dune::FieldVector<ctype,funcdim>& BVector,
                     const Dune::FieldVector<ctype,dim>& point);
   
+    //! \brief Returns the B matrix in a quadrature point
+    //! \param[out] B The B matrix
+    //! \param[in] point (Reference) coordinates of quadrature point
+    //! \param[in] Jinv Jacobian matrix in quadrature point
       template<int components, int funcdim>
     void getBmatrix(Dune::FieldMatrix<ctype,components,funcdim>& B,
                     const Dune::FieldVector<ctype,dim>& point,

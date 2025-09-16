@@ -236,7 +236,7 @@ class ElasticityUpscale
     //! \param[in] Escale_ A scale value for E-moduluses to avoid numerical issues
     //! \param[in] file The eclipse grid file
     //! \param[in] rocklist If not blank, file is a rocklist
-    //! \param[in] verbose If true, give verbose output
+    //! \param[in] verbose_ If true, give verbose output
     ElasticityUpscale(const GridType& gv_, ctype tol_, ctype Escale_, 
                       const std::string& file, const std::string& rocklist,
                       bool verbose_)
@@ -256,7 +256,7 @@ class ElasticityUpscale
 
     //! \brief Add a MPC equation
     //! \param[in] dir The direction of the MPC
-    //! \param[in] slave The slave node index
+    //! \param[in] slavenode The slave node index
     //! \param[in] m The vertices on the master grid
     void addMPC(Direction dir, int slavenode,
                 const BoundaryGrid::Vertex& m);

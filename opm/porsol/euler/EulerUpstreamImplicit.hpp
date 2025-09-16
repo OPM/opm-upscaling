@@ -89,10 +89,12 @@ namespace Opm {
         /// @param
         void display();
 
-        /// \brief Solve transport equation, evolving \param saturation
-        /// for \param time seconds.
-        /// @tparam
-        /// @param
+        /// @brief Solve transport equation.
+        /// @param saturation the evolving saturation
+        /// @param time Time in seconds.
+        /// @param gravity Gravity
+        /// @param pressure_sol Pressure solution
+        /// @param injection_rates Injection ratees
         template <class PressureSolution>
         bool transportSolve(std::vector<double>& saturation,
                             const double time,

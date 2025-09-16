@@ -86,11 +86,9 @@ namespace Opm
     }
 
     /// @brief Estimates a scalar cell velocity from face fluxes.
-    /// @tparam GridInterface a grid interface.
-    /// @tparam FlowSol a flow solution type.
     /// @param[out] cell_velocity the estimated velocities.
-    /// @param[in] ginterf an interface to the grid.
-    /// @param[in] flow_solution the object containing the fluxes.
+    /// @param[in] grid an interface to the grid.
+    /// @param[in] face_flux the object containing the fluxes.
     template <class GridInterface>
     void estimateCellVelocitySimpleInterface(std::vector<typename GridInterface::Vector>& cell_velocity,
                                              const GridInterface& grid,

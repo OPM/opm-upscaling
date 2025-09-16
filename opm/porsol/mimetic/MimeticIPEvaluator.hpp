@@ -186,15 +186,17 @@ namespace Opm {
         ///    @endcode retrieves the @f$ij@f$'th component of the
         ///    cell permeability @f$K@f$.
         ///
-        /// @param [in] c
+        /// @param[in] c
         ///    Cell for which to evaluate the inverse of the mimetic
         ///    inner product.
         ///
-        /// @param [in] r
+        /// @param[in] r
         ///    Specific rock properties.  Only the permeability
         ///    is used in method @code buildStaticContrib() @endcode.
         ///
-        /// @param [in] nf
+        /// @param[in] grav Gravity
+        ///
+        /// @param[in] nf
         ///    Number of faces (i.e., number of neighbours) of cell
         ///    @code *c @endcode.
         void buildStaticContrib(const CellIter& c,

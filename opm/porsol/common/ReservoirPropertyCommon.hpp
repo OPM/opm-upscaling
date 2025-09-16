@@ -184,18 +184,18 @@ namespace Opm
         /// @return capillary pressure at the given cell and saturation.
         double capillaryPressure(int cell_index, double saturation) const;
         /// @brief Derivative of Capillary pressure.
-        /// @param cell_index index of a grid cell.
-        /// @param saturation a saturation value.
+        /// @param c index of a grid cell.
+        /// @param s saturation value.
         /// @return capillary pressure at the given cell and saturation.
         double capillaryPressureDeriv(int c, double s) const;
 
         // @brief Minimum of saturation in rock table.
-        /// @param cell_index index of a grid cell.
+        /// @param c index of a grid cell.
         /// @return minimum saturation in given cell.
         double s_min(int c) const;
 
         // @brief Maximum of saturation in rock table.
-        /// @param cell_index index of a grid cell.
+        /// @param c index of a grid cell.
         /// @return maximum saturation in given cell.
         double s_max(int c) const;
 

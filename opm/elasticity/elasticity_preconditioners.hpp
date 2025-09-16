@@ -73,7 +73,8 @@ struct Schwarz {
   //! \param[in] zcells The wanted number of cells to collapse in z per level
   //! \param[in] op The linear operator
   //! \param[in] gv The cornerpoint grid
-  //! \param[out] thread Whether or not to clone for threads
+  //! \param      A The ASMHandler for the elasticity operator(s)
+  //! \param[out] copy Whether or not to clone for threads
   static std::shared_ptr<type>
                 setup(int /* pre */, int /* post */, int /* target */, int /* zcells */,
                       std::shared_ptr<Operator>& op, const Dune::CpGrid& gv,
@@ -112,7 +113,7 @@ struct AMG1 {
   //! \param[in] zcells The wanted number of cells to collapse in z per level
   //! \param[in] op The linear operator
   //! \param[in] gv The cornerpoint grid
-  //! \param[out] thread Whether or not to clone for threads
+  //! \param[out] copy Whether or not to clone for threads
   static std::shared_ptr<type>
                 setup(int pre, int post, int target, int zcells,
                       std::shared_ptr<Operator>& op, const Dune::CpGrid& /* gv */,
@@ -144,7 +145,8 @@ struct FastAMG {
   //! \param[in] zcells The wanted number of cells to collapse in z per level
   //! \param[in] op The linear operator
   //! \param[in] gv The cornerpoint grid
-  //! \param[out] thread Whether or not to clone for threads
+  //! \param     A Assembly handler
+  //! \param[out] copy Whether or not to clone for threads
   static std::shared_ptr<type>
                 setup(int pre, int post, int target, int zcells,
                       std::shared_ptr<Operator>& op, const Dune::CpGrid& gv,
@@ -175,7 +177,8 @@ struct AMG2Level {
   //! \param[in] zcells The wanted number of cells to collapse in z per level
   //! \param[in] op The linear operator
   //! \param[in] gv The cornerpoint grid
-  //! \param[out] thread Whether or not to clone for threads
+  //! \param     A The assembly handler
+  //! \param[out] copy Whether or not to clone for threads
   static std::shared_ptr<type>
                 setup(int pre, int post, int target, int zcells,
                       std::shared_ptr<Operator>& op, const Dune::CpGrid& gv,

@@ -13,6 +13,8 @@
 #ifndef APPLIER_H_
 #define APPLIER_H_
 
+#include <dune/istl/solver.hh>
+
 #include <opm/elasticity/matrixops.hpp>
 
 namespace Opm {
@@ -34,12 +36,12 @@ struct OperatorApplier
   void apply(Vector& v, Vector& d);
 
   //! \brief Preprocess a preconditioner, noop for an inverse operator
-  //! \param[in/out] b The load vector
-  //! \param[in/out] x The initial (guessed) solution
+  //! \param[in,out] x The initial (guessed) solution
+  //! \param[in,out] b The load vector
   void pre(Vector& x, Vector& b);
 
   //! \brief Postprocess a preconditioner, noop for an inverse operator
-  //! \param[in/out] x The final solution
+  //! \param[in,out] x The final solution
   void post(Vector& x);
 
   T& A;

@@ -200,6 +200,8 @@ namespace Opm {
         ///    Specific reservoir properties.  Only the permeability
         ///    is used in method @code buildMatrix() @endcode.
         ///
+        /// @param [in] grav Gravity
+        ///
         /// @param [in] nf
         ///    Number of faces (i.e., number of neighbours) of cell
         ///    @code *c @endcode.

@@ -72,6 +72,7 @@ namespace Opm
         /// only needed for nonperiodic upscaling.
         /// @param pressure_drop the pressure drop in Pascal over the domain.
         /// @param upscaled_perm typically the output of upscaleSinglePhase().
+        /// @param[out] success True if upscaling was successful
         /// @return the upscaled relative permeability matrices of both phases.
         /// The relative permeability matrix, call it k, is such that if K_w is the phase
         /// permeability and K the absolute permeability, K_w = k*K.

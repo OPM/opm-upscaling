@@ -14,6 +14,9 @@
 
 #include <dune/istl/solvers.hh>
 
+#include <opm/elasticity/matrixops.hpp>
+#include <opm/elasticity/mortar_utils.hpp>
+
 namespace Opm {
   namespace Elasticity {
 
@@ -27,8 +30,8 @@ class UzawaSolver : public Dune::InverseOperator<X,Y>
     typedef std::shared_ptr<Dune::InverseOperator<X,Y> > OperatorPtr;
     //! \brief Default constructor
     //! \param[in] innersolver_ The inner solver
-    //! \param[in] outersolve_ The outer solver
-    //! \param[in] B Coupling matrix
+    //! \param[in] outersolver_ The outer solver
+    //! \param[in] B_ Coupling matrix
     UzawaSolver(OperatorPtr& innersolver_,
                 OperatorPtr& outersolver_,
                 const Matrix& B_) :

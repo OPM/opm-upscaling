@@ -69,7 +69,7 @@ class MatrixOps {
                           size_t r0, size_t c0, bool symmetric);
 
     //! \brief Extract the diagonal of a matrix into a new matrix
-    //! \param[in] The matrix to extract the diagonal from
+    //! \param[in] A The matrix to extract the diagonal from
     //! \returns M = diag(A)
     static Matrix extractDiagonal(const Matrix& A);
 
@@ -78,7 +78,11 @@ class MatrixOps {
     static Matrix diagonal(size_t N);
 
     //! \brief Extract a subblock of a matrix into a new matrix
-    //! \param[in] The matrix to extract from
+    //! \param[in] A The matrix to extract from
+    //! \param[in] r0 First row index for block
+    //! \param[in] N Number of rows in block
+    //! \param[in] c0 First column index for block
+    //! \param[in] M Number of colums in block
     //! \returns The subblock
     static Matrix extractBlock(const Matrix& A,
                                size_t r0, size_t N, size_t c0, size_t M);
