@@ -88,7 +88,7 @@ namespace Opm {
 
       //! \brief Default constructor.
       //! \param[in] mpi_rank Rank of this process (for parallel simulations).
-      //! \param[in] options Options structure.
+      //! \param[in] options_ Options structure.
       //! \details Uses the following options: fluids
       RelPermUpscaleHelper(int mpi_rank, std::map<std::string,std::string>& options_);
 

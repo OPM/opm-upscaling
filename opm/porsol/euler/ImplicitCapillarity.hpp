@@ -85,13 +85,15 @@ namespace Opm {
 		     const BoundaryConditions& boundary);
 
 
-	/// \brief Solve transport equation, evolving \param saturation
-	/// for \param time seconds.
-	/// Cfl type conditions may force many explicit timesteps to
-	/// be taken, before the function returns.
-	/// @tparam
-	/// @param
-	template <class PressureSolution>
+    /// @brief Solve transport equation.
+    /// @param saturation the evolving saturation
+    /// @param time Time in seconds.
+    /// @param gravity Gravity
+    /// @param pressure_sol Pressure solution
+    /// @param injection_rates Injection ratees
+    /// @details Cfl type conditions may force many explicit timesteps to
+    ///          be taken, before the function returns.
+    template <class PressureSolution>
 	void transportSolve(std::vector<double>& saturation,
 			    const double time,
 			    const typename GridInterface::Vector& gravity,

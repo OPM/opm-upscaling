@@ -560,6 +560,7 @@ namespace Opm {
         ///    The reservoir properties of each grid cell.  In method
         ///    @code computeInnerProducts() @endcode, we only inspect
         ///    the permeability field of @code r @endcode.
+        /// @param[in] grav Gravity
         template<class Point>
         void computeInnerProducts(const RockInterface& r,
                                   const Point& grav)
@@ -597,7 +598,7 @@ namespace Opm {
         ///    @code solve() @endcode we query this object for the
         ///    phase mobilities (i.e., @code r.phaseMobilities()
         ///    @endcode) and the phase densities (i.e., @code
-        ///    phaseDensities() @encode) of each phase.
+        ///    phaseDensities() @endcode) of each phase.
         ///
         /// @param [in] sat
         ///    Saturation of primary phase.  One scalar value for each
@@ -645,7 +646,7 @@ namespace Opm {
         ///
         /// @param [in] linsolver_maxit maximum iterations allowed
         ///
-        /// @param [in] prolongate_factor Factor to scale the prolongated coarse 
+        /// @param [in] prolongate_factor Factor to scale the prolongated coarse
         ///    coarse grid correction
         ///
         /// @param [in] smooth_steps Number of smoothing steps to be

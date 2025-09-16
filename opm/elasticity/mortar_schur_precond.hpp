@@ -37,12 +37,12 @@ namespace Elasticity {
 class MortarSchurPre : public Dune::Preconditioner<Vector,Vector> {
   public:
     //! \brief Constructor
-    //! \param[in] P The multiplier block with diagonal A approximation
-    //! \param[in] B The mortar coupling matrix
+    //! \param[in] P_ The multiplier block with diagonal A approximation
+    //! \param[in] B_ The mortar coupling matrix
     //! \param[in] Apre_ A preconfigured preconditioner for A
-    //! \param[in] symmetric If true, use symmetric preconditioning
+    //! \param[in] symmetric_ If true, use symmetric preconditioning
     MortarSchurPre(const Matrix& P_, const Matrix& B_,
-                   PrecondElasticityBlock& Apre_, bool symmetric_=false) :
+                   PrecondElasticityBlock& Apre_, bool symmetric_ = false) :
       Apre(Apre_), B(B_), N(B.N()), M(B.M()),
       Lpre(P_, false, false), symmetric(symmetric_)
     {

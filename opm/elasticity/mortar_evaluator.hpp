@@ -27,8 +27,8 @@ namespace Elasticity {
 class MortarEvaluator : public Dune::LinearOperator<Vector, Vector> {
   public:
     //! \brief Constructor
-    //! \param[in] Ai Evaluator for A^-1
-    //! \param[in] B The mortar coupling matrix
+    //! \param[in] A_ Evaluator for A^-1
+    //! \param[in] B_ The mortar coupling matrix
     MortarEvaluator(const Matrix& A_,
                     const Matrix& B_) :
       A(A_), B(B_)
