@@ -52,17 +52,17 @@
 using namespace std;
 
 
-int main(int argc, char** argv) try {        
-    if (argc ==  1) { // If no arguments supplied 
+int main(int argc, char** argv) try {
+    if (argc ==  1) { // If no arguments supplied
         cout << "Usage: grdecldips gridfilename=foo.grdecl [mincellvolume=1e-8] " << endl;
         cout << "       [listallcells=false] [output=filename.txt]" << endl;
         exit(1);
-    } 
+    }
 
     Dune::MPIHelper::instance(argc, argv);
 
     Opm::ParameterGroup param(argc, argv);
-    
+
     std::string gridfilename = param.get<std::string>("gridfilename");
     double minCellVolume = param.getDefault("mincellvolume", 1e-8);
     bool listallcells = param.getDefault("listallcells", false);
@@ -76,13 +76,13 @@ int main(int argc, char** argv) try {
 
     auto deck = Opm::RelPermUpscaleHelper::parseEclipseFile(gridfilename);
     Opm::EclipseGridInspector gridinspector(deck);
-    
+
     // Check that we have the information we need from the eclipse file, we will check PERM-fields later
-    if (! (deck.hasKeyword("SPECGRID") && deck.hasKeyword("COORD") && deck.hasKeyword("ZCORN"))) {  
-        cerr << "Error: Did not find SPECGRID, COORD and ZCORN in Eclipse file " << gridfilename << endl;  
-        exit(1);  
+    if (! (deck.hasKeyword("SPECGRID") && deck.hasKeyword("COORD") && deck.hasKeyword("ZCORN"))) {
+        cerr << "Error: Did not find SPECGRID, COORD and ZCORN in Eclipse file " << gridfilename << endl;
+        exit(1);
     }
-    
+
     /***************************
      * Find dips for every cell.
      */
@@ -94,11 +94,11 @@ int main(int argc, char** argv) try {
     griddims[2] = specgridRecord.getItem("NZ").get< int >(0);
     vector<double> xdips, ydips, cellvolumes;
     vector<int> cellidxs_i, cellidxs_j, cellidxs_k;
-    
-    int ignoredCellCount = 0; 
+
+    int ignoredCellCount = 0;
     for (int k=0; k < griddims[2]; ++k) {
 	for (int j=0; j < griddims[1]; ++j) {
-	    for (int i=0; i < griddims[0]; ++i) { 
+	    for (int i=0; i < griddims[0]; ++i) {
 		double cellVolume = gridinspector.cellVolumeVerticalPillars(i, j, k);
 		if (cellVolume > minCellVolume) {
 		    std::pair<double,double> xydip = gridinspector.cellDips(i, j, k);
@@ -115,13 +115,13 @@ int main(int argc, char** argv) try {
 	    }
 	}
     }
-    
-    // Average xdips and ydips 
+
+    // Average xdips and ydips
     double xdipaverage = accumulate(xdips.begin(), xdips.end(), 0.0)/xdips.size();
     double ydipaverage = accumulate(ydips.begin(), ydips.end(), 0.0)/ydips.size();
-    
+
     stringstream outputtmp;
-    
+
     // Print a table of all computed values:
     outputtmp << "###############################################################################" << endl;
     outputtmp << "# Results from upscaling dips."<< endl;
@@ -129,7 +129,7 @@ int main(int argc, char** argv) try {
     time_t now = time(NULL);
     outputtmp << "# Finished: " << asctime(localtime(&now));
     utsname hostname; uname(&hostname);
-    
+
     outputtmp << "#" << endl;
     outputtmp << "# Eclipse file: " << gridfilename << endl;
     outputtmp << "#" << endl;
@@ -143,13 +143,13 @@ int main(int argc, char** argv) try {
 	outputtmp << "# i j k xdip ydip  cellvolume" << endl;
 	for (unsigned int i=0; i < xdips.size(); ++i) {
 	    outputtmp << cellidxs_i[i] << " " << cellidxs_j[i] << " " << cellidxs_k[i] << "\t" << xdips[i] << "\t" << ydips[i] << "\t" << cellvolumes[i] << endl;
-	} 
+	}
     }
-    else { 
+    else {
 	outputtmp << "x_dip_average " << xdipaverage << endl;
 	outputtmp << "y_dip_average " << ydipaverage << endl;
-    } 
-    
+    }
+
     cout << endl << outputtmp.str();
     if (outputfilename != "")  {
         cout << "Writing results to " << outputfilename << endl;
@@ -159,10 +159,9 @@ int main(int argc, char** argv) try {
         outfile.close();
     }
     return 0;
-    
+
 }
 catch (const std::exception &e) {
     std::cerr << "Program threw an exception: " << e.what() << "\n";
     throw;
 }
-

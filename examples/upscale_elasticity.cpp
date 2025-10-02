@@ -10,7 +10,7 @@
 //!
 //==============================================================================
 #ifdef HAVE_CONFIG_H
-# include "config.h"     
+# include "config.h"
 #endif
 
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
@@ -470,7 +470,7 @@ int main(int argc, char** argv)
 try
 {
   try {
-    if (argc < 2 || strcmp(argv[1],"-h") == 0 
+    if (argc < 2 || strcmp(argv[1],"-h") == 0
                  || strcmp(argv[1],"--help") == 0
                  || strcmp(argv[1],"-?") == 0) {
       syntax(argv);

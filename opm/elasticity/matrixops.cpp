@@ -76,7 +76,7 @@ void MatrixOps::print(const Matrix& A)
                              it != A.end(); ++it) {
     for (Matrix::ConstColIterator it2  = it->begin();
                                   it2 != it->end();++it2) {
-      double val = *it2; 
+      double val = *it2;
       if (fabs(val) < 1.e-14)
         continue;
       std::cout << it.index() << " " << it2.index() << " : " << val << std::endl;
@@ -140,14 +140,14 @@ Matrix MatrixOps::augment(const Matrix& A, const Matrix& B,
   adj.resize(nrow);
   for (Matrix::ConstIterator it  = A.begin();
                              it != A.end();++it) {
-    for (Matrix::ConstColIterator it2  = it->begin(); 
+    for (Matrix::ConstColIterator it2  = it->begin();
                                   it2 != it->end();++it2) {
       adj[it.index()].insert(it2.index());
     }
   }
   for (Matrix::ConstIterator it  = B.begin();
                              it != B.end();++it) {
-    for (Matrix::ConstColIterator it2  = it->begin(); 
+    for (Matrix::ConstColIterator it2  = it->begin();
                                   it2 != it->end();++it2) {
       adj[it.index()+r0].insert(it2.index()+c0);
       if (symmetric)
@@ -163,21 +163,21 @@ Matrix MatrixOps::augment(const Matrix& A, const Matrix& B,
   fromAdjacency(result,adj,nrow,ncol);
   for (Matrix::ConstIterator it  = A.begin();
                              it != A.end();++it) {
-    for (Matrix::ConstColIterator it2  = it->begin(); 
+    for (Matrix::ConstColIterator it2  = it->begin();
                                   it2 != it->end();++it2) {
       result[it.index()][it2.index()] = *it2;
     }
   }
   for (Matrix::ConstIterator it  = B.begin();
                              it != B.end();++it) {
-    for (Matrix::ConstColIterator it2  = it->begin(); 
+    for (Matrix::ConstColIterator it2  = it->begin();
                                   it2 != it->end();++it2) {
       result[it.index()+r0][it2.index()+c0] = *it2;
       if (symmetric)
         result[it2.index()+c0][it.index()+r0] = *it2;
     }
   }
-  
+
   return result;
 }
 

@@ -70,7 +70,7 @@ namespace Opm
     inline void SteadyStateUpscaler<Traits>::initImpl(const Opm::parameter::ParameterGroup& param)
     {
 	Super::initImpl(param);
-        use_gravity_ =  param.getDefault("use_gravity", use_gravity_);        
+        use_gravity_ =  param.getDefault("use_gravity", use_gravity_);
 	output_vtk_ = param.getDefault("output_vtk", output_vtk_);
 	print_inoutflows_ = param.getDefault("print_inoutflows", print_inoutflows_);
 	simulation_steps_ = param.getDefault("simulation_steps", simulation_steps_);
@@ -165,7 +165,7 @@ namespace Opm
 
         // Run pressure solver.
         this->flow_solver_.solve(this->res_prop_, saturation, this->bcond_, src,
-                                 this->residual_tolerance_, this->linsolver_verbosity_, 
+                                 this->residual_tolerance_, this->linsolver_verbosity_,
                                  this->linsolver_type_, false,
                                  this->linsolver_maxit_, this->linsolver_prolongate_factor_,
                                  this->linsolver_smooth_steps_);
@@ -271,7 +271,7 @@ namespace Opm
 
 	// Compute the (anisotropic) upscaled mobilities.
         // eff_Kw := lambda_w*K
-        //  =>  lambda_w = eff_Kw*inv(K); 
+        //  =>  lambda_w = eff_Kw*inv(K);
 	permtensor_t lambda_w(matprod(eff_Kw, inverse3x3(upscaled_perm)));
 	permtensor_t lambda_o(matprod(eff_Ko, inverse3x3(upscaled_perm)));
 

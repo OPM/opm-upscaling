@@ -27,7 +27,7 @@
    The main machinery is the same, but with some changes:
 
    - Input data (grid file, rock file and reference solution) is not provided from command line,
-     but is built in at compiler time by embedding hexadecimal (1 byte) input data files. See 
+     but is built in at compiler time by embedding hexadecimal (1 byte) input data files. See
      README for further documentation.
    - Other command line options are not supported.
    - The construction of deck and stone data is changed due to change in input routine.

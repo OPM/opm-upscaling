@@ -53,7 +53,7 @@ namespace Opm {
     {
     public:
         typedef IncompFlowSolverHybrid<GridInterface,
-                                       ReservoirProperties, 
+                                       ReservoirProperties,
                                        BoundaryConditions,
                                        InnerProd> PressureSolver;
 

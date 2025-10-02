@@ -109,7 +109,7 @@ try
                                Opm::unit::square(Opm::unit::meter));
 
     // Input for surfaceTension is dynes/cm, SI units are Joules/square metre
-    const double surfaceTension = param.getDefault("surfaceTension", 11.0) * 1e-3; // multiply with 10^-3 to obtain SI units 
+    const double surfaceTension = param.getDefault("surfaceTension", 11.0) * 1e-3; // multiply with 10^-3 to obtain SI units
 
     bool endpoints = param.getDefault("endpoints", false); // whether to upscale saturation endpoints
     bool cappres = param.getDefault("cappres", false); // whether to upscale capillary pressure
@@ -158,18 +158,18 @@ try
             if (!rock_stream) {
                 OPM_THROW(std::runtime_error, "Could not open file " + rockfilename);
             }
-            
+
             if (! anisorocks) { //Isotropic input rocks (Sw Krw Kro J)
                 Opm::MonotCubicInterpolator Jtmp;
                 try {
-                    Jtmp = Opm::MonotCubicInterpolator(rockname, 1, 4); 
+                    Jtmp = Opm::MonotCubicInterpolator(rockname, 1, 4);
                 }
                 catch (const char * errormessage) {
                     std::cerr << "Error: " << errormessage << std::endl;
                     std::cerr << "Check filename" << std::endl;
                     exit(1);
                 }
-                
+
                 // Invert J-function, now we get saturation as a function of pressure:
                 if (Jtmp.isStrictlyMonotone()) {
                     InvJfunctions.push_back(Opm::MonotCubicInterpolator(Jtmp.get_fVector(), Jtmp.get_xVector()));
@@ -178,7 +178,7 @@ try
                     std::cerr << "Error: Jfunction " << i+1 << " in rock file " << rockname << " was not invertible." << std::endl;
                     exit(1);
                 }
-                
+
                 jfuncendpoints_[i][0] = Jtmp.getMinimumX().second;
                 jfuncendpoints_[i][1] = Jtmp.getMaximumX().second;
                 rocksatendpoints_[i][0] = Jtmp.getMinimumX().first;
@@ -213,7 +213,7 @@ try
                 }
                 rocksatendpoints_[i][0] = Pctmp.getMinimumX().first;
                 rocksatendpoints_[i][1] = Pctmp.getMaximumX().first;
-            }          
+            }
         }
     }
 
@@ -270,7 +270,7 @@ try
 	std::cout << "*****     WARNING: Unused parameters:     *****\n";
 	param.displayUsage();
     }
-    
+
     // Note that end is included in interval for uniform_int.
     std::uniform_int_distribution<> disti(imin, imax - ilen);
     std::uniform_int_distribution<> distj(jmin, jmax - jlen);
@@ -295,9 +295,9 @@ try
     std::vector<std::vector<double> > pcvalues;
     std::vector<double> dipangs, azimuths;
 
-    // Initialize a matrix for subsample satnum volumes. 
+    // Initialize a matrix for subsample satnum volumes.
     // Outer index is subsample index, inner index is SATNUM-value
-    std::vector<std::vector<double> > rockvolumes; 
+    std::vector<std::vector<double> > rockvolumes;
     int maxSatnum = 0; // This value is determined from the chopped cells.
 
     int finished_subsamples = 0; // keep explicit count of successful subsamples
@@ -323,7 +323,7 @@ try
             if (upscale) {
                 auto subdeck = ch.subDeck();
                 Opm::SinglePhaseUpscaler upscaler;
-                
+
                 upscaler.init(subdeck, bctype, minpermSI,
                               residual_tolerance, linsolver_verbosity, linsolver_type, false);
 
@@ -334,7 +334,7 @@ try
                 porosities.push_back(upscaler.upscalePorosity());
                 if (ch.hasNTG()) {
                     netporosities.push_back(upscaler.upscaleNetPorosity());
-                    ntgs.push_back(upscaler.upscaleNTG());                    
+                    ntgs.push_back(upscaler.upscaleNTG());
                 }
                 if (ch.hasSWCR()) {
                     swcrs.push_back(upscaler.upscaleSWCR(ch.hasNTG()));
@@ -355,7 +355,7 @@ try
                 // Create single-phase upscaling object to get poro and perm values from the grid
                 auto subdeck = ch.subDeck();
                 std::vector<double>  perms = subdeck["PERMX"].back().getRawDoubleData();
-                Opm::SinglePhaseUpscaler upscaler;                
+                Opm::SinglePhaseUpscaler upscaler;
                 upscaler.init(subdeck, bctype, minpermSI,
                               residual_tolerance, linsolver_verbosity, linsolver_type, false);
                 std::vector<int>   satnums = subdeck["SATNUM"].back().getIntData();
@@ -407,7 +407,7 @@ try
                 }
 
                 // Total porevolume and total volume -> upscaled porosity:
-                double poreVolume = std::accumulate(cellPoreVolumes.begin(), 
+                double poreVolume = std::accumulate(cellPoreVolumes.begin(),
                                                     cellPoreVolumes.end(),
                                                     0.0);
                 double Swir = Swirvolume/poreVolume;
@@ -421,7 +421,7 @@ try
                     double Ptestvalue;
                     while (largestSaturationInterval > (Swor-Swir)/double(nsatpoints)) {
                         if (Pcmax == Pcmin) {
-                            // This is a dummy situation, we go through once and then 
+                            // This is a dummy situation, we go through once and then
                             // we are finished (this will be triggered by zero permeability)
                             Ptestvalue = Pcmin;
                             largestSaturationInterval = 0;
@@ -457,12 +457,12 @@ try
                             double waterSaturationCell = 0.0;
                             if (satnums[cell_idx] > 0) { // handle "no rock" cells with satnum zero
                                 double PtestvalueCell;
-                                
+
                                 PtestvalueCell = Ptestvalue;
-                                
-                                if (!anisorocks) {   
+
+                                if (!anisorocks) {
                                     double Jvalue = sqrt(perms[cell_idx] * milliDarcyToSqMetre /poros[cell_idx]) * PtestvalueCell / surfaceTension;
-                                    waterSaturationCell 
+                                    waterSaturationCell
                                         = InvJfunctions[int(satnums[cell_idx])-1].evaluate(Jvalue);
                                 }
                                 else { // anisotropic_input, then we do not do J-function-scaling
@@ -476,7 +476,7 @@ try
                     WaterSaturationVsCapPressure.chopFlatEndpoints(saturationThreshold);
                     std::vector<double> wattest = WaterSaturationVsCapPressure.get_fVector();
                     std::vector<double> cprtest = WaterSaturationVsCapPressure.get_xVector();
-                    Opm::MonotCubicInterpolator CapPressureVsWaterSaturation(WaterSaturationVsCapPressure.get_fVector(), 
+                    Opm::MonotCubicInterpolator CapPressureVsWaterSaturation(WaterSaturationVsCapPressure.get_fVector(),
                                                                         WaterSaturationVsCapPressure.get_xVector());
                     std::vector<double> pcs;
                     for (int satp=0; satp<nsatpoints; ++satp) {
@@ -484,7 +484,7 @@ try
                     }
                     pcvalues.push_back(pcs);
                 }
-                
+
             }
 
 
@@ -503,7 +503,7 @@ try
 		    for (int j=0; j < griddims[1]; ++j) {
 			for (int i=0; i < griddims[0]; ++i) {
 			    if (gridinspector.cellVolumeVerticalPillars(i, j, k) > mincellvolume) {
-				std::pair<double,double> xydip = gridinspector.cellDips(i, j, k);                       
+				std::pair<double,double> xydip = gridinspector.cellDips(i, j, k);
 				xdips_subsample.push_back(xydip.first);
 				ydips_subsample.push_back(xydip.second);
 			    }
@@ -515,7 +515,7 @@ try
                 //  double azimuth = atan(xydip.first/xydip.second);
                 //              double dip = acos(1.0/sqrt(pow(xydip.first,2.0)+pow(xydip.second,2.0)+1.0));
                 //	dips_subsample.push_back( xydip.first );
-                //	azims_subsample.push_back(atan(xydip.first/xydip.second));         
+                //	azims_subsample.push_back(atan(xydip.first/xydip.second));
 
 		// Average xdips and ydips
 		double xdipaverage = accumulate(xdips_subsample.begin(), xdips_subsample.end(), 0.0)/xdips_subsample.size();
@@ -525,7 +525,7 @@ try
                 double azimuth = atan(xdipaverage/ydipaverage)+azimuthdisplacement;
                 double dip = acos(1.0/sqrt(pow(xdipaverage,2.0)+pow(ydipaverage,2.0)+1.0));
                 dipangs.push_back(dip);
-                azimuths.push_back(azimuth);                    
+                azimuths.push_back(azimuth);
 	    }
 
 	    if (satnumvolumes) {
@@ -565,7 +565,7 @@ try
             std::cerr << "Warning: Upscaling chopped subsample nr. " << sample << " failed, proceeding to next subsample\n";
         }
     }
-    
+
 
     // Make stream of output data, to be outputted to screen and optionally to file
     std::stringstream outputtmp;
@@ -589,8 +589,8 @@ try
         outputtmp << "#      (auto) seed: " << autoseed << std::endl;
     }
     else {
-        outputtmp << "#    (manual) seed: " << userseed << std::endl; 
-    }        
+        outputtmp << "#    (manual) seed: " << userseed << std::endl;
+    }
     outputtmp << "################################################################################################" << std::endl;
     outputtmp << "# id";
     if (upscale) {
@@ -628,7 +628,7 @@ try
         }
         outputtmp << "                  Swir                    Swor";
         if (cappres) {
-            outputtmp << "                  Pc(Swir)                Pc2                     Pc3                     Pc4                     Pc(Swor)";            
+            outputtmp << "                  Pc(Swir)                Pc2                     Pc3                     Pc4                     Pc(Swor)";
         }
     }
     if (dips) {
@@ -659,7 +659,7 @@ try
                 outputtmp <<
                     std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permyzs[sample-1] << '\t' <<
                     std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permxzs[sample-1] << '\t' <<
-                    std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permxys[sample-1] << '\t';                
+                    std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permxys[sample-1] << '\t';
             }
             if (ch.hasNTG()) {
                 outputtmp <<

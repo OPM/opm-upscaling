@@ -81,5 +81,3 @@ catch (const std::exception &e) {
     std::cerr << "Program threw an exception: " << e.what() << "\n";
     throw;
 }
-
-

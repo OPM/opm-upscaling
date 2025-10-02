@@ -96,14 +96,14 @@ class ASMHandler {
     }
 
     //! \brief This function needs to be called before starting
-    //!        the element assembly. 
+    //!        the element assembly.
     void initForAssembly();
 
     //! \brief Add an element matrix/vector to the system
     //! \param[in] K Pointer to the element matrix. Can be NULL
     //! \param[in] S Pointer to the element load vector. Can be NULL
     //! \param[in] cell An iterator pointing to the cell we're assembling for
-    //! \param[in] b Vector to add contributions to. If not given, 
+    //! \param[in] b Vector to add contributions to. If not given,
     //!              we use the internal vector
       template<int esize>
     void addElement(const Dune::FieldMatrix<double,esize,esize>* K,
@@ -121,7 +121,7 @@ class ASMHandler {
     //! \param[in] it An iterator to the cell we want to extract values for
     //! \param[out] v Vector holding the values requested
       template<int comp>
-    void extractValues(Dune::FieldVector<double,comp>& v, 
+    void extractValues(Dune::FieldVector<double,comp>& v,
                        const Vector& u, const LeafIterator& it);
 
     //! \brief Expand a system vector to a solution vector
@@ -141,7 +141,7 @@ class ASMHandler {
     //! \brief Update/add a fixed node
     //! \param[in] node The node number
     //! \param[in] entry The fixed values
-    void updateFixedNode(int node, 
+    void updateFixedNode(int node,
                          const std::pair<Direction,NodeValue>& entry);
 
     //! \brief Check if a node is marked as fixed (in any direction)
@@ -185,7 +185,7 @@ class ASMHandler {
     //! \param[in] row The equation number/row in matrix
     void nodeAdjacency(const LeafIterator& it, int vertexsize, int row);
 
-    //! \brief Internal function. Calculate adjacency pattern 
+    //! \brief Internal function. Calculate adjacency pattern
     void determineAdjacencyPattern();
 
     //! \brief Internal function. Assemble entries for a single DOF

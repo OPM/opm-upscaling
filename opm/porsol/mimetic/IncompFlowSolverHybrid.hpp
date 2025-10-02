@@ -435,7 +435,7 @@ namespace Opm {
 	    Opm::SparseTable< int  > cellFaces_;
             std::vector<Scalar> pressure_;
 	    Opm::SparseTable<Scalar> outflux_;
-	    
+
             void clear() {
                 std::vector<int>().swap(cellno_);
                 cellFaces_.clear();
@@ -676,16 +676,16 @@ namespace Opm {
               solveLinearSystem(residual_tolerance, linsolver_verbosity, linsolver_maxit);
                 break;
             case 1: // AMG preconditioned CG
-                solveLinearSystemAMG(residual_tolerance, linsolver_verbosity, 
+                solveLinearSystemAMG(residual_tolerance, linsolver_verbosity,
 				     linsolver_maxit, prolongate_factor, same_matrix, smooth_steps);
                 break;
-		
+
             case 2: // KAMG preconditioned CG
-                solveLinearSystemKAMG(residual_tolerance, linsolver_verbosity, 
+                solveLinearSystemKAMG(residual_tolerance, linsolver_verbosity,
 				      linsolver_maxit, prolongate_factor, same_matrix,smooth_steps);
                 break;
             case 3: // CG preconditioned with AMG that uses less memory badwidth
-                solveLinearSystemFastAMG(residual_tolerance, linsolver_verbosity, 
+                solveLinearSystemFastAMG(residual_tolerance, linsolver_verbosity,
                              linsolver_maxit, prolongate_factor, same_matrix,smooth_steps);
                 break;
             default:
@@ -1485,7 +1485,7 @@ namespace Opm {
                     S_[0][0] *= 2;
                 }
                 opS_.reset(new Operator(S_));
-		
+
                 // Construct preconditioner.
                 double relax = 1;
                 typename Precond::SmootherArgs smootherArgs;
@@ -1511,7 +1511,7 @@ namespace Opm {
 
             Dune::InverseOperatorResult result;
             soln_ = 0.0;
-            // Adapt initial guess such Dirichlet boundary conditions are 
+            // Adapt initial guess such Dirichlet boundary conditions are
             // represented, i.e. soln_i=A_{ii}^-1 rhs_i
             typedef typename Dune::BCRSMatrix <MatrixBlockType>::ConstRowIterator RowIter;
             typedef typename Dune::BCRSMatrix <MatrixBlockType>::ConstColIterator ColIter;
@@ -1553,7 +1553,7 @@ namespace Opm {
                     S_[0][0] *= 2;
                 }
                 opS_.reset(new Operator(S_));
-		
+
                 // Construct preconditioner.
                 typedef Dune::Amg::AggregationCriterion<Dune::Amg::SymmetricMatrixDependency<Matrix,CouplingMetric> > CritBase;
 
@@ -1577,7 +1577,7 @@ namespace Opm {
             Dune::InverseOperatorResult result;
             soln_ = 0.0;
 
-            // Adapt initial guess such Dirichlet boundary conditions are 
+            // Adapt initial guess such Dirichlet boundary conditions are
             // represented, i.e. soln_i=A_{ii}^-1 rhs_i
             typedef typename Dune::BCRSMatrix <MatrixBlockType>::ConstRowIterator RowIter;
             typedef typename Dune::BCRSMatrix <MatrixBlockType>::ConstColIterator ColIter;
@@ -1606,8 +1606,8 @@ namespace Opm {
         void solveLinearSystemKAMG(double residual_tolerance, int verbosity_level,
                                    int maxit, double prolong_factor, bool same_matrix, int smooth_steps)
         // ----------------------------------------------------------------
-        {        
-            
+        {
+
             typedef Dune::Amg::KAMG<Operator,Vector,Smoother,Dune::Amg::SequentialInformation> Precond;
             // Adapted from upscaling.cc by Arne Rekdal, 2009
             Scalar residTol = residual_tolerance;
@@ -1617,7 +1617,7 @@ namespace Opm {
                     S_[0][0] *= 2;
                 }
                 opS_.reset(new Operator(S_));
-                
+
                 // Construct preconditioner.
                 double relax = 1;
                 typename Precond::SmootherArgs smootherArgs;
@@ -1643,7 +1643,7 @@ namespace Opm {
 
             Dune::InverseOperatorResult result;
             soln_ = 0.0;
-            // Adapt initial guess such Dirichlet boundary conditions are 
+            // Adapt initial guess such Dirichlet boundary conditions are
             // represented, i.e. soln_i=A_{ii}^-1 rhs_i
             typedef typename Dune::BCRSMatrix <MatrixBlockType>::ConstRowIterator RowIter;
             typedef typename Dune::BCRSMatrix <MatrixBlockType>::ConstColIterator ColIter;

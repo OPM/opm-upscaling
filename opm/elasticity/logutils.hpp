@@ -42,7 +42,7 @@ class LoggerHelper {
     }
 
     //! \brief Returns the start and end offsets of a chunk group
-    //! \param[in] group The requested chunk 
+    //! \param[in] group The requested chunk
     std::pair<int, int> group(int group)
     {
       return std::make_pair(groups[group],groups[group+1]);

@@ -116,7 +116,7 @@ inline bool EQUAL2(const BoundaryGrid::FaceCoord& x,
 
 bool BoundaryGrid::find(Vertex& res, const Vertex& coord) const
 {
-  // find first quad with coord within bounding box 
+  // find first quad with coord within bounding box
   std::vector<Quad>::const_iterator it = std::find_if(grid.begin(),grid.end(),
                                                       BoundedPredicate(coord.c));
 
@@ -131,7 +131,7 @@ bool BoundaryGrid::find(Vertex& res, const Vertex& coord) const
         ok = true;
         break;
       }
-    } 
+    }
     if (!ok && Q4inv(res.c,*it,coord.c,1.e-8,1.e-8) > 0) {
       ok = true;
     }
@@ -351,7 +351,7 @@ std::vector<double> BoundaryGrid::Quad::evalBasis(double xi, double eta) const
 BoundaryGrid::Vertex minXminY(const std::vector<BoundaryGrid::Vertex>& in)
 {
   // find the nodes with minimal X
-  // then find the minimum Y among these 
+  // then find the minimum Y among these
   std::vector<BoundaryGrid::Vertex> s(in);
   std::sort(s.begin(),s.end(),BoundaryGrid::VertexLess(0));
   std::sort(s.begin(),s.begin()+2,BoundaryGrid::VertexLess(1));
@@ -361,7 +361,7 @@ BoundaryGrid::Vertex minXminY(const std::vector<BoundaryGrid::Vertex>& in)
 BoundaryGrid::Vertex maxXminY(const std::vector<BoundaryGrid::Vertex>& in)
 {
   // find the nodes with maximum X
-  // then find the minimum Y among these 
+  // then find the minimum Y among these
   std::vector<BoundaryGrid::Vertex> s(in);
   std::sort(s.begin(),s.end(),BoundaryGrid::VertexLess(0));
   std::sort(s.begin()+2,s.end(),BoundaryGrid::VertexLess(1));
@@ -371,7 +371,7 @@ BoundaryGrid::Vertex maxXminY(const std::vector<BoundaryGrid::Vertex>& in)
 BoundaryGrid::Vertex maxXmaxY(const std::vector<BoundaryGrid::Vertex>& in)
 {
   // find the nodes with maximum X
-  // then find the maximum Y among these 
+  // then find the maximum Y among these
   std::vector<BoundaryGrid::Vertex> s(in);
   std::sort(s.begin(),s.end(),BoundaryGrid::VertexLess(0));
   std::sort(s.begin()+2,s.end(),BoundaryGrid::VertexLess(1));
@@ -381,7 +381,7 @@ BoundaryGrid::Vertex maxXmaxY(const std::vector<BoundaryGrid::Vertex>& in)
 BoundaryGrid::Vertex minXmaxY(const std::vector<BoundaryGrid::Vertex>& in)
 {
   // find the nodes with minimum X
-  // then find the maximum Y among these 
+  // then find the maximum Y among these
   std::vector<BoundaryGrid::Vertex> s(in);
   std::sort(s.begin(),s.end(),BoundaryGrid::VertexLess(0));
   std::sort(s.begin(),s.begin()+2,BoundaryGrid::VertexLess(1));

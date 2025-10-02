@@ -64,10 +64,10 @@ list (APPEND TEST_DATA_FILES
   tests/input_data/grids/stone2.txt
   tests/input_data/grids/stoneAniso.txt
   tests/input_data/grids/stonefile_benchmark.txt
-  tests/input_data/reference_solutions/upscale_perm_BCp_PeriodicTilted.txt 
-  tests/input_data/reference_solutions/upscale_perm_BCflp_27cellsAniso.txt 
-  tests/input_data/reference_solutions/upscale_perm_BCflp_27cellsIso.txt 
-  tests/input_data/reference_solutions/upscale_perm_BCfl_EightCells.txt 
+  tests/input_data/reference_solutions/upscale_perm_BCp_PeriodicTilted.txt
+  tests/input_data/reference_solutions/upscale_perm_BCflp_27cellsAniso.txt
+  tests/input_data/reference_solutions/upscale_perm_BCflp_27cellsIso.txt
+  tests/input_data/reference_solutions/upscale_perm_BCfl_EightCells.txt
   tests/input_data/reference_solutions/upscale_perm_BCflp_Hummocky.txt
   tests/input_data/reference_solutions/upscale_relperm_BCf_pts20_surfTens11_stonefile_benchmark_stonefile_benchmark_benchmark_tiny_grid.txt
   tests/input_data/reference_solutions/upscale_relperm_BCf_pts30_surfTens11_stone1_stone1_EightCells.txt

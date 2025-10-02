@@ -14,7 +14,7 @@
 
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
 
-#include <dune/common/fmatrix.hh> 
+#include <dune/common/fmatrix.hh>
 #include <dune/common/dynmatrix.hh>
 #include <dune/istl/bcrsmatrix.hh>
 

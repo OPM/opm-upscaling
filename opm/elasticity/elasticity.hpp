@@ -37,7 +37,7 @@ class Elasticity {
       template<int funcdim>
     void getBVector(Dune::FieldVector<ctype,funcdim>& BVector,
                     const Dune::FieldVector<ctype,dim>& point);
-  
+
     //! \brief Returns the B matrix in a quadrature point
     //! \param[out] B The B matrix
     //! \param[in] point (Reference) coordinates of quadrature point
@@ -66,7 +66,7 @@ class Elasticity {
     //! \param[out] sigma The stress vector in the given quadrature point
       template<int comp, int funcdim>
     void getStressVector(Dune::FieldVector<ctype,comp>& sigma,
-                         const Dune::FieldVector<ctype,funcdim>& v, 
+                         const Dune::FieldVector<ctype,funcdim>& v,
                          const Dune::FieldVector<ctype,comp>& eps0,
                          const Dune::FieldMatrix<ctype,comp,funcdim>& B,
                          const Dune::FieldMatrix<ctype,comp,comp>& C);

@@ -51,7 +51,7 @@ namespace Elasticity {
 //! \brief An enumeration of available linear solver classes
 enum Solver {
   DIRECT,
-  ITERATIVE 
+  ITERATIVE
 };
 
 enum Preconditioner {
@@ -225,7 +225,7 @@ class ElasticityUpscale
     //! \brief Vector holding the volume fractions for materials (grouped by SATNUM)
     std::vector<double> volumeFractions;
     //! \brief Are volume fractions grouped by SATNUM?
-    bool bySat; 
+    bool bySat;
 
     //! \brief Upscaled density
     double upscaledRho;
@@ -237,7 +237,7 @@ class ElasticityUpscale
     //! \param[in] file The eclipse grid file
     //! \param[in] rocklist If not blank, file is a rocklist
     //! \param[in] verbose_ If true, give verbose output
-    ElasticityUpscale(const GridType& gv_, ctype tol_, ctype Escale_, 
+    ElasticityUpscale(const GridType& gv_, ctype tol_, ctype Escale_,
                       const std::string& file, const std::string& rocklist,
                       bool verbose_)
       :  A(gv_), gv(gv_), tol(tol_), Escale(Escale_), E(gv_), verbose(verbose_),
@@ -324,8 +324,8 @@ class ElasticityUpscale
     //! \param[in] value The constant coordinate describing the plane
     bool isOnPlane(Direction plane, GlobalCoordinate coord, ctype value);
 
-    //! \brief Check if the given coordinate falls on a given line 
-    //! \param[in] dir The line direction 
+    //! \brief Check if the given coordinate falls on a given line
+    //! \param[in] dir The line direction
     //! \param[in] coord The coordinates to check
     //! \param[in] x The first coordinate of the line
     //! \param[in] y The second coordinate of the line

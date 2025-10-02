@@ -25,7 +25,7 @@ namespace Elasticity {
  *  mortar-elasticity system
  *  [A   B]
  *  [B'   ]
- *  
+ *
  *  The preconditioner is
  *  [Apre B]
  *  [     P]
@@ -118,7 +118,7 @@ class MortarSchurPre : public Dune::Preconditioner<Vector,Vector> {
     LUSolver Lpre;
 
     //! \brief Whether or not to use a symmetric preconditioner
-    bool symmetric; 
+    bool symmetric;
 };
 
 }

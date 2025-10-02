@@ -20,25 +20,25 @@
 /**
    @file upscale_cond.C
    @brief Upscales resistivity as a function of water saturation
-   
-   Description:  
-   
+
+   Description:
+
    Reads in a lithofacies geometry in Eclipse format, reads in J(S_w)
-   for each stone type, and calculates upscaled 
+   for each stone type, and calculates upscaled
    resistivity values for values of S_w.
-   
+
    Steps in the code:
-   
+
    1: Process command line options.
-   2: Read and parse Eclipse file 
+   2: Read and parse Eclipse file
    3: Read a J-function for each stone-type.
    4: Tesselate the grid (Sintef code)
    5: Find minimum and maximum capillary pressure from the J-functions in each cell.
    6: Upscale water saturation as a function of capillary pressure
    7: Upscale conductivity ( = 1/resistivity ) for each saturation point
    8: Print output to screen and optionally to file.
-   
-   The relative permeability computation is based on 
+
+   The relative permeability computation is based on
      - Capillary equilibrium, p_c is spatially invariant.
 
    Units handling:
@@ -76,7 +76,7 @@
 #include <sstream>
 
 #include <sys/utsname.h>
- 
+
 using namespace Opm;
 using namespace std;
 
@@ -140,7 +140,7 @@ namespace {
 
 int main(int varnum, char** vararg)
 try
-{ 
+{
    // Variables used for timing/profiling:
    clock_t start, finish;
    double timeused = 0, timeused_tesselation = 0;
@@ -157,7 +157,7 @@ try
    }
 
 
-   
+
    /*
      Populate options-map with default values
    */
@@ -171,10 +171,10 @@ try
    options.insert(make_pair("output",                 ""      )); // Output to file as well as screen if provided
    options.insert(make_pair("mudresistivity",         "1.4"   )); // Constant resistivity for mud
    options.insert(make_pair("mud1rocktype",           "0"     )); // First mud rock type. 0 if there is no mud types
-   options.insert(make_pair("mud2rocktype",           "0"     )); // Second mud rock type. 
+   options.insert(make_pair("mud2rocktype",           "0"     )); // Second mud rock type.
    options.insert(make_pair("jFunctionCurve",         "4"     )); // column number of J-function values in input files
    options.insert(make_pair("surfaceTension",         "11"    )); // Surface tension given in dynes/cm
-   options.insert(make_pair("interpolate",            "0"     )); // default is not to interpolate  
+   options.insert(make_pair("interpolate",            "0"     )); // default is not to interpolate
    options.insert(make_pair("minPerm",                "1e-12" )); // minimum modelled permeability (for saturation distr)
    options.insert(make_pair("minPoro",            "0.0001")); // this limit is necessary for pcmin/max computation
 
@@ -208,20 +208,20 @@ try
        Opm::unit::convert::to(1.0*Opm::prefix::milli*Opm::unit::darcy,
                               Opm::unit::square(Opm::unit::meter));
    // Reference: http://www.spe.org/spe-site/spe/spe/papers/authors/Metric_Standard.pdf
- 
+
    /*
-     Look for strings in args matching the entries in the options map, 
+     Look for strings in args matching the entries in the options map,
      if found, replace default values with command line values.
    */
 
-   /* Loop over all command line options in order to look 
-      for options. 
+   /* Loop over all command line options in order to look
+      for options.
 
       argidx loops over all the arguments here, and updates the
       variable 'argeclindex' *if* it finds any legal options,
       'argeclindex' is so that vararg[argeclindex] = the eclipse
-      filename. If options are illegal, argeclindex will be wrong, 
-      
+      filename. If options are illegal, argeclindex will be wrong,
+
    */
    int argeclindex = 0;
    for (int argidx = 1; argidx < varnum; argidx += 2)  {
@@ -238,33 +238,33 @@ try
                usageandexit();
            }
        }
-       else { 
-           // if vararg[argidx] does not start in '-', 
+       else {
+           // if vararg[argidx] does not start in '-',
            // assume we have found the position of the Eclipse-file.
            argeclindex = argidx;
-           break; // out of for-loop, 
+           break; // out of for-loop,
        }
    }
-   
-   
+
+
    // argeclindex should now point at the eclipse file
    static char* ECLIPSEFILENAME(vararg[argeclindex]);
    argeclindex += 1; // areglcindex jumps to next input argument, now it points to the first J-file
-   
+
    // argcindex now points to the first J-function. This index is not
    // to be touched now.
    static int JFindex = argeclindex;
-   
+
    /* Check if at least one J-function is supplied on command line */
    if (varnum <= JFindex) {
       if (isMaster) cerr << "Error: No J-functions found on command line." << endl;
       usageandexit();
    }
 
-   // Check that boundary conditions are valid , and make booleans 
+   // Check that boundary conditions are valid , and make booleans
    // for boundary conditions. This allows more readable code later.
    bool isFixed = false, isLinear = false, isPeriodic = false;
-   SinglePhaseUpscaler::BoundaryConditionType boundaryCondition = SinglePhaseUpscaler::Fixed ; 
+   SinglePhaseUpscaler::BoundaryConditionType boundaryCondition = SinglePhaseUpscaler::Fixed ;
 
    int tensorElementCount = 0; // Number of independent elements in resulting tensor
    if (options["bc"].substr(0,1) == "f") {
@@ -287,8 +287,8 @@ try
        if (isMaster) cout << "Invalid boundary condition: " << options["bc"] << endl;
        usageandexit();
    }
-   
-   // Read data from the Eclipse file and 
+
+   // Read data from the Eclipse file and
    // populate our vectors with data from the file
    // Test if filename exists and is readable
    ifstream eclipsefile(ECLIPSEFILENAME, ios::in);
@@ -296,7 +296,7 @@ try
        if (isMaster) cerr << "Error: Filename " << ECLIPSEFILENAME << " not found or not readable." << endl;
        usageandexit();
    }
-   eclipsefile.close(); 
+   eclipsefile.close();
 
    if (isMaster) cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... ";
    flush(cout);   start = clock();
@@ -318,13 +318,13 @@ try
    vector<int> satnums   = deck["SATNUM"].back().getIntData();
    vector<double> poros  = deck["PORO"].back().getRawDoubleData();
    vector<double> permxs = deck["PERMX"].back().getRawDoubleData();
-   const double minPerm = atof(options["minPerm"].c_str()); 
+   const double minPerm = atof(options["minPerm"].c_str());
    const double minPoro = atof(options["minPoro"].c_str());
 
 
    // Read in J-functions for all stone-types.
    // Number of stone-types is max(satnums):
-   
+
    // If there is only one J-function supplied on the command line,
    // use that for all stone types.
 
@@ -337,7 +337,7 @@ try
    const int jFunctionCurve = atoi(options["jFunctionCurve"].c_str()); // default 4
    // Input for surfaceTension is dynes/cm
    // SI units are Joules/square metre
-   const double surfaceTension     = atof(options["surfaceTension"].c_str()) * 1e-3; // multiply 
+   const double surfaceTension     = atof(options["surfaceTension"].c_str()) * 1e-3; // multiply
    if (varnum == JFindex + stone_types) {
       for (int i=0 ; i < stone_types; ++i) {
          const char* ROCKFILENAME = vararg[JFindex+i];
@@ -347,11 +347,11 @@ try
              if (isMaster) cerr << "Error: Filename " << ROCKFILENAME << " not found or not readable." << endl;
             usageandexit();
          }
-         rockfile.close(); 
-         
+         rockfile.close();
+
          MonotCubicInterpolator Jtmp;
          try {
-             Jtmp = MonotCubicInterpolator(vararg[JFindex + i], 1, jFunctionCurve); 
+             Jtmp = MonotCubicInterpolator(vararg[JFindex + i], 1, jFunctionCurve);
          }
          catch (const char * errormessage) {
              if (isMaster) {
@@ -360,7 +360,7 @@ try
              }
              usageandexit();
          }
-         
+
          // Invert J-function, now we get saturation as a function of pressure:
          if (Jtmp.isStrictlyMonotone()) {
             InvJfunctions.push_back(MonotCubicInterpolator(Jtmp.get_fVector(), Jtmp.get_xVector()));
@@ -372,7 +372,7 @@ try
              if (isMaster) cerr << "Error: Jfunction " << i+1 << " in rock file " << ROCKFILENAME << " was not invertible." << endl;
              usageandexit();
          }
-      } 
+      }
    }
    else if (varnum == JFindex + 1) {
       for (int i=0; i < stone_types; ++i) {
@@ -383,7 +383,7 @@ try
              if (isMaster) cerr << "Error: Filename " << ROCKFILENAME << " not found or not readable." << endl;
 	     usageandexit();
          }
-         rockfile.close(); 
+         rockfile.close();
 
          MonotCubicInterpolator Jtmp;
          try {
@@ -409,8 +409,8 @@ try
       }
    }
    else {
-       if (isMaster) cerr << "Error:  Wrong number of J-functions provided. " << endl << 
-               "Note that all input arguments after the eclipsefile " << endl << 
+       if (isMaster) cerr << "Error:  Wrong number of J-functions provided. " << endl <<
+               "Note that all input arguments after the eclipsefile " << endl <<
                "are interpreted as J-functions." << endl;
        usageandexit();
    }
@@ -418,10 +418,10 @@ try
 
    /*
      Step 4
-     
+
      Generate tesselated grid. Tesselation depends on boundary conditions.
      For periodic boundary conditions, the grid needs to be massaged slightly
-     (crop top and bottom). These modifications ruin the computations for 
+     (crop top and bottom). These modifications ruin the computations for
      fixed and linear boundary conditions.
    */
    const auto& specgridRecord = deck["SPECGRID"].back().getRecord(0);
@@ -439,9 +439,9 @@ try
                  linsolver_tolerance, linsolver_verbosity, linsolver_type, twodim_hack);
 
    finish = clock();   timeused_tesselation = (double(finish)-double(start))/CLOCKS_PER_SEC;
-   if (isMaster) cout << " (" << timeused_tesselation <<" secs)" << endl;    
-   
-  
+   if (isMaster) cout << " (" << timeused_tesselation <<" secs)" << endl;
+
+
    int maxSatnum = 0;
    int tesselatedCells = 0;
 
@@ -454,7 +454,7 @@ try
       - Check maximum number of SATNUM values (can be number of rock types present)
    */
    for (size_t i = 0; i < satnums.size(); ++i) {
-       if (satnums[i] < 0 || satnums[i] > 1000) { 
+       if (satnums[i] < 0 || satnums[i] > 1000) {
            if (isMaster) cerr << "satnums[" << i << "] = " << satnums[i] << ", not sane, quitting." << endl;
            usageandexit();
        }
@@ -493,7 +493,7 @@ try
     */
 
 
-   vector<double> cellVolumes, cellPoreVolumes; 
+   vector<double> cellVolumes, cellPoreVolumes;
    cellVolumes.resize(satnums.size(), 0.0);
    cellPoreVolumes.resize(satnums.size(), 0.0);
 
@@ -506,19 +506,19 @@ try
        if (satnums[cell_idx] > 0) { // Satnum zero is "no rock"
            cellVolumes[cell_idx] = c->geometry().volume();
            cellPoreVolumes[cell_idx] = cellVolumes[cell_idx] * poros[cell_idx];
-           
+
            double Pcmincandidate, Pcmaxcandidate, minSw, maxSw;
-           
+
            Pcmincandidate = InvJfunctions[int(satnums[cell_idx])-1].getMinimumX().first
                / sqrt(permxs[cell_idx] * milliDarcyToSqMetre / poros[cell_idx]) * surfaceTension;
            Pcmaxcandidate = InvJfunctions[int(satnums[cell_idx])-1].getMaximumX().first
                / sqrt(permxs[cell_idx] * milliDarcyToSqMetre/poros[cell_idx]) * surfaceTension;
            minSw = InvJfunctions[int(satnums[cell_idx])-1].getMinimumF().second;
            maxSw = InvJfunctions[int(satnums[cell_idx])-1].getMaximumF().second;
-           
+
            Pcmin = min(Pcmincandidate, Pcmin);
            Pcmax = max(Pcmaxcandidate, Pcmax);
-           
+
            // Add irreducible water saturation volume
            Swirvolume += minSw * cellPoreVolumes[cell_idx];
            Sworvolume += maxSw * cellPoreVolumes[cell_idx];
@@ -537,7 +537,7 @@ try
    }
 
    // Total porevolume and total volume -> upscaled porosity:
-   double poreVolume = std::accumulate(cellPoreVolumes.begin(), 
+   double poreVolume = std::accumulate(cellPoreVolumes.begin(),
                                        cellPoreVolumes.end(),
                                        0.0);
    double volume = std::accumulate(cellVolumes.begin(),
@@ -555,9 +555,9 @@ try
        cout << "Saturation points to be computed: " << points << endl;
    }
 
-   // Sometimes, if Swmax=1 or Swir=0 in the input tables, the upscaled 
+   // Sometimes, if Swmax=1 or Swir=0 in the input tables, the upscaled
    // values can be a little bit larger (within machine precision) and
-   // the check below fails. Hence, check if these values are within the 
+   // the check below fails. Hence, check if these values are within the
    // the [0 1] interval within some precision (use linsolver_precision)
    if (Swor > 1.0 && Swor - linsolver_tolerance < 1.0) {
        Swor = 1.0;
@@ -568,8 +568,8 @@ try
    if (Swir < 0.0 || Swir > 1.0 || Swor < 0.0 || Swor > 1.0) {
        if (isMaster) cerr << "ERROR: Swir/Swor unsensible. Check your input. Exiting";
        usageandexit();
-   }      
-   
+   }
+
 
    /************************************************************
     * Handle petrophysical constants/parameters
@@ -586,7 +586,7 @@ try
    vector<double> cementationexponents, saturationexponents;
    cementationexponents.resize(maxSatnum + 1); // index 0 unused!!
    saturationexponents.resize(maxSatnum + 1); // index 0 unused!!
-   
+
    /* The saturation and cementation exponents may be set globally for
       all rock types using the options cementationExponent and
       saturationExponent. However, these can also be set on a rock by
@@ -597,7 +597,7 @@ try
 
        stringstream rocktypestring;
        rocktypestring << i; // integer to string conversion.
-       
+
        //cout << "rock" + rocktypestring.str() + "cemexp" << endl;
        double cemoptionvalue = atof(options["rock" + rocktypestring.str() + "cemexp"].c_str());
        double satoptionvalue = atof(options["rock" + rocktypestring.str() + "satexp"].c_str());
@@ -616,19 +616,19 @@ try
        //cout << "rocktype " << i << endl;
        //cout << " cem: " << cementationexponents[i] << endl;
        //cout << " sat: " << saturationexponents[i] << endl;
-       
+
    }
 
    if (waterresistivity <= 0) {
        if (isMaster) cout << "Error: Water resistivity must be positive." << endl;
        usageandexit();
    }
-                               
 
-   // If this number is 1 or higher, the output will be interpolated, if not 
-   // the computed data is untouched. 
-   const int interpolationPoints = atoi(options["interpolate"].c_str()); 
-   bool doInterpolate = false; 
+
+   // If this number is 1 or higher, the output will be interpolated, if not
+   // the computed data is untouched.
+   const int interpolationPoints = atoi(options["interpolate"].c_str());
+   bool doInterpolate = false;
    if (interpolationPoints > 1) {
        doInterpolate = true;
    }
@@ -656,15 +656,15 @@ try
     */
 
    MonotCubicInterpolator WaterSaturationVsCapPressure;
-   
+
    double largestSaturationInterval = Swor-Swir;
-   
+
    double Ptestvalue = Pcmax;
-   
+
    while (largestSaturationInterval > (Swor-Swir)/500.0) {
        //       cout << Ptestvalue << endl;
        if (Pcmax == Pcmin) {
-           // This is a dummy situation, we go through once and then 
+           // This is a dummy situation, we go through once and then
            // we are finished (this will be triggered by zero permeability)
            Ptestvalue = Pcmin;
            largestSaturationInterval = 0;
@@ -687,14 +687,14 @@ try
            Ptestvalue = SatDiff.first;
            largestSaturationInterval = SatDiff.second;
        }
-       
+
        // Check for saneness of Ptestvalue:
        if (std::isnan(Ptestvalue) || std::isinf(Ptestvalue)) {
            if (isMaster) cerr << "ERROR: Ptestvalue was inf or nan" << endl;
            break; // Jump out of while-loop, just print out the results
            // up to now and exit the program
        }
-       
+
        double waterVolume = 0.0;
        for (auto c = upscaler.grid().leafbegin<0>(); c != upscaler.grid().leafend<0>(); ++c) {
            size_t cell_idx = ecl_idx[c->index()];
@@ -706,17 +706,17 @@ try
                PtestvalueCell = Ptestvalue;
                double Jvalue = sqrt(permxs[cell_idx] * milliDarcyToSqMetre /poros[cell_idx]) * PtestvalueCell / surfaceTension;
                //cout << "JvalueCell: " << Jvalue << endl;
-               waterSaturationCell 
+               waterSaturationCell
                    = InvJfunctions[int(satnums[cell_idx])-1].evaluate(Jvalue);
            }
            waterVolume += waterSaturationCell  * cellPoreVolumes[cell_idx];
        }
-       
+
        WaterSaturationVsCapPressure.addPair(Ptestvalue, waterVolume/poreVolume);
    }
-   
+
    //cout << WaterSaturationVsCapPressure.toString();
-   
+
    // Now, it may happen that we have a large number of cells, and
    // some cells with near zero poro and perm. This may cause that
    // Pcmax has been estimated so high that it does not affect Sw
@@ -733,18 +733,18 @@ try
        }
        usageandexit();
    }
-   MonotCubicInterpolator CapPressureVsWaterSaturation(WaterSaturationVsCapPressure.get_fVector(), 
+   MonotCubicInterpolator CapPressureVsWaterSaturation(WaterSaturationVsCapPressure.get_fVector(),
                                                        WaterSaturationVsCapPressure.get_xVector());
 
    /*****************************************************************
     * Step 7:
-    * 
+    *
     * Loop through a given number of uniformly distributed saturation points
     * and upscale conductivity for each of them.
     *    a: Make vector of capillary pressure points corresponding to uniformly
     *       distributed water saturation points between saturation endpoints.
     *    b: Loop over capillary pressure points
-    *       1)  Loop over all cells to find the saturation value given the 
+    *       1)  Loop over all cells to find the saturation value given the
     *           capillary pressure found in (a). Given the saturation value, find the
     *           conductivity in the cell given its physical properties
     *       2)  Upscale conductivity for the geometry.
@@ -756,7 +756,7 @@ try
 
    Matrix zeroMatrix(3,3,(double*)0);
    zero(zeroMatrix);
- 
+
    vector<double> WaterSaturation; // This will hold re-upscaled water saturation for the computed pressure points.
    vector<vector<double> > UpscaledConductivity;  // 'tensorElementCount' phaseperm values per pressurepoint.
 
@@ -766,14 +766,14 @@ try
        WaterSaturation.push_back(0.0);
        vector<double> tmp;
        UpscaledConductivity.push_back(tmp);
-       for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) { 
-           UpscaledConductivity[idx].push_back(0.0); 
-       } 
+       for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) {
+           UpscaledConductivity[idx].push_back(0.0);
+       }
    }
 
    // Make vector of capillary pressure points corresponding to uniformly distributed
    // saturation points between Swor and Swir.
-   
+
    vector<double> pressurePoints;
    for (int pointidx = 1; pointidx <= points; ++pointidx) {
        // pointidx=1 corresponds to Swir, pointidx=points to Swor.
@@ -789,7 +789,7 @@ try
    for (int idx=0; idx < points; ++idx) {
        node_vs_pressurepoint.push_back(0);
    }
-   
+
 #ifdef HAVE_MPI
    // Distribute work load over mpi nodes.
    for (int idx=0; idx < points; ++idx) {
@@ -799,27 +799,27 @@ try
        /*if (isMaster) {
            cout << "Pressure point " << idx << " assigned to node " << node_vs_pressurepoint[idx] << endl;
        }*/
-   }   
+   }
 #endif
 
    clock_t start_upscale_wallclock = clock();
-   
+
    double waterVolumeLF = 0.0;
    // Now loop through the vector of capillary pressure points that
    // this node should compute.
    for (int pointidx = 0; pointidx < points; ++pointidx) {
-       
+
        double accRes = 0.0;
        // Should "I" (mpi-wise) compute this pressure point?
        if (node_vs_pressurepoint[pointidx] == mpi_rank) {
-           
+
            Ptestvalue = pressurePoints[pointidx];
-           
+
            cout << "Upscaling resistivity for Pc = " << Ptestvalue;
            flush(cout);
-           
+
            //start = clock();
-           
+
            // Loop over each cell again to find saturations given this particular
            // capillary pressure:
            waterVolumeLF = 0.0;
@@ -833,26 +833,26 @@ try
                    //cout << endl << "Cell no. " << cell_idx << " satnum: " <<  satnums[cell_idx] << endl;
                    double Jvalue = sqrt(permxs[cell_idx] * milliDarcyToSqMetre / poros[cell_idx]) * Ptestvalue / surfaceTension;
                    //cout << "JvalueCell: " << Jvalue << endl;
-                   double waterSaturationCell 
+                   double waterSaturationCell
                        = InvJfunctions[int(satnums[cell_idx])-1].evaluate(Jvalue);
                    //cout << "WatersaturationCell: " << waterSaturationCell << endl;
                    waterVolumeLF += waterSaturationCell  * cellPoreVolumes[cell_idx];
-                   
+
                    // Compute cell resistivity. We use a cutoff-value as we
                    // easily divide by zero here.  When water saturation is
                    // zero, we get 'inf', which is circumvented by the cutoff value.
-                   
+
                    if ((satnums[cell_idx] == mud1rocktype) || (satnums[cell_idx] == mud2rocktype)) {
                        // Handle mud specially
                        resistivityCell = mudresistivity;
                    }
                    else {
-                       resistivityCell 
-                           = min(a_lithologycoeff * waterresistivity / pow(poros[cell_idx], cementationexponents[satnums[cell_idx]]) 
-                                 / pow(waterSaturationCell, saturationexponents[satnums[cell_idx]]), 
+                       resistivityCell
+                           = min(a_lithologycoeff * waterresistivity / pow(poros[cell_idx], cementationexponents[satnums[cell_idx]])
+                                 / pow(waterSaturationCell, saturationexponents[satnums[cell_idx]]),
                                  resistivityCutoff);
                    }
-               }              
+               }
                // Insert conductivity (reciprocal of resistivity) into
                // the grid for upscaling:
                Matrix cellCond = zeroMatrix;
@@ -865,18 +865,18 @@ try
                //cout << "cell " << cell_idx << " resistivity" << resistivityCell << endl;
            }
        }
-       
-       
+
+
        // Output average resistity
        cout << ", Arith. mean res = " << accRes/float(tesselatedCells) << " ohms, ";
-       
+
        //  Call upscaling code (SINTEF/FRAUNHOFER)
-       
+
        Matrix condTensor;
        condTensor = upscaler.upscaleSinglePhase();
-      
-       
-       
+
+
+
       // Here we recalculate the upscaled water saturation,
       // although it is already known when we asked for the
       // pressure point to compute for. Nonetheless, we
@@ -885,7 +885,7 @@ try
       // points are not perfectly uniformly distributed)
       WaterSaturation[pointidx] = waterVolumeLF/poreVolume;
       cout << WaterSaturation[pointidx] << endl;
-      
+
       invert(condTensor);
       Matrix resTensor(condTensor);
 
@@ -959,10 +959,10 @@ try
 #ifdef HAVE_MPI
    // Sum the upscaling time used by all processes
    double timeused_total;
-   MPI_Reduce(&timeused_upscale_wallclock, &timeused_total, 1, MPI_DOUBLE, 
+   MPI_Reduce(&timeused_upscale_wallclock, &timeused_total, 1, MPI_DOUBLE,
               MPI_SUM, 0, MPI_COMM_WORLD);
    double avg_upscaling_time_pr_point = timeused_total/(double)points;
-       
+
 #else
    double avg_upscaling_time_pr_point = timeused_upscale_wallclock / (double)points;
 #endif
@@ -976,10 +976,10 @@ try
    if (WaterSaturation.size() == 0) {
       return(1); // non-zero return value, this means something wrong with input data.
    }
-   
+
    if (isMaster) {
        stringstream outputtmp;
-       
+
        // Print a table of all computed values:
        outputtmp << "######################################################################" << endl;
        outputtmp << "# Results from upscaling resistivity."<< endl;
@@ -989,10 +989,10 @@ try
 #endif
        time_t now = std::time(NULL);
        outputtmp << "# Finished: " << asctime(localtime(&now));
-       
+
        utsname hostname;   uname(&hostname);
        outputtmp << "# Hostname: " << hostname.nodename << endl;
-       
+
        outputtmp << "#" << endl;
        outputtmp << "# Eclipse file: " << ECLIPSEFILENAME << endl;
        outputtmp << "#        cells: " << tesselatedCells << endl;
@@ -1032,8 +1032,8 @@ try
        outputtmp << "#                 minPerm: " << options["minPerm"] << endl;
        outputtmp << "#                 minPoro: " << options["minPoro"] << endl;
 
-       if (doInterpolate) { 
-           outputtmp << "#              interpolate: " << options["interpolate"] << " points" << endl; 
+       if (doInterpolate) {
+           outputtmp << "#              interpolate: " << options["interpolate"] << " points" << endl;
        }
        outputtmp << "#" << endl;
        outputtmp << "# Archie options (global):" << endl;
@@ -1054,37 +1054,37 @@ try
            }
        }
        outputtmp << "# " << endl;
-       if (doInterpolate) { 
-           outputtmp << "# NB: Data points shown are interpolated." << endl; 
+       if (doInterpolate) {
+           outputtmp << "# NB: Data points shown are interpolated." << endl;
        }
        outputtmp << "######################################################################" << endl;
        if (isFixed) {
            outputtmp << "#       Pc (Pa)       Sw            Rxx           Ryy           Rzz" << endl;
        }
        else if (isLinear) {
-           outputtmp << "#       Pc (Pa)       Sw            Rxx           Ryy           Rzz           Ryz           Rxz           Rxy           Rzy           Rzx           Ryx " << endl;             
+           outputtmp << "#       Pc (Pa)       Sw            Rxx           Ryy           Rzz           Ryz           Rxz           Rxy           Rzy           Rzx           Ryx " << endl;
        }
        else if (isPeriodic) {
-           outputtmp << "#       Pc (Pa)       Sw            Rxx           Ryy           Rzz           Ryz           Rxz           Rxy           Rzy           Rzx           Ryx " << endl;             
+           outputtmp << "#       Pc (Pa)       Sw            Rxx           Ryy           Rzz           Ryz           Rxz           Rxy           Rzy           Rzx           Ryx " << endl;
        }
-       
+
 
        vector<double> Pvalues = pressurePoints; // WaterSaturation.get_xVector();
        vector<double> Satvalues = WaterSaturation; //.get_fVector();
 
-       
+
        /* Rearrange the UpscaledConductivity array so that voigtIdx is the first index
-          (to facilitate interpolation in the then last variable) 
+          (to facilitate interpolation in the then last variable)
 
           (results from this is only to be trusted on the master node)
        */
-       
+
        vector<vector <double> > ResDirValues; // voigtIdx is first index.
        for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) {
            vector<double> tmp;
            ResDirValues.push_back(tmp);
        }
-         // Loop over all pressure points 
+         // Loop over all pressure points
        for (int idx=0; idx < points; ++idx) {
            Matrix condTensor(zeroMatrix);
            for (int voigtIdx = 0; voigtIdx < tensorElementCount; ++voigtIdx) {
@@ -1099,7 +1099,7 @@ try
        /*   for (int voigtIdx = 0; voigtIdx < tensorElementCount; ++voigtIdx) {
             ResDirValues.push_back(Res[voigtIdx].get_fVector());
             }*/
-       
+
        /* If user wants interpolated output, do monotone cubic interpolation
           by modifying the data vectors that are to be printed */
        if (doInterpolate) {
@@ -1121,7 +1121,7 @@ try
            }
            // Now capillary pressure and computed conductivity-values must be viewed as functions
            // of saturation, and then interpolated on the uniform saturation grid.
-           
+
            // Now overwrite existing Pvalues and ResDirValues-data with interpolated data:
            MonotCubicInterpolator PvaluesVsSaturation(Satvalues, Pvalues);
            Pvalues.clear();
@@ -1138,31 +1138,31 @@ try
            // Now also overwrite Satvalues
            Satvalues.clear();
            Satvalues = SatvaluesInterp;
-           
+
        }
-       
+
 
        /* Output computed resistivity data */
        for (size_t i=0; i < Satvalues.size(); ++i) {
            // Note: The Interpolator-object's values contain the log10 of the real values.
            outputtmp << std::showpoint << std::setw(14) << Pvalues[i];
-           outputtmp << std::showpoint << std::setw(14) << Satvalues[i];   
-           
+           outputtmp << std::showpoint << std::setw(14) << Satvalues[i];
+
            for (int voigtIdx = 0; voigtIdx < tensorElementCount; ++voigtIdx) {
                outputtmp << showpoint << setw(14) << ResDirValues[voigtIdx][i];
            }
            outputtmp << endl;
        }
-       
+
        cout << outputtmp.str();
-       
+
        /* Possibly write to output file */
        if (options["output"] != "") {
            cout << "Writing results to " << options["output"] << endl;
            ofstream outfile;
            outfile.open(options["output"].c_str(), ios::out | ios::trunc);
            outfile << outputtmp.str();
-           outfile.close();      
+           outfile.close();
        }
    }
 
@@ -1172,4 +1172,3 @@ catch (const std::exception &e) {
     std::cerr << "Program threw an exception: " << e.what() << "\n";
     throw;
 }
-

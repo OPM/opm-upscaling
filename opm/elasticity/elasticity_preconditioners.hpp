@@ -134,7 +134,7 @@ struct AMG1 {
   }
 };
 
-//! \brief A FastAMG 
+//! \brief A FastAMG
 struct FastAMG {
   typedef Dune::Amg::FastAMG<Operator, Vector> type;
 
@@ -167,7 +167,7 @@ struct AMG2Level {
                                              typename AMG1<Smoother>::Criterion> CoarsePolicy;
 
   typedef typename Dune::Amg::SmootherTraits<Smoother>::Arguments SmootherArgs;
-  
+
   typedef Dune::Amg::TwoLevelMethod<Operator, CoarsePolicy, Schwarz::type> type;
 
   //! \brief Setup preconditioner

@@ -192,7 +192,7 @@ namespace Opm
                     // Computing G. Note that we do not multiply with the mobility,
                     // so this G is wrong in case of anisotropic relperm.
                     const double G = s.method_gravity_ ?
-                        loc_area*inner(loc_normal, grav_influence) 
+                        loc_area*inner(loc_normal, grav_influence)
                         : 0.0;
                     const int triv_phase = G >= 0.0 ? 0 : 1;
                     const int ups_cell = loc_flux >= 0.0 ? 0 : 1;

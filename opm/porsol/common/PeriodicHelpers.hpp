@@ -16,7 +16,7 @@
 /*
   Copyright 2009, 2010 SINTEF ICT, Applied Mathematics.
   Copyright 2009, 2010 Statoil ASA.
-  
+
   This file is part of The Open Reservoir Simulator Project (OpenRS).
 
   OpenRS is free software: you can redistribute it and/or modify
@@ -258,7 +258,7 @@ namespace Opm
         double cmin = low[pddir];
         double cmax = hi[pddir];
         double cdelta = cmax - cmin;
-        
+
         for (int i = 0; i < num_bdy; ++i) {
             Vector fcent = bface_iters[i]->centroid();
             int canon_pos = -1;

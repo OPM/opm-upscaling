@@ -39,7 +39,7 @@ protected:
 
   //! \brief Prints the material properties to a stream.
   virtual std::ostream& write(std::ostream& os) const
-  { 
+  {
     return os;
   }
 

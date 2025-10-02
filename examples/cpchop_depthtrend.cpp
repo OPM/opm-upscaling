@@ -48,12 +48,12 @@
 #include <random>
 
 /**
-   This program is a variant of cpchop. Instead of subsampling randomly, 
+   This program is a variant of cpchop. Instead of subsampling randomly,
    it picks subsamples downwards in a model. It is specifically designed
    for extracting laterally extensive subsamples in specified intervals
-   downwards through a model, in order to analyze depth trends in 
+   downwards through a model, in order to analyze depth trends in
    porosity in particular
-   
+
    Default is to pick a new subsample every meter (zresolution=1)
    The subsample height might be smaller or larger than zresolution.
 */
@@ -105,22 +105,22 @@ try
     double residual_tolerance = param.getDefault("residual_tolerance", 1e-8);
     double linsolver_verbosity = param.getDefault("linsolver_verbosity", 0);
     double linsolver_type = param.getDefault("linsolver_type", 1);
-        
+
     // Check for unused parameters (potential typos).
     if (param.anyUnused()) {
 	std::cout << "*****     WARNING: Unused parameters:     *****\n";
 	param.displayUsage();
     }
-    
-    // Check that we do not have any user input 
+
+    // Check that we do not have any user input
     // that goes outside the coordinates described in
     // the cornerpoint file (runtime-exception will be thrown in case of error)
-    ch.verifyInscribedShoebox(imin, ilen, imax, 
+    ch.verifyInscribedShoebox(imin, ilen, imax,
 			      jmin, jlen, jmax,
 			      zmin, zlen, zmax);
 
     std::mt19937 gen;
-    
+
     // Seed the random number generators with the current time, unless specified on command line
     // Warning: Current code does not allow 0 for the seed!!
     if (userseed == 0) {
@@ -129,14 +129,14 @@ try
     else {
         gen.seed(userseed);
     }
-        
+
 
     // Note that end is included in interval for uniform_int.
     std::uniform_int_distribution<> disti(imin, imax - ilen);
     std::uniform_int_distribution<> distj(jmin, jmax - jlen);
     auto ri = [&disti, &gen] { return disti(gen); };
     auto rj = [&distj, &gen] { return distj(gen); };
-    
+
     // Storage for results
     std::vector<double> zstarts;
     std::vector<double> porosities;
@@ -144,7 +144,7 @@ try
     std::vector<double> permys;
     std::vector<double> permzs;
 
-    
+
     /* z_start is the topmost point of the subsample to extract */
     for (double zstart = 0.0; zstart  <= zmax-zlen; zstart += zresolution) {
         /* Horizontally, we pick by random, even though default behaviour is
@@ -169,35 +169,35 @@ try
                 Opm::SinglePhaseUpscaler upscaler;
                 upscaler.init(subdeck, Opm::SinglePhaseUpscaler::Fixed, minpermSI,
                               residual_tolerance, linsolver_verbosity, linsolver_type, false);
-                
+
                 Opm::SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
                 upscaled_K *= (1.0/(Opm::prefix::milli*Opm::unit::darcy));
-                
-                
+
+
                 zstarts.push_back(zstart);
                 porosities.push_back(upscaler.upscalePorosity());
                 permxs.push_back(upscaled_K(0,0));
                 permys.push_back(upscaled_K(1,1));
                 permzs.push_back(upscaled_K(2,2));
-                
-            }   
+
+            }
         }
         catch (...) {
             std::cerr << "Warning: Upscaling chopped subsample at z=" << zstart << "failed, proceeding to next subsample\n";
         }
     }
-     
+
     if (upscale) {
-        
+
         // Make stream of output data, to be outputted to screen and optionally to file
         std::stringstream outputtmp;
-        
+
         outputtmp << "################################################################################################" << std::endl;
         outputtmp << "# Results from depth trend analysis on subsamples" << std::endl;
         outputtmp << "#" << std::endl;
         time_t now = time(NULL);
         outputtmp << "# Finished: " << asctime(localtime(&now));
-        
+
         utsname hostname;   uname(&hostname);
         outputtmp << "# Hostname: " << hostname.nodename << std::endl;
         outputtmp << "#" << std::endl;
@@ -209,10 +209,10 @@ try
         outputtmp << "#      zresolution: " << zresolution << std::endl;
         outputtmp << "################################################################################################" << std::endl;
         outputtmp << "# zstart          porosity                 permx                   permy                   permz" << std::endl;
-        
+
         const int fieldwidth = outputprecision + 8;
         for (size_t sample = 1; sample <= porosities.size(); ++sample) {
-            outputtmp << 
+            outputtmp <<
                 std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << zstarts[sample-1] << '\t' <<
                 std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << porosities[sample-1] << '\t' <<
                 std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permxs[sample-1] << '\t' <<
@@ -220,17 +220,17 @@ try
                 std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permzs[sample-1] << '\t' <<
                 std::endl;
         }
-        
+
         if (resultfile != "") {
             std::cout << "Writing results to " << resultfile << std::endl;
             std::ofstream outfile;
             outfile.open(resultfile.c_str(), std::ios::out | std::ios::trunc);
             outfile << outputtmp.str();
-            outfile.close();      
+            outfile.close();
         }
-        
-        
-        
+
+
+
         std::cout << outputtmp.str();
     }
 }
@@ -238,4 +238,3 @@ catch (const std::exception &e) {
     std::cerr << "Program threw an exception: " << e.what() << "\n";
     throw;
 }
-

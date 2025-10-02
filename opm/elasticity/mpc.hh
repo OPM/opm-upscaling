@@ -22,7 +22,7 @@ namespace Elasticity {
 
 //! \brief An enum for specification of global coordinate directions
 enum Direction { NONE = 0, X = 1, Y = 2, Z = 4,
-                 XY = 1+2, XZ = 1+4, YZ = 2+4, 
+                 XY = 1+2, XZ = 1+4, YZ = 2+4,
                  XYZ = 1+2+4 };
 
 /*!

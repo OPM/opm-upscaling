@@ -190,7 +190,7 @@ namespace Opm
         if (use_gravity_) {
             gravity[2] = Opm::unit::gravity;
         }
-        
+
         if (gravity.two_norm() > 0.0) {
             OPM_MESSAGE("Warning: Gravity is experimental for flow solver.");
         }

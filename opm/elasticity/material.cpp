@@ -72,13 +72,13 @@ Material* Material::create(int ID, const std::string& file)
   }
   std::string str,str2;
   f >> str;
-  if (str == "ti") { // transverse isotropic material with unit axis in z-direction. 
+  if (str == "ti") { // transverse isotropic material with unit axis in z-direction.
       Dune::DynamicVector<double>mat(21,double(0));
       double a = 0.0, b = 0.0, c = 0.0, d = 0.0, e = 0.0, rho = 0.0;
       f >> a >> b >> c >> d >> e;
       f >> str2;
       if (str2 != "density") {
-          std::cerr << "Rock file " << file << " has wrong format. when isotropycase is \"ti\", " << std::endl 
+          std::cerr << "Rock file " << file << " has wrong format. when isotropycase is \"ti\", " << std::endl
                     << "the next line need 5 a,b,c,d and e for C matrix with C11=C22=a, C33=c, " << std::endl
                     << "C44=C55=d, C66=e, C12=a-2e and C13=b. Then keyword density on next " << std::endl
                     << "line followed by material density (double) on last line." << std::endl;
@@ -95,15 +95,15 @@ Material* Material::create(int ID, const std::string& file)
       double rho;
       for (int cuidx=0; cuidx<21; cuidx++) {
           f >> mat[cuidx];
-      } 
+      }
       f >> str2;
       if (str2 != "density") {
-          std::cerr << "Rock file " << file << " has wrong format. when isotropycase is \"anisotropic\", " << std::endl 
+          std::cerr << "Rock file " << file << " has wrong format. when isotropycase is \"anisotropic\", " << std::endl
                     << "the next line need 21 entries for upper C matrix. Then keyword density on next " << std::endl
                     << "line followed by material density (double) on last line." << std::endl;
           exit(1);
       }
-      
+
       f >> rho;
       return new  OrthotropicSym(ID,mat);
   }
@@ -141,7 +141,7 @@ Material* Material::create(int ID, const std::string& file)
         std::cerr << "Material in " << file << " is not isotropic (nu=" << nu << "), bailing" << std::endl;
         exit(1);
       }
-      
+
       return new Isotropic(ID,E,nu,rho);
   }
 }

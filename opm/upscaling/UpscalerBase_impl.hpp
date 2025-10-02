@@ -255,7 +255,7 @@ namespace Opm
 	    // Run pressure solver.
             bool same_matrix = (bctype_ != Fixed) && (pdd != 0);
 	    flow_solver_.solve(fluid, sat, bcond_, src, residual_tolerance_,
-                               linsolver_verbosity_, 
+                               linsolver_verbosity_,
                                linsolver_type_, same_matrix,
                                linsolver_maxit_, linsolver_prolongate_factor_,
                                linsolver_smooth_steps_);
@@ -330,7 +330,7 @@ namespace Opm
 			    side2_flux += flux*norm_comp;
 			    side2_area += area;
 			}
-		    }		    
+		    }
 		}
 	    }
 	}
@@ -362,7 +362,7 @@ namespace Opm
 			    side2_pos += area*pos_comp;
 			    side2_area += area;
 			}
-		    }		    
+		    }
 		}
 	    }
 	}
