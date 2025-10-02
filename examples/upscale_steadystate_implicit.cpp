@@ -126,11 +126,11 @@ std::vector<std::vector<double> > getExtremeSats(std::string rock_list, std::vec
         if (!rock_stream) {
             OPM_THROW(std::runtime_error, "Could not open file " + rockfilename);
         }
-        
+
         if (! anisorocks) { //Isotropic input rocks (Sw Krw Kro J)
             MonotCubicInterpolator Jtmp;
             try {
-                Jtmp = MonotCubicInterpolator(rockname, 1, 4); 
+                Jtmp = MonotCubicInterpolator(rockname, 1, 4);
             }
             catch (const char * errormessage) {
                 std::cerr << "Error: " << errormessage << std::endl;
@@ -159,7 +159,7 @@ std::vector<std::vector<double> > getExtremeSats(std::string rock_list, std::vec
             }
             rocksatendp[i][0] = Pctmp.getMinimumX().first;
             rocksatendp[i][1] = Pctmp.getMaximumX().first;
-        }          
+        }
     }
     return rocksatendp;
 }
@@ -188,12 +188,12 @@ try
     std::string gridfilename = param.get<std::string>("gridfilename");
     auto deck = Opm::RelPermUpscaleHelper::parseEclipseFile(gridfilename);
 
-    // Check that we have the information we need from the eclipse file:  
+    // Check that we have the information we need from the eclipse file:
     if (! (deck.hasKeyword("SPECGRID") && deck.hasKeyword("COORD") && deck.hasKeyword("ZCORN")
            && deck.hasKeyword("PORO") && deck.hasKeyword("PERMX"))) {
-        std::cerr << "Error: Did not find SPECGRID, COORD, ZCORN, PORO and PERMX in Eclipse file " << gridfilename << std::endl;  
-        usageandexit();  
-    }  
+        std::cerr << "Error: Did not find SPECGRID, COORD, ZCORN, PORO and PERMX in Eclipse file " << gridfilename << std::endl;
+        usageandexit();
+    }
 
     // Set default values if not given as input
     double linsolver_tolerance = param.getDefault("residual_tolerance", 1e-8);
@@ -253,25 +253,25 @@ try
         std::cerr << "Boundary conditions (bc) must be either fixed, periodic or linear. Value is " << bc << std::endl;
         usageandexit();
     }
-    
+
     // Compute minimum and maximum (large scale) saturations
     std::string rock_list = param.getDefault<std::string>("rock_list", "no_list");
     std::vector<std::string> rockfiles;
     std::vector<std::vector<double> > rocksatendpoints_ = getExtremeSats(rock_list,rockfiles);
 
-    std::vector<double>  poros = deck["PORO"].back().getSIDoubleData();  
+    std::vector<double>  poros = deck["PORO"].back().getSIDoubleData();
     // Anisotropic relperm not yet implemented in steadystate_implicit
     //bool anisorocks = param.getDefault("anisotropicrocks", false);
-    std::vector<int> satnums(poros.size(), 1); 
+    std::vector<int> satnums(poros.size(), 1);
     if (deck.hasKeyword("SATNUM")) {
         satnums = deck["SATNUM"].back().getIntData();
-    } 
+    }
     else if (deck.hasKeyword("ROCKTYPE")) {
         satnums = deck["ROCKTYPE"].back().getIntData();
-    } 
-    else { 
-        std::cout << "Warning: SATNUM or ROCKTYPE not found in input file, assuming only one rocktype" << std::endl; 
-    } 
+    }
+    else {
+        std::cout << "Warning: SATNUM or ROCKTYPE not found in input file, assuming only one rocktype" << std::endl;
+    }
     // check that number of rock types in rock_list matches number of rock types in grid
     int num_rock_types_grid = int(*(max_element(satnums.begin(), satnums.end())));
     int num_rock_types_rocklist = rocksatendpoints_.size();
@@ -284,7 +284,7 @@ try
     spupscaler.init(deck, Opm::SinglePhaseUpscaler::Fixed,
                     0.0, linsolver_tolerance, linsolver_verbosity, linsolver_type, false, linsolver_maxit,
                     linsolver_prolongate_factor, linsolver_smooth_steps);
-    std::vector<double>  cellPoreVolumes; 
+    std::vector<double>  cellPoreVolumes;
     cellPoreVolumes.resize(satnums.size(), 0.0);
     double swirvolume = 0.0;
     double sworvolume = 0.0;
@@ -300,7 +300,7 @@ try
         }
     }
     // Total porevolume and total volume -> upscaled porosity:
-    double poreVolume = std::accumulate(cellPoreVolumes.begin(), 
+    double poreVolume = std::accumulate(cellPoreVolumes.begin(),
                                         cellPoreVolumes.end(),
                                         0.0);
     double min_sat = swirvolume/poreVolume;
@@ -308,7 +308,7 @@ try
     // Insert computed Swir and Swor as min_sat and max_sat in param object
     //param.insertParameter("min_sat",toString(min_sat));
     //param.insertParameter("max_sat",toString(max_sat));
-    
+
     std::vector<double> saturations;
     Opm::SparseTable<double> all_pdrops;
     // Linear range of saturations
@@ -332,21 +332,21 @@ try
     typedef Upscaler::permtensor_t permtensor_t;
     Upscaler upscaler;
     upscaler.init(param);
-    
+
     // Compute single phase permeability
     permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
     permtensor_t singlephaseperm = upscaled_K;
     singlephaseperm *= (1.0/(Opm::prefix::milli*Opm::unit::darcy));
     double porosity = upscaler.upscalePorosity();
     int num_cells = upscaler.grid().size(0);
-    
+
     // Holders for upscaled relpermvalues for each saturation-pressure-point
     std::vector<std::vector<std::vector<double> > > RelPermPhase1, RelPermPhase2;
     for (int satidx=0; satidx<num_sats; ++satidx) {
         RelPermPhase1.push_back(std::vector<std::vector<double> >(all_pdrops[satidx].size(),std::vector<double>(tensorElementCount,0.0)));
         RelPermPhase2.push_back(std::vector<std::vector<double> >(all_pdrops[satidx].size(),std::vector<double>(tensorElementCount,0.0)));
     }
-    
+
     for (int satidx = 0; satidx < num_sats; ++satidx) {
         std::vector<double> init_sat;
         if (start_from_cl) {
@@ -390,7 +390,7 @@ try
     outputtmp << "#" << std::endl;
     time_t now = std::time(NULL);
     outputtmp << "# Finished: " << asctime(localtime(&now));
-    
+
     utsname hostname;   uname(&hostname);
     outputtmp << "# Hostname: " << hostname.nodename << std::endl;
     outputtmp << "#" << std::endl;
@@ -400,7 +400,7 @@ try
     outputtmp << "#     Porosity: " << porosity << std::endl;
     outputtmp << "#" << std::endl;
     outputtmp << "# Rock list: " << rock_list << std::endl;
-    outputtmp << "#   with the following rock files: " << std::endl;    
+    outputtmp << "#   with the following rock files: " << std::endl;
     for (std::size_t ridx=0; ridx<rockfiles.size(); ++ridx) {
         outputtmp << "#   " << rockfiles[ridx] << std::endl;
     }
@@ -408,9 +408,9 @@ try
 
     outputtmp << "# Options used:" << std::endl;
     outputtmp << "#     Boundary conditions: " << bc << std::endl;
-    outputtmp << "#          flow direction: " << flowdir << std::endl;    
+    outputtmp << "#          flow direction: " << flowdir << std::endl;
     outputtmp << "#       saturation points: " << num_sats << std::endl;
-    outputtmp << "#    pressure drop points: " << num_pdrops << std::endl;    
+    outputtmp << "#    pressure drop points: " << num_pdrops << std::endl;
     //outputtmp << "#         maxPermContrast: " << options["maxPermContrast"] << std::endl;
     //outputtmp << "#                 minPerm: " << options["minPerm"] << std::endl;
     //outputtmp << "#                 minPoro: " << options["minPoro"] << std::endl;
@@ -420,19 +420,19 @@ try
     //    // Output values of water/gas and oil densities
     //}
     outputtmp << "#" << std::endl;
-    outputtmp << "# Single phase permeability" << std::endl; 
-    outputtmp << "#  |Kxx  Kxy  Kxz| = " << singlephaseperm(0,0) << "  " << singlephaseperm(0,1) << "  " << singlephaseperm(0,2) << std::endl; 
-    outputtmp << "#  |Kyx  Kyy  Kyz| = " << singlephaseperm(1,0) << "  " << singlephaseperm(1,1) << "  " << singlephaseperm(1,2) << std::endl; 
-    outputtmp << "#  |Kzx  Kzy  Kzz| = " << singlephaseperm(2,0) << "  " << singlephaseperm(2,1) << "  " << singlephaseperm(2,2) << std::endl; 
+    outputtmp << "# Single phase permeability" << std::endl;
+    outputtmp << "#  |Kxx  Kxy  Kxz| = " << singlephaseperm(0,0) << "  " << singlephaseperm(0,1) << "  " << singlephaseperm(0,2) << std::endl;
+    outputtmp << "#  |Kyx  Kyy  Kyz| = " << singlephaseperm(1,0) << "  " << singlephaseperm(1,1) << "  " << singlephaseperm(1,2) << std::endl;
+    outputtmp << "#  |Kzx  Kzy  Kzz| = " << singlephaseperm(2,0) << "  " << singlephaseperm(2,1) << "  " << singlephaseperm(2,2) << std::endl;
     outputtmp << "# " << std::endl;
-    
+
     std::cout << outputtmp.str();
-    
+
     // MPIHelper::instance(argc,argv) ;
     //typedef SteadyStateUpscalerImplicit<UpscalingTraitsBasicImplicit> upscaler_t;
     //SteadyStateUpscalerManagerImplicit<upscaler_t> mgr;
     //mgr.upscale(param);
-    
+
 }
 catch (const std::exception &e) {
     std::cerr << "Program threw an exception: " << e.what() << "\n";

@@ -133,4 +133,3 @@ BOOST_AUTO_TEST_CASE(surfvolboundaryconditions)
     BOOST_CHECK(bc2.surfvolCond(1).isDirichlet());
     BOOST_CHECK(bc2.surfvolCond(1).surfvol() == z);
 }
-

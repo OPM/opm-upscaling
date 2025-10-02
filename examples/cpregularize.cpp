@@ -28,7 +28,7 @@
      your asked-for horizontal resolution does not divide the initial
      number of pillars in x/y, you will not obtain a fully regular
      grid, but still easier numerically.
-     
+
    - Be careful with non-flat top and bottom boundary.
 
 */
@@ -76,7 +76,7 @@ try
     }
 
     Dune::MPIHelper::instance(argc, argv);
-  
+
     Opm::ParameterGroup param(argc, argv);
     std::string gridfilename = param.get<std::string>("gridfilename");
     Opm::CornerPointChopper ch(gridfilename);
@@ -105,15 +105,15 @@ try
 	param.displayUsage();
     }
 
-    // Check that we do not have any user input 
+    // Check that we do not have any user input
     // that goes outside the coordinates described in
     // the cornerpoint file (runtime-exception will be thrown in case of error)
     // (ilen, jlen and zlen set to zero, does not apply here)
-    ch.verifyInscribedShoebox(imin, 0, imax, 
+    ch.verifyInscribedShoebox(imin, 0, imax,
 			      jmin, 0, jmax,
 			      zmin, 0, zmax);
 
-    
+
     // Storage for properties for regularized cells
     std::vector<double> poro;
     std::vector<double> permx;
@@ -159,7 +159,7 @@ try
 	zcorn_c.push_back(zmin + zidx_c * (zmax-zmin)/zres);
     }
     zcorn_c.push_back(zmax);
-    
+
 
 
     // Run through the new regular grid to find its properties
@@ -183,13 +183,13 @@ try
 		    Opm::SinglePhaseUpscaler upscaler;
 		    upscaler.init(subdeck, Opm::SinglePhaseUpscaler::Fixed, minpermSI,
 				  residual_tolerance, linsolver_verbosity, linsolver_type, false);
-            
+
 		    Opm::SinglePhaseUpscaler::permtensor_t upscaled_K = upscaler.upscaleSinglePhase();
 		    upscaled_K *= (1.0/(Opm::prefix::milli*Opm::unit::darcy));
 		    poro.push_back(upscaler.upscalePorosity());
 		    permx.push_back(upscaled_K(0,0));
 		    permy.push_back(upscaled_K(1,1));
-		    permz.push_back(upscaled_K(2,2)); 
+		    permz.push_back(upscaled_K(2,2));
 		}
 		catch (...) {
 		    std::cout << "Warning: Upscaling for cell failed to convert, values set to zero\n";
@@ -207,7 +207,7 @@ try
         std::cerr << "Could not open file " << resultgrid << "\n";
         throw std::runtime_error("Could not open output file.");
     }
-    out << "SPECGRID\n" << ires << ' ' << jres << ' ' << zres 
+    out << "SPECGRID\n" << ires << ' ' << jres << ' ' << zres
                 << " 1 F\n/\n\n";
 
     out << "COORD\n";
@@ -223,12 +223,12 @@ try
      Write ZCORN, that is the Z-coordinates along the pillars, specifying
      the eight corners of each cell. Each corner is specified for each
      cell, even though it is the same corner that is used in other
-     cells. 
+     cells.
 
      We loop over corners in each grid cell, directions: z, y, x (x innermost).
      The code here *IS* redundant, but the grid is also very redundant
      for a grid that is really regular..
-   */ 
+   */
     out << "ZCORN\n";
     double zlen = zmax-zmin;
     for (int zidx=0; zidx < zres; ++zidx) {
@@ -252,36 +252,34 @@ try
 	}
     }
     out << "/\n\n";
-    
+
     out << "PORO\n";
     for (size_t idx=0; idx < (size_t)poro.size(); ++idx) {
 	out << poro[idx] << std::endl;
     }
     out << "/\n\n";
-    
+
     out << "PERMX\n";
     for (size_t idx=0; idx < (size_t)permx.size(); ++idx) {
 	out << permx[idx] << std::endl;
     }
     out << "/\n\n";
-    
+
     out << "PERMY\n\n";
     for (size_t idx=0; idx < (size_t)permy.size(); ++idx) {
 	out << permy[idx] << std::endl;
     }
     out << "/\n\n";
-    
+
     out << "PERMZ\n\n";
     for (size_t idx=0; idx < (size_t)permz.size(); ++idx) {
 	out << permz[idx] << std::endl;
     }
     out << "/\n";
-    
+
     out.close();
 }
 catch (const std::exception &e) {
     std::cerr << "Program threw an exception: " << e.what() << "\n";
     throw;
 }
-
-

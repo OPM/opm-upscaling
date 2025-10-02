@@ -53,7 +53,7 @@ void ASMHandler<GridType>::addDOF(int row, int erow,
                               const Dune::FieldMatrix<double,esize,esize>* K,
                               const Dune::FieldVector<double,esize>* S,
                               const LeafIndexSet& set,
-                              const LeafIterator& cell, 
+                              const LeafIterator& cell,
                               Vector* bptr,
                               double scale)
 {
@@ -192,7 +192,7 @@ void ASMHandler<GridType>::addMPC(MPC* mpc)
   int slaveNode = mpc->getSlave().node*dim+mpc->getSlave().dof-1;
   fixIt it = fixedNodes.find(mpc->getSlave().node);
   int flag = 1 << (mpc->getSlave().dof-1);
-  if (it == fixedNodes.end() || 
+  if (it == fixedNodes.end() ||
       !(it->second.first & flag)) {
     mpcs.insert(std::make_pair(slaveNode,mpc));
     return;

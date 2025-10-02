@@ -74,4 +74,3 @@ void Opm::initCPGrid(Dune::CpGrid& grid, const Opm::ParameterGroup& param) {
         OPM_THROW(std::runtime_error, "Unknown file format string: " + fileformat);
     }
 }
-

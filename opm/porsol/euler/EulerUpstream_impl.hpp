@@ -354,7 +354,7 @@ namespace Opm
 
 
 
-	
+
     template <class GI, class RP, class BC>
     template <class PressureSolution>
     inline void EulerUpstream<GI, RP, BC>::smallTimeStep(std::vector<double>& saturation,

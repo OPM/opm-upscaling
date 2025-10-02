@@ -22,8 +22,8 @@
    @file upscale_cap.C
    @brief Upscales capillary pressure function, water saturation, and water saturation pr. rocktype.
 
-   Description: 
- 
+   Description:
+
    Reads in a lithofacies geometry in Eclipse format, reads in J(S_w)
    permeability and porosity, and upscale the capillary pressure function
    and water saturation, both for the whole geometry, and on a per rocktype basis
@@ -39,17 +39,17 @@
        included, calculate the "surface tension" yourself.
      - Outputted capillary pressure is in Pascals.
 
-  
+
    Steps in the code:
-  
+
    1: Process command line options.
-   2: Read Eclipse file 
+   2: Read Eclipse file
    3: Read and J-function for each stone-type.
-   4: Find minimum and maximum capillary pressure from the 
+   4: Find minimum and maximum capillary pressure from the
       J-functions in each cell.
    5: Upscale water saturation as a function of capillary pressure
    6: Print output to screen and optionally to file.
- 
+
     @author: Håvard Berland <havb <at> statoil.com>
  */
 #include <config.h>
@@ -125,7 +125,7 @@ namespace {
 
 int main(int varnum, char** vararg)
 try
-{ 
+{
 
    /******************************************************************************
     * Step 1:
@@ -145,9 +145,9 @@ try
    map<string,string> options;
    options.insert(make_pair("points",             "50"   )); // Number of saturation points (uniformly distributed within saturation endpoints)
    options.insert(make_pair("jFunctionCurve",     "4")); // Which column in the rock type file is the J-function curve
-   options.insert(make_pair("output",             "")); // If this is set, output goes to screen and to this file. 
+   options.insert(make_pair("output",             "")); // If this is set, output goes to screen and to this file.
    options.insert(make_pair("outputprecision",    "8")); // number of decimals to print
-   options.insert(make_pair("surfaceTension",     "11")); // Surface tension given in dynes/cm 
+   options.insert(make_pair("surfaceTension",     "11")); // Surface tension given in dynes/cm
    options.insert(make_pair("maxPermContrast",    "1e7")); // maximum allowed contrast in each single-phase computation
    options.insert(make_pair("minPerm",            "1e-12")); // absoluted minimum allowed minimal cell permeability
    options.insert(make_pair("minPoro",            "0.0001")); // this limit is necessary for pcmin/max computation
@@ -160,14 +160,14 @@ try
    // Reference: http://www.spe.org/spe-site/spe/spe/papers/authors/Metric_Standard.pdf
 
 
-   /* Loop over all command line options in order to look 
-      for options. 
+   /* Loop over all command line options in order to look
+      for options.
 
       argidx loops over all the arguments here, and updates the
       variable 'argeclindex' *if* it finds any legal options,
       'argeclindex' is so that vararg[argeclindex] = the eclipse
-      filename. If options are illegal, argeclindex will be wrong, 
-      
+      filename. If options are illegal, argeclindex will be wrong,
+
    */
    int argeclindex = 0;
    for (int argidx = 1; argidx < varnum; argidx += 2)  {
@@ -184,59 +184,59 @@ try
                usageandexit();
            }
        }
-       else { 
-           // if vararg[argidx] does not start in '-', 
+       else {
+           // if vararg[argidx] does not start in '-',
            // assume we have found the position of the Eclipse-file.
            argeclindex = argidx;
-           break; // out of for-loop, 
+           break; // out of for-loop,
        }
    }
-     
+
    // argeclindex should now point to the eclipse file
    static char* ECLIPSEFILENAME(vararg[argeclindex]);
    argeclindex += 1; // argeclindex jumps to next input argument, now it points to the stone files.
-   
+
    // argeclindex now points to the first J-function. This index is not
    // to be touched now.
    static int JFindex = argeclindex;
-   
+
 
    /* Check if at least one J-function is supplied on command line */
    if (varnum <= JFindex) {
        cerr << "Error: No J-functions found on command line." << endl;
        usageandexit();
    }
-    
-   
+
+
    /***********************************************************************
     * Step 2:
     * Load geometry and data from Eclipse file
     */
-   
-   // Read data from the Eclipse file and 
+
+   // Read data from the Eclipse file and
    // populate our vectors with data from the file
 
    const double emptycellvolumecutoff = 1e-10;
-      
+
    // Test if filename exists and is readable
    ifstream eclipsefile(ECLIPSEFILENAME, ios::in);
    if (eclipsefile.fail()) {
        cerr << "Error: Filename " << ECLIPSEFILENAME << " not found or not readable." << endl;
        usageandexit();
    }
-   eclipsefile.close(); 
+   eclipsefile.close();
 
    cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... " << endl;
    auto deck = RelPermUpscaleHelper::parseEclipseFile(ECLIPSEFILENAME);
-   
-   // Check that we have the information we need from the eclipse file:  
-   if (! (deck.hasKeyword("SPECGRID") && deck.hasKeyword("COORD") && deck.hasKeyword("ZCORN")  
-          && deck.hasKeyword("PORO") && deck.hasKeyword("PERMX") && deck.hasKeyword("SATNUM"))) {  
-       cerr << "Error: Did not find SPECGRID, COORD and ZCORN in Eclipse file " << ECLIPSEFILENAME << endl;  
-       usageandexit();  
-   }  
-   
-   vector<int>   satnums = deck["SATNUM"].back().getIntData();  
+
+   // Check that we have the information we need from the eclipse file:
+   if (! (deck.hasKeyword("SPECGRID") && deck.hasKeyword("COORD") && deck.hasKeyword("ZCORN")
+          && deck.hasKeyword("PORO") && deck.hasKeyword("PERMX") && deck.hasKeyword("SATNUM"))) {
+       cerr << "Error: Did not find SPECGRID, COORD and ZCORN in Eclipse file " << ECLIPSEFILENAME << endl;
+       usageandexit();
+   }
+
+   vector<int>   satnums = deck["SATNUM"].back().getIntData();
    vector<double>  poros = deck["PORO"].back().getRawDoubleData();
    vector<double> permxs = deck["PERMX"].back().getRawDoubleData();
    vector<int>  griddims(3);
@@ -254,12 +254,12 @@ try
       - Check that SATNUM are set sensibly, that is => 0 and < 1000, error if not.
       - Check that porosity is between 0 and 1, error if not.
         Set to minPoro if zero or less than minPoro (due to pcmin/max computation)
-      - Check that permeability is zero or positive. Error if negative. 
+      - Check that permeability is zero or positive. Error if negative.
         Set to minPerm if zero or less than minPerm.
       - Check maximum number of SATNUM values (can be number of rock types present)
    */
    for (unsigned int i = 0; i < satnums.size(); ++i) {
-       if (satnums[i] < 0 || satnums[i] > 1000) { 
+       if (satnums[i] < 0 || satnums[i] > 1000) {
            cerr << "satnums[" << i << "] = " << satnums[i] << ", not sane, quitting." << endl;
            usageandexit();
        }
@@ -283,40 +283,40 @@ try
        // Explicitly handle "no rock" cells, set them to minimum perm and zero porosity.
        if (satnums[i] == 0) {
            permxs[i] = minPerm;
-           poros[i] = 0; // zero poro is fine for these cells, as they are not 
+           poros[i] = 0; // zero poro is fine for these cells, as they are not
                          // used in pcmin/max computation.
        }
-   }  
+   }
 
 
    /***************************************************************************
     * Step 3:
     * Load relperm- and J-function-curves for the stone types.
-    * We read columns from text-files, syntax allowed is determined 
-    * by MonotCubicInterpolator which actually opens and parses the 
+    * We read columns from text-files, syntax allowed is determined
+    * by MonotCubicInterpolator which actually opens and parses the
     * text files.
     */
 
    // Number of stone-types is max(satnums):
-   
+
    // If there is only one J-function supplied on the command line,
    // use that for all stone types.
 
    int stone_types = int(*(max_element(satnums.begin(), satnums.end())));
    std::vector<MonotCubicInterpolator> InvJfunctions; // Holds the inverse of the loaded J-functions.
-   
+
    std::vector<string> JfunctionNames; // Placeholder for the names of the loaded J-functions.
 
    // Input for surfaceTension is dynes/cm
    // SI units are Joules/square metre
-   const double surfaceTension     = atof(options["surfaceTension"].c_str()) * 1e-3; // multiply with 10^-3 to obtain SI units 
+   const double surfaceTension     = atof(options["surfaceTension"].c_str()) * 1e-3; // multiply with 10^-3 to obtain SI units
    const int jFunctionCurve        = atoi(options["jFunctionCurve"].c_str());
    const int interpolationPoints   = atoi(options["points"].c_str());
    const int outputprecision       = atoi(options["outputprecision"].c_str());
 
    // Handle two command line input formats, either one J-function for all stone types
    // or one each. If there is only one stone type, both code blocks below are equivalent.
-   
+
    if (varnum == JFindex + stone_types) {
       for (int i=0 ; i < stone_types; ++i) {
          const char* ROCKFILENAME = vararg[JFindex+i];
@@ -326,10 +326,10 @@ try
             cerr << "Error: Filename " << ROCKFILENAME << " not found or not readable." << endl;
             usageandexit();
          }
-         rockfile.close(); 
+         rockfile.close();
          MonotCubicInterpolator Jtmp;
          try {
-             Jtmp = MonotCubicInterpolator(ROCKFILENAME, 1, jFunctionCurve); 
+             Jtmp = MonotCubicInterpolator(ROCKFILENAME, 1, jFunctionCurve);
          }
          catch (const char * errormessage) {
              cerr << "Error: " << errormessage << endl;
@@ -345,9 +345,9 @@ try
              cerr << "Error: Jfunction " << i+1 << " in rock file " << ROCKFILENAME << " was not invertible." << endl;
              usageandexit();
          }
-      } 
+      }
    }
-   
+
    else if (varnum == JFindex + 1) {
       for (int i=0; i < stone_types; ++i) {
          const char* ROCKFILENAME = vararg[JFindex];
@@ -357,7 +357,7 @@ try
             cerr << "Error: Filename " << ROCKFILENAME << " not found or not readable." << endl;
             usageandexit();
          }
-         rockfile.close(); 
+         rockfile.close();
          MonotCubicInterpolator Jtmp;
          try {
              Jtmp = MonotCubicInterpolator(ROCKFILENAME, 1, jFunctionCurve);
@@ -382,7 +382,7 @@ try
       cerr << "Error:  Wrong number of stone-functions provided. " << endl;
       usageandexit();
    }
-   
+
 
    /******************************************************************************
     * Step 5:
@@ -398,7 +398,7 @@ try
        cout << "Illegal contrast value" << endl;
        usageandexit();
    }
-   
+
 
    // Construct an object for single-phase upscaling, since we need to get some
    // information from the grid.
@@ -407,7 +407,7 @@ try
                  Opm::unit::convert::from(minPerm, Opm::prefix::milli*Opm::unit::darcy),
                  1e-8, 0, 1, false);  // options on this line are noops for upscale_cap
 
-   vector<double> cellVolumes, cellPoreVolumes; 
+   vector<double> cellVolumes, cellPoreVolumes;
    cellVolumes.resize(satnums.size(), 0.0);
    cellPoreVolumes.resize(satnums.size(), 0.0);
 
@@ -422,12 +422,12 @@ try
    /* Find minimium and maximum capillary pressure values in each
       cell, and use the global min/max as the two initial pressure
       points for computations.
-   
-      Also find max single-phase permeability, used to obey the 
+
+      Also find max single-phase permeability, used to obey the
       maxPermContrast option.
 
       Also find properly upscaled saturation endpoints, these are
-      printed out to stdout for reference during computations, but will 
+      printed out to stdout for reference during computations, but will
       automatically appear as the lowest and highest saturation points
       in finished output.
    */
@@ -446,34 +446,34 @@ try
 	   cellVolumes[cell_idx] = c->geometry().volume();
 	   cellPoreVolumes[cell_idx] = cellVolumes[cell_idx] * poros[cell_idx];
 
-	   
+
 	   double Pcmincandidate = InvJfunctions[int(satnums[cell_idx])-1].getMinimumX().first
 	       / sqrt(permxs[cell_idx] * milliDarcyToSqMetre/poros[cell_idx]) * surfaceTension;
 	   Pcmin = min(Pcmincandidate, Pcmin);
-           
+
 	   double Pcmaxcandidate = InvJfunctions[int(satnums[cell_idx])-1].getMaximumX().first
 	       / sqrt(permxs[cell_idx] * milliDarcyToSqMetre/poros[cell_idx]) * surfaceTension;
 	   Pcmax = max(Pcmaxcandidate, Pcmax);
-           
+
 	   maxSinglePhasePerm = max( maxSinglePhasePerm, permxs[cell_idx]);
-           
+
 	   cellporevolume_rocktype[satnums[cell_idx]] += cellPoreVolumes[cell_idx];
 	   double minSw = InvJfunctions[int(satnums[cell_idx])-1].getMinimumF().second;
 	   double maxSw = InvJfunctions[int(satnums[cell_idx])-1].getMaximumF().second;
-           
+
 	   // cout << "minSwc: " << minSw << endl;
 	   // cout << "maxSwc: " << maxSw << endl;
-           
+
 	   // Add irreducible water saturation volume
 	   Swirvolume += minSw * cellPoreVolumes[cell_idx];
 	   Sworvolume += maxSw * cellPoreVolumes[cell_idx];
-           
+
        }
        ++tesselatedCells; // keep count.
    }
 
    //double minSinglePhasePerm = max(maxSinglePhasePerm/maxPermContrast, minPerm);
-   
+
    cout << "Pcmin:    " << Pcmin << endl;
    cout << "Pcmax:    " << Pcmax << endl;
 
@@ -483,7 +483,7 @@ try
    }
 
    // Total porevolume and total volume -> upscaled porosity:
-   double poreVolume = std::accumulate(cellPoreVolumes.begin(), 
+   double poreVolume = std::accumulate(cellPoreVolumes.begin(),
                                        cellPoreVolumes.end(),
                                        0.0);
    double volume = std::accumulate(cellVolumes.begin(),
@@ -499,9 +499,9 @@ try
    cout << "Upscaled Swir:     " << Swir << endl;
    cout << "Upscaled Swmax:    " << Swor << endl; //Swor=1-Swmax
 
-   // Sometimes, if Swmax=1 or Swir=0 in the input tables, the upscaled 
+   // Sometimes, if Swmax=1 or Swir=0 in the input tables, the upscaled
    // values can be a little bit larger (within machine precision) and
-   // the check below fails. Hence, check if these values are within the 
+   // the check below fails. Hence, check if these values are within the
    // the [0 1] interval within some precision
    double linsolver_tolerance = atof(options["linsolver_tolerance"].c_str());
    if (Swor > 1.0 && Swor - linsolver_tolerance < 1.0) {
@@ -513,7 +513,7 @@ try
    if (Swir < 0.0 || Swir > 1.0 || Swor < 0.0 || Swor > 1.0) {
        cerr << "ERROR: Swir/Swor unsensible. Check your input. Exiting";
        usageandexit();
-   }      
+   }
 
    /***************************************************************************
     * Step 6:
@@ -529,9 +529,9 @@ try
     */
 
    MonotCubicInterpolator WaterSaturationVsCapPressure;
-   
+
    double largestSaturationInterval = Swor-Swir;
-   
+
    double Ptestvalue;
 
    vector<MonotCubicInterpolator> watersaturation_rocktype;
@@ -539,10 +539,10 @@ try
        MonotCubicInterpolator tmp;
        watersaturation_rocktype.push_back(tmp);
    }
-   
+
    while (largestSaturationInterval > (Swor-Swir)/200.0) {
        if (Pcmax == Pcmin) {
-           // This is a dummy situation, we go through once and then 
+           // This is a dummy situation, we go through once and then
            // we are finished (this will be triggered by zero permeability)
            Ptestvalue = Pcmin;
            largestSaturationInterval = 0;
@@ -565,7 +565,7 @@ try
            Ptestvalue = SatDiff.first;
            largestSaturationInterval = SatDiff.second;
        }
-       
+
        // Check for saneness of Ptestvalue:
        if (std::isnan(Ptestvalue) || std::isinf(Ptestvalue)) {
            cerr << "ERROR: Ptestvalue was inf or nan" << endl;
@@ -577,7 +577,7 @@ try
        for (unsigned int satidx = 0; satidx <= maxSatnum; ++satidx) {
            watervolume_rocktype[satidx] = 0.0;
        }
-     
+
        double waterVolume = 0.0;
        for (unsigned int cell_idx = 0; cell_idx < satnums.size(); ++cell_idx) {
            if (cellVolumes[cell_idx] > emptycellvolumecutoff) {
@@ -585,15 +585,15 @@ try
                if (satnums[cell_idx] > 0) { // handle "no rock" cells with satnum zero
                    double PtestvalueCell;
                    PtestvalueCell = Ptestvalue;
-                   double Jvalue = sqrt(permxs[cell_idx] * milliDarcyToSqMetre/poros[cell_idx]) 
+                   double Jvalue = sqrt(permxs[cell_idx] * milliDarcyToSqMetre/poros[cell_idx])
                        * PtestvalueCell / surfaceTension;
                    //cout << "JvalueCell: " << Jvalue << endl;
-                   waterSaturationCell 
+                   waterSaturationCell
                        = InvJfunctions[int(satnums[cell_idx])-1].evaluate(Jvalue);
                }
                waterVolume += waterSaturationCell  * cellPoreVolumes[cell_idx];
                watervolume_rocktype[satnums[cell_idx]] += waterSaturationCell * cellPoreVolumes[cell_idx];
-               
+
            }
        }
        WaterSaturationVsCapPressure.addPair(Ptestvalue, waterVolume/poreVolume);
@@ -614,7 +614,7 @@ try
    // Check if the saturation vs cap pressure curve is monotone
    // If not, it would have been a problem for upscale_relperm, but
    // it is not as critical here, so we only issue a warning
-   // (upscale_relperm solves this by issung chopFlatEndpoints and possibly shrinkFlatAreas, 
+   // (upscale_relperm solves this by issung chopFlatEndpoints and possibly shrinkFlatAreas,
    // but this is trickier to implement in this code due to watersaturation_rocktype[satidx])
    if (!WaterSaturationVsCapPressure.isStrictlyMonotone()) {
        {
@@ -622,10 +622,10 @@ try
            cerr << "         Unphysical input data?." << endl;
        }
    }
-   MonotCubicInterpolator CapPressureVsWaterSaturation(WaterSaturationVsCapPressure.get_fVector(), 
+   MonotCubicInterpolator CapPressureVsWaterSaturation(WaterSaturationVsCapPressure.get_fVector(),
                                                        WaterSaturationVsCapPressure.get_xVector());
 
-   
+
    /*********************************************************************************
     *  Step 9
     *
@@ -633,9 +633,9 @@ try
     * file if the '-outputWater'-option and/or '-outputOil' has been set, as this option is an
     * empty string by default.
     */
-   vector<double> Pvalues = WaterSaturationVsCapPressure.get_xVector(); 
-   vector<double> Satvalues = WaterSaturationVsCapPressure.get_fVector(); 
-   
+   vector<double> Pvalues = WaterSaturationVsCapPressure.get_xVector();
+   vector<double> Satvalues = WaterSaturationVsCapPressure.get_fVector();
+
    vector<vector<double> > watersaturation_rocktype_values;
    vector<double> tmp;
    watersaturation_rocktype_values.push_back(tmp); // dummy zero index element
@@ -643,14 +643,14 @@ try
        watersaturation_rocktype_values.push_back(watersaturation_rocktype[satidx].get_fVector());
    }
    stringstream outputtmp;
-   
+
    // Print a table of all computed values:
    outputtmp << "######################################################################" << endl;
    outputtmp << "# Results from upscaling capillary pressure and water saturations."<< endl;
    outputtmp << "#" << endl;
    time_t now = std::time(NULL);
    outputtmp << "# Finished: " << asctime(localtime(&now));
-   
+
    utsname hostname;   uname(&hostname);
    outputtmp << "# Hostname: " << hostname.nodename << endl;
 
@@ -669,11 +669,11 @@ try
    outputtmp << "#          jFunctionCurve: " << options["jFunctionCurve"] << endl;
    outputtmp << "#                  points: " << options["points"] << endl;
    outputtmp << "#         maxPermContrast: " << options["maxPermContrast"] << endl;
-   outputtmp << "#          surfaceTension: " << options["surfaceTension"] << endl;   
+   outputtmp << "#          surfaceTension: " << options["surfaceTension"] << endl;
    outputtmp << "######################################################################" << endl;
-   outputtmp << "#         Pc (Pa)         Sw              Sw1           Sw2       Sw3 etc.." << endl; 
-   
-   
+   outputtmp << "#         Pc (Pa)         Sw              Sw1           Sw2       Sw3 etc.." << endl;
+
+
   // If user wants interpolated output, do monotone cubic interpolation
    // by modifying the data vectors that are to be printed
    if (interpolationPoints > 0) {
@@ -717,24 +717,24 @@ try
 
    const int fieldwidth = outputprecision + 8;
    for (unsigned int i=0; i < Satvalues.size(); ++i) {
-       outputtmp << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Pvalues[i]; 
-       outputtmp << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Satvalues[i]; 
-       for (unsigned int satidx = 1; satidx <= maxSatnum; ++satidx) { 
-           outputtmp << showpoint << setw(fieldwidth) << setprecision(outputprecision) 
-                     << watersaturation_rocktype_values[satidx][i]; 
-       } 
-       outputtmp << endl; 
-       
+       outputtmp << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Pvalues[i];
+       outputtmp << showpoint << setw(fieldwidth) << setprecision(outputprecision) << Satvalues[i];
+       for (unsigned int satidx = 1; satidx <= maxSatnum; ++satidx) {
+           outputtmp << showpoint << setw(fieldwidth) << setprecision(outputprecision)
+                     << watersaturation_rocktype_values[satidx][i];
+       }
+       outputtmp << endl;
+
    }
-   
+
    cout << outputtmp.str();
-   
+
    if (options["output"] != "") {
        cout << "Writing results to " << options["output"] << endl;
        ofstream outfile;
        outfile.open(options["output"].c_str(), ios::out | ios::trunc);
        outfile << outputtmp.str();
-       outfile.close();      
+       outfile.close();
    }
 
 
@@ -744,4 +744,3 @@ catch (const std::exception &e) {
     std::cerr << "Program threw an exception: " << e.what() << "\n";
     throw;
 }
-

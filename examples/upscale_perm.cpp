@@ -22,18 +22,18 @@
 
 /** @file upscale_perm.C
  *  @brief Upscales permeability
- *  
- *  Upscales permeability for a given Eclipse-model. 
+ *
+ *  Upscales permeability for a given Eclipse-model.
  *  Upscaling is performed for periodic, linear and
  *  fixed boundary conditions and output is ASCII to standard out.
- *  
+ *
  *  Input is Eclipse grid format specifying the corner-point
  *  grid (must be of shoebox-shape, but this condition is slightly relaxed
  *  on top and bottom surfaces).
- * 
+ *
  *  The input eclipse file must specify the permeability properties
  *  for each cell.
- * 
+ *
  *  If only PERMX is supplied, isotropic permeability is assumed in each cell
  *
  *  If PERMX, PERMY and PERMZ are supplied, diagonal anisotropic permeability
@@ -78,7 +78,7 @@ void usage() {
         "                     the terminal (standard out)." << endl <<
         "-bc <string>      -- which boundary conditions to compute for. " << endl <<
         "                     <string> may contain a combination of the" << endl <<
-        "                     letters lfp to compute linear (l), fixed (f) " << endl << 
+        "                     letters lfp to compute linear (l), fixed (f) " << endl <<
         "                     and periodic (p) boundary conditions." << endl <<
         "                     Default: f (fixed boundary conditions)" << endl <<
         "-minPerm <float>  -- Minimum floating point value allowed for" << endl <<
@@ -88,7 +88,7 @@ void usage() {
 
 /**
    @brief Upscales permeability
-   
+
    @param varnum Number of input arguments
    @param vararg Input arguments
    @return int
@@ -99,12 +99,12 @@ int upscale(int varnum, char** vararg) {
         cout << "Error: No eclipsefile provided" << endl;
         usage();
         exit(1);
-    } 
+    }
     map<string,string> options;
-    options.insert(make_pair("output", "")); // If this is set, output goes to screen and to this file 
-    options.insert(make_pair("bc",     "f")); // Fixed boundary conditions are default    
+    options.insert(make_pair("output", "")); // If this is set, output goes to screen and to this file
+    options.insert(make_pair("bc",     "f")); // Fixed boundary conditions are default
     options.insert(make_pair("minPerm", "1e-9")); // Minimum allowable permeability value (for diagonal tensor entries)
-    
+
     options.insert(make_pair("linsolver_tolerance", "1e-8"));  // residual tolerance for linear solver
     options.insert(make_pair("linsolver_verbosity", "0"));     // verbosity level for linear solver
     options.insert(make_pair("linsolver_max_iterations", "0"));         // Maximum number of iterations allow, specify 0 for default
@@ -128,11 +128,11 @@ int upscale(int varnum, char** vararg) {
             cout << "Parsed command line option: " << searchfor << " := " << vararg[argidx+1] << endl;
             eclipseindex += 2;
         }
-    }               
+    }
 
     const char* ECLIPSEFILENAME(vararg[eclipseindex]);
 
-   
+
     // Test if filename exists and is readable
     ifstream eclipsefile(ECLIPSEFILENAME, ios::in);
     if (eclipsefile.fail()) {
@@ -141,15 +141,15 @@ int upscale(int varnum, char** vararg) {
         exit(1);
     }
     eclipsefile.close();
-    
-    // Check validity of boundary conditions chosen, and make booleans 
+
+    // Check validity of boundary conditions chosen, and make booleans
     // for boundary conditions, this allows more readable code later
     bool isFixed, isLinear, isPeriodic;
     isFixed = isLinear = isPeriodic = false;
-    
+
     // Read in default or user-specified boundary conditions:
     string boundcond(options["bc"]);
-    
+
     // Length of string must be between 1 and 3:
     if (boundcond.length()>= 1 && boundcond.length() <= 3) {
         if (boundcond.find(string("p")) < 3) {
@@ -161,12 +161,12 @@ int upscale(int varnum, char** vararg) {
         if (boundcond.find(string("l")) < 3) {
             isLinear = true;
         }
-        
+
         // If no boundary conditions are set now, issue error:
         if (!isFixed && !isLinear && !isPeriodic) {
             cerr << "Error: No boundary conditions specified: " << boundcond << endl;
             usage();
-            exit(1);                                                                        
+            exit(1);
         }
     }
     else {
@@ -175,20 +175,20 @@ int upscale(int varnum, char** vararg) {
         exit(1);
     }
 
-   
+
     // Variables for timing/profiling
     clock_t start, finish;
     double timeused = 0; // reusable variable
     double timeused_periodic_tesselation = 0, timeused_nonperiodic_tesselation = 0;
     double timeused_periodic = 0,  timeused_fixed = 0, timeused_linear = 0;
-        
+
     cout << endl;
-    
+
     // Storage for upscaled results:
     using Opm::SinglePhaseUpscaler;
     typedef SinglePhaseUpscaler::permtensor_t Matrix;
     Matrix Kfixed, Klinear, Kperiodic;
-   
+
 
     /***********************************************************************
      * Load geometry and data from Eclipse file
@@ -200,18 +200,18 @@ int upscale(int varnum, char** vararg) {
 
     finish = clock();   timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
     cout << " (" << timeused <<" secs)" << endl;
- 
+
     // Check that we have the information we need from the eclipse file, we will check PERM-fields later
-    if (! (deck.hasKeyword("SPECGRID") && deck.hasKeyword("COORD") && deck.hasKeyword("ZCORN"))) {  
-        cerr << "Error: Did not find SPECGRID, COORD and ZCORN in Eclipse file " << ECLIPSEFILENAME << endl;  
-        usage();  
-        exit(1);  
+    if (! (deck.hasKeyword("SPECGRID") && deck.hasKeyword("COORD") && deck.hasKeyword("ZCORN"))) {
+        cerr << "Error: Did not find SPECGRID, COORD and ZCORN in Eclipse file " << ECLIPSEFILENAME << endl;
+        usage();
+        exit(1);
     }
 
 
     /*****************************************************************
-     * Tesselate grid 
-     * 
+     * Tesselate grid
+     *
      * Possibly twice because, the grid must be massaged slightly
      * (crop top and bottom) for periodic boundary conditions. These
      * modifications ruin the computations for linear and fixed
@@ -237,9 +237,9 @@ int upscale(int varnum, char** vararg) {
     if (isFixed || isLinear)  {
         cout << "Tesselating non-periodic grid ...";
         start = clock();
-        upscaler_nonperiodic.init(deck, 
+        upscaler_nonperiodic.init(deck,
                                   isFixed ? SinglePhaseUpscaler::Fixed : SinglePhaseUpscaler::Linear,
-                                  minPerm,  linsolver_tolerance, linsolver_verbosity, linsolver_type, 
+                                  minPerm,  linsolver_tolerance, linsolver_verbosity, linsolver_type,
                                   twodim_hack, linsolver_maxit, linsolver_prolongate_factor, smooth_steps);
         finish = clock();
         timeused_nonperiodic_tesselation = (double(finish)-double(start))/CLOCKS_PER_SEC;
@@ -257,8 +257,8 @@ int upscale(int varnum, char** vararg) {
     }
 
 
-    
-    
+
+
     /*********************************************************************
      * Do porosity upscaling
      *
@@ -273,11 +273,11 @@ int upscale(int varnum, char** vararg) {
             upscaledPorosity = upscaler_nonperiodic.upscalePorosity();
         }
     }
- 
+
     /*********************************************************************
-     * Do single-phase permeability upscaling 
+     * Do single-phase permeability upscaling
      */
-    
+
     if (isFixed)  {
         cout << "Compute for fixed boundary conditions: ...  ";
         start = clock();
@@ -290,7 +290,7 @@ int upscale(int varnum, char** vararg) {
         cout << Kfixed << endl;
         cout << endl;
     }
-    
+
     if (isLinear)  {
         cout << "Compute for linear boundary conditions: ... " << endl;
         start = clock();
@@ -303,26 +303,26 @@ int upscale(int varnum, char** vararg) {
         cout << " ( " << timeused_linear << " secs)" << endl;
         cout << endl << endl;
     }
-    
-    if (isPeriodic)  {                
+
+    if (isPeriodic)  {
         cout << "Compute for periodic boundary conditions: ... ";
         start = clock();
         upscaler_periodic.setBoundaryConditionType(SinglePhaseUpscaler::Periodic);
         Kperiodic = upscaler_periodic.upscaleSinglePhase();
         Kperiodic *= 1.0/(Opm::prefix::milli*Opm::unit::darcy);
         finish = clock();
-        timeused_periodic =  (double(finish)-double(start))/CLOCKS_PER_SEC;     
-        cout << " (" << timeused_periodic << " secs)" << endl;           
+        timeused_periodic =  (double(finish)-double(start))/CLOCKS_PER_SEC;
+        cout << " (" << timeused_periodic << " secs)" << endl;
         cout << Kperiodic << endl;
         cout << endl;
-    }     
-    
+    }
+
     /***********************************************************************
      * Output results to stdout or optionally to file
      */
-    
+
     stringstream outputtmp;
-    
+
     // Print a table of all computed values:
     outputtmp << "###############################################################################" << endl;
     outputtmp << "# Results from upscaling permeability."<< endl;
@@ -338,7 +338,7 @@ int upscale(int varnum, char** vararg) {
     outputtmp << "#" << endl;
     outputtmp << "# Options used:" << endl;
     outputtmp << "#     Boundary conditions: ";
-    if (isFixed)    outputtmp << "Fixed (no-flow)  "; 
+    if (isFixed)    outputtmp << "Fixed (no-flow)  ";
     if (isPeriodic) outputtmp << "Periodic  ";
     if (isLinear)   outputtmp << "Linear  ";
     outputtmp << endl;
@@ -346,7 +346,7 @@ int upscale(int varnum, char** vararg) {
     outputtmp << "#" << endl;
     outputtmp << "# If both linear and fixed boundary conditions are calculated, " << endl <<
         "# the nonperiodic tesselation is done only once" << endl <<  "# " << endl  << "#" << endl;
-    
+
     if (isFixed) {
         outputtmp << "# Upscaled permeability for fixed boundary conditions:" << endl;
         outputtmp << "# Tesselation time: " << timeused_nonperiodic_tesselation << " s" << endl;
@@ -367,9 +367,9 @@ int upscale(int varnum, char** vararg) {
         outputtmp << "# Tesselation time: " << timeused_periodic_tesselation << " s" << endl;
         outputtmp << "# Computation time: " << timeused_periodic << " s" << endl;
         outputtmp << Kperiodic;
-    }    
+    }
     cout << endl << outputtmp.str();
-    
+
     if (options["output"] != "")  {
         cout << "Writing results to " << options["output"] << endl;
         ofstream outfile;
@@ -377,14 +377,14 @@ int upscale(int varnum, char** vararg) {
         outfile << outputtmp.str();
         outfile.close();
     }
-    return 0;   
+    return 0;
 }
 
 } // namespace anonymous
 
 /**
    @brief Upscales permeability
-   
+
    @param varnum Number of input arguments
    @param vararg Input arguments
    @return int
@@ -396,4 +396,3 @@ catch (const std::exception &e) {
     std::cerr << "Program threw an exception: " << e.what() << "\n";
     throw;
 }
-

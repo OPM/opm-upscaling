@@ -23,7 +23,7 @@ void Elasticity<GridType>::getBmatrix(Dune::FieldMatrix<ctype,components,funcdim
                                const Dune::FieldVector<ctype,dim>& point,
                                const Dune::FieldMatrix<ctype,dim,dim>& Jinv)
 {
-    P1ShapeFunctionSet<ctype,ctype,dim> basis 
+    P1ShapeFunctionSet<ctype,ctype,dim> basis
                              = P1ShapeFunctionSet<ctype,ctype,dim>::instance();
   int funcs = funcdim/dim;
 
@@ -77,7 +77,7 @@ void Elasticity<GridType>::getBmatrix(Dune::FieldMatrix<ctype,components,funcdim
 void Elasticity<GridType>::getBVector(Dune::FieldVector<ctype,funcdims>& Bvector,
                                       const Dune::FieldVector<ctype,dim>& point)
 {
-    P1ShapeFunctionSet<ctype,ctype,dim> basis 
+    P1ShapeFunctionSet<ctype,ctype,dim> basis
         = P1ShapeFunctionSet<ctype,ctype,dim>::instance();
 
     Dune::FieldMatrix<ctype,funcdims,dim> N;
@@ -85,7 +85,7 @@ void Elasticity<GridType>::getBVector(Dune::FieldVector<ctype,funcdims>& Bvector
         Bvector[i] = basis[i].evaluateFunction(point);
     }
 }
-    
+
   template <class GridType>
     template<int comp, int funcdim>
 void Elasticity<GridType>::getStiffnessMatrix(
@@ -120,7 +120,7 @@ Dune::FieldVector<double,3> waveSpeeds(const Dune::FieldMatrix<double,6,6>& C, d
   x[0] = r*cos(theta)*cos(phi);
   x[1] = r*sin(theta)*cos(phi);
   x[2] = r*sin(phi);
-  
+
   Dune::FieldMatrix<double, 3, 6> D;
   D[0][0] = x[0];
   D[0][4] = x[2];

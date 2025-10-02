@@ -19,22 +19,22 @@
 
 /** @file upscale_avg.C
  *  @brief Upscales using simple averages and reports statistics
- *  
- *  Processes permeability and porosity for a given Eclipse-model. 
- *  
+ *
+ *  Processes permeability and porosity for a given Eclipse-model.
+ *
  *  Input is Eclipse grid format specifying the corner-point
  *  grid (must be of shoebox-shape, but this condition is slightly relaxed
  *  on top and bottom surfaces).
- * 
+ *
  *  The input eclipse file must specify the permeability properties
  *  for each cell.
- * 
+ *
  *  The grid processing step from the permeability upscaling code is
  *  used as a simple code library for computing the volume of each
  *  cell, if some effort is invested, this can be circumventing by a
  *  simpler code that does nothing but interpret the coordinates and
  *  calculates the volume, which will be much faster.
- * 
+ *
  *
  */
 #include <config.h>
@@ -85,7 +85,7 @@ namespace {
 /**
    @brief Computes simple statistics.
 */
-int main(int varnum, char** vararg) try {        
+int main(int varnum, char** vararg) try {
 
     Dune::MPIHelper::instance(varnum, vararg);
 
@@ -97,7 +97,7 @@ int main(int varnum, char** vararg) try {
         cout << "Error: No eclipsefile provided" << endl;
         usage();
         exit(1);
-    } 
+    }
 
 
    /*
@@ -108,14 +108,14 @@ int main(int varnum, char** vararg) try {
                                                         //Default is not to use actnum for this
                                                         //When use_actnum is used the cell volumes of the cells with actnum 0 is set to 0
 
-   /* Loop over all command line options in order to look 
-      for options. 
+   /* Loop over all command line options in order to look
+      for options.
 
       argidx loops over all the arguments here, and updates the
       variable 'argeclindex' *if* it finds any legal options,
       'argeclindex' is so that vararg[argeclindex] = the eclipse
-      filename. If options are illegal, argeclindex will be wrong, 
-      
+      filename. If options are illegal, argeclindex will be wrong,
+
    */
    int argeclindex = 0;
    for (int argidx = 1; argidx < varnum; argidx += 2)  {
@@ -132,11 +132,11 @@ int main(int varnum, char** vararg) try {
                usageandexit();
            }
        }
-       else { 
-           // if vararg[argidx] does not start in '-', 
+       else {
+           // if vararg[argidx] does not start in '-',
            // assume we have found the position of the Eclipse-file.
            argeclindex = argidx;
-           break; // out of for-loop, 
+           break; // out of for-loop,
        }
    }
 
@@ -150,11 +150,11 @@ int main(int varnum, char** vararg) try {
         exit(1);
     }
     eclipsefile.close();
-    
+
     // Variables for timing/profiling
     clock_t start, finish;
     double timeused = 0;
-        
+
     /***********************************************************************
     * Step X
     * Load geometry and data from Eclipse file
@@ -163,19 +163,19 @@ int main(int varnum, char** vararg) try {
     flush(cout);   start = clock();
     // eclParser_p is here a pointer to an object of type Opm::EclipseGridParser
     // (this pointer trick is necessary for the try-catch-clause to work)
-    
+
     auto deck = RelPermUpscaleHelper::parseEclipseFile(ECLIPSEFILENAME);
 
     Opm::EclipseGridInspector eclInspector(deck);
 
     finish = clock();   timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
     cout << " (" << timeused <<" secs)" << endl;
-    
+
     // Check that we have the information we need from the eclipse file, we will check PERM-fields later
-    if (! (deck.hasKeyword("SPECGRID") && deck.hasKeyword("COORD") && deck.hasKeyword("ZCORN"))) {  
-        cerr << "Error: Did not find SPECGRID, COORD and ZCORN in Eclipse file " << ECLIPSEFILENAME << endl;  
-        usage();  
-        exit(1);  
+    if (! (deck.hasKeyword("SPECGRID") && deck.hasKeyword("COORD") && deck.hasKeyword("ZCORN"))) {
+        cerr << "Error: Did not find SPECGRID, COORD and ZCORN in Eclipse file " << ECLIPSEFILENAME << endl;
+        usage();
+        exit(1);
     }
 
    SinglePhaseUpscaler upscaler;
@@ -195,12 +195,12 @@ int main(int varnum, char** vararg) try {
         else {
             cout << "Error: option use_actnum set to 1 but Gridfile " << ECLIPSEFILENAME << " does not include any field ACTNUM." << endl;
             usage();
-            exit(1);            
+            exit(1);
         }
     }
 
     // Print header for the output
-    
+
     cout << "Statistics for filename: " << ECLIPSEFILENAME << endl;
     cout << "-----------------------------------------------------" << endl;
     bool doporosity = false;
@@ -211,7 +211,7 @@ int main(int varnum, char** vararg) try {
     if (deck.hasKeyword("NTG")) {
         // Ntg only used together with PORO
         if (deck.hasKeyword("PORO")) dontg = true;
-    }    
+    }
 
     bool doperm = false;
     if (deck.hasKeyword("PERMX")) {
@@ -237,9 +237,9 @@ int main(int varnum, char** vararg) try {
       griddims[1] << " x " <<
       griddims[2] << ")" << endl;
     int pillars = (griddims[0]+1) * (griddims[1]+1);
-    cout << "                  Pillars: " << pillars << " (" << griddims[0]+1 << 
+    cout << "                  Pillars: " << pillars << " (" << griddims[0]+1 <<
         " x " << griddims[1]+1 << ")" << endl;
-    
+
     // Find max and min in x-, y- and z-directions
     std::array<double, 6> gridlimits = eclInspector.getGridLimits();
     cout << "                 x-limits: " << gridlimits[0] << " -- " << gridlimits[1] << endl;
@@ -267,13 +267,13 @@ int main(int varnum, char** vararg) try {
             permys = deck["PERMY"].back().getRawDoubleData();
             permzs = deck["PERMZ"].back().getRawDoubleData();
         }
-        
+
     }
     const std::vector<int>& ecl_idx = upscaler.grid().globalCell();
     Dune::CpGrid::Codim<0>::LeafIterator c = upscaler.grid().leafbegin<0>();
     for (; c != upscaler.grid().leafend<0>(); ++c) {
       size_t cell_idx = ecl_idx[c->index()];
-      
+
       //for (size_t cell_idx = 0; cell_idx < num_eclipse_cells; ++cell_idx) {
         if (!use_actnum){
           cellVolumes[cell_idx] = c->geometry().volume();
@@ -292,19 +292,19 @@ int main(int varnum, char** vararg) try {
             }
         }
     }
-    
+
     cout << "             Active cells: " << active_cell_count << " (" << (double)active_cell_count/(double)num_eclipse_cells*100.0 << "%)" << endl;
     double volume = std::accumulate(cellVolumes.begin(),
                                     cellVolumes.end(),
                                     0.0);
     cout << "             Total volume: " << volume << endl;
     if (doporosity) {
-        double poreVolume = std::accumulate(cellPoreVolumes.begin(), 
+        double poreVolume = std::accumulate(cellPoreVolumes.begin(),
                                             cellPoreVolumes.end(),
                                             0.0);
         cout << "         Total porevolume: " << poreVolume << endl;
         cout << "        Upscaled porosity: " << poreVolume/volume << endl;
-        
+
         int zeroporocells = 0;
         int negativeporocells = 0;
         for (size_t cell_idx = 0; cell_idx < (size_t)num_eclipse_cells; ++cell_idx) {
@@ -327,20 +327,20 @@ int main(int varnum, char** vararg) try {
                                                netCellVolumes.end(),
                                                0.0);
         cout << "         Total net volume: " << netVolume << endl;
-        cout << "             Upscaled NTG: " << netVolume/volume << endl;        
-        double netPoreVolume = std::accumulate(netCellPoreVolumes.begin(), 
+        cout << "             Upscaled NTG: " << netVolume/volume << endl;
+        double netPoreVolume = std::accumulate(netCellPoreVolumes.begin(),
                                                netCellPoreVolumes.end(),
                                                0.0);
         cout << "     Total net porevolume: " << netPoreVolume << endl;
-        cout << "    Upscaled net porosity: " << netPoreVolume/netVolume << endl;        
+        cout << "    Upscaled net porosity: " << netPoreVolume/netVolume << endl;
     }
-    
+
     double permxsum = 0.0, permysum = 0.0, permzsum = 0.0;
     double invpermxsum = 0.0, invpermysum = 0.0, invpermzsum = 0.0;
     double volpermxsum = 0.0, volpermysum = 0.0, volpermzsum = 0.0;
     double invvolpermxsum = 0.0, invvolpermysum = 0.0, invvolpermzsum = 0.0;
     double logpermxsum = 0.0, logpermysum = 0.0, logpermzsum = 0.0;
-    double logvolpermxsum = 0.0, logvolpermysum = 0.0, logvolpermzsum=0.0; 
+    double logvolpermxsum = 0.0, logvolpermysum = 0.0, logvolpermzsum=0.0;
     if (doperm) {
         int zeropermcells = 0;
         int negativepermcells = 0;
@@ -365,7 +365,7 @@ int main(int varnum, char** vararg) try {
                     invvolpermysum += cellVolumes[cell_idx] / permys[cell_idx];
                     logpermysum += log(permys[cell_idx]);
                     logvolpermysum += log(permys[cell_idx]) * cellVolumes[cell_idx];
-                    
+
                     permzsum += permzs[cell_idx];
                     volpermzsum += permzs[cell_idx] * cellVolumes[cell_idx];
                     invpermzsum += 1.0/permzs[cell_idx];
@@ -375,14 +375,14 @@ int main(int varnum, char** vararg) try {
                 }
             }
         }
-        
+
         cout << "Total arithmetic permeability average: " << volpermxsum/volume << endl;
         cout << "  Total harmonic permeability average: " << volume/invvolpermxsum << endl;
         cout << " Total geometric permeability average: " << exp(logvolpermxsum/volume) << endl;
         cout << "Total arithmetic permeability average: " << permxsum/((double)active_cell_count) << " (not volume-weighted)" << endl;
         cout << "  Total harmonic permeability average: " << ((double)active_cell_count)/invpermxsum << " (not volume-weighted)" << endl;
         cout << " Total geometric permeability average: " << exp(logpermxsum/(double)active_cell_count) << " (not volume-weighted)" << endl;
-        
+
         if (anisotropic_input) {
             cout << endl;
             cout << "Total arithmetic permeability (y) average: " << volpermysum/volume << endl;
@@ -398,7 +398,7 @@ int main(int varnum, char** vararg) try {
             cout << "Total arithmetic permeability (z) average: " << permzsum/((double)active_cell_count) << " (not volume-weighted)" << endl;
             cout << "  Total harmonic permeability (z) average: " << ((double)active_cell_count)/invpermzsum << " (not volume-weighted)" << endl;
             cout << " Total geometric permeability (z) average: " << exp(logpermzsum/(double)active_cell_count) << " (not volume-weighted)" << endl;
-            
+
         }
 
         if  (zeropermcells > 0) {
@@ -409,13 +409,13 @@ int main(int varnum, char** vararg) try {
         }
     }
 
-    // Then do statistics on rocktype by rocktype basis    
+    // Then do statistics on rocktype by rocktype basis
     bool dosatnums = false;
     vector<int> satnums;
     if (deck.hasKeyword("SATNUM")) {
         dosatnums = true;
         satnums = deck["SATNUM"].back().getIntData();
-    } // If SATNUM was not present, maybe ROCKTYPE is there, 
+    } // If SATNUM was not present, maybe ROCKTYPE is there,
     // if so, we will use it as SATNUM.
     else if (deck.hasKeyword("ROCKTYPE")) {
         dosatnums = true;
@@ -431,7 +431,7 @@ int main(int varnum, char** vararg) try {
             if (satnums[i] > maxsatnumvalue) {
                 maxsatnumvalue = satnums[i];
             }
-            if (satnums[i] < 0 || satnums[i] > 1000) { 
+            if (satnums[i] < 0 || satnums[i] > 1000) {
                 cerr << "satnums[" << i << "] = " << satnums[i] << ", not sane, quitting." << endl;
                 exit(1);
             }
@@ -439,14 +439,14 @@ int main(int varnum, char** vararg) try {
 
         vector<double> permxsum_rocktype;
         permxsum_rocktype.resize(maxsatnumvalue+1, 0.0);
-        
+
         vector<double> invpermxsum_rocktype;
         invpermxsum_rocktype.resize(maxsatnumvalue+1, 0.0); // for harmonic average
 
         vector<double> volpermxsum_rocktype;              // volume weighted
         volpermxsum_rocktype.resize(maxsatnumvalue+1, 0.0);
-        
-        vector<double> invvolpermxsum_rocktype;           // volume weighted    
+
+        vector<double> invvolpermxsum_rocktype;           // volume weighted
         invvolpermxsum_rocktype.resize(maxsatnumvalue+1, 0.0); // for harmonic average
 
         vector<double> porevolumesum_rocktype;
@@ -476,7 +476,7 @@ int main(int varnum, char** vararg) try {
 
                     volpermxsum_rocktype[satnums[cell_idx]] += permxs[cell_idx] * cellVolumes[cell_idx];
                     invvolpermxsum_rocktype[satnums[cell_idx]] += cellVolumes[cell_idx] / permxs[cell_idx];
-                    
+
                 }
                 if (doporosity) {
                     porevolumesum_rocktype[satnums[cell_idx]] += cellVolumes[cell_idx] * poros[cell_idx];
@@ -484,7 +484,7 @@ int main(int varnum, char** vararg) try {
             }
         }
 
-        // Compute the sample variance in porosity per rock type        
+        // Compute the sample variance in porosity per rock type
         /*
           phi_avg = 1/V*sum(v_i*phi_i)
           phi_var = 1/V*sum(v_i*(phi_i-phi_avg)^2)
@@ -492,23 +492,23 @@ int main(int varnum, char** vararg) try {
         if (doporosity) {
             for (size_t cell_idx = 0; cell_idx < (size_t)num_eclipse_cells; ++cell_idx) {
                 if (cellVolumes[cell_idx] > emptycellvolumecutoff) {
-                    porosityvariancesum_rocktype[satnums[cell_idx]] += cellVolumes[cell_idx] 
+                    porosityvariancesum_rocktype[satnums[cell_idx]] += cellVolumes[cell_idx]
                         * pow((poros[cell_idx]-porevolumesum_rocktype[satnums[cell_idx]]/volumesum_rocktype[satnums[cell_idx]]),2);
-                                       
+
                 }
-            }  
-        }      
-        
+            }
+        }
+
         // Now loop over rocktypes in order to print statistics
 
         // Does SATNUM/ROCKTYPE start with 0 or 1?
         for (int rocktype_idx = 0; rocktype_idx <= maxsatnumvalue; ++rocktype_idx) {
             if (activecellcount_rocktype[rocktype_idx] > 0) {
                 cout << endl << "Statistics for rocktype " << rocktype_idx << endl;
-                
+
                 cout     << "         Volume: " << volumesum_rocktype[rocktype_idx] << " (" << volumesum_rocktype[rocktype_idx]/volume*100 << "%)" << endl;
                 cout     << "    Total cells: " << totalcellcount_rocktype[rocktype_idx] << " (" << (double)totalcellcount_rocktype[rocktype_idx]/(double)num_eclipse_cells*100 << "%)" << endl;
-                cout     << "   Active cells: " << activecellcount_rocktype[rocktype_idx] << " (" << 
+                cout     << "   Active cells: " << activecellcount_rocktype[rocktype_idx] << " (" <<
                     (double)activecellcount_rocktype[rocktype_idx]/(double)totalcellcount_rocktype[rocktype_idx]*100.0 << "% within rocktype)" << endl;
                 if (doporosity) {
                     cout << "     Porevolume: " << porevolumesum_rocktype[rocktype_idx] << endl;
@@ -520,17 +520,16 @@ int main(int varnum, char** vararg) try {
                     cout << " Perm harm. avg: " << volumesum_rocktype[rocktype_idx]/invvolpermxsum_rocktype[rocktype_idx] << endl;
                     cout << "Perm arith. avg: " << permxsum_rocktype[rocktype_idx]/activecellcount_rocktype[rocktype_idx] << " (not volume-weighted)" << endl;
                     cout << " Perm harm. avg: " << activecellcount_rocktype[rocktype_idx]/invpermxsum_rocktype[rocktype_idx] << " (not volume-weighted)" << endl;
-                }                
+                }
             }
         }
     }
-    
-    
+
+
     return 0;
-    
+
 }
 catch (const std::exception &e) {
     std::cerr << "Program threw an exception: " << e.what() << "\n";
     throw;
 }
-

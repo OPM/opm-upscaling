@@ -27,7 +27,7 @@ namespace Elasticity {
 #define IMPL_FUNC(A,B) template<class GridType, class PC> \
                          A ElasticityUpscale<GridType, PC>::B
 
-IMPL_FUNC(std::vector<BoundaryGrid::Vertex>, 
+IMPL_FUNC(std::vector<BoundaryGrid::Vertex>,
           extractFace(Direction dir, ctype coord))
 {
   std::vector<BoundaryGrid::Vertex> result;
@@ -67,13 +67,13 @@ IMPL_FUNC(BoundaryGrid, extractMasterFace(Direction dir,
   int c = 0;
   int i = log2(float(dir));
   BoundaryGrid result;
-  // we first group nodes into this map through the coordinate of lower left 
+  // we first group nodes into this map through the coordinate of lower left
   // vertex. we then split this up into pillars for easy processing later
   std::map<double, std::vector<BoundaryGrid::Quad> > nodeMap;
-  for (LeafIterator cell  = gv.leafGridView().template begin<0>(); 
+  for (LeafIterator cell  = gv.leafGridView().template begin<0>();
                     cell != gv.leafGridView().template end<0>(); ++cell, ++c) {
     std::vector<BoundaryGrid::Vertex> verts;
-    int idx=0; 
+    int idx=0;
     if (side == LEFT)
      idx = set.subIndex(*cell,V1[i][0],dim);
     else if (side == RIGHT)
@@ -283,7 +283,7 @@ IMPL_FUNC(void, assembleBBlockMortar(const BoundaryGrid& b1,
                                      double alpha))
 {
   // get a set of P1 shape functions for the displacements
-  P1ShapeFunctionSet<ctype,ctype,2> ubasis = 
+  P1ShapeFunctionSet<ctype,ctype,2> ubasis =
                 P1ShapeFunctionSet<ctype,ctype,2>::instance();
 
   // get a set of PN shape functions for the multipliers
@@ -298,7 +298,7 @@ IMPL_FUNC(void, assembleBBlockMortar(const BoundaryGrid& b1,
   // get a quadrature rule
   int quadorder = std::max((1.0+n1+0.5)/2.0,(1.0+n2+0.5)/2.0);
   quadorder = std::max(quadorder, 2);
-  const Dune::QuadratureRule<ctype,2>& rule = 
+  const Dune::QuadratureRule<ctype,2>& rule =
                   Dune::QuadratureRules<ctype,2>::rule(gt,quadorder);
 
   // do the assembly loop
@@ -369,7 +369,7 @@ IMPL_FUNC(void, fixPoint(Direction dir,
   typedef typename GridType::LeafGridView::template Codim<dim>::Iterator VertexLeafIterator;
   const VertexLeafIterator itend = gv.leafGridView().template end<dim>();
 
-  // make a mapper for codim 0 entities in the leaf grid 
+  // make a mapper for codim 0 entities in the leaf grid
   using LeafGridView = Dune::GridView<Dune::DefaultLeafGridViewTraits<GridType>>;
   Dune::MultipleCodimMultipleGeomTypeMapper<LeafGridView> mapper(gv.leafGridView(), Dune::mcmgVertexLayout());
 
@@ -682,8 +682,8 @@ IMPL_FUNC(void, loadMaterialsFromGrid(const std::string& file))
   std::cout << "Number of materials: " << cache.size() << std::endl;
 
   double totalvolume=0;
-  for (std::map<Material*,double>::iterator it  = volume.begin(); 
-                                            it != volume.end(); ++it) 
+  for (std::map<Material*,double>::iterator it  = volume.begin();
+                                            it != volume.end(); ++it)
     totalvolume += it->second;
 
   // statistics
@@ -813,7 +813,7 @@ IMPL_FUNC(void, periodicBCs(const double* min, const double* max))
   periodicPlane(Z,XYZ,slave[2],master[2]);
 }
 
-IMPL_FUNC(void, periodicBCsMortar(const double* min, 
+IMPL_FUNC(void, periodicBCsMortar(const double* min,
                                   const double* max,
                                   int n1, int n2,
                                   int p1, int p2))
@@ -832,7 +832,7 @@ IMPL_FUNC(void, periodicBCsMortar(const double* min,
 
   // step 1
   fixCorners(min,max);
-  
+
   // step 2
   std::cout << "\textracting nodes on top face..." << std::endl;
   slave.push_back(extractFace(Z,max[2]));
@@ -911,7 +911,7 @@ IMPL_FUNC(void, setupSolvers(const LinSolParams& params))
 #ifdef HAVE_OPENMP
    numsolvers = omp_get_max_threads();
 #endif
-          
+
   if (params.type == ITERATIVE) {
     op.reset(new Operator(A.getOperator()));
     bool copy;
@@ -987,7 +987,7 @@ IMPL_FUNC(void, setupSolvers(const LinSolParams& params))
         for (Matrix::ConstRowIterator it  = A.getOperator().begin();
                                       it != A.getOperator().end(); ++it, ++row) {
           double alpha=0;
-          for (Matrix::ConstColIterator it2  = it->begin(); 
+          for (Matrix::ConstColIterator it2  = it->begin();
                                         it2 != it->end(); ++it2) {
             if (it2.index() != row)
               alpha += fabs(*it2);
@@ -1051,7 +1051,7 @@ IMPL_FUNC(void, setupSolvers(const LinSolParams& params))
       }
     }
   } else {
-    if (B.N()) 
+    if (B.N())
       A.getOperator() = MatrixOps::augment(A.getOperator(), B,
                                            0, A.getOperator().M(), true);
 #if HAVE_SUITESPARSE_UMFPACK || HAVE_SUPERLU

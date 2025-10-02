@@ -109,7 +109,7 @@ namespace Opm
                 : pgrid_(&grid), iter_(it), local_index_(loc_ind)
             {
             }
-            
+
             /// @brief
             /// @todo Doc me!
             /// @return

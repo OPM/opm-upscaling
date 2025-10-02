@@ -54,7 +54,7 @@ class BoundaryGrid {
     //! \brief Default (empty) destructor
     virtual ~BoundaryGrid() {}
 
-    //! \brief Holds the indices and relevant coordinates of the vertices 
+    //! \brief Holds the indices and relevant coordinates of the vertices
     //         on a boundary
     class Quad;
 
@@ -221,7 +221,7 @@ class BoundaryGrid {
       bool operator()(const Quad& q)
       {
         double eps = 1.e-8;
-        return (coord[0] >= q.bb[0][0]-eps && 
+        return (coord[0] >= q.bb[0][0]-eps &&
                 coord[0] <= q.bb[1][0]+eps &&
                 coord[1] >= q.bb[0][1]-eps &&
                 coord[1] <= q.bb[1][1]+eps);
@@ -463,7 +463,7 @@ class HexGeometry<2, cdim, GridImp>
 
     //! \brief Returns the inverse, transposed Jacobian
     //! \param[in] local The local coordinates
-    const Dune::FieldMatrix<ctype, coorddimension, mydimension> 
+    const Dune::FieldMatrix<ctype, coorddimension, mydimension>
       jacobianInverseTransposed(const LocalCoordinate& local) const
     {
       Dune::FieldMatrix<ctype, coorddimension, mydimension> Jti = jacobianTransposed(local);

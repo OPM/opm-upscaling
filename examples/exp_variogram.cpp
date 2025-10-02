@@ -19,7 +19,7 @@
 */
 
 /*
-  This program computes data for an experimental 
+  This program computes data for an experimental
   variogram from a cornerpoint geometry with properties.
 
   This works by choosing pairs of volumes chosen
@@ -94,7 +94,7 @@ try
     double residual_tolerance = param.getDefault("residual_tolerance", 1e-8);
     int linsolver_verbosity = param.getDefault("linsolver_verbosity", 0);
     int linsolver_type = param.getDefault("linsolver_type", 1);
-    
+
     // Check for unused parameters (potential typos).
     if (param.anyUnused()) {
 	std::cout << "*****     WARNING: Unused parameters:     *****\n";
@@ -115,7 +115,7 @@ try
         exit(1);
     }
 
-    // Check user supplied variogram direction, either horizontal or vertical 
+    // Check user supplied variogram direction, either horizontal or vertical
     enum variogram_directions { undefined, horizontal, vertical };
     variogram_directions variogram_direction = undefined;
     std::string distancemetric;
@@ -133,17 +133,17 @@ try
         std::cerr << "Error: variogram direction is undefined, user supplied '" << direction << "'.\n";
         exit(1);
     }
-    
-    
-    // Check that we do not have any user input 
+
+
+    // Check that we do not have any user input
     // that goes outside the coordinates described in
     // the cornerpoint file (runtime-exception will be thrown in case of error)
     ch.verifyInscribedShoebox(imin, ilen, imax,
                               jmin, jlen, jmax,
                               zmin, zlen, zmax);
-    
+
     std::mt19937 gen;
-    
+
     // Seed the random number generators with the current time, unless specified on command line
     // Warning: Current code does not allow 0 for the seed!!
     if (userseed == 0) {
@@ -152,7 +152,7 @@ try
     else {
         gen.seed(userseed);
     }
-        
+
 
     // Note that end is included in interval for uniform_int.
     std::uniform_int_distribution<> disti(imin, imax - ilen);
@@ -161,14 +161,14 @@ try
     auto ri = [&disti, &gen] { return disti(gen); };
     auto rj = [&distj, &gen] { return distj(gen); };
     auto rz = [&distz, &gen] { return distz(gen); };
-    
+
     // Storage for results
     std::vector<double> distances;
     std::vector<double> porodiffs;
     std::vector<double> permxdiffs;
     std::vector<double> permydiffs;
     std::vector<double> permzdiffs;
-    
+
     for (int pair = 1; pair <= pairs; ++pair) {
         int istart_1 = ri();
         int jstart_1 = rj();
@@ -195,9 +195,9 @@ try
             istart_2 = istart_1;
             jstart_2 = jstart_1;
             zstart_2 = rz();
-        }   
+        }
         ch.chop(istart_2, istart_2 + ilen, jstart_2, jstart_2 + jlen, zstart_2, zstart_2 + zlen, false);
-	
+
         auto subdeck_2 = ch.subDeck();
         Opm::SinglePhaseUpscaler upscaler_2;
         upscaler_2.init(subdeck_2, Opm::SinglePhaseUpscaler::Fixed, minpermSI,
@@ -217,16 +217,16 @@ try
 	permydiffs.push_back(fabs(upscaled_K_2(1,1) - upscaled_K_1(1,1)));
         permzdiffs.push_back(fabs(upscaled_K_2(2,2) - upscaled_K_1(2,2)));
     }
-    
+
     // Make stream of output data, to be outputted to screen and optionally to file
     std::stringstream outputtmp;
-    
+
     outputtmp << "################################################################################################" << std::endl;
     outputtmp << "# Data for experimental variogram" << std::endl;
     outputtmp << "#" << std::endl;
     time_t now = time(NULL);
     outputtmp << "# Finished: " << asctime(localtime(&now));
-        
+
     utsname hostname;   uname(&hostname);
     outputtmp << "# Hostname: " << hostname.nodename << std::endl;
     outputtmp << "#" << std::endl;
@@ -239,7 +239,7 @@ try
     outputtmp << "#            pairs: " << pairs << std::endl;
     outputtmp << "################################################################################################" << std::endl;
     outputtmp << "# distance (" << distancemetric << ")      porositydiff                permxdiff               permydiff                permzdiff" << std::endl;
-    
+
     const int fieldwidth = outputprecision + 8;
     for (int pair = 1; pair <= pairs; ++pair) {
 	outputtmp << std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << distances[pair-1] << '\t' <<
@@ -249,21 +249,20 @@ try
 	    std::showpoint << std::setw(fieldwidth) << std::setprecision(outputprecision) << permzdiffs[pair-1] << '\t' <<
 	    std::endl;
     }
-    
+
     if (resultfile != "") {
 	std::cout << "Writing results to " << resultfile << std::endl;
 	std::ofstream outfile;
 	outfile.open(resultfile.c_str(), std::ios::out | std::ios::trunc);
 	outfile << outputtmp.str();
-	outfile.close();      
+	outfile.close();
     }
-    
-        
-    
+
+
+
     std::cout << outputtmp.str();
 }
 catch (const std::exception &e) {
     std::cerr << "Program threw an exception: " << e.what() << "\n";
     throw;
 }
-

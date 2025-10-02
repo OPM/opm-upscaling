@@ -189,7 +189,7 @@ namespace Opm
             std::string kro_filename = param.getDefault<std::string>("outputOil", krotmpname);
             std::ofstream krw_out(krw_filename.c_str());
             std::ofstream kro_out(kro_filename.c_str());
-            // std::stringstream krw_out; 
+            // std::stringstream krw_out;
             // std::stringstream kro_out;
             krw_out << "# Result from steady state upscaling" << std::endl;
             krw_out << "# Pressuredrop  Sw  Krxx  Kryy  Krzz" << std::endl;

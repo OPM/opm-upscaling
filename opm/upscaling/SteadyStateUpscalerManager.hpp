@@ -101,8 +101,8 @@ namespace Opm
     {
         /* const int num_rows = K.numRows(); */
         /* const int num_cols = K.numCols(); */
-	
-        /* We write tensor output in Voigt notation, 
+
+        /* We write tensor output in Voigt notation,
            (but we also output the remainding three terms)
            http://en.wikipedia.org/wiki/Voigt_notation
         */
@@ -113,7 +113,7 @@ namespace Opm
 	  If linear or periodic bc's, output all 9 elements (even though 6 is strictly necessary for periodic bc's)
 	  Use the Tensor class to order output into Voigt notation, so that it works for more than 3x3 matrices
 	*/
-        
+
         os << pdrop << '\t';
         os << sat << '\t';
         os << K(0,0) << '\t'; /* xx */
@@ -125,7 +125,7 @@ namespace Opm
         os << K(2,1) << '\t'; /* zy */
         os << K(2,0) << '\t'; /* zx */
         os << K(1,2);         /* yz */
-        
+
 
 	os << std::endl;
 
@@ -231,10 +231,10 @@ namespace Opm
                     // Changing initial saturations for next pressure drop to equal the steady state of the last
                     init_sat = upscaler.lastSaturationState();
 
-		    
+
                     writeRelPerm(krw_out, lambda.first , usat, pdrop);
                     writeRelPerm(kro_out, lambda.second, usat, pdrop);
-		    
+
                 }
             }
         }

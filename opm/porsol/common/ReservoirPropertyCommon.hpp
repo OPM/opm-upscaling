@@ -65,7 +65,7 @@ namespace Opm
         /// @brief Tensor type for read and write access to permeability.
         typedef SharedCMatrix    SharedPermTensor;
 
-        /// @brief The number of phases 
+        /// @brief The number of phases
         enum { NumberOfPhases = 2 };
 
         /// @brief Default constructor.
