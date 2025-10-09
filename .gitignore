@@ -70,3 +70,11 @@ examples/grdecldips
 data
 steadystate_test_implicit
 steadystate_test_explicit
+
+# Mac OS X debug info
+*.dSYM
+*.DS_Store
+
+# VSCode
+.vs
+.vscode
