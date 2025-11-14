@@ -5,8 +5,8 @@
 
 Module: opm-upscaling
 Description: DUNE module containing single-phase and steady-state upscaling methods
-Version: 2025.10
-Label: 2025.10
+Version: 2025.10.1
+Label: 2025.10.1
 Maintainer: arne.morten.kvarving@sintef.no
 MaintainerName: Arne Morten Kvarving
 Url: http://opm-project.org
