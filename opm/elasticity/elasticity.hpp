@@ -13,6 +13,7 @@
 #define ELASTICITY_HPP_
 
 #include <dune/common/fmatrix.hh>
+#include <dune/common/fvector.hh>
 
 namespace Opm {
 namespace Elasticity {
@@ -80,8 +81,9 @@ class Elasticity {
 //! \brief phi dip angle
 //! \brief theta Azimuth angle
 //! \brief density Density of material
-Dune::FieldVector<double,3> waveSpeeds(const Dune::FieldMatrix<double,6,6>& C, double phi,
-                                       double theta, double density);
+Dune::FieldVector<double,3>
+waveSpeeds(const Dune::FieldMatrix<double,6,6>& C,
+           double phi, double theta, double density);
 
 }
 }
