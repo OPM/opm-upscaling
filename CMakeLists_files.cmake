@@ -43,6 +43,7 @@ list(APPEND MAIN_SOURCE_FILES
   opm/upscaling/initCPGrid.cpp
   opm/upscaling/writeECLData.cpp
   opm/elasticity/boundarygrid.cpp
+  opm/elasticity/elasticity.cpp
   opm/elasticity/elasticity_preconditioners.cpp
   opm/elasticity/material.cpp
   opm/elasticity/materials.cpp
