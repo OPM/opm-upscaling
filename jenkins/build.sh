@@ -18,9 +18,8 @@ declare -a downstreams
 declare -A downstreamRev
 
 # Clone opm-common
-pushd .
 mkdir -p $WORKSPACE/deps/opm-common
-cd $WORKSPACE/deps/opm-common
+pushd $WORKSPACE/deps/opm-common
 git init .
 git remote add origin https://github.com/OPM/opm-common
 git fetch --depth 1 origin ${upstreamRev[opm-common]}:branch_to_build
@@ -33,7 +32,6 @@ source $WORKSPACE/deps/opm-common/jenkins/build-opm-module.sh
 parseRevisions
 printHeader opm-upscaling
 
-# Setup opm-data
-source $WORKSPACE/deps/opm-common/jenkins/setup-opm-tests.sh
+clone_repositories opm-upscaling
 
 build_module_full opm-upscaling
