@@ -6,8 +6,6 @@ set (opm-upscaling_CONFIG_VAR
 
 # dependencies
 set (opm-upscaling_DEPS
-  # compile with C99 support if available
-  "C99"
   # various runtime library enhancements
   "Boost 1.44.0
      COMPONENTS date_time system unit_test_framework REQUIRED"
