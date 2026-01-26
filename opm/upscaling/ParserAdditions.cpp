@@ -19,22 +19,19 @@
 
 #include <opm/upscaling/ParserAdditions.hpp>
 
-#include <opm/json/JsonObject.hpp>
-
 #include <opm/input/eclipse/Parser/ParserKeyword.hpp>
 
 namespace {
     void add_RHO(Opm::Parser& parser)
     {
-        const auto rhoJsonData =
-R"~~({
-        "name"     : "RHO",
-        "sections" : [],
-        "data"     : {"value_type" : "DOUBLE" }
-}
-)~~";
+        Opm::ParserKeyword kw("RHO", Opm::KeywordSize(1));
+        Opm::ParserItem item("data", Opm::ParserItem::itype::DOUBLE);
+        item.setSizeType(Opm::ParserItem::item_size::ALL);
+        Opm::ParserRecord record;
+        record.addDataItem(item);
+        kw.addDataRecord(record);
 
-        parser.addParserKeyword(Json::JsonObject(rhoJsonData));
+        parser.addParserKeyword(kw);
     }
 } // Anonymous
 
