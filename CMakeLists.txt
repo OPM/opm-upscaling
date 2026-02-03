@@ -62,8 +62,6 @@ endmacro (dir_hook)
 include (OpmInit)
 OpmSetPolicies()
 
-set(USE_OPENMP_DEFAULT ON)
-
 # list of prerequisites for this particular project; this is in a
 # separate file (in cmake/Modules sub-directory) because it is shared
 # with the find module
@@ -73,7 +71,7 @@ include (${project}-prereqs)
 # it should set various lists with the names of the files to include
 include (CMakeLists_files.cmake)
 
-macro (config_hook)
+macro(${project}_config_hook)
 	opm_need_version_of ("dune-common")
 	opm_need_version_of ("dune-geometry")
 	opm_need_version_of ("dune-istl")
@@ -82,25 +80,13 @@ macro (config_hook)
 		HAVE_SUPERLU
 		HAVE_SUITESPARSE_UMFPACK
 		)
-endmacro (config_hook)
+endmacro()
 
-macro (prereqs_hook)
-endmacro (prereqs_hook)
-
-macro (sources_hook)
-endmacro (sources_hook)
-
-macro (files_hook)
-endmacro (files_hook)
-
-macro (fortran_hook)
+macro(${project}_fortran_hook)
 	#  interface requires a variable to inspect, a value won't suffice
 	set (UNCONDITIONALLY TRUE)
 	set (${project}_FORTRAN_IF UNCONDITIONALLY)
-endmacro (fortran_hook)
-
-macro (tests_hook)
-endmacro (tests_hook)
+endmacro()
 
 # all setup common to the OPM library modules is done here
 include (OpmLibMain)
