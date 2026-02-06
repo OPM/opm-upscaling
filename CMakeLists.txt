@@ -22,6 +22,39 @@ project(opm-upscaling C CXX)
 option(SIBLING_SEARCH "Search for other modules in sibling directories?" ON)
 option(INSTALL_BENCHMARKS "Install benchmark applications?" OFF)
 
+macro(opm-upscaling_fortran_hook)
+  #  interface requires a variable to inspect, a value won't suffice
+  set(UNCONDITIONALLY TRUE)
+  set(opm-upscaling_FORTRAN_IF UNCONDITIONALLY)
+endmacro()
+
+macro(opm-upscaling_config_hook)
+  opm_need_version_of ("dune-common")
+  opm_need_version_of ("dune-geometry")
+  opm_need_version_of ("dune-istl")
+endmacro()
+
+macro(opm-upscaling_tests_hook)
+  # setup extra tests (using helper binaries)
+  include(compareUpscaling.cmake)
+endmacro()
+
+macro(opm-upscaling_targets_hook)
+  # encode test cases so they can be embedded in the benchmark executables
+  include(EmbedCases.cmake)
+endmacro()
+
+macro(opm-upscaling_install_hook)
+  install(
+    DIRECTORY
+      doc/man1
+    DESTINATION
+      ${CMAKE_INSTALL_MANDIR}
+    FILES_MATCHING PATTERN
+      "*.1"
+  )
+endmacro()
+
 if(SIBLING_SEARCH AND NOT opm-common_DIR)
   # guess the sibling dir
   get_filename_component(_leaf_dir_name ${PROJECT_BINARY_DIR} NAME)
@@ -52,10 +85,6 @@ find_package(opm-common REQUIRED)
 
 include(OpmInit)
 
-# not the same location as most of the other projects? this hook overrides
-macro (dir_hook)
-endmacro (dir_hook)
-
 # project information is in dune.module. Read this file and set variables.
 # we cannot generate dune.module since it is read by dunecontrol before
 # the build starts, so it makes sense to keep the data there then.
@@ -71,31 +100,5 @@ include (${project}-prereqs)
 # it should set various lists with the names of the files to include
 include (CMakeLists_files.cmake)
 
-macro(${project}_config_hook)
-  opm_need_version_of ("dune-common")
-  opm_need_version_of ("dune-geometry")
-  opm_need_version_of ("dune-istl")
-  list (APPEND ${project}_CONFIG_IMPL_VARS
-    HAVE_LAPACK
-    HAVE_SUPERLU
-    HAVE_SUITESPARSE_UMFPACK
-  )
-endmacro()
-
-macro(${project}_fortran_hook)
-  #  interface requires a variable to inspect, a value won't suffice
-  set (UNCONDITIONALLY TRUE)
-  set (${project}_FORTRAN_IF UNCONDITIONALLY)
-endmacro()
-
 # all setup common to the OPM library modules is done here
 include (OpmLibMain)
-
-# setup extra tests (using helper binaries)
-include (${CMAKE_CURRENT_SOURCE_DIR}/compareUpscaling.cmake)
-
-# encode test cases so they can be embedded in the benchmark executables
-include (${PROJECT_SOURCE_DIR}/EmbedCases.cmake)
-
-install(DIRECTORY doc/man1 DESTINATION ${CMAKE_INSTALL_MANDIR}
-  FILES_MATCHING PATTERN "*.1")
