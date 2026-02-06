@@ -2,7 +2,9 @@
 set (opm-upscaling_CONFIG_VAR
   HAVE_SUPERLU
   HAVE_OPENMP
-  )
+  HAVE_LAPACK
+  HAVE_SUITESPARSE_UMFPACK
+)
 
 # CMake 3.30.0 requires to find Boost in CONFIG mode
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.30.0)
