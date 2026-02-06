@@ -1,5 +1,5 @@
-# -*- mode: cmake; tab-width: 2; indent-tabs-mode: t; truncate-lines: t; compile-command: "cmake -Wdev" -*-
-# vim: set filetype=cmake autoindent tabstop=2 shiftwidth=2 noexpandtab softtabstop=2 nowrap:
+# -*- mode: cmake; tab-width: 2; indent-tabs-mode: nil; truncate-lines: t; compile-command: "cmake -Wdev" -*-
+# vim: set filetype=cmake autoindent tabstop=2 shiftwidth=2 expandtab softtabstop=2 nowrap:
 
 macro (opm_pack_file case_dir case_name suffix in_ext out_ext)
   # put the output in the same relative path in the output; we then
@@ -15,12 +15,19 @@ macro (opm_pack_file case_dir case_name suffix in_ext out_ext)
   # run the shell script to encode the file
   set (pack_script "${PROJECT_SOURCE_DIR}/benchmarks/input/create_hex_data_file.sh")
   add_custom_command (
-	OUTPUT "${output_file}"
-	COMMAND "${pack_script}"
-	ARGS "${input_file}" "${output_file}"
-	DEPENDS "${input_file}" "${pack_script}"
-	COMMENT "Creating packed binary of ${rel_file}"
-	)
+    OUTPUT
+      ${output_file}
+    COMMAND
+      ${pack_script}
+    ARGS
+      ${input_file}
+      ${output_file}
+    DEPENDS
+      ${input_file}
+      ${pack_script}
+    COMMENT
+      "Creating packed binary of ${rel_file}"
+  )
 
   # cannot add files to targets other than in add_custom_target,
   # and that command can only run once, so we must return a list
@@ -36,14 +43,14 @@ macro (opm_pack_case test_exe case_name)
   # we cannot add files directly (sic) but must wrap in a target
   add_custom_target (${case_name} DEPENDS ${${case_name}_DEPENDS})
   add_dependencies ("${test_exe}" "${case_name}")
-	list(APPEND OPM_BENCHMARKS ${test_exe})
+  list(APPEND OPM_BENCHMARKS ${test_exe})
 endmacro (opm_pack_case)
 
 # rel.perm curve is packed separately because it is common for all cases
 macro (opm_pack_stone test_exe)
-	opm_pack_file ("benchmarks/input" "stonefile" "_benchmark" ".txt" ".txt.gz.hex")
-	add_custom_target (stonefile ALL DEPENDS ${stonefile_DEPENDS})
-	add_dependencies ("${test_exe}" "stonefile")
+  opm_pack_file ("benchmarks/input" "stonefile" "_benchmark" ".txt" ".txt.gz.hex")
+  add_custom_target (stonefile ALL DEPENDS ${stonefile_DEPENDS})
+  add_dependencies ("${test_exe}" "stonefile")
 endmacro (opm_pack_stone)
 
 # pack these cases which are alternatives in the code

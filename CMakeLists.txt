@@ -1,5 +1,5 @@
-# -*- mode: cmake; tab-width: 2; indent-tabs-mode: t; truncate-lines: t; compile-command: "cmake -Wdev" -*-
-# vim: set filetype=cmake autoindent tabstop=2 shiftwidth=2 noexpandtab softtabstop=2 nowrap:
+# -*- mode: cmake; tab-width: 2; indent-tabs-mode: nil; truncate-lines: t; compile-command: "cmake -Wdev" -*-
+# vim: set filetype=cmake autoindent tabstop=2 shiftwidth=2 expandtab softtabstop=2 nowrap:
 
 ###########################################################################
 #                                                                         #
@@ -72,20 +72,20 @@ include (${project}-prereqs)
 include (CMakeLists_files.cmake)
 
 macro(${project}_config_hook)
-	opm_need_version_of ("dune-common")
-	opm_need_version_of ("dune-geometry")
-	opm_need_version_of ("dune-istl")
-	list (APPEND ${project}_CONFIG_IMPL_VARS
-		HAVE_LAPACK
-		HAVE_SUPERLU
-		HAVE_SUITESPARSE_UMFPACK
-		)
+  opm_need_version_of ("dune-common")
+  opm_need_version_of ("dune-geometry")
+  opm_need_version_of ("dune-istl")
+  list (APPEND ${project}_CONFIG_IMPL_VARS
+    HAVE_LAPACK
+    HAVE_SUPERLU
+    HAVE_SUITESPARSE_UMFPACK
+  )
 endmacro()
 
 macro(${project}_fortran_hook)
-	#  interface requires a variable to inspect, a value won't suffice
-	set (UNCONDITIONALLY TRUE)
-	set (${project}_FORTRAN_IF UNCONDITIONALLY)
+  #  interface requires a variable to inspect, a value won't suffice
+  set (UNCONDITIONALLY TRUE)
+  set (${project}_FORTRAN_IF UNCONDITIONALLY)
 endmacro()
 
 # all setup common to the OPM library modules is done here
