@@ -40,8 +40,19 @@ macro(opm-upscaling_tests_hook)
 endmacro()
 
 macro(opm-upscaling_targets_hook)
-  # encode test cases so they can be embedded in the benchmark executables
-  include(EmbedCases.cmake)
+  # pack these cases which are alternatives in the code
+  if(TARGET Boost::iostreams)
+    include(EmbedCases.cmake)
+    opm_pack_stone(upscale_relperm_benchmark)
+    opm_pack_case(upscale_relperm_benchmark benchmark20)
+
+    if(INSTALL_BENCHMARKS)
+      add_custom_target(benchmarks ALL DEPENDS upscale_relperm_benchmark)
+      set_target_properties(upscale_relperm_benchmark PROPERTIES EXCLUDE_FROM_ALL 0)
+    else()
+      add_custom_target(benchmarks DEPENDS upscale_relperm_benchmark)
+    endif()
+  endif()
 endmacro()
 
 macro(opm-upscaling_install_hook)

@@ -52,16 +52,3 @@ macro (opm_pack_stone test_exe)
   add_custom_target (stonefile ALL DEPENDS ${stonefile_DEPENDS})
   add_dependencies ("${test_exe}" "stonefile")
 endmacro (opm_pack_stone)
-
-# pack these cases which are alternatives in the code
-if(Boost_IOSTREAMS_FOUND)
-  opm_pack_stone (upscale_relperm_benchmark)
-  opm_pack_case (upscale_relperm_benchmark benchmark20)
-
-  if(INSTALL_BENCHMARKS)
-    add_custom_target(benchmarks ALL DEPENDS upscale_relperm_benchmark)
-    set_target_properties(upscale_relperm_benchmark PROPERTIES EXCLUDE_FROM_ALL 0)
-  else()
-    add_custom_target(benchmarks DEPENDS upscale_relperm_benchmark)
-  endif()
-endif()
