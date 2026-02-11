@@ -107,9 +107,5 @@ OpmSetPolicies()
 # with the find module
 include (${project}-prereqs)
 
-# read the list of components from this file (in the project directory);
-# it should set various lists with the names of the files to include
-include (CMakeLists_files.cmake)
-
 # all setup common to the OPM library modules is done here
 include (OpmLibMain)
