@@ -94,13 +94,10 @@ endif()
 
 find_package(opm-common REQUIRED)
 
-include(OpmInit)
-
 # project information is in dune.module. Read this file and set variables.
 # we cannot generate dune.module since it is read by dunecontrol before
 # the build starts, so it makes sense to keep the data there then.
 include (OpmInit)
-OpmSetPolicies()
 
 # list of prerequisites for this particular project; this is in a
 # separate file (in cmake/Modules sub-directory) because it is shared
