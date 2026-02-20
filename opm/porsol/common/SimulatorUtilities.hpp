@@ -292,7 +292,7 @@ namespace Opm
             OPM_THROW(std::runtime_error, "Could not open file " + filename);
         }
         os << field.size() << '\n';
-        std::copy(field.begin(), field.end(), std::ostream_iterator<double>(os, "\n"));
+        std::ranges::copy(field, std::ostream_iterator<double>(os, "\n"));
     }
 
 } // namespace Opm

@@ -848,8 +848,7 @@ namespace Opm {
 
             const std::vector<int>& cell = flowSolution_.cellno_;
             os << "cell index map = [";
-            std::copy(cell.begin(), cell.end(),
-                      std::ostream_iterator<int>(os, " "));
+            std::ranges::copy(cell, std::ostream_iterator<int>(os, " "));
             os << "\b]\n";
 
             const Opm::SparseTable<int>& cf = flowSolution_.cellFaces_;
@@ -857,8 +856,7 @@ namespace Opm {
             for (int i = 0; i < cf.size(); ++i)
             {
                 os << "\t[" << i << "] -> [";
-                std::copy(cf[i].begin(), cf[i].end(),
-                          std::ostream_iterator<int>(os, ","));
+                std::ranges::copy(cf[i], std::ostream_iterator<int>(os, ","));
                 os << "\b]\n";
             }
         }
@@ -893,8 +891,7 @@ namespace Opm {
             std::ofstream rhs(rhsfile.c_str());
             rhs.precision(15);
             rhs.setf(std::ios::scientific | std::ios::showpos);
-            std::copy(rhs_.begin(), rhs_.end(),
-                      std::ostream_iterator<VectorBlockType>(rhs, "\n"));
+            std::ranges::copy(rhs_, std::ostream_iterator<VectorBlockType>(rhs, "\n"));
         }
 
     private:
