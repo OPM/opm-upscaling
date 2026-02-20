@@ -120,7 +120,7 @@ namespace Opm {
                         n.push_back(f->neighbourCellIndex());
                     }
                 }
-                std::sort(n.begin(), n.end());
+                std::ranges::sort(n);
 
                 sane = std::unique(n.begin(), n.end()) == n.end();
             }
