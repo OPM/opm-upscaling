@@ -1707,9 +1707,8 @@ namespace Opm {
                          std::inner_product(F_[c0].begin(), F_[c0].end(),
                                             pi.begin(), 0.0)) / L_[c0];
 
-                std::transform(pi.begin(), pi.end(),
-                               pi.begin(),
-                               [&p, c0](const double& input) { return p[c0] - input; });
+                std::ranges::transform(pi, pi.begin(),
+                                       [&p, c0](const double& input) { return p[c0] - input; });
 
                 // Recover fluxes from local system
                 //    Bv = Bv_g + Cp - D\pi
@@ -1725,9 +1724,7 @@ namespace Opm {
                 // 2) Add gravity flux contributions (v <- v + v_g)
                 //
                 ip_.gravityFlux(c, gflux);
-                std::transform(gflux.begin(), gflux.end(), v[c0].begin(),
-                               v[c0].begin(),
-                               std::plus<Scalar>());
+                std::ranges::transform(gflux, v[c0], v[c0].begin(), std::plus<Scalar>());
             }
         }
 
@@ -1799,9 +1796,7 @@ namespace Opm {
             g_[c] -= std::accumulate(gflux.begin(), gflux.end(), Scalar(0.0));
 
             // rhs <- v_g - rhs (== v_g - h)
-            std::transform(gflux.begin(), gflux.end(), rhs.begin(),
-                           rhs.begin(),
-                           std::minus<Scalar>());
+            std::ranges::transform(gflux, rhs, rhs.begin(), std::minus<Scalar>());
 
             // rhs <- rhs + g_[c]/L_[c]*F
             std::transform(rhs.begin(), rhs.end(), Ft.data(),

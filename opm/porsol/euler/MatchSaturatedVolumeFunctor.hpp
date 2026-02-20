@@ -86,8 +86,8 @@ namespace Opm
 
         double operator()(double dp) const
         {
-            std::transform(cap_press_.begin(), cap_press_.end(), cp_new_.begin(),
-                           [dp](const double& input) { return input + dp; });
+            std::ranges::transform(cap_press_, cp_new_.begin(),
+                                   [dp](const double& input) { return input + dp; });
             computeSaturations();
             std::pair<double, double> vols = poreSatVolumes(grid_, rp_, sat_);
             return (vols.second - orig_satvol_)/vols.first;

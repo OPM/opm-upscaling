@@ -161,8 +161,8 @@ namespace Opm {
 
             Vector sz2(sz.size());
 
-            std::transform(sz.begin(), sz.end(), sz2.begin(),
-                           [](const vt& input) { return input*input; });
+            std::ranges::transform(sz, sz2.begin(),
+                                   [](const vt& input) { return input*input; });
 
             Binv_ .allocate(sz2.begin(), sz2.end());
             gflux_.allocate(sz .begin(), sz .end());

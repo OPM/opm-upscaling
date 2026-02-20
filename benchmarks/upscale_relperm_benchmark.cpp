@@ -477,8 +477,8 @@ try
      // at the command line. This multiplication has been postponed to here
      // to avoid division by zero and to avoid special handling of negative
      // capillary pressure in the code above.
-     std::transform(Pvalues.begin(), Pvalues.end(), Pvalues.begin(),
-                    [surfaceTension](const double val) { return val*surfaceTension; });
+     std::ranges::transform(Pvalues, Pvalues.begin(),
+                            [surfaceTension](const double val) { return val*surfaceTension; });
 
     /*
      * Step 9a: Verify results

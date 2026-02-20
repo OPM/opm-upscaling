@@ -54,10 +54,7 @@ namespace Opm {
             static void
             add(const BaseVec& x, BaseVec& y) {
                 typedef typename BaseVec::value_type VT;
-                ::std::transform(x.begin(), x.end(),
-                                 y.begin(),
-                                 y.begin(),
-                                 ::std::plus<VT>());
+                ::std::ranges::transform(x, y, y.begin(), ::std::plus<VT>());
             }
         };
 
@@ -68,9 +65,7 @@ namespace Opm {
             static void
             negate(BaseVec& x) {
                 typedef typename BaseVec::value_type VT;
-                ::std::transform(x.begin(), x.end(),
-                                 x.begin(),
-                                 ::std::negate<VT>());
+                ::std::ranges::transform(x, x.begin(), ::std::negate<VT>());
             }
         };
 
@@ -98,9 +93,8 @@ namespace Opm {
             template <class Scalar>
             static void
             assign(const Scalar& a, const BaseVec& x, BaseVec& y) {
-                ::std::transform(x.begin(), x.end(),
-                                 y.begin(),
-                                 [&a](auto z) { return a * z; });
+                ::std::ranges::transform(x, y.begin(),
+                                         [&a](auto z) { return a * z; });
             }
         };
 
