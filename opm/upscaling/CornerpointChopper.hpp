@@ -155,7 +155,7 @@ namespace Opm
                     int pos = (dims_[0] + 1)*j + i;
                     int new_pos = (new_dims_[0] + 1)*(j-jmin) + (i-imin);
                     // Copy all 6 coordinates for a pillar.
-                    std::copy(COORD.begin() + 6*pos, COORD.begin() + 6*(pos + 1), new_COORD_.begin() + 6*new_pos);
+                    std::copy_n(COORD.begin() + 6*pos, 6, new_COORD_.begin() + 6*new_pos);
                     if (resettoorigin) {
                         // Substract lowest x value from all X-coords, similarly for y, and truncate in z-direction
                       new_COORD_[6*new_pos]     -= x_correction;
