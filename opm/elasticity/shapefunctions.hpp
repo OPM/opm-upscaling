@@ -374,7 +374,7 @@ protected:
       std::vector<double> result(n);
       for (int i=0; i < n; ++i)
         result[i] = std::real(eigenValues[i]);
-      std::sort(result.begin(),result.begin()+n);
+      std::ranges::sort(result);
 
       return result;
     }
