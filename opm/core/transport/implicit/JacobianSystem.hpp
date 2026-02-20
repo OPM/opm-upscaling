@@ -76,7 +76,7 @@ namespace Opm {
             zero(BaseVec& x) {
                 typedef typename BaseVec::value_type VT;
 
-                ::std::fill(x.begin(), x.end(), VT(0.0));
+                ::std::ranges::fill(x, VT(0.0));
             }
         };
 

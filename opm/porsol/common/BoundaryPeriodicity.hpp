@@ -118,7 +118,7 @@ namespace Opm
 	}
 
 	// Store boundary face info in a suitable structure. Also find side total volumes.
-	std::fill(side_areas.begin(), side_areas.end(), 0.0);
+    std::ranges::fill(side_areas, 0.0);
 	bfinfo.clear();
 	bfinfo.reserve(num_bdy);
 	for (int i = 0; i < num_bdy; ++i) {
@@ -214,7 +214,7 @@ namespace Opm
 	}
 
 	// Store boundary face info in a suitable structure. Also find side total volumes.
-	std::fill(side_areas.begin(), side_areas.end(), 0.0);
+    std::ranges::fill(side_areas, 0.0);
 	bfinfo.clear();
 	bfinfo.reserve(num_bdy);
 	for (int i = 0; i < num_bdy; ++i) {

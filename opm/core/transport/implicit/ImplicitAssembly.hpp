@@ -171,7 +171,7 @@ namespace Opm {
             nconn_ = countConnections(g, c);
 
             asm_buffer_.resize((2*nconn_ + 1)*ndof2 + (nconn_ + 2)*ndof);
-            std::fill(asm_buffer_.begin(), asm_buffer_.end(), 0.0);
+            std::ranges::fill(asm_buffer_, 0.0);
 
             double* F  = &asm_buffer_[(2*nconn_ + 1) * ndof2];
             double* J1 = &asm_buffer_[(0*nconn_ + 1) * ndof2];

@@ -721,7 +721,7 @@ namespace Opm {
             }
             void resetVisited()
             {
-                std::fill(visited_.begin(), visited_.end(), 0);
+                std::ranges::fill(visited_, 0);
             }
 
             double maxMod() const
@@ -1334,9 +1334,9 @@ namespace Opm {
             S_   = 0.0;
             rhs_ = 0.0;
 
-            std::fill(g_.begin(), g_.end(), Scalar(0.0));
-            std::fill(L_.begin(), L_.end(), Scalar(0.0));
-            std::fill(e .begin(), e .end(), Scalar(1.0));
+            std::ranges::fill(g_, Scalar(0.0));
+            std::ranges::fill(L_, Scalar(0.0));
+            std::ranges::fill(e, Scalar(1.0));
 
             // We will have to regularize resulting system if there
             // are no prescribed pressures (i.e., Dirichlet BC's).
@@ -1359,7 +1359,7 @@ namespace Opm {
                 SharedFortranMatrix    S(nf, nf, &data_store[0]);
                 ip_.getInverseMatrix(c, S);
 
-                std::fill(gflux.begin(), gflux.end(), Scalar(0.0));
+                std::ranges::fill(gflux, Scalar(0.0));
                 ip_.gravityFlux(c, gflux);
 
                 ImmutableFortranMatrix one(nf, 1, &e[0]);
@@ -1745,10 +1745,10 @@ namespace Opm {
 
             const Opm::SparseTable<int>& cf = flowSolution_.cellFaces_;
 
-            std::fill(rhs     .begin(), rhs     .end(), Scalar(0.0));
-            std::fill(facetype.begin(), facetype.end(), Internal   );
-            std::fill(condval .begin(), condval .end(), Scalar(0.0));
-            std::fill(ppartner.begin(), ppartner.end(), -1         );
+            std::ranges::fill(rhs, Scalar(0.0));
+            std::ranges::fill(facetype, Internal);
+            std::ranges::fill(condval, Scalar(0.0));
+            std::ranges::fill(ppartner, -1);
 
             g_[c0] = src;
 
