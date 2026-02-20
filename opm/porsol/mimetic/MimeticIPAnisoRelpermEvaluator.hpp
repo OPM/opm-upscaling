@@ -159,14 +159,14 @@ namespace Opm {
 
             Vector sz2(sz.size());
 
-            std::transform(sz.begin(), sz.end(), sz2.begin(),
-                           [](const vt& input) { return input*input; });
+            std::ranges::transform(sz, sz2.begin(),
+                                   [](const vt& input) { return input*input; });
 
             second_term_.allocate(sz2.begin(), sz2.end());
 
             int idim = int(dim);
-            std::transform(sz.begin(), sz.end(), sz2.begin(),
-                           [idim](const vt& input) { return input*idim; });
+            std::ranges::transform(sz, sz2.begin(),
+                                   [idim](const vt& input) { return input*idim; });
 
             n_.allocate(sz2.begin(), sz2.end());
 
@@ -322,9 +322,7 @@ namespace Opm {
                 vecMulAdd_N(rho[phase], pmob, Kg.data(), Scalar(1.0), dyn_Kg_.data());
 
                 // \lambda_t += \lambda_phase
-                std::transform(lambda_t.begin(), lambda_t.end(), pmob_data.begin(),
-                               lambda_t.begin(),
-                               std::plus<Scalar>());
+                std::ranges::transform(lambda_t, pmob_data, lambda_t.begin(), std::plus<Scalar>());
             }
 
             // lambdaK_ = (\sum_i \lambda_i) K
