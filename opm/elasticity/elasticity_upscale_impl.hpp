@@ -591,7 +591,7 @@ IMPL_FUNC(void, loadMaterialsFromGrid(const std::string& file))
     if (deck.hasKeyword("YOUNGMOD") && deck.hasKeyword("POISSONMOD")) {
         Emod = deck["YOUNGMOD"].back().getRawDoubleData();
         Poiss = deck["POISSONMOD"].back().getRawDoubleData();
-      std::vector<double>::const_iterator it = std::min_element(Poiss.begin(), Poiss.end());
+      const auto it = std::ranges::min_element(Poiss);
       if (*it < 0) {
         std::cerr << "Auxetic material specified for cell " << it-Poiss.begin() << std::endl
                   << "Emod: "<< Emod[it-Poiss.begin()] << " Poisson's ratio: " << *it << std::endl << "bailing..." << std::endl;
@@ -606,7 +606,7 @@ IMPL_FUNC(void, loadMaterialsFromGrid(const std::string& file))
         Emod[i]  = shear[i]*(3*lame[i]+2*shear[i])/(lame[i]+shear[i]);
         Poiss[i] = 0.5*lame[i]/(lame[i]+shear[i]);
       }
-      std::vector<double>::const_iterator it = std::min_element(Poiss.begin(), Poiss.end());
+      const auto it = std::ranges::min_element(Poiss);
       if (*it < 0) {
         std::cerr << "Auxetic material specified for cell " << it-Poiss.begin() << std::endl
                   << "Lamè modulus: " << lame[it-Poiss.begin()] << " Shearmodulus: " << shear[it-Poiss.begin()] << std::endl
@@ -622,7 +622,7 @@ IMPL_FUNC(void, loadMaterialsFromGrid(const std::string& file))
         Emod[i]  = 9*bulk[i]*shear[i]/(3*bulk[i]+shear[i]);
         Poiss[i] = 0.5*(3*bulk[i]-2*shear[i])/(3*bulk[i]+shear[i]);
       }
-      std::vector<double>::const_iterator it = std::min_element(Poiss.begin(), Poiss.end());
+      const auto it = std::min_element(Poiss.begin(), Poiss.end());
       if (*it < 0) {
         std::cerr << "Auxetic material specified for cell " << it-Poiss.begin() << std::endl
                   << "Bulkmodulus: " << bulk[it-Poiss.begin()] << " Shearmodulus: " << shear[it-Poiss.begin()] << std::endl
@@ -644,7 +644,7 @@ IMPL_FUNC(void, loadMaterialsFromGrid(const std::string& file))
   }
   // scale E modulus of materials
   if (Escale > 0) {
-    Emin = *std::min_element(Emod.begin(),Emod.end());
+    Emin = *std::ranges::min_element(Emod);
     for (size_t i=0;i<Emod.size();++i)
       Emod[i] *= Escale/Emin;
   }

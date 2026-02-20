@@ -56,7 +56,7 @@ namespace Opm
                                         ZCORN.begin() + dims_[2]*layersz);
 
             abszmax_ = *std::max_element(ZCORN.begin(), ZCORN.end());
-            abszmin_ = *std::min_element(ZCORN.begin(), ZCORN.end());
+            abszmin_ = *std::ranges::min_element(ZCORN);
 
             std::cout << "Parsed grdecl file with dimensions ("
                       << dims_[0] << ", " << dims_[1] << ", " << dims_[2] << ")" << std::endl;
