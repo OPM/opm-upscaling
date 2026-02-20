@@ -117,8 +117,7 @@ inline bool EQUAL2(const BoundaryGrid::FaceCoord& x,
 bool BoundaryGrid::find(Vertex& res, const Vertex& coord) const
 {
   // find first quad with coord within bounding box
-  std::vector<Quad>::const_iterator it = std::find_if(grid.begin(),grid.end(),
-                                                      BoundedPredicate(coord.c));
+  auto it = std::ranges::find_if(grid, BoundedPredicate(coord.c));
 
   res.i = -1;
   while (it != grid.end()) {
@@ -138,7 +137,7 @@ bool BoundaryGrid::find(Vertex& res, const Vertex& coord) const
 
     if (ok)
       break;
-    it = std::find_if(it+1,grid.end(),BoundedPredicate(coord.c));
+    it = std::find_if(it+1, grid.end(), BoundedPredicate(coord.c));
   }
   if (it == grid.end()) {
     std::cout << " failed to locate " << coord.c << std::endl;
