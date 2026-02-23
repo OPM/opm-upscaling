@@ -86,7 +86,7 @@ namespace Opm {
             // y <- x
             static void
             assign(const BaseVec& x, BaseVec& y) {
-                ::std::copy(x.begin(), x.end(), y.begin());
+                ::std::ranges::copy(x, y.begin());
             }
 
             // y <- a*x

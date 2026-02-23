@@ -586,7 +586,7 @@ namespace Opm
                     }
                 }
                 assert(int(l2g.size()) == num_faces[c0]);
-                std::copy(l2g.begin(), l2g.end(), cfdata.begin() + cumul_num_faces[c0]);
+                std::ranges::copy(l2g, cfdata.begin() + cumul_num_faces[c0]);
             }
             num_faces_ = total_num_faces;
             max_faces_per_cell_ = max_ncf;

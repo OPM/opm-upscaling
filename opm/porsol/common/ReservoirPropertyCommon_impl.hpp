@@ -541,7 +541,7 @@ namespace Opm
                 OPM_THROW(std::runtime_error, "Could not open file " + filename);
             }
             file << num_cells << '\n';
-            std::copy(porosity_.begin(), porosity_.end(), std::ostream_iterator<double>(file, "\n"));
+            std::ranges::copy(porosity_, std::ostream_iterator<double>(file, "\n"));
         }
         // Write permeability.
         {
@@ -553,7 +553,7 @@ namespace Opm
             file << num_cells << '\n';
             switch (permeability_kind_) {
             case TensorPerm:
-                std::copy(permeability_.begin(), permeability_.end(), std::ostream_iterator<double>(file, "\n"));
+                std::ranges::copy(permeability_, std::ostream_iterator<double>(file, "\n"));
                 break;
             case DiagonalPerm:
                 for (int c = 0; c < num_cells; ++c) {

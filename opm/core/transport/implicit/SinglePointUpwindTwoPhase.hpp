@@ -305,7 +305,7 @@ namespace Opm {
                 }
             }
 
-            std::copy(porevol.begin(), porevol.end(), store_.porevol());
+            std::ranges::copy(porevol, store_.porevol());
         }
 
         void

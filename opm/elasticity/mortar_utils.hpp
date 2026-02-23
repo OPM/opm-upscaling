@@ -27,7 +27,7 @@ class MortarUtils {
     static void extractBlock(Vector& x, const Vector& y, int len, int start = 0)
     {
       x.resize(len);
-      std::copy(y.begin() + start, y.begin() + len + start, x.begin());
+      std::copy_n(y.begin() + start, len, x.begin());
     }
 
     //! \brief Inject a range of indices into a vector
@@ -37,7 +37,7 @@ class MortarUtils {
     //! \param[in] start The first index in the range
     static void injectBlock(Vector& x, const Vector& y, int len, int start = 0)
     {
-      std::copy(y.begin(), y.begin() + len, x.begin() + start);
+      std::copy_n(y.begin(), len, x.begin() + start);
     }
 };
 
