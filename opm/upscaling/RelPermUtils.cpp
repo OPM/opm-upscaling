@@ -460,8 +460,8 @@ void RelPermUpscaleHelper::sanityCheckInput(const Opm::Deck& deck,
     //   present)
 
     {
-        auto it  = std::find_if(satnums.begin(), satnums.end(), [](int a) { return a < 0; });
-        auto it2 = std::find_if(satnums.begin(), satnums.end(), [](int a) { return a > 1000;});
+        const auto it  = std::ranges::find_if(satnums, [](int a) { return a < 0; });
+        const auto it2 = std::ranges::find_if(satnums, [](int a) { return a > 1000;});
 
         if (it != satnums.end() || it2 != satnums.end()) {
             std::stringstream str;
@@ -481,11 +481,8 @@ void RelPermUpscaleHelper::sanityCheckInput(const Opm::Deck& deck,
     }
 
     {
-        auto it3 = std::find_if(poros.begin(), poros.end(),
-                                [](double value)
-                                {
-                                    return (value < 0) || (value > 1);
-                                });
+        const auto it3 =
+            std::ranges::find_if(poros, [](double value) { return (value < 0) || (value > 1); });
 
         if (it3 != poros.end()) {
             std::stringstream str;
@@ -501,8 +498,8 @@ void RelPermUpscaleHelper::sanityCheckInput(const Opm::Deck& deck,
         auto name       = std::string("permx");
         auto check_perm = [&name](const std::vector<double>& perm)
         {
-            auto it = std::find_if(perm.begin(), perm.end(),
-                                   [](double value) { return value < 0; });
+            const auto it =
+                std::ranges::find_if(perm, [](double value) { return value < 0; });
 
             if (it != perm.end()) {
                 std::stringstream str;
