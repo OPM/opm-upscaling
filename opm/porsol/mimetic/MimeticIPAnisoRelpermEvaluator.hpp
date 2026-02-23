@@ -170,7 +170,7 @@ namespace Opm {
 
             n_.allocate(sz2.begin(), sz2.end());
 
-            std::fill(sz2.begin(), sz2.end(), vt(dim));
+            std::ranges::fill(sz2, vt(dim));
             Kg_.allocate(sz2.begin(), sz2.end());
         }
 
@@ -312,8 +312,8 @@ namespace Opm {
             std::array<Scalar, FluidInterface::NumberOfPhases> rho;
             fl.phaseDensities(ci, rho);
 
-            std::fill(dyn_Kg_.begin(), dyn_Kg_.end(), Scalar(0.0));
-            std::fill(lambda_t.begin(), lambda_t.end(), 0.0);
+            std::ranges::fill(dyn_Kg_, Scalar(0.0));
+            std::ranges::fill(lambda_t, 0.0);
 
             for (int phase = 0; phase < FluidInterface::NumberOfPhases; ++phase) {
                 fl.phaseMobility(phase, ci, s[ci], pmob);

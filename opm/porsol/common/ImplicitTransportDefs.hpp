@@ -104,7 +104,7 @@ namespace Opm {
     private:
         void
         setVector(double x, ::std::vector<double>& v) {
-            ::std::fill(v.begin(), v.end(), x);
+            ::std::ranges::fill(v, x);
         }
 
         ::std::size_t         dim_ ;

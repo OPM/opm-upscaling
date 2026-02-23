@@ -522,7 +522,7 @@ namespace Opm {
             assert (x.size() == (::std::size_t) (g.number_of_cells));
 
 	    if (init_step_use_previous_sol_) {
-		std::fill(x.begin(), x.end(), 0.0);
+        std::ranges::fill(x, 0.0);
             } else {
 		const std::vector<double>& s = state.saturation();
 		for (int c = 0, nc = g.number_of_cells; c < nc; ++c) {
