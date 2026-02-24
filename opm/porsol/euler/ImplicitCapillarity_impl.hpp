@@ -197,8 +197,8 @@ namespace Opm
                                                     residual_.reservoirProperties(),
                                                     saturation,
                                                     cap_press);
-        double min_cap_press = *std::ranges::min_element(cap_press);
-        double max_cap_press = *std::ranges::max_element(cap_press);
+        const double min_cap_press = *std::ranges::min_element(cap_press);
+        const double max_cap_press = *std::ranges::max_element(cap_press);
         double cap_press_range = max_cap_press - min_cap_press;
         double mod_low = 1e100;
         double mod_high = -1e100;

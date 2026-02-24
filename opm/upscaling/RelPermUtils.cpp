@@ -1116,8 +1116,7 @@ RelPermUpscaleHelper::upscalePermeability(int mpi_rank)
 
                         maxPhasePerm[p] = std::max(maxPhasePerm[p], cellPhasePerm);
                         maxPhasePerm[p] = std::max(maxPhasePerm[p],
-                                                   *std::max_element(cellPhasePermDiag.begin(),
-                                                                     cellPhasePermDiag.end()));
+                                                   *std::ranges::max_element(cellPhasePermDiag));
                     }
                 }
 
