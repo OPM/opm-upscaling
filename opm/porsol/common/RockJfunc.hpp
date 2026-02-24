@@ -211,9 +211,9 @@ namespace Opm
 	    kro_ = TabFunc(svals, kro);
 	    Jfunc_ = TabFunc(svals, Jfunc);
 	    std::vector<double> invJfunc(Jfunc);
-	    std::reverse(invJfunc.begin(), invJfunc.end());
+	    std::ranges::reverse(invJfunc);
 	    std::vector<double> invsvals(svals);
-	    std::reverse(invsvals.begin(), invsvals.end());
+	    std::ranges::reverse(invsvals);
 	    invJfunc_ = TabFunc(invJfunc, invsvals);
 	}
 
