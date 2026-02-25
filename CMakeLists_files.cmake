@@ -113,9 +113,12 @@ list (APPEND EXAMPLE_SOURCE_FILES
   tests/compareUpscaling.cpp
 )
 
-list (APPEND ADDITIONAL_SOURCE_FILES
-  benchmarks/upscale_relperm_benchmark.cpp
-)
+# Cannot build boost::iostreams 1.66 as c++-20
+if(Boost_VERSION VERSION_GREATER 1.66)
+  list (APPEND ADDITIONAL_SOURCE_FILES
+    benchmarks/upscale_relperm_benchmark.cpp
+  )
+endif()
 
 # programs listed here will not only be compiled, but also marked for
 # installation

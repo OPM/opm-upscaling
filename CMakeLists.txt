@@ -41,7 +41,8 @@ endmacro()
 
 macro(opm-upscaling_targets_hook)
   # pack these cases which are alternatives in the code
-  if(TARGET Boost::iostreams)
+  # cannot build boost::iostreams 1.66 as c++-20.
+  if(TARGET Boost::iostreams AND Boost_VERSION VERSION_GREATER 1.66)
     include(EmbedCases.cmake)
     opm_pack_stone(upscale_relperm_benchmark)
     opm_pack_case(upscale_relperm_benchmark benchmark20)
