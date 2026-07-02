@@ -18,9 +18,9 @@ cmake_minimum_required (VERSION 3.23)
 
 # Mandatory call to project
 # On a Windows host (MSVC) there is no Fortran compiler and opm-upscaling has no
-# Fortran sources; Fortran is used only by FortranCInterface (FCMacros.h), and the
-# FC_GLOBAL macros that blas_lapack.cpp needs are otherwise supplied by the
-# compat/ shim. Skip Fortran on Windows; keep it enabled on every other host.
+# Fortran sources; Fortran is used only by FortranCInterface (FCMacros.h). Skip
+# Fortran on Windows; keep it enabled on every other host. Without a Fortran
+# compiler a fallback FCMacros.h is generated in opm-upscaling_language_hook.
 # Note: WIN32 is not set before project(), so test CMAKE_HOST_WIN32 instead.
 if(CMAKE_HOST_WIN32)
   project(opm-upscaling C CXX)
@@ -32,11 +32,27 @@ option(SIBLING_SEARCH "Search for other modules in sibling directories?" ON)
 option(INSTALL_BENCHMARKS "Install benchmark applications?" OFF)
 
 macro(opm-upscaling_language_hook)
-  # FCMacros.h (Fortran name-mangling) is only generated when a Fortran compiler
-  # is available; on Windows FC_GLOBAL comes from the compat/ shim instead.
   if(CMAKE_Fortran_COMPILER)
     include(FortranCInterface)
     fortrancinterface_header(${PROJECT_BINARY_DIR}/FCMacros.h MACRO_NAMESPACE FC_)
+  else()
+    # Without a Fortran compiler FortranCInterface cannot detect the BLAS/LAPACK
+    # name mangling, but opm/porsol/common/blas_lapack.hpp hard-requires
+    # FCMacros.h (#error when it is missing). Generate a fallback that assumes
+    # the de-facto standard convention -- lowercase with a trailing underscore --
+    # used by gfortran-built BLAS/LAPACK (OpenBLAS, reference LAPACK) and also
+    # exported by MKL.
+    file(WRITE ${PROJECT_BINARY_DIR}/FCMacros.h
+"#ifndef FC_HEADER_INCLUDED
+#define FC_HEADER_INCLUDED
+
+/* Fallback Fortran name mangling, generated without a Fortran compiler:
+   lowercase with trailing underscore (gfortran/OpenBLAS/LAPACK default). */
+#define FC_GLOBAL(name,NAME) name##_
+#define FC_GLOBAL_(name,NAME) name##_
+
+#endif
+")
   endif()
 endmacro()
 
