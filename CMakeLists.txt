@@ -42,7 +42,16 @@ macro(opm-upscaling_language_hook)
     # the de-facto standard convention -- lowercase with a trailing underscore --
     # used by gfortran-built BLAS/LAPACK (OpenBLAS, reference LAPACK) and also
     # exported by MKL.
-    file(WRITE ${PROJECT_BINARY_DIR}/FCMacros.h
+    # Only write the fallback if the file does not exist yet, so that a
+    # hand-edited FCMacros.h (for a library with a different convention)
+    # survives reconfiguration.
+    if(NOT EXISTS ${PROJECT_BINARY_DIR}/FCMacros.h)
+      message(STATUS "No Fortran compiler available - writing fallback FCMacros.h "
+                     "assuming lowercase-with-underscore BLAS/LAPACK name mangling "
+                     "(gfortran/OpenBLAS/LAPACK/MKL convention). If linking BLAS/LAPACK "
+                     "fails with unresolved symbols like 'dgemm_', your library uses a "
+                     "different convention; edit ${PROJECT_BINARY_DIR}/FCMacros.h to match.")
+      file(WRITE ${PROJECT_BINARY_DIR}/FCMacros.h
 "#ifndef FC_HEADER_INCLUDED
 #define FC_HEADER_INCLUDED
 
@@ -53,6 +62,7 @@ macro(opm-upscaling_language_hook)
 
 #endif
 ")
+    endif()
   endif()
 endmacro()
 
