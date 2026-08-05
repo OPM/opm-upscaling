@@ -17,15 +17,21 @@
 cmake_minimum_required (VERSION 3.23)
 
 # Mandatory call to project
-# On a Windows host (MSVC) there is no Fortran compiler and opm-upscaling has no
-# Fortran sources; Fortran is used only by FortranCInterface (FCMacros.h). Skip
-# Fortran on Windows; keep it enabled on every other host. Without a Fortran
-# compiler a fallback FCMacros.h is generated in opm-upscaling_language_hook.
-# Note: WIN32 is not set before project(), so test CMAKE_HOST_WIN32 instead.
-if(CMAKE_HOST_WIN32)
-  project(opm-upscaling C CXX)
-else()
+# opm-upscaling has no Fortran sources; Fortran is enabled only so that
+# FortranCInterface can detect the BLAS/LAPACK name mangling and write
+# FCMacros.h, which opm/porsol/common/blas_lapack.hpp hard-requires.
+#
+# Ask for the language only when a compiler for it actually exists, rather than
+# keying on the host OS: a Windows machine with Intel Fortran should get the
+# real header, and a Linux machine without gfortran should still configure.
+# opm-upscaling_language_hook writes a fallback FCMacros.h when it is absent.
+# Note: project() has not run yet, so use check_language(), not CMAKE_Fortran_COMPILER.
+include(CheckLanguage)
+check_language(Fortran)
+if(CMAKE_Fortran_COMPILER)
   project(opm-upscaling C CXX Fortran)
+else()
+  project(opm-upscaling C CXX)
 endif()
 
 option(SIBLING_SEARCH "Search for other modules in sibling directories?" ON)
