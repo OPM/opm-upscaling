@@ -1395,7 +1395,9 @@ namespace Opm {
 
             // Regularize the matrix (only for pure Neumann problems...)
             if (do_regularization_) {
-                S_[0][0] *= 2;
+                // 2.0 (not int 2): MSVC finds FieldMatrix<double,1,1>::operator*=
+                // ambiguous for an int argument (C2666); a double is exact.
+                S_[0][0] *= 2.0;
             }
             Adapter opS(S_);
 
@@ -1493,7 +1495,9 @@ namespace Opm {
             if (!same_matrix) {
                 // Regularize the matrix (only for pure Neumann problems...)
                 if (do_regularization_) {
-                    S_[0][0] *= 2;
+                    // 2.0 (not int 2): MSVC finds FieldMatrix<double,1,1>::operator*=
+                    // ambiguous for an int argument (C2666); a double is exact.
+                    S_[0][0] *= 2.0;
                 }
                 opS_.reset(new Operator(S_));
 
@@ -1561,7 +1565,9 @@ namespace Opm {
             if (!same_matrix) {
                 // Regularize the matrix (only for pure Neumann problems...)
                 if (do_regularization_) {
-                    S_[0][0] *= 2;
+                    // 2.0 (not int 2): MSVC finds FieldMatrix<double,1,1>::operator*=
+                    // ambiguous for an int argument (C2666); a double is exact.
+                    S_[0][0] *= 2.0;
                 }
                 opS_.reset(new Operator(S_));
 
@@ -1625,7 +1631,9 @@ namespace Opm {
             if (!same_matrix) {
                 // Regularize the matrix (only for pure Neumann problems...)
                 if (do_regularization_) {
-                    S_[0][0] *= 2;
+                    // 2.0 (not int 2): MSVC finds FieldMatrix<double,1,1>::operator*=
+                    // ambiguous for an int argument (C2666); a double is exact.
+                    S_[0][0] *= 2.0;
                 }
                 opS_.reset(new Operator(S_));
 
