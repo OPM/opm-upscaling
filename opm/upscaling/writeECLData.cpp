@@ -23,6 +23,7 @@
 #endif
 
 #include <opm/upscaling/writeECLData.hpp>
+#include <opm/common/utility/TimeService.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/io/eclipse/OutputStream.hpp>
@@ -47,7 +48,7 @@ namespace {
 
   Opm::RestartIO::InteHEAD::TimePoint timeStamp(const time_t time_stamp)
   {
-    return Opm::RestartIO::getSimulationTimePoint(time_stamp, 0.0);
+    return Opm::RestartIO::getSimulationTimePoint(Opm::TimeService::from_time_t(time_stamp), 0.0);
   }
 
   std::vector<int>
