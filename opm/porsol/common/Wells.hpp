@@ -21,7 +21,7 @@
 #define OPM_WELLS_HEADER_INCLUDED
 
 #include <opm/common/ErrorMacros.hpp>
-#include <opm/grid/utility/SparseTable.hpp>
+#include <opm/common/utility/SparseTable.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <dune/common/fvector.hh>
 

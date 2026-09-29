@@ -40,7 +40,7 @@
 #include <opm/common/utility/parameters/ParameterGroup.hpp>
 
 #include <opm/common/utility/numeric/SparseVector.hpp>
-#include <opm/grid/utility/SparseTable.hpp>
+#include <opm/common/utility/SparseTable.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/grid/common/Volumes.hpp>
