@@ -36,7 +36,7 @@
 #ifndef OPENRS_GRIDINTERFACEEULER_HEADER
 #define OPENRS_GRIDINTERFACEEULER_HEADER
 
-#include <opm/grid/utility/SparseTable.hpp>
+#include <opm/common/utility/SparseTable.hpp>
 #include <opm/grid/utility/StopWatch.hpp>
 #include <opm/grid/CpGrid.hpp> // How to avoid this? Needed for the explicit mapper specialization below.
 

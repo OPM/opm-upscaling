@@ -40,7 +40,7 @@
 #include <opm/upscaling/SteadyStateUpscalerImplicit.hpp>
 #include <opm/upscaling/UpscalingTraits.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
-#include <opm/grid/utility/SparseTable.hpp>
+#include <opm/common/utility/SparseTable.hpp>
 #include <cmath>
 #include <fstream>
 #include <iostream>

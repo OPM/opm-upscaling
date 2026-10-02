@@ -42,7 +42,7 @@
 #include <array>
 
 #include <opm/common/ErrorMacros.hpp>
-#include <opm/grid/utility/SparseTable.hpp>
+#include <opm/common/utility/SparseTable.hpp>
 
 #include <opm/porsol/common/fortran.hpp>
 #include <opm/porsol/common/blas_lapack.hpp>
