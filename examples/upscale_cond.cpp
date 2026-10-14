@@ -61,6 +61,7 @@
 #include <opm/common/utility/numeric/MonotCubicInterpolator.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
 
+#include <opm/upscaling/CollectiveCheck.hpp>
 #include <opm/upscaling/RelPermUtils.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 
@@ -74,6 +75,8 @@
 #include <map>
 #include <memory>
 #include <sstream>
+#include <stdexcept>
+#include <string>
 
 #include <sys/utsname.h>
 
@@ -134,7 +137,23 @@ namespace {
 
     void usageandexit() {
         usage();
+
+        // If this rank leaves on its own, the other ranks might wait for it forever.
+        Opm::abortParallelRun(EXIT_FAILURE);
         std::exit(EXIT_FAILURE);
+    }
+
+    // Throw a std::runtime_error whose message is the concatenation of the
+    // arguments.  Used from code that runs under Opm::collectiveCheck(),
+    // where the message is reported by the failing rank(s), whichever those
+    // may be.  Do not guard such messages with isMaster.
+    template <class... Args>
+    [[noreturn]] void throwError(const Args&... args)
+    {
+        std::ostringstream os;
+        (os << ... << args);
+
+        throw std::runtime_error { os.str() };
     }
 } // Anonymous
 
@@ -289,35 +308,47 @@ try
    }
 
    // Read data from the Eclipse file and
-   // populate our vectors with data from the file
-   // Test if filename exists and is readable
-   ifstream eclipsefile(ECLIPSEFILENAME, ios::in);
-   if (eclipsefile.fail()) {
-       if (isMaster) cerr << "Error: Filename " << ECLIPSEFILENAME << " not found or not readable." << endl;
-       usageandexit();
-   }
-   eclipsefile.close();
-
+   // populate our vectors with data from the file.  Reading the input is
+   // rank-local work, so use collectiveCheck to make all ranks agree on the
+   // outcome and shut down together if any rank fails.
    if (isMaster) cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... ";
    flush(cout);   start = clock();
 
-   auto deck = RelPermUpscaleHelper::parseEclipseFile(ECLIPSEFILENAME);
+   Opm::Deck deck;
+   Opm::collectiveCheck([&deck]() {
+       // Test if filename exists and is readable
+       ifstream eclipsefile(ECLIPSEFILENAME, ios::in);
+       if (eclipsefile.fail()) {
+           throw std::runtime_error("Error: Filename " + std::string(ECLIPSEFILENAME) + " not found or not readable.");
+       }
+       eclipsefile.close();
+
+       deck = RelPermUpscaleHelper::parseEclipseFile(ECLIPSEFILENAME);
+
+       // Check that we have the information we need from the eclipse file:
+       if (! (deck.hasKeyword("SPECGRID") && deck.hasKeyword("COORD") && deck.hasKeyword("ZCORN")
+              && deck.hasKeyword("PORO") && deck.hasKeyword("PERMX") && deck.hasKeyword("SATNUM"))) {
+           throw std::runtime_error("Error: Did not find SPECGRID, COORD and ZCORN in Eclipse file " + std::string(ECLIPSEFILENAME));
+       }
+   });
 
    finish = clock();   timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
    if (isMaster) cout << " (" << timeused <<" secs)" << endl;
 
-   // Check that we have the information we need from the eclipse file:
-   if (! (deck.hasKeyword("SPECGRID") && deck.hasKeyword("COORD") && deck.hasKeyword("ZCORN")
-          && deck.hasKeyword("PORO") && deck.hasKeyword("PERMX") && deck.hasKeyword("SATNUM"))) {
-       if (isMaster) cerr << "Error: Did not find SPECGRID, COORD and ZCORN in Eclipse file " << ECLIPSEFILENAME << endl;
-       usageandexit();
-   }
-
    const int points                = atoi(options["points"].c_str());
 
-   vector<int> satnums   = deck["SATNUM"].back().getIntData();
-   vector<double> poros  = deck["PORO"].back().getRawDoubleData();
-   vector<double> permxs = deck["PERMX"].back().getRawDoubleData();
+   // The input data are rank-local.  Everything that can fail depending on
+   // their contents must therefore run under collectiveCheck(), and report
+   // problems by throwing.  Otherwise, a rank that exits on bad data leaves
+   // the other ranks waiting in the communication further down.
+   vector<int> satnums;
+   vector<double> poros, permxs;
+   Opm::collectiveCheck([&]() {
+       satnums = deck["SATNUM"].back().getIntData();
+       poros   = deck["PORO"].back().getRawDoubleData();
+       permxs  = deck["PERMX"].back().getRawDoubleData();
+   });
+
    const double minPerm = atof(options["minPerm"].c_str());
    const double minPoro = atof(options["minPoro"].c_str());
 
@@ -338,82 +369,72 @@ try
    // Input for surfaceTension is dynes/cm
    // SI units are Joules/square metre
    const double surfaceTension     = atof(options["surfaceTension"].c_str()) * 1e-3; // multiply
-   if (varnum == JFindex + stone_types) {
-      for (int i=0 ; i < stone_types; ++i) {
-         const char* ROCKFILENAME = vararg[JFindex+i];
-         // Check if rock file exists and is readable:
-         ifstream rockfile(ROCKFILENAME, ios::in);
-         if (rockfile.fail()) {
-             if (isMaster) cerr << "Error: Filename " << ROCKFILENAME << " not found or not readable." << endl;
-            usageandexit();
-         }
-         rockfile.close();
+   // Reading the stone files is rank-local I/O.
+   Opm::collectiveCheck([&]() {
+      if (varnum == JFindex + stone_types) {
+         for (int i=0 ; i < stone_types; ++i) {
+            const char* ROCKFILENAME = vararg[JFindex+i];
+            // Check if rock file exists and is readable:
+            ifstream rockfile(ROCKFILENAME, ios::in);
+            if (rockfile.fail()) {
+                throw std::runtime_error("Error: Filename " + std::string(ROCKFILENAME) + " not found or not readable.");
+            }
+            rockfile.close();
 
-         MonotCubicInterpolator Jtmp;
-         try {
-             Jtmp = MonotCubicInterpolator(vararg[JFindex + i], 1, jFunctionCurve);
-         }
-         catch (const char * errormessage) {
-             if (isMaster) {
-                 cerr << "Error: " << errormessage << endl
-                      << "Check filename and -jFunctionCurve" << endl;
-             }
-             usageandexit();
-         }
+            MonotCubicInterpolator Jtmp;
+            try {
+                Jtmp = MonotCubicInterpolator(vararg[JFindex + i], 1, jFunctionCurve);
+            }
+            catch (const char * errormessage) {
+                throw std::runtime_error(std::string("Error: ") + errormessage + "\nCheck filename and -jFunctionCurve");
+            }
 
-         // Invert J-function, now we get saturation as a function of pressure:
-         if (Jtmp.isStrictlyMonotone()) {
-            InvJfunctions.push_back(MonotCubicInterpolator(Jtmp.get_fVector(), Jtmp.get_xVector()));
-            JfunctionNames.push_back(vararg[JFindex + i]);
-            //cout << vararg[JFindex + i] << endl;
-            //cout << InvJfunctions[i].toString();
-         }
-         else {
-             if (isMaster) cerr << "Error: Jfunction " << i+1 << " in rock file " << ROCKFILENAME << " was not invertible." << endl;
-             usageandexit();
+            // Invert J-function, now we get saturation as a function of pressure:
+            if (Jtmp.isStrictlyMonotone()) {
+               InvJfunctions.push_back(MonotCubicInterpolator(Jtmp.get_fVector(), Jtmp.get_xVector()));
+               JfunctionNames.push_back(vararg[JFindex + i]);
+               //cout << vararg[JFindex + i] << endl;
+               //cout << InvJfunctions[i].toString();
+            }
+            else {
+                throw std::runtime_error("Error: Jfunction " + std::to_string(i+1) + " in rock file " + std::string(ROCKFILENAME) + " was not invertible.");
+            }
          }
       }
-   }
-   else if (varnum == JFindex + 1) {
-      for (int i=0; i < stone_types; ++i) {
-        const char* ROCKFILENAME = vararg[JFindex];
-         // Check if rock file exists and is readable:
-         ifstream rockfile(ROCKFILENAME, ios::in);
-         if (rockfile.fail()) {
-             if (isMaster) cerr << "Error: Filename " << ROCKFILENAME << " not found or not readable." << endl;
-	     usageandexit();
-         }
-         rockfile.close();
+      else if (varnum == JFindex + 1) {
+         for (int i=0; i < stone_types; ++i) {
+           const char* ROCKFILENAME = vararg[JFindex];
+            // Check if rock file exists and is readable:
+            ifstream rockfile(ROCKFILENAME, ios::in);
+            if (rockfile.fail()) {
+                throw std::runtime_error("Error: Filename " + std::string(ROCKFILENAME) + " not found or not readable.");
+            }
+            rockfile.close();
 
-         MonotCubicInterpolator Jtmp;
-         try {
-             Jtmp = MonotCubicInterpolator(vararg[JFindex], 1, jFunctionCurve);
-         }
-         catch (const char * errormessage) {
-             if (isMaster) {
-                 cerr << "Error: " << errormessage << endl
-                      << "Check filename and -jFunctionCurve" << endl;
-             }
-             usageandexit();
-         }
+            MonotCubicInterpolator Jtmp;
+            try {
+                Jtmp = MonotCubicInterpolator(vararg[JFindex], 1, jFunctionCurve);
+            }
+            catch (const char * errormessage) {
+                throw std::runtime_error(std::string("Error: ") + errormessage + "\nCheck filename and -jFunctionCurve");
+            }
 
-         // Invert J-function, now we get saturation as a function of pressure:
-         if (Jtmp.isStrictlyMonotone()) {
-            InvJfunctions.push_back(MonotCubicInterpolator(Jtmp.get_fVector(), Jtmp.get_xVector()));
-            JfunctionNames.push_back(vararg[JFindex]);
-         }
-         else {
-             if (isMaster) cerr << "Error: Jfunction " << i+1 << " in rock file " << ROCKFILENAME << " was not invertible." << endl;
-            usageandexit();
+            // Invert J-function, now we get saturation as a function of pressure:
+            if (Jtmp.isStrictlyMonotone()) {
+               InvJfunctions.push_back(MonotCubicInterpolator(Jtmp.get_fVector(), Jtmp.get_xVector()));
+               JfunctionNames.push_back(vararg[JFindex]);
+            }
+            else {
+                throw std::runtime_error("Error: Jfunction " + std::to_string(i+1) + " in rock file " + std::string(ROCKFILENAME) + " was not invertible.");
+            }
          }
       }
-   }
-   else {
-       if (isMaster) cerr << "Error:  Wrong number of J-functions provided. " << endl <<
-               "Note that all input arguments after the eclipsefile " << endl <<
-               "are interpreted as J-functions." << endl;
-       usageandexit();
-   }
+      else {
+          throw std::runtime_error("Error:  Wrong number of J-functions provided.\n"
+                                   "Note that all input arguments after the eclipsefile\n"
+                                   "are interpreted as J-functions.");
+      }
+   });
 
 
    /*
@@ -434,9 +455,11 @@ try
    int linsolver_verbosity    = atoi(options["linsolver_verbosity"].c_str());
    int linsolver_type         = atoi(options["linsolver_type"].c_str());
    bool twodim_hack = false;
-   upscaler.init(deck, boundaryCondition,
-                 Opm::unit::convert::from(minPerm, Opm::prefix::milli*Opm::unit::darcy),
-                 linsolver_tolerance, linsolver_verbosity, linsolver_type, twodim_hack);
+   Opm::collectiveCheck([&]() {
+       upscaler.init(deck, boundaryCondition,
+                     Opm::unit::convert::from(minPerm, Opm::prefix::milli*Opm::unit::darcy),
+                     linsolver_tolerance, linsolver_verbosity, linsolver_type, twodim_hack);
+   });
 
    finish = clock();   timeused_tesselation = (double(finish)-double(start))/CLOCKS_PER_SEC;
    if (isMaster) cout << " (" << timeused_tesselation <<" secs)" << endl;
@@ -453,34 +476,33 @@ try
         zero and less than minPerm.
       - Check maximum number of SATNUM values (can be number of rock types present)
    */
-   for (size_t i = 0; i < satnums.size(); ++i) {
-       if (satnums[i] < 0 || satnums[i] > 1000) {
-           if (isMaster) cerr << "satnums[" << i << "] = " << satnums[i] << ", not sane, quitting." << endl;
-           usageandexit();
-       }
-       if (satnums[i] > maxSatnum) {
-           maxSatnum = satnums[i];
-       }
-       if ((poros[i] >= 0) && (poros[i] < minPoro)) { // Truncate porosity from below
-           poros[i] = minPoro;
-       }
-       if (poros[i] < 0 || poros[i] > 1) {
-           if (isMaster) cerr << "poros[" << i <<"] = " << poros[i] << ", not sane, quitting." << endl;
-           usageandexit();
-       }
-       if (permxs[i] == 0) {
-           permxs[i] = minPerm;
-       }
-       if (permxs[i] < 0) {
-           if (isMaster) cerr << "permx[" << i <<"] = " << permxs[i] << ", not sane, quitting." << endl;
-           usageandexit();
-       }
-       // Explicitly handle "no rock" cells, set them to minimum perm and zero porosity.
-       if (satnums[i] == 0) {
-           permxs[i] = minPerm;
-           poros[i] = 0;
-       }
-   }
+   Opm::collectiveCheck([&]() {
+      for (size_t i = 0; i < satnums.size(); ++i) {
+          if (satnums[i] < 0 || satnums[i] > 1000) {
+              throwError("satnums[", i, "] = ", satnums[i], ", not sane, quitting.");
+          }
+          if (satnums[i] > maxSatnum) {
+              maxSatnum = satnums[i];
+          }
+          if ((poros[i] >= 0) && (poros[i] < minPoro)) { // Truncate porosity from below
+              poros[i] = minPoro;
+          }
+          if (poros[i] < 0 || poros[i] > 1) {
+              throwError("poros[", i, "] = ", poros[i], ", not sane, quitting.");
+          }
+          if (permxs[i] == 0) {
+              permxs[i] = minPerm;
+          }
+          if (permxs[i] < 0) {
+              throwError("permx[", i, "] = ", permxs[i], ", not sane, quitting.");
+          }
+          // Explicitly handle "no rock" cells, set them to minimum perm and zero porosity.
+          if (satnums[i] == 0) {
+              permxs[i] = minPerm;
+              poros[i] = 0;
+          }
+      }
+   });
 
    /******************************************************************************
     * Step 5:
@@ -531,10 +553,11 @@ try
             << "Pcmax:    " << Pcmax << endl;
    }
 
-   if (Pcmin > Pcmax) {
-       if (isMaster) cerr << "ERROR: No legal capillary pressures found for this system. Exiting..." << endl;
-       usageandexit();
-   }
+   Opm::collectiveCheck([&]() {
+       if (Pcmin > Pcmax) {
+           throwError("ERROR: No legal capillary pressures found for this system. Exiting...");
+       }
+   });
 
    // Total porevolume and total volume -> upscaled porosity:
    double poreVolume = std::accumulate(cellPoreVolumes.begin(),
@@ -565,10 +588,11 @@ try
    if (Swir < 0.0 && Swir + linsolver_tolerance > 0.0) {
        Swir = 0.0;
    }
-   if (Swir < 0.0 || Swir > 1.0 || Swor < 0.0 || Swor > 1.0) {
-       if (isMaster) cerr << "ERROR: Swir/Swor unsensible. Check your input. Exiting";
-       usageandexit();
-   }
+   Opm::collectiveCheck([&]() {
+       if (Swir < 0.0 || Swir > 1.0 || Swor < 0.0 || Swor > 1.0) {
+           throwError("ERROR: Swir/Swor unsensible. Check your input. Exiting");
+       }
+   });
 
 
    /************************************************************
@@ -726,13 +750,12 @@ try
    WaterSaturationVsCapPressure.shrinkFlatAreas();
    // Now we can also invert the upscaled water saturation
    // (it should be monotonic)
-   if (!WaterSaturationVsCapPressure.isStrictlyMonotone()) {
-       if (isMaster) {
-           cerr << "Error: Upscaled water saturation not strictly monotone in capillary pressure." << endl;
-           cerr << "       Unphysical input data, exiting." << endl;
+   Opm::collectiveCheck([&]() {
+       if (!WaterSaturationVsCapPressure.isStrictlyMonotone()) {
+           throwError("Error: Upscaled water saturation not strictly monotone in capillary pressure.\n",
+                      "       Unphysical input data, exiting.");
        }
-       usageandexit();
-   }
+   });
    MonotCubicInterpolator CapPressureVsWaterSaturation(WaterSaturationVsCapPressure.get_fVector(),
                                                        WaterSaturationVsCapPressure.get_xVector());
 
@@ -807,108 +830,112 @@ try
    double waterVolumeLF = 0.0;
    // Now loop through the vector of capillary pressure points that
    // this node should compute.
-   for (int pointidx = 0; pointidx < points; ++pointidx) {
+   // The upscaling is rank-local work that may fail on a subset of the ranks.
+   // Make all ranks agree on the outcome before starting the data exchange below.
+   Opm::collectiveCheck([&]() {
+      for (int pointidx = 0; pointidx < points; ++pointidx) {
 
-       double accRes = 0.0;
-       // Should "I" (mpi-wise) compute this pressure point?
-       if (node_vs_pressurepoint[pointidx] == mpi_rank) {
+          double accRes = 0.0;
+          // Should "I" (mpi-wise) compute this pressure point?
+          if (node_vs_pressurepoint[pointidx] == mpi_rank) {
 
-           Ptestvalue = pressurePoints[pointidx];
+              Ptestvalue = pressurePoints[pointidx];
 
-           cout << "Upscaling resistivity for Pc = " << Ptestvalue;
-           flush(cout);
+              cout << "Upscaling resistivity for Pc = " << Ptestvalue;
+              flush(cout);
 
-           //start = clock();
+              //start = clock();
 
-           // Loop over each cell again to find saturations given this particular
-           // capillary pressure:
-           waterVolumeLF = 0.0;
+              // Loop over each cell again to find saturations given this particular
+              // capillary pressure:
+              waterVolumeLF = 0.0;
 
-           for (auto c = upscaler.grid().leafbegin<0>(); c != upscaler.grid().leafend<0>(); ++c) {
-               size_t cell_idx = ecl_idx[c->index()];
-               //               for (size_t cell_idx = 0; cell_idx < satnums.size(); ++cell_idx) {
-               //  if (LFgrid.getCellIndex(cell_idx) != EMPTY) {
-               double resistivityCell = resistivityCutoff;
-               if (satnums[cell_idx] > 0) { // SATNUM  index == 0 is legal, means "not rock"
-                   //cout << endl << "Cell no. " << cell_idx << " satnum: " <<  satnums[cell_idx] << endl;
-                   double Jvalue = sqrt(permxs[cell_idx] * milliDarcyToSqMetre / poros[cell_idx]) * Ptestvalue / surfaceTension;
-                   //cout << "JvalueCell: " << Jvalue << endl;
-                   double waterSaturationCell
-                       = InvJfunctions[int(satnums[cell_idx])-1].evaluate(Jvalue);
-                   //cout << "WatersaturationCell: " << waterSaturationCell << endl;
-                   waterVolumeLF += waterSaturationCell  * cellPoreVolumes[cell_idx];
+              for (auto c = upscaler.grid().leafbegin<0>(); c != upscaler.grid().leafend<0>(); ++c) {
+                  size_t cell_idx = ecl_idx[c->index()];
+                  //               for (size_t cell_idx = 0; cell_idx < satnums.size(); ++cell_idx) {
+                  //  if (LFgrid.getCellIndex(cell_idx) != EMPTY) {
+                  double resistivityCell = resistivityCutoff;
+                  if (satnums[cell_idx] > 0) { // SATNUM  index == 0 is legal, means "not rock"
+                      //cout << endl << "Cell no. " << cell_idx << " satnum: " <<  satnums[cell_idx] << endl;
+                      double Jvalue = sqrt(permxs[cell_idx] * milliDarcyToSqMetre / poros[cell_idx]) * Ptestvalue / surfaceTension;
+                      //cout << "JvalueCell: " << Jvalue << endl;
+                      double waterSaturationCell
+                          = InvJfunctions[int(satnums[cell_idx])-1].evaluate(Jvalue);
+                      //cout << "WatersaturationCell: " << waterSaturationCell << endl;
+                      waterVolumeLF += waterSaturationCell  * cellPoreVolumes[cell_idx];
 
-                   // Compute cell resistivity. We use a cutoff-value as we
-                   // easily divide by zero here.  When water saturation is
-                   // zero, we get 'inf', which is circumvented by the cutoff value.
+                      // Compute cell resistivity. We use a cutoff-value as we
+                      // easily divide by zero here.  When water saturation is
+                      // zero, we get 'inf', which is circumvented by the cutoff value.
 
-                   if ((satnums[cell_idx] == mud1rocktype) || (satnums[cell_idx] == mud2rocktype)) {
-                       // Handle mud specially
-                       resistivityCell = mudresistivity;
-                   }
-                   else {
-                       resistivityCell
-                           = min(a_lithologycoeff * waterresistivity / pow(poros[cell_idx], cementationexponents[satnums[cell_idx]])
-                                 / pow(waterSaturationCell, saturationexponents[satnums[cell_idx]]),
-                                 resistivityCutoff);
-                   }
-               }
-               // Insert conductivity (reciprocal of resistivity) into
-               // the grid for upscaling:
-               Matrix cellCond = zeroMatrix;
-               double condval = 1.0/resistivityCell;
-               cellCond(0,0) = condval;
-               cellCond(1,1) = condval;
-               cellCond(2,2) = condval;
-               upscaler.setPermeability(c->index(), cellCond);
-               accRes += resistivityCell;
-               //cout << "cell " << cell_idx << " resistivity" << resistivityCell << endl;
-           }
-       }
-
-
-       // Output average resistity
-       cout << ", Arith. mean res = " << accRes/float(tesselatedCells) << " ohms, ";
-
-       //  Call upscaling code (SINTEF/FRAUNHOFER)
-
-       Matrix condTensor;
-       condTensor = upscaler.upscaleSinglePhase();
+                      if ((satnums[cell_idx] == mud1rocktype) || (satnums[cell_idx] == mud2rocktype)) {
+                          // Handle mud specially
+                          resistivityCell = mudresistivity;
+                      }
+                      else {
+                          resistivityCell
+                              = min(a_lithologycoeff * waterresistivity / pow(poros[cell_idx], cementationexponents[satnums[cell_idx]])
+                                    / pow(waterSaturationCell, saturationexponents[satnums[cell_idx]]),
+                                    resistivityCutoff);
+                      }
+                  }
+                  // Insert conductivity (reciprocal of resistivity) into
+                  // the grid for upscaling:
+                  Matrix cellCond = zeroMatrix;
+                  double condval = 1.0/resistivityCell;
+                  cellCond(0,0) = condval;
+                  cellCond(1,1) = condval;
+                  cellCond(2,2) = condval;
+                  upscaler.setPermeability(c->index(), cellCond);
+                  accRes += resistivityCell;
+                  //cout << "cell " << cell_idx << " resistivity" << resistivityCell << endl;
+              }
+          }
 
 
+          // Output average resistity
+          cout << ", Arith. mean res = " << accRes/float(tesselatedCells) << " ohms, ";
 
-      // Here we recalculate the upscaled water saturation,
-      // although it is already known when we asked for the
-      // pressure point to compute for. Nonetheless, we
-      // recalculate here to avoid any minor roundoff-error and
-      // interpolation error (this means that the saturation
-      // points are not perfectly uniformly distributed)
-      WaterSaturation[pointidx] = waterVolumeLF/poreVolume;
-      cout << WaterSaturation[pointidx] << endl;
+          //  Call upscaling code (SINTEF/FRAUNHOFER)
 
-      invert(condTensor);
-      Matrix resTensor(condTensor);
+          Matrix condTensor;
+          condTensor = upscaler.upscaleSinglePhase();
 
 
-      // Store result
-      for (int voigtIdx = 0; voigtIdx < tensorElementCount; ++voigtIdx) {
-          UpscaledConductivity[pointidx][voigtIdx] = ::Opm::getVoigtValue(resTensor, voigtIdx);
-      }
 
-      //      finish = clock();    timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
-      //cout << " (" << timeused <<" secs)" << endl;
-      //timeused_upscale_acc += timeused;
+         // Here we recalculate the upscaled water saturation,
+         // although it is already known when we asked for the
+         // pressure point to compute for. Nonetheless, we
+         // recalculate here to avoid any minor roundoff-error and
+         // interpolation error (this means that the saturation
+         // points are not perfectly uniformly distributed)
+         WaterSaturation[pointidx] = waterVolumeLF/poreVolume;
+         cout << WaterSaturation[pointidx] << endl;
 
-      // Output computed values for impatient users..
+         invert(condTensor);
+         Matrix resTensor(condTensor);
+
+
+         // Store result
+         for (int voigtIdx = 0; voigtIdx < tensorElementCount; ++voigtIdx) {
+             UpscaledConductivity[pointidx][voigtIdx] = ::Opm::getVoigtValue(resTensor, voigtIdx);
+         }
+
+         //      finish = clock();    timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
+         //cout << " (" << timeused <<" secs)" << endl;
+         //timeused_upscale_acc += timeused;
+
+         // Output computed values for impatient users..
 #ifdef HAVE_MPI
-           cout << "Rank " << mpi_rank << ": ";
+              cout << "Rank " << mpi_rank << ": ";
 #endif
-      cout << Ptestvalue << "\t" << waterVolumeLF/poreVolume;
-      for (int voigtIdx = 0; voigtIdx < tensorElementCount; ++voigtIdx) {
-          cout << "\t" << ::Opm::getVoigtValue(resTensor, voigtIdx);
+         cout << Ptestvalue << "\t" << waterVolumeLF/poreVolume;
+         for (int voigtIdx = 0; voigtIdx < tensorElementCount; ++voigtIdx) {
+             cout << "\t" << ::Opm::getVoigtValue(resTensor, voigtIdx);
+         }
+         cout << endl;
       }
-      cout << endl;
-   }
+   });
    clock_t finish_upscale_wallclock = clock();
    timeused_upscale_wallclock = (double(finish_upscale_wallclock)-double(start_upscale_wallclock))/CLOCKS_PER_SEC;
 
@@ -1168,7 +1195,17 @@ try
 
     return EXIT_SUCCESS;
 }
+catch (const Opm::CollectiveFailure&) {
+    // All ranks agreed that something failed and the details have been
+    // reported already.  Return normally so that every rank reaches
+    // MPI_Finalize() together.
+    return EXIT_FAILURE;
+}
 catch (const std::exception &e) {
     std::cerr << "Program threw an exception: " << e.what() << "\n";
+
+    // Reached only if the failure was not handled collectively, i.e., if
+    // other ranks might be waiting for this one.
+    Opm::abortParallelRun(EXIT_FAILURE);
     return EXIT_FAILURE;
 }
