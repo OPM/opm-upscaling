@@ -21,6 +21,8 @@
 
 #include <opm/upscaling/RelPermUtils.hpp>
 
+#include <opm/upscaling/CollectiveCheck.hpp>
+
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
 
@@ -990,8 +992,7 @@ void RelPermUpscaleHelper::upscaleCapillaryPressure()
     }
 }
 
-std::tuple<double, double>
-RelPermUpscaleHelper::upscalePermeability(int mpi_rank)
+double RelPermUpscaleHelper::upscalePressurePoints(int mpi_rank)
 {
     const auto minPerm         = to_double(options["minPerm"]);
     const auto maxPermContrast = to_double(options["maxPermContrast"]);
@@ -1190,9 +1191,22 @@ RelPermUpscaleHelper::upscalePermeability(int mpi_rank)
     }
 
     clock_t finish_upscale_wallclock = clock();
-    double timeused_upscale_wallclock =
-        (double(finish_upscale_wallclock) -
-         double(start_upscale_wallclock)) / CLOCKS_PER_SEC;
+
+    return (double(finish_upscale_wallclock) -
+            double(start_upscale_wallclock)) / CLOCKS_PER_SEC;
+}
+
+std::tuple<double, double>
+RelPermUpscaleHelper::upscalePermeability(int mpi_rank)
+{
+    // The upscaling itself is rank-local and may fail on a subset of the
+    // ranks.  Make sure all ranks agree on the outcome before entering the
+    // point-to-point and collective communication in collectResults() and
+    // the reduction below.
+    double timeused_upscale_wallclock = 0.0;
+    collectiveCheck([this, mpi_rank, &timeused_upscale_wallclock]() {
+        timeused_upscale_wallclock = this->upscalePressurePoints(mpi_rank);
+    });
 
     collectResults();
 
