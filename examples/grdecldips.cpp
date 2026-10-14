@@ -39,6 +39,7 @@
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 
 #include <cmath>
+#include <cstdlib>
 #include <ctime>
 #include <fstream>
 #include <iomanip>
@@ -158,10 +159,10 @@ int main(int argc, char** argv) try {
         outfile << outputtmp.str();
         outfile.close();
     }
-    return 0;
 
+    return EXIT_SUCCESS;
 }
 catch (const std::exception &e) {
     std::cerr << "Program threw an exception: " << e.what() << "\n";
-    throw;
+    return EXIT_FAILURE;
 }

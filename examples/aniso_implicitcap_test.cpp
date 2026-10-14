@@ -55,6 +55,7 @@
 #include <tbb/task_scheduler_init.h>
 #endif // USE_TBB
 
+#include <cstdlib>
 #include <iostream>
 
 using namespace Opm;
@@ -79,5 +80,5 @@ try
 }
 catch (const std::exception &e) {
     std::cerr << "Program threw an exception: " << e.what() << "\n";
-    throw;
+    return EXIT_FAILURE;
 }
