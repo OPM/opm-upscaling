@@ -38,6 +38,7 @@ list(APPEND MAIN_SOURCE_FILES
   opm/porsol/common/ImplicitTransportDefs.cpp
   opm/porsol/common/setupGridAndProps.cpp
   opm/porsol/euler/ImplicitCapillarity.cpp
+  opm/upscaling/CollectiveCheck.cpp
   opm/upscaling/ParserAdditions.cpp
   opm/upscaling/RelPermUtils.cpp
   opm/upscaling/initCPGrid.cpp
@@ -176,6 +177,7 @@ list (APPEND PUBLIC_HEADER_FILES
   opm/porsol/mimetic/IncompFlowSolverHybrid.hpp
   opm/porsol/mimetic/MimeticIPAnisoRelpermEvaluator.hpp
   opm/porsol/mimetic/MimeticIPEvaluator.hpp
+  opm/upscaling/CollectiveCheck.hpp
   opm/upscaling/ParserAdditions.hpp
   opm/upscaling/SinglePhaseUpscaler.hpp
   opm/upscaling/SteadyStateUpscaler.hpp
