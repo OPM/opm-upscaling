@@ -50,8 +50,8 @@
 #include <opm/upscaling/initCPGrid.hpp>
 
 
-
 #include <array>
+#include <cstdlib>
 #include <iostream>
 
 
@@ -107,5 +107,5 @@ try
 }
 catch (const std::exception &e) {
     std::cerr << "Program threw an exception: " << e.what() << "\n";
-    throw;
+    return EXIT_FAILURE;
 }

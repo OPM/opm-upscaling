@@ -27,6 +27,7 @@
 #include <opm/porsol/euler/EulerUpstreamImplicit.hpp>
 #include <opm/porsol/common/SimulatorTraits.hpp>
 
+#include <cstdlib>
 #include <iostream>
 
 namespace Opm
@@ -65,5 +66,5 @@ try
 }
 catch (const std::exception &e) {
     std::cerr << "Program threw an exception: " << e.what() << "\n";
-    throw;
+    return EXIT_FAILURE;
 }

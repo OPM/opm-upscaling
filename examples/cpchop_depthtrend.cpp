@@ -36,6 +36,7 @@
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 
 #include <cmath> // for min()
+#include <cstdlib>
 #include <ctime>
 #include <fstream>
 #include <iomanip>
@@ -236,5 +237,5 @@ try
 }
 catch (const std::exception &e) {
     std::cerr << "Program threw an exception: " << e.what() << "\n";
-    throw;
+    return EXIT_FAILURE;
 }

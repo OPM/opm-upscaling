@@ -74,6 +74,7 @@
 #include <algorithm>
 #include <cfloat> // for DBL_MAX/DBL_MIN
 #include <cmath>
+#include <cstdlib>
 #include <ctime>
 #include <fstream>
 #include <iomanip>
@@ -157,7 +158,7 @@ static void usage()
 
 static void usageandexit() {
     usage();
-    exit(1);
+    exit(EXIT_FAILURE);
 }
 
 //! \brief Parse command line arguments into string map.
