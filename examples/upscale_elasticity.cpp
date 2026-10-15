@@ -45,6 +45,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <ctime>
 #include <fstream>
@@ -336,7 +337,7 @@ int run(Params& p)
               << std::endl;
 
     if (p.inspect == "mesh")
-      return 0;
+      return EXIT_SUCCESS;
 
     if (p.linsolver.pre == UNDETERMINED) {
       double hx = (p.max[0]-p.min[0])/grid.logicalCartesianSize()[0];
@@ -449,7 +450,7 @@ int run(Params& p)
       writeOutput(p, watch, grid.size(0), upscale.volumeFractions,
                   upscale.bySat, C, upscale.upscaledRho, speeds);
 
-    return 0;
+    return EXIT_SUCCESS;
   }
   catch (const Dune::Exception &e) {
     throw e;
@@ -457,7 +458,7 @@ int run(Params& p)
   catch (...) {
     throw;
   }
-  return 1;
+  return EXIT_FAILURE;
 }
 
   template<template<class Smoother> class AMG>
@@ -482,14 +483,14 @@ try
                  || std::strcmp(argv[1],"--help") == 0
                  || std::strcmp(argv[1],"-?") == 0) {
       syntax(argv);
-      exit(1);
+      std::exit(EXIT_FAILURE);
     }
 
     Dune::MPIHelper& mpi=Dune::MPIHelper::instance(argc, argv);
     const int size = mpi.size();
     if (size != 1) {
       std::cerr << "This program does not support MPI parallelization" << std::endl;
-      return 2;
+      return EXIT_FAILURE;
     }
 
     Params p;
@@ -511,9 +512,9 @@ try
   catch (...) {
     std::cerr << "Unknown exception thrown!" << std::endl;
   }
-  return 1;
+  return EXIT_FAILURE;
 }
 catch (const std::exception &e) {
   std::cerr << "Program threw an exception: " << e.what() << "\n";
-  throw;
+  return EXIT_FAILURE;
 }

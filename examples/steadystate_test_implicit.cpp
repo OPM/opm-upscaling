@@ -49,6 +49,7 @@
 #include <opm/upscaling/SteadyStateUpscalerImplicit.hpp>
 #include <opm/upscaling/SteadyStateUpscalerManagerImplicit.hpp>
 
+#include <cstdlib>
 #include <iostream>
 
 namespace Opm {
@@ -89,5 +90,5 @@ try
 }
 catch (const std::exception &e) {
     std::cerr << "Program threw an exception: " << e.what() << "\n";
-    throw;
+    return EXIT_FAILURE;
 }

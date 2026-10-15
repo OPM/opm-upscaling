@@ -737,10 +737,9 @@ try
        outfile.close();
    }
 
-
-   return 0;
+   return EXIT_SUCCESS;
 }
 catch (const std::exception &e) {
     std::cerr << "Program threw an exception: " << e.what() << "\n";
-    throw;
+    return EXIT_FAILURE;
 }

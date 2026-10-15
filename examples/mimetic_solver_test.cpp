@@ -73,6 +73,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cstdlib>
 #include <iomanip>
 #include <iostream>
 
@@ -188,5 +189,5 @@ try
 }
 catch (const std::exception &e) {
     std::cerr << "Program threw an exception: " << e.what() << "\n";
-    throw;
+    return EXIT_FAILURE;
 }
