@@ -148,9 +148,18 @@ namespace Opm {
       //! \param[in] mpi_rank MPI rank of this process.
       //! \details Uses the following options:  minPerm, maxPermContrast
       //! \return Tuple with (total time, time per point).
+      //! \details Collective operation.  If this function fails on any MPI
+      //!          rank, then it throws CollectiveFailure on all ranks.
       std::tuple<double,double> upscalePermeability(int mpi_rank);
 
     private:
+      //! \brief Upscale the pressure points assigned to this rank.
+      //! \param[in] mpi_rank MPI rank of this process.
+      //! \return Wall-clock time spent in this rank's upscaling.
+      //! \details Purely rank-local.  Called through collectiveCheck()
+      //!          from upscalePermeability().
+      double upscalePressurePoints(int mpi_rank);
+
       //! \brief Perform critical saturation check for a single curve.
       //! \param[in,out] func Function to check for.
       //! \details Checks that minimum relperm is larger than the threshold.
