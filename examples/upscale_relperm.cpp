@@ -68,6 +68,7 @@
 
 #include <opm/input/eclipse/Units/Units.hpp>
 
+#include <opm/upscaling/CollectiveCheck.hpp>
 #include <opm/upscaling/RelPermUtils.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 
@@ -158,6 +159,9 @@ static void usage()
 
 static void usageandexit() {
     usage();
+
+    // If this rank leaves on its own, the other ranks might wait for it forever.
+    Opm::abortParallelRun(EXIT_FAILURE);
     exit(EXIT_FAILURE);
 }
 
@@ -523,7 +527,13 @@ try
    // Test if filename exists and is readable
    start = clock();
 
-   auto deck = RelPermUpscaleHelper::parseEclipseFile(ECLIPSEFILENAME);
+   // Parsing and checking the input is rank-local work.  Use collectiveCheck
+   // to make all ranks agree on the outcome so that a failure on one rank
+   // shuts down the entire run.
+   Opm::Deck deck;
+   Opm::collectiveCheck([&deck]() {
+       deck = RelPermUpscaleHelper::parseEclipseFile(ECLIPSEFILENAME);
+   });
 
    finish   = clock();
    timeused = (double(finish) - double(start)) / CLOCKS_PER_SEC;
@@ -531,13 +541,13 @@ try
        cout << " (" << timeused << " secs)" << endl;
    }
 
-   {
+   Opm::collectiveCheck([&options, &deck, &helper]() {
        const double minPerm = atof(options["minPerm"].c_str());
        const double maxPerm = atof(options["maxPerm"].c_str());
        const double minPoro = atof(options["minPoro"].c_str());
 
        helper.sanityCheckInput(deck, minPerm, maxPerm, minPoro);
-   }
+   });
 
    /***************************************************************************
     * Step 3:
@@ -586,15 +596,19 @@ try
    // Handle two command line input formats, either one J-function for all stone types
    // or one each. If there is only one stone type, both code blocks below are equivalent.
 
-   if (! ((varnum == rockfileindex + stone_types) ||
-          (varnum == rockfileindex + 1          )))
-   {
-       throw std::runtime_error("Error:  Wrong number of stone-functions provided.");
-   }
-
    // Placeholder for the names of the loaded J-functions.
    std::vector<string> JfunctionNames;
-   {
+
+   // The number of stone types is derived from the deck, which is rank-local
+   // data, and reading the stone files is rank-local I/O.  Validate the
+   // number of stone files here too.
+   Opm::collectiveCheck([&]() {
+       if (! ((varnum == rockfileindex + stone_types) ||
+              (varnum == rockfileindex + 1          )))
+       {
+           throw std::runtime_error("Error:  Wrong number of stone-functions provided.");
+       }
+
        // This decides whether we are upscaling water or oil relative permeability
        const int relPermCurve   = atoi(options["relPermCurve"].c_str());
        const int jFunctionCurve = atoi(options["jFunctionCurve"].c_str());
@@ -603,13 +617,13 @@ try
                                   rockfileindex, stone_types,
                                   jFunctionCurve, relPermCurve,
                                   JfunctionNames, helper);
-   }
 
-   // Check if input relperm curves satisfy ECLIPSE requirement of
-   // specifying critical saturations
-   if (helper.doEclipseCheck) {
-       helper.checkCriticalSaturations();
-   }
+       // Check if input relperm curves satisfy ECLIPSE requirement of
+       // specifying critical saturations
+       if (helper.doEclipseCheck) {
+           helper.checkCriticalSaturations();
+       }
+   });
 
    /*****************************************************************************
     * Step 4:
@@ -627,12 +641,14 @@ try
     *      constant times cell height times factor 10^-7 to obtain bars (same as p_c)
     */
 
-   timeused_tesselation = helper.tesselateGrid(deck);
+   Opm::collectiveCheck([&]() {
+       timeused_tesselation = helper.tesselateGrid(deck);
 
-   /* If gravity is to be included, calculate z-values of every cell: */
-   if (includeGravity) {
-       helper.calculateCellPressureGradients();
-   }
+       /* If gravity is to be included, calculate z-values of every cell: */
+       if (includeGravity) {
+           helper.calculateCellPressureGradients();
+       }
+   });
 
    /******************************************************************************
     * Step 5:
@@ -647,7 +663,9 @@ try
     * the final output of results.
     */
 
-   helper.calculateMinMaxCapillaryPressure();
+   Opm::collectiveCheck([&helper]() {
+       helper.calculateMinMaxCapillaryPressure();
+   });
 
    /***************************************************************************
     * Step 6:
@@ -662,7 +680,9 @@ try
     * will be used afterwards for accessing the tabulated values.
     */
 
-   helper.upscaleCapillaryPressure();
+   Opm::collectiveCheck([&helper]() {
+       helper.upscaleCapillaryPressure();
+   });
 
    /*****************************************************************************
     * Step 7:
@@ -673,7 +693,11 @@ try
     * In an MPI-environment, this is only done on the master node.
     */
 
-   helper.upscaleSinglePhasePermeability();
+   // Only the master rank does any work here, so the master may fail while
+   // the other ranks do not.
+   Opm::collectiveCheck([&helper]() {
+       helper.upscaleSinglePhasePermeability();
+   });
 
    /*****************************************************************
     * Step 8:
@@ -1084,6 +1108,12 @@ try
             }
        }
    }
+}
+catch (const Opm::CollectiveFailure&) {
+    // All ranks agreed that something failed and the details have been
+    // reported already.  Return normally so that every rank reaches
+    // MPI_Finalize() together.
+    return EXIT_FAILURE;
 }
 catch (const std::exception& e) {
     std::cerr << e.what() << '\n';
