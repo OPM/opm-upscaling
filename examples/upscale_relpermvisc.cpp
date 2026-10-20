@@ -77,6 +77,7 @@
 
 #include <opm/common/utility/numeric/MonotCubicInterpolator.hpp>
 
+#include <opm/upscaling/CollectiveCheck.hpp>
 #include <opm/upscaling/RelPermUtils.hpp>
 #include <opm/upscaling/SinglePhaseUpscaler.hpp>
 
@@ -90,6 +91,8 @@
 #include <map>
 #include <memory>
 #include <sstream>
+#include <stdexcept>
+#include <string>
 
 #include <sys/utsname.h>
 
@@ -147,7 +150,23 @@ void usage()
 
 void usageandexit() {
     usage();
+
+    // If this rank leaves on its own, the other ranks might wait for it forever.
+    Opm::abortParallelRun(EXIT_FAILURE);
     std::exit(EXIT_FAILURE);
+}
+
+// Throw a std::runtime_error whose message is the concatenation of the
+// arguments.  Used from code that runs under Opm::collectiveCheck(), where the
+// message is reported by the failing rank(s), whichever those may be.  Do not
+// guard such messages with isMaster.
+template <class... Args>
+[[noreturn]] void throwError(const Args&... args)
+{
+    std::ostringstream os;
+    (os << ... << args);
+
+    throw std::runtime_error { os.str() };
 }
 
 } // namespace anonymous
@@ -331,60 +350,40 @@ try
     // Read data from the Eclipse file and
     // populate our vectors with data from the file
 
-    // Test if filename exists and is readable
-    ifstream eclipsefile(ECLIPSEFILENAME, ios::in);
-    if (eclipsefile.fail()) {
-        if (isMaster) cerr << "Error: Filename " << ECLIPSEFILENAME << " not found or not readable." << endl;
-        usageandexit();
-    }
-    eclipsefile.close();
-
+    // Reading the input is rank-local work, so use collectiveCheck to make
+    // all ranks agree on the outcome and shut down together if any rank fails.
     if (isMaster) cout << "Parsing Eclipse file <" << ECLIPSEFILENAME << "> ... ";
     flush(cout);   start = clock();
 
-    auto deck = RelPermUpscaleHelper::parseEclipseFile(ECLIPSEFILENAME);
+    Opm::Deck deck;
+    Opm::collectiveCheck([&deck]() {
+        // Test if filename exists and is readable
+        ifstream eclipsefile(ECLIPSEFILENAME, ios::in);
+        if (eclipsefile.fail()) {
+            throw std::runtime_error("Error: Filename " + std::string(ECLIPSEFILENAME) + " not found or not readable.");
+        }
+        eclipsefile.close();
+
+        deck = RelPermUpscaleHelper::parseEclipseFile(ECLIPSEFILENAME);
+
+        // Check that we have the information we need from the eclipse file:
+        if (! (deck.hasKeyword("SPECGRID") && deck.hasKeyword("COORD") && deck.hasKeyword("ZCORN")
+               && deck.hasKeyword("PORO") && deck.hasKeyword("PERMX") && deck.hasKeyword("SATNUM"))) {
+            throw std::runtime_error("Error: Did not find SPECGRID, COORD and ZCORN in Eclipse file " + std::string(ECLIPSEFILENAME));
+        }
+    });
 
     finish = clock();   timeused = (double(finish)-double(start))/CLOCKS_PER_SEC;
     if (isMaster) cout << " (" << timeused <<" secs)" << endl;
 
-    // Check that we have the information we need from the eclipse file:
-    if (! (deck.hasKeyword("SPECGRID") && deck.hasKeyword("COORD") && deck.hasKeyword("ZCORN")
-           && deck.hasKeyword("PORO") && deck.hasKeyword("PERMX") && deck.hasKeyword("SATNUM"))) {
-        cerr << "Error: Did not find SPECGRID, COORD and ZCORN in Eclipse file " << ECLIPSEFILENAME << endl;
-        usage();
-        exit(1);
-    }
-
-    vector<double> poros  = deck["PORO"].back().getRawDoubleData();
-    vector<double> permxs = deck["PERMX"].back().getRawDoubleData();
-
-    // Load anisotropic (only diagonal supported) input if present in grid
+    // The input data are rank-local.  Everything that can fail depending on
+    // their contents must therefore run under collectiveCheck(), and report
+    // problems by throwing.  Otherwise, a rank that exits on bad data leaves
+    // the other ranks waiting in the communication further down.
+    vector<double> poros, permxs;
     vector<double> permys, permzs;
-
-    if (deck.hasKeyword("PERMY") && deck.hasKeyword("PERMZ")) {
-        anisotropic_input = true;
-        permys = deck["PERMY"].back().getRawDoubleData();
-        permzs = deck["PERMZ"].back().getRawDoubleData();
-        if (isMaster) {
-            cout << "Info: PERMY and PERMZ present, going into anisotropic input mode, no J-functions\n"
-                 << "      Options -relPermCurve and -jFunctionCurve is meaningless.\n";
-        }
-    }
-
-
-    /* Initialize a default satnums-vector with only "ones" (meaning only one rocktype) */
-    vector<int> satnums(poros.size(), 1);
-
-    if (deck.hasKeyword("SATNUM")) {
-        satnums = deck["SATNUM"].back().getIntData();
-    }
-    else if (deck.hasKeyword("ROCKTYPE")) {
-        satnums = deck["ROCKTYPE"].back().getIntData();
-    }
-    else {
-        if (isMaster) cout << "Warning: SATNUM or ROCKTYPE not found in input file, assuming only one rocktype" << endl;
-    }
-
+    vector<int> satnums;
+    int maxSatnum = 0;
 
     /* Sanity check/fix on input for each cell:
        - Check that SATNUM are set sensibly, that is => 0 and < 1000, error if not.
@@ -411,62 +410,87 @@ try
         usageandexit();
     }
 
-    int maxSatnum = 0;
-    for (unsigned int i = 0; i < satnums.size(); ++i) {
-        if (satnums[i] < 0 || satnums[i] > 1000) {
-            if (isMaster) cerr << "satnums[" << i << "] = " << satnums[i] << ", not sane, quitting." << endl;
-            usageandexit();
-        }
-        if (satnums[i] > maxSatnum) {
-            maxSatnum = satnums[i];
-        }
-        if ((poros[i] >= 0) && (poros[i] < minPoro)) {
-            poros[i] = minPoro;
-            ++cells_truncated_from_below_poro;
-        }
-        if (poros[i] < 0 || poros[i] > 1) {
-            if (isMaster) cerr << "poros[" << i <<"] = " << poros[i] << ", not sane, quitting." << endl;
-            usageandexit();
-        }
-        if (permxs[i] > maxPermInInputFile) {
-            maxPermInInputFile = permxs[i];
-        }
-        if ((permxs[i] >= 0) && (permxs[i] < minPerm)) {
-            permxs[i] = minPerm;
-            ++cells_truncated_from_below_permx;
-        }
-        if (permxs[i] > maxPerm) { // Truncate permeability from above
-            permxs[i] = maxPerm;
-            ++cells_truncated_from_above_permx;
-        }
-        if (permxs[i] < 0) {
-            if (isMaster) cerr << "permx[" << i <<"] = " << permxs[i] << ", not sane, quitting." << endl;
-            usageandexit();
-        }
-        if ((permxs[i] >= 0) && (permxs[i] > maxPerm)) {
-          permxs[i] = maxPerm;
-        }
-        if (anisotropic_input) {
-            if (permys[i] < 0) {
-                if (isMaster) cerr << "permy[" << i <<"] = " << permys[i] << ", not sane, quitting." << endl;
-                usageandexit();
-            }
-            if (permzs[i] < 0) {
-                if (isMaster) cerr << "permz[" << i <<"] = " << permzs[i] << ", not sane, quitting." << endl;
-                usageandexit();
+
+    Opm::collectiveCheck([&]() {
+        poros  = deck["PORO"].back().getRawDoubleData();
+        permxs = deck["PERMX"].back().getRawDoubleData();
+
+        // Load anisotropic (only diagonal supported) input if present in grid
+        if (deck.hasKeyword("PERMY") && deck.hasKeyword("PERMZ")) {
+            anisotropic_input = true;
+            permys = deck["PERMY"].back().getRawDoubleData();
+            permzs = deck["PERMZ"].back().getRawDoubleData();
+            if (isMaster) {
+                cout << "Info: PERMY and PERMZ present, going into anisotropic input mode, no J-functions\n"
+                     << "      Options -relPermCurve and -jFunctionCurve is meaningless.\n";
             }
         }
-        // Explicitly handle "no rock" cells, set them to minimum perm and zero porosity.
-        if (satnums[i] == 0) {
-            permxs[i] = minPerm;
-            poros[i] = 0; // zero poro is fine for these cells, as they are not
-            // used in pcmin/max computation.
+
+        /* Initialize a default satnums-vector with only "ones" (meaning only one rocktype) */
+        satnums.assign(poros.size(), 1);
+
+        if (deck.hasKeyword("SATNUM")) {
+            satnums = deck["SATNUM"].back().getIntData();
+        }
+        else if (deck.hasKeyword("ROCKTYPE")) {
+            satnums = deck["ROCKTYPE"].back().getIntData();
+        }
+        else {
+            if (isMaster) cout << "Warning: SATNUM or ROCKTYPE not found in input file, assuming only one rocktype" << endl;
+        }
+
+        for (unsigned int i = 0; i < satnums.size(); ++i) {
+            if (satnums[i] < 0 || satnums[i] > 1000) {
+                throwError("satnums[", i, "] = ", satnums[i], ", not sane, quitting.");
+            }
+            if (satnums[i] > maxSatnum) {
+                maxSatnum = satnums[i];
+            }
+            if ((poros[i] >= 0) && (poros[i] < minPoro)) {
+                poros[i] = minPoro;
+                ++cells_truncated_from_below_poro;
+            }
+            if (poros[i] < 0 || poros[i] > 1) {
+                throwError("poros[", i, "] = ", poros[i], ", not sane, quitting.");
+            }
+            if (permxs[i] > maxPermInInputFile) {
+                maxPermInInputFile = permxs[i];
+            }
+            if ((permxs[i] >= 0) && (permxs[i] < minPerm)) {
+                permxs[i] = minPerm;
+                ++cells_truncated_from_below_permx;
+            }
+            if (permxs[i] > maxPerm) { // Truncate permeability from above
+                permxs[i] = maxPerm;
+                ++cells_truncated_from_above_permx;
+            }
+            if (permxs[i] < 0) {
+                throwError("permx[", i, "] = ", permxs[i], ", not sane, quitting.");
+            }
+            if ((permxs[i] >= 0) && (permxs[i] > maxPerm)) {
+              permxs[i] = maxPerm;
+            }
             if (anisotropic_input) {
-                permys[i] = minPerm;
-                permzs[i] = minPerm;
+                if (permys[i] < 0) {
+                    throwError("permy[", i, "] = ", permys[i], ", not sane, quitting.");
+                }
+                if (permzs[i] < 0) {
+                    throwError("permz[", i, "] = ", permzs[i], ", not sane, quitting.");
+                }
+            }
+            // Explicitly handle "no rock" cells, set them to minimum perm and zero porosity.
+            if (satnums[i] == 0) {
+                permxs[i] = minPerm;
+                poros[i] = 0; // zero poro is fine for these cells, as they are not
+                // used in pcmin/max computation.
+                if (anisotropic_input) {
+                    permys[i] = minPerm;
+                    permzs[i] = minPerm;
+                }
             }
         }
-    }
+    });
+
     if (cells_truncated_from_below_poro > 0) {
         cout << "Cells with truncated porosity: " << cells_truncated_from_below_poro << endl;
     }
@@ -497,17 +521,67 @@ try
     std::vector<string> rockTypeNames; // Placeholder for the names of the loaded rock perm files,
                                        // to be used in final output.
 
-    // Handle two command line input formats, either stone.txt for all stone types
-    // *or* one each. If there is only one stone type, both code blocks below are equivalent.
-    if (! anisotropic_input) {
-        if (varnum == rockfileindex + stone_types) { // one .txt for each stone type in isotropic case
-            for (int i=0 ; i < stone_types; ++i) {
-                const char* ROCKFILENAME = vararg[rockfileindex+i];
-                // Check if rock file exists and is readable:
+    // Reading the stone files is rank-local I/O.
+    Opm::collectiveCheck([&]() {
+        // Handle two command line input formats, either stone.txt for all stone types
+        // *or* one each. If there is only one stone type, both code blocks below are equivalent.
+        if (! anisotropic_input) {
+            if (varnum == rockfileindex + stone_types) { // one .txt for each stone type in isotropic case
+                for (int i=0 ; i < stone_types; ++i) {
+                    const char* ROCKFILENAME = vararg[rockfileindex+i];
+                    // Check if rock file exists and is readable:
+                    ifstream rockfile(ROCKFILENAME, ios::in);
+                    if (rockfile.fail()) {
+                        throwError("Error: Filename ", ROCKFILENAME, " not found or not readable.");
+                    }
+                    rockfile.close();
+                    MonotCubicInterpolator Krwtmp;
+                    try {
+                        Krwtmp = MonotCubicInterpolator(ROCKFILENAME, 1, relPermCurves[waterPhaseIndex]);
+                    }
+                    catch (const char * errormessage) {
+                        throwError("Error: ", errormessage, " Filename: ", ROCKFILENAME, '\n',
+                                   "Check filename and -waterCurve");
+                    }
+                    if (!Krwtmp.isStrictlyMonotone()) {
+                        throwError("Error: Data in column ", relPermCurves[waterPhaseIndex], " of file ", ROCKFILENAME, '\n',
+                                   "       was not strictly monotone. Exiting.");
+                    }
+                    MonotCubicInterpolator Krotmp;
+                    try {
+                        Krotmp = MonotCubicInterpolator(ROCKFILENAME, 1, relPermCurves[oilPhaseIndex]);
+                    }
+                    catch (const char * errormessage) {
+                        throwError("Error: ", errormessage, " Filename: ", ROCKFILENAME, '\n',
+                                   "Check filename and -oilCurve");
+                    }
+
+                    if (!Krotmp.isStrictlyMonotone()) {
+                        throwError("Error: Data in column ", relPermCurves[oilPhaseIndex], " of file ", ROCKFILENAME, '\n',
+                                   "       was not strictly monotone. Exiting.");
+                    }
+
+                    if ((Krwtmp.isStrictlyIncreasing() && Krotmp.isStrictlyIncreasing()) || (Krwtmp.isStrictlyDecreasing() && Krotmp.isStrictlyDecreasing())) {
+                        throwError("Error: Input relperm curves are both increasing or decreasing in file ", ROCKFILENAME);
+                    }
+
+                    Krw.push_back(Krwtmp);
+                    Kro.push_back(Krotmp);
+
+                    if (isMaster) {
+                        cout << "Loaded rock file: " << ROCKFILENAME
+                             << ", for stone type " << i+1 << endl;
+                    }
+
+                    rockTypeNames.push_back(ROCKFILENAME);
+                }
+            }
+            else if (varnum == rockfileindex + 1) { // one .txt for all stone types
+                const char* ROCKFILENAME = vararg[rockfileindex];
+                // Check if rock files exists and is readable:
                 ifstream rockfile(ROCKFILENAME, ios::in);
                 if (rockfile.fail()) {
-                    if (isMaster) cerr << "Error: Filename " << ROCKFILENAME << " not found or not readable." << endl;
-                    usageandexit();
+                    throwError("Error: Filename ", ROCKFILENAME, " not found or not readable.");
                 }
                 rockfile.close();
                 MonotCubicInterpolator Krwtmp;
@@ -515,339 +589,196 @@ try
                     Krwtmp = MonotCubicInterpolator(ROCKFILENAME, 1, relPermCurves[waterPhaseIndex]);
                 }
                 catch (const char * errormessage) {
-                    if (isMaster) {
-                        cerr << "Error: " << errormessage << " Filename: " << ROCKFILENAME << endl
-                             << "Check filename and -waterCurve" << endl;
-                    }
-                    usageandexit();
+                    throwError("Error: ", errormessage, " Filename: ", ROCKFILENAME, '\n',
+                               "Check filename and -waterCurve");
                 }
                 if (!Krwtmp.isStrictlyMonotone()) {
-                    if (isMaster) {
-                        cerr << "Error: Data in column " << relPermCurves[waterPhaseIndex] << " of file " << ROCKFILENAME << endl <<
-                                "       was not strictly monotone. Exiting." << endl;
-                    }
-                    usageandexit();
+                    throwError("Error: Data in column ", relPermCurves[waterPhaseIndex], " of file ", ROCKFILENAME, '\n',
+                               "       was not strictly monotone. Exiting.");
                 }
                 MonotCubicInterpolator Krotmp;
                 try {
                     Krotmp = MonotCubicInterpolator(ROCKFILENAME, 1, relPermCurves[oilPhaseIndex]);
                 }
                 catch (const char * errormessage) {
-                    if (isMaster) {
-                        cerr << "Error: " << errormessage << " Filename: " << ROCKFILENAME <<  endl
-                             << "Check filename and -oilCurve" << endl;
-                    }
-                    usageandexit();
+                    throwError("Error: ", errormessage, " Filename: ", ROCKFILENAME, '\n',
+                               "Check filename and -oilCurve");
                 }
-
                 if (!Krotmp.isStrictlyMonotone()) {
-                    if (isMaster) {
-                        cerr << "Error: Data in column " << relPermCurves[oilPhaseIndex] << " of file " << ROCKFILENAME << endl <<
-                                "       was not strictly monotone. Exiting." << endl;
-                    }
-                    usageandexit();
+                    throwError("Error: Data in column ", relPermCurves[oilPhaseIndex], " of file ", ROCKFILENAME, '\n',
+                               "       was not strictly monotone. Exiting.");
                 }
-
                 if ((Krwtmp.isStrictlyIncreasing() && Krotmp.isStrictlyIncreasing()) || (Krwtmp.isStrictlyDecreasing() && Krotmp.isStrictlyDecreasing())) {
-                    if (isMaster) {
-                        cerr << "Error: Input relperm curves are both increasing or decreasing in file " << ROCKFILENAME << endl;
-                    }
-                    usageandexit();
+                    throwError("Error: Input relperm curves are both increasing or decreasing in file ", ROCKFILENAME);
                 }
-
-                Krw.push_back(Krwtmp);
-                Kro.push_back(Krotmp);
+                for (int i=0 ; i < stone_types; ++i) { //Insert the same input curves for all rock types
+                    Krw.push_back(Krwtmp);
+                    Kro.push_back(Krotmp);
+                    rockTypeNames.push_back(ROCKFILENAME);
+                }
 
                 if (isMaster) {
                     cout << "Loaded rock file: " << ROCKFILENAME
-                         << ", for stone type " << i+1 << endl;
+                         << ", for all stone types" << endl;
                 }
+            }
+            else {
+                throwError("Error:  Wrong number of stone-functions provided. ", '\n',
+                           "Note that all input arguments after eclipse file are ", '\n',
+                           "interpreted as stone functions.");
+            }
+        }
+        else {   // Anisotropic case here! (double set of input curves needed
+            cout << "rock types: " << stone_types << endl;
+            cout << "varnum: " << varnum << endl;
+            cout << "rockfileindex: " << rockfileindex << endl;
+            if (varnum == rockfileindex + 2*stone_types) { // two .txt for each stone type in anisotropic case
+                int rockidx=0;
+                for (int i=0 ; i < 2*stone_types; i+=2) {
+                    rockidx++;
+                    const char* WATERFILENAME = vararg[rockfileindex+i];
+                    const char* OILFILENAME = vararg[rockfileindex+i+1];
+                    // Check if rock files exists and is readable:
+                    ifstream waterfile(WATERFILENAME, ios::in);
+                    ifstream oilfile(OILFILENAME, ios::in);
+                    if (waterfile.fail()) {
+                        throwError("Error: Filename ", WATERFILENAME, " not found or not readable.");
+                    }
+                    waterfile.close();
+                    if (oilfile.fail()) {
+                        throwError("Error: Filename ", OILFILENAME, " not found or not readable.");
+                    }
+                    oilfile.close();
 
-                rockTypeNames.push_back(ROCKFILENAME);
-            }
-        }
-        else if (varnum == rockfileindex + 1) { // one .txt for all stone types
-            const char* ROCKFILENAME = vararg[rockfileindex];
-            // Check if rock files exists and is readable:
-            ifstream rockfile(ROCKFILENAME, ios::in);
-            if (rockfile.fail()) {
-                if (isMaster) {
-                    cerr << "Error: Filename " << ROCKFILENAME << " not found or not readable." << endl;
+                    MonotCubicInterpolator Krwxtmp, Krwytmp, Krwztmp, Kroxtmp, Kroytmp, Kroztmp;
+                    try {
+                        Krwxtmp = MonotCubicInterpolator(WATERFILENAME, 2, 3);
+                        Krwytmp = MonotCubicInterpolator(WATERFILENAME, 2, 4);
+                        Krwztmp = MonotCubicInterpolator(WATERFILENAME, 2, 5);
+                    }
+                    catch (const char * errormessage) {
+                        throwError("Error: ", errormessage, " Filename: ", WATERFILENAME, '\n',
+                                   "Check filename and relpermcurves");
+                    }
+                    if (!Krwxtmp.isStrictlyMonotone()) {
+                        throwError("Error: Data in column ", 3, " of file ", WATERFILENAME, '\n',
+                                   "       was not strictly monotone. Exiting.");
+                    }
+                    if (!Krwytmp.isStrictlyMonotone()) {
+                        throwError("Error: Data in column ", 4, " of file ", WATERFILENAME, '\n',
+                                   "       was not strictly monotone. Exiting.");
+                    }
+                    if (!Krwztmp.isStrictlyMonotone()) {
+                        throwError("Error: Data in column ", 5, " of file ", WATERFILENAME, '\n',
+                                   "       was not strictly monotone. Exiting.");
+                    }
+                    try {
+                        Kroxtmp = MonotCubicInterpolator(OILFILENAME, 2, 3);
+                        Kroytmp = MonotCubicInterpolator(OILFILENAME, 2, 4);
+                        Kroztmp = MonotCubicInterpolator(OILFILENAME, 2, 5);
+                    }
+                    catch (const char * errormessage) {
+                        throwError("Error: ", errormessage, " Filename: ", OILFILENAME, '\n',
+                                   "Check filename and relpermcurves");
+                    }
+                    if (!Kroxtmp.isStrictlyMonotone()) {
+                        throwError("Error: Data in column ", 3, " of file ", OILFILENAME, '\n',
+                                   "       was not strictly monotone. Exiting.");
+                    }
+                    if (!Kroytmp.isStrictlyMonotone()) {
+                        throwError("Error: Data in column ", 4, " of file ", OILFILENAME, '\n',
+                                   "       was not strictly monotone. Exiting.");
+                    }
+                    if (!Kroztmp.isStrictlyMonotone()) {
+                        throwError("Error: Data in column ", 5, " of file ", OILFILENAME, '\n',
+                                   "       was not strictly monotone. Exiting.");
+                    }
+                    Krwx.push_back(Krwxtmp); Krwy.push_back(Krwytmp); Krwz.push_back(Krwztmp);
+                    Krox.push_back(Kroxtmp); Kroy.push_back(Kroytmp); Kroz.push_back(Kroztmp);
+                    if (isMaster) {
+                        cout << "Loaded rock files: " << WATERFILENAME << " and "
+                             << OILFILENAME  << ", for stone type " << rockidx << endl;
+                    }
+                    rockTypeNames.push_back(WATERFILENAME);
+                    rockTypeNames.push_back(OILFILENAME);
                 }
-                usageandexit();
             }
-            rockfile.close();
-            MonotCubicInterpolator Krwtmp;
-            try {
-                Krwtmp = MonotCubicInterpolator(ROCKFILENAME, 1, relPermCurves[waterPhaseIndex]);
-            }
-            catch (const char * errormessage) {
-                if (isMaster) {
-                    cerr << "Error: " << errormessage << " Filename: " << ROCKFILENAME << endl
-                         << "Check filename and -waterCurve" << endl;
-                }
-                usageandexit();
-            }
-            if (!Krwtmp.isStrictlyMonotone()) {
-                if (isMaster) {
-                    cerr << "Error: Data in column " << relPermCurves[waterPhaseIndex] << " of file " << ROCKFILENAME << endl <<
-                            "       was not strictly monotone. Exiting." << endl;
-                }
-                usageandexit();
-            }
-            MonotCubicInterpolator Krotmp;
-            try {
-                Krotmp = MonotCubicInterpolator(ROCKFILENAME, 1, relPermCurves[oilPhaseIndex]);
-            }
-            catch (const char * errormessage) {
-                if (isMaster) {
-                    cerr << "Error: " << errormessage << " Filename: " << ROCKFILENAME <<  endl
-                         << "Check filename and -oilCurve" << endl;
-                }
-                usageandexit();
-            }
-            if (!Krotmp.isStrictlyMonotone()) {
-                if (isMaster) {
-                    cerr << "Error: Data in column " << relPermCurves[oilPhaseIndex] << " of file " << ROCKFILENAME << endl <<
-                            "       was not strictly monotone. Exiting." << endl;
-                }
-                usageandexit();
-            }
-            if ((Krwtmp.isStrictlyIncreasing() && Krotmp.isStrictlyIncreasing()) || (Krwtmp.isStrictlyDecreasing() && Krotmp.isStrictlyDecreasing())) {
-                if (isMaster) {
-                    cerr << "Error: Input relperm curves are both increasing or decreasing in file " << ROCKFILENAME << endl;
-                }
-                usageandexit();
-            }
-            for (int i=0 ; i < stone_types; ++i) { //Insert the same input curves for all rock types
-                Krw.push_back(Krwtmp);
-                Kro.push_back(Krotmp);
-                rockTypeNames.push_back(ROCKFILENAME);
-            }
-
-            if (isMaster) {
-                cout << "Loaded rock file: " << ROCKFILENAME
-                     << ", for all stone types" << endl;
-            }
-        }
-        else {
-            cerr << "Error:  Wrong number of stone-functions provided. " << endl
-                 << "Note that all input arguments after eclipse file are " << endl
-                 << "interpreted as stone functions." << endl;
-            return 1;
-        }
-    }
-    else {   // Anisotropic case here! (double set of input curves needed
-        cout << "rock types: " << stone_types << endl;
-        cout << "varnum: " << varnum << endl;
-        cout << "rockfileindex: " << rockfileindex << endl;
-        if (varnum == rockfileindex + 2*stone_types) { // two .txt for each stone type in anisotropic case
-            int rockidx=0;
-            for (int i=0 ; i < 2*stone_types; i+=2) {
-                rockidx++;
-                const char* WATERFILENAME = vararg[rockfileindex+i];
-                const char* OILFILENAME = vararg[rockfileindex+i+1];
+            else if (varnum == rockfileindex + 2) { // one waterfile and one oilfile for all stone types
+                const char* WATERFILENAME = vararg[rockfileindex];
+                const char* OILFILENAME = vararg[rockfileindex+1];
                 // Check if rock files exists and is readable:
                 ifstream waterfile(WATERFILENAME, ios::in);
                 ifstream oilfile(OILFILENAME, ios::in);
                 if (waterfile.fail()) {
-                    if (isMaster) {
-                        cerr << "Error: Filename " << WATERFILENAME << " not found or not readable." << endl;
-                    }
-                    usageandexit();
+                    throwError("Error: Filename ", WATERFILENAME, " not found or not readable.");
                 }
                 waterfile.close();
                 if (oilfile.fail()) {
-                    if (isMaster) {
-                        cerr << "Error: Filename " << OILFILENAME << " not found or not readable." << endl;
-                    }
-                    usageandexit();
+                    throwError("Error: Filename ", OILFILENAME, " not found or not readable.");
                 }
                 oilfile.close();
-
-                MonotCubicInterpolator Krwxtmp, Krwytmp, Krwztmp, Kroxtmp, Kroytmp, Kroztmp;
+                MonotCubicInterpolator Krwxtmp, Krwytmp, Krwztmp;
                 try {
                     Krwxtmp = MonotCubicInterpolator(WATERFILENAME, 2, 3);
                     Krwytmp = MonotCubicInterpolator(WATERFILENAME, 2, 4);
                     Krwztmp = MonotCubicInterpolator(WATERFILENAME, 2, 5);
                 }
                 catch (const char * errormessage) {
-                    if (isMaster) {
-                        cerr << "Error: " << errormessage << " Filename: " << WATERFILENAME << endl
-                             << "Check filename and relpermcurves" << endl;
-                    }
-                    usageandexit();
+                    throwError("Error: ", errormessage, " Filename: ", WATERFILENAME, '\n',
+                               "Check filename and relpermcurves");
                 }
                 if (!Krwxtmp.isStrictlyMonotone()) {
-                    if (isMaster) {
-                        cerr << "Error: Data in column " << 3 << " of file " << WATERFILENAME << endl <<
-                                "       was not strictly monotone. Exiting." << endl;
-                    }
-                    usageandexit();
+                    throwError("Error: Data in column ", 3, " of file ", WATERFILENAME, '\n',
+                               "       was not strictly monotone. Exiting.");
                 }
                 if (!Krwytmp.isStrictlyMonotone()) {
-                    if (isMaster) {
-                        cerr << "Error: Data in column " << 4 << " of file " << WATERFILENAME << endl <<
-                                "       was not strictly monotone. Exiting." << endl;
-                    }
-                    usageandexit();
+                    throwError("Error: Data in column ", 4, " of file ", WATERFILENAME, '\n',
+                               "       was not strictly monotone. Exiting.");
                 }
                 if (!Krwztmp.isStrictlyMonotone()) {
-                    if (isMaster) {
-                        cerr << "Error: Data in column " << 5 << " of file " << WATERFILENAME << endl <<
-                                "       was not strictly monotone. Exiting." << endl;
-                    }
-                    usageandexit();
+                    throwError("Error: Data in column ", 5, " of file ", WATERFILENAME, '\n',
+                               "       was not strictly monotone. Exiting.");
                 }
+                MonotCubicInterpolator Kroxtmp, Kroytmp, Kroztmp;
                 try {
                     Kroxtmp = MonotCubicInterpolator(OILFILENAME, 2, 3);
                     Kroytmp = MonotCubicInterpolator(OILFILENAME, 2, 4);
                     Kroztmp = MonotCubicInterpolator(OILFILENAME, 2, 5);
                 }
                 catch (const char * errormessage) {
-                    if (isMaster) {
-                        cerr << "Error: " << errormessage << " Filename: " << OILFILENAME << endl
-                             << "Check filename and relpermcurves" << endl;
-                    }
-                    usageandexit();
+                    throwError("Error: ", errormessage, " Filename: ", OILFILENAME, '\n',
+                               "Check filename and relpermcurves");
                 }
                 if (!Kroxtmp.isStrictlyMonotone()) {
-                    if (isMaster) {
-                        cerr << "Error: Data in column " << 3 << " of file " << OILFILENAME << endl <<
-                                "       was not strictly monotone. Exiting." << endl;
-                    }
-                    usageandexit();
+                    throwError("Error: Data in column ", 3, " of file ", OILFILENAME, '\n',
+                               "       was not strictly monotone. Exiting.");
                 }
                 if (!Kroytmp.isStrictlyMonotone()) {
-                    if (isMaster) {
-                        cerr << "Error: Data in column " << 4 << " of file " << OILFILENAME << endl <<
-                                "       was not strictly monotone. Exiting." << endl;
-                    }
-                    usageandexit();
+                    throwError("Error: Data in column ", 4, " of file ", OILFILENAME, '\n',
+                               "       was not strictly monotone. Exiting.");
                 }
                 if (!Kroztmp.isStrictlyMonotone()) {
-                    if (isMaster) {
-                        cerr << "Error: Data in column " << 5 << " of file " << OILFILENAME << endl <<
-                                "       was not strictly monotone. Exiting." << endl;
-                    }
-                    usageandexit();
+                    throwError("Error: Data in column ", 5, " of file ", OILFILENAME, '\n',
+                               "       was not strictly monotone. Exiting.");
                 }
-                Krwx.push_back(Krwxtmp); Krwy.push_back(Krwytmp); Krwz.push_back(Krwztmp);
-                Krox.push_back(Kroxtmp); Kroy.push_back(Kroytmp); Kroz.push_back(Kroztmp);
+                for (int i=0 ; i < 2*stone_types; i+=2) {
+                    Krwx.push_back(Krwxtmp); Krwy.push_back(Krwytmp); Krwz.push_back(Krwztmp);
+                    Krox.push_back(Kroxtmp); Kroy.push_back(Kroytmp); Kroz.push_back(Kroztmp);
+                    rockTypeNames.push_back(WATERFILENAME);
+                    rockTypeNames.push_back(OILFILENAME);
+                }
                 if (isMaster) {
                     cout << "Loaded rock files: " << WATERFILENAME << " and "
-                         << OILFILENAME  << ", for stone type " << rockidx << endl;
+                         << OILFILENAME  << ", for all stone types" << endl;
                 }
-                rockTypeNames.push_back(WATERFILENAME);
-                rockTypeNames.push_back(OILFILENAME);
+            }
+            else {
+                throwError("Error:  Wrong number of stone-functions provided. ", '\n',
+                           "Note that all input arguments after eclipse file are ", '\n',
+                           "interpreted as input functions.");
             }
         }
-        else if (varnum == rockfileindex + 2) { // one waterfile and one oilfile for all stone types
-            const char* WATERFILENAME = vararg[rockfileindex];
-            const char* OILFILENAME = vararg[rockfileindex+1];
-            // Check if rock files exists and is readable:
-            ifstream waterfile(WATERFILENAME, ios::in);
-            ifstream oilfile(OILFILENAME, ios::in);
-            if (waterfile.fail()) {
-                if (isMaster) {
-                    cerr << "Error: Filename " << WATERFILENAME << " not found or not readable." << endl;
-                }
-                usageandexit();
-            }
-            waterfile.close();
-            if (oilfile.fail()) {
-                if (isMaster) {
-                    cerr << "Error: Filename " << OILFILENAME << " not found or not readable." << endl;
-                }
-                usageandexit();
-            }
-            oilfile.close();
-            MonotCubicInterpolator Krwxtmp, Krwytmp, Krwztmp;
-            try {
-                Krwxtmp = MonotCubicInterpolator(WATERFILENAME, 2, 3);
-                Krwytmp = MonotCubicInterpolator(WATERFILENAME, 2, 4);
-                Krwztmp = MonotCubicInterpolator(WATERFILENAME, 2, 5);
-            }
-            catch (const char * errormessage) {
-                if (isMaster) {
-                    cerr << "Error: " << errormessage << " Filename: " << WATERFILENAME << endl
-                         << "Check filename and relpermcurves" << endl;
-                }
-                usageandexit();
-            }
-            if (!Krwxtmp.isStrictlyMonotone()) {
-                if (isMaster) {
-                    cerr << "Error: Data in column " << 3 << " of file " << WATERFILENAME << endl <<
-                            "       was not strictly monotone. Exiting." << endl;
-                }
-                usageandexit();
-            }
-            if (!Krwytmp.isStrictlyMonotone()) {
-                if (isMaster) {
-                    cerr << "Error: Data in column " << 4 << " of file " << WATERFILENAME << endl <<
-                            "       was not strictly monotone. Exiting." << endl;
-                }
-                usageandexit();
-            }
-            if (!Krwztmp.isStrictlyMonotone()) {
-                if (isMaster) {
-                    cerr << "Error: Data in column " << 5 << " of file " << WATERFILENAME << endl <<
-                            "       was not strictly monotone. Exiting." << endl;
-                }
-                usageandexit();
-            }
-            MonotCubicInterpolator Kroxtmp, Kroytmp, Kroztmp;
-            try {
-                Kroxtmp = MonotCubicInterpolator(OILFILENAME, 2, 3);
-                Kroytmp = MonotCubicInterpolator(OILFILENAME, 2, 4);
-                Kroztmp = MonotCubicInterpolator(OILFILENAME, 2, 5);
-            }
-            catch (const char * errormessage) {
-                if (isMaster) {
-                    cerr << "Error: " << errormessage << " Filename: " << OILFILENAME << endl
-                         << "Check filename and relpermcurves" << endl;
-                }
-                usageandexit();
-            }
-            if (!Kroxtmp.isStrictlyMonotone()) {
-                if (isMaster) {
-                    cerr << "Error: Data in column " << 3 << " of file " << OILFILENAME << endl <<
-                            "       was not strictly monotone. Exiting." << endl;
-                }
-                usageandexit();
-            }
-            if (!Kroytmp.isStrictlyMonotone()) {
-                if (isMaster) {
-                    cerr << "Error: Data in column " << 4 << " of file " << OILFILENAME << endl <<
-                            "       was not strictly monotone. Exiting." << endl;
-                }
-                usageandexit();
-            }
-            if (!Kroztmp.isStrictlyMonotone()) {
-                if (isMaster) {
-                    cerr << "Error: Data in column " << 5 << " of file " << OILFILENAME << endl <<
-                            "       was not strictly monotone. Exiting." << endl;
-                }
-                usageandexit();
-            }
-            for (int i=0 ; i < 2*stone_types; i+=2) {
-                Krwx.push_back(Krwxtmp); Krwy.push_back(Krwytmp); Krwz.push_back(Krwztmp);
-                Krox.push_back(Kroxtmp); Kroy.push_back(Kroytmp); Kroz.push_back(Kroztmp);
-                rockTypeNames.push_back(WATERFILENAME);
-                rockTypeNames.push_back(OILFILENAME);
-            }
-            if (isMaster) {
-                cout << "Loaded rock files: " << WATERFILENAME << " and "
-                     << OILFILENAME  << ", for all stone types" << endl;
-            }
-        }
-        else {
-            cerr << "Error:  Wrong number of stone-functions provided. " << endl
-                 << "Note that all input arguments after eclipse file are " << endl
-                 << "interpreted as input functions." << endl;
-            return 1;
-        }
-    }
+    });
 
 
     /*****************************************************************************
@@ -863,9 +794,11 @@ try
     int linsolver_verbosity = atoi(options["linsolver_verbosity"].c_str());
     int linsolver_type = atoi(options["linsolver_type"].c_str());
     bool twodim_hack = false;
-    upscaler.init(deck, boundaryCondition,
-                  Opm::unit::convert::from(minPerm, Opm::prefix::milli*Opm::unit::darcy),
-                  linsolver_tolerance, linsolver_verbosity, linsolver_type, twodim_hack);
+    Opm::collectiveCheck([&]() {
+        upscaler.init(deck, boundaryCondition,
+                      Opm::unit::convert::from(minPerm, Opm::prefix::milli*Opm::unit::darcy),
+                      linsolver_tolerance, linsolver_verbosity, linsolver_type, twodim_hack);
+    });
 
     finish = clock();   timeused_tesselation = (double(finish)-double(start))/CLOCKS_PER_SEC;
     if (isMaster) cout << " (" << timeused_tesselation <<" secs)" << endl;
@@ -962,12 +895,11 @@ try
    if (Swir < 0.0 && Swir + linsolver_tolerance > 0.0) {
        Swir = 0.0;
    }
-   if (Swir < 0.0 || Swir > 1.0 || Swor < 0.0 || Swor > 1.0) {
-       if (isMaster) {
-           cerr << "ERROR: Swir/Swor unsensible. Check your input. Exiting";
+   Opm::collectiveCheck([&]() {
+       if (Swir < 0.0 || Swir > 1.0 || Swor < 0.0 || Swor > 1.0) {
+           throwError("ERROR: Swir/Swor unsensible. Check your input. Exiting");
        }
-       usageandexit();
-   }
+   });
 
     /***********************************************************************
      * Step 6
@@ -1159,14 +1091,13 @@ try
 
     // Now we can also invert the upscaled water saturation
     // (it should be monotonic)
-    if (!WaterSaturationVsFractionalFlow.isStrictlyMonotone()) {
-        if (isMaster) {
-            cout << WaterSaturationVsFractionalFlow.toString();
-            cerr << "Error: Upscaled water saturation not strictly monotone in fractional flow ratio." << endl;
-            cerr << "       Unphysical input data, exiting." << endl;
+    Opm::collectiveCheck([&]() {
+        if (!WaterSaturationVsFractionalFlow.isStrictlyMonotone()) {
+            throwError(WaterSaturationVsFractionalFlow.toString(),
+                       "Error: Upscaled water saturation not strictly monotone in fractional flow ratio.\n",
+                       "       Unphysical input data, exiting.");
         }
-        usageandexit();
-    }
+    });
     MonotCubicInterpolator FractionalFlowVsWaterSaturation(WaterSaturationVsFractionalFlow.get_fVector(),
                                                            WaterSaturationVsFractionalFlow.get_xVector());
 
@@ -1278,144 +1209,148 @@ try
     double waterVolumeLF; // water volume for the whole model
     // Now loop through the vector of fractional flow ratios that
     // this node should compute.
-    for (int phase = waterPhaseIndex; phase <= oilPhaseIndex; ++phase) {
+    // The upscaling is rank-local work that may fail on a subset of the ranks.
+    // Make all ranks agree on the outcome before starting the data exchange below.
+    Opm::collectiveCheck([&]() {
+        for (int phase = waterPhaseIndex; phase <= oilPhaseIndex; ++phase) {
 
-        string phaseName;
-        if (phase == waterPhaseIndex) {
-            phaseName = string("water");
-        }
-        else if (phase == oilPhaseIndex) {
-            phaseName = string("oil");
-        }
-        if (isMaster) cout << endl << "Upscaling relative permeability for " << phaseName << "... " << endl;
-        for (int pointidx = 0; pointidx < points; ++pointidx) {
+            string phaseName;
+            if (phase == waterPhaseIndex) {
+                phaseName = string("water");
+            }
+            else if (phase == oilPhaseIndex) {
+                phaseName = string("oil");
+            }
+            if (isMaster) cout << endl << "Upscaling relative permeability for " << phaseName << "... " << endl;
+            for (int pointidx = 0; pointidx < points; ++pointidx) {
 
-            // Should "I" (mpi-wise) compute this fracflowratio point?
-            if (node_vs_fracflowratiopoint[pointidx] == mpi_rank) {
+                // Should "I" (mpi-wise) compute this fracflowratio point?
+                if (node_vs_fracflowratiopoint[pointidx] == mpi_rank) {
 
-                fracFlowRatioTestvalue = fracFlowRatioPoints[pointidx];
+                    fracFlowRatioTestvalue = fracFlowRatioPoints[pointidx];
 
-                double maxPhasePerm = 0.0;
+                    double maxPhasePerm = 0.0;
 
-                vector<double> phasePermValues;
-                vector<vector<double> > phasePermValuesDiag;
-                phasePermValues.resize(satnums.size());
-                phasePermValuesDiag.resize(satnums.size());
-                waterVolumeLF = 0.0;
+                    vector<double> phasePermValues;
+                    vector<vector<double> > phasePermValuesDiag;
+                    phasePermValues.resize(satnums.size());
+                    phasePermValuesDiag.resize(satnums.size());
+                    waterVolumeLF = 0.0;
 
-                vector<double> waterSaturationRockType;
-                waterSaturationRockType.resize(stone_types);
+                    vector<double> waterSaturationRockType;
+                    waterSaturationRockType.resize(stone_types);
 
-                for (int rockIdx = 0; rockIdx < stone_types; ++rockIdx) {
-                    waterSaturationRockType[rockIdx] = FracFlowRatioInv[rockIdx].evaluate(fracFlowRatioTestvalue);
-                    if (anisotropic_input) {
-                        waterSaturationRockType[rockIdx] += FracFlowRatioInvY[rockIdx].evaluate(fracFlowRatioTestvalue);
-                        waterSaturationRockType[rockIdx] += FracFlowRatioInvZ[rockIdx].evaluate(fracFlowRatioTestvalue);
-                        waterSaturationRockType[rockIdx] /= 3.0; // arithmetic average of three directions.
+                    for (int rockIdx = 0; rockIdx < stone_types; ++rockIdx) {
+                        waterSaturationRockType[rockIdx] = FracFlowRatioInv[rockIdx].evaluate(fracFlowRatioTestvalue);
+                        if (anisotropic_input) {
+                            waterSaturationRockType[rockIdx] += FracFlowRatioInvY[rockIdx].evaluate(fracFlowRatioTestvalue);
+                            waterSaturationRockType[rockIdx] += FracFlowRatioInvZ[rockIdx].evaluate(fracFlowRatioTestvalue);
+                            waterSaturationRockType[rockIdx] /= 3.0; // arithmetic average of three directions.
+                        }
+                        waterVolumeLF += waterSaturationRockType[rockIdx] * rocktypeVolume[rockIdx];
                     }
-                    waterVolumeLF += waterSaturationRockType[rockIdx] * rocktypeVolume[rockIdx];
-                }
-                for (unsigned int i = 0; i < ecl_idx.size(); ++i) {
-                    unsigned int cell_idx = ecl_idx[i];
-                    double cellPhasePerm = minPerm;
-                    vector<double>  cellPhasePermDiag;
-                    cellPhasePermDiag.push_back(minPerm);
-                    cellPhasePermDiag.push_back(minPerm);
-                    cellPhasePermDiag.push_back(minPerm);
+                    for (unsigned int i = 0; i < ecl_idx.size(); ++i) {
+                        unsigned int cell_idx = ecl_idx[i];
+                        double cellPhasePerm = minPerm;
+                        vector<double>  cellPhasePermDiag;
+                        cellPhasePermDiag.push_back(minPerm);
+                        cellPhasePermDiag.push_back(minPerm);
+                        cellPhasePermDiag.push_back(minPerm);
 
-                    if (satnums[cell_idx] > 0) { // Satnum zero is "no rock", model those with minPerm.
+                        if (satnums[cell_idx] > 0) { // Satnum zero is "no rock", model those with minPerm.
 
-                        // Water saturation is only a function of the rock type
-                        double saturationCell
-                            = waterSaturationRockType[int(satnums[cell_idx])-1];
+                            // Water saturation is only a function of the rock type
+                            double saturationCell
+                                = waterSaturationRockType[int(satnums[cell_idx])-1];
+                            if (! anisotropic_input) {
+                                double cellRelPerm;
+                                if (phase == waterPhaseIndex) {
+                                    cellRelPerm = Krw[int(satnums[cell_idx])-1].evaluate(saturationCell);
+                                }
+                                else { // if (phase == oilPhaseIndex) {
+                                    cellRelPerm = Kro[int(satnums[cell_idx])-1].evaluate(saturationCell);
+                                }
+                                cellPhasePerm = cellRelPerm * permxs[cell_idx];
+                            }
+                            else { //anisotropic
+                                if (phase == waterPhaseIndex) {
+                                    cellPhasePermDiag[0] = Krwx[int(satnums[cell_idx])-1].evaluate(saturationCell) *
+                                        permxs[cell_idx];
+                                    cellPhasePermDiag[1] = Krwy[int(satnums[cell_idx])-1].evaluate(saturationCell) *
+                                        permys[cell_idx];
+                                    cellPhasePermDiag[2] = Krwz[int(satnums[cell_idx])-1].evaluate(saturationCell) *
+                                        permzs[cell_idx];
+                                }
+                                else { // oil
+                                    cellPhasePermDiag[0] = Krox[int(satnums[cell_idx])-1].evaluate(saturationCell) *
+                                        permxs[cell_idx];
+                                    cellPhasePermDiag[1] = Kroy[int(satnums[cell_idx])-1].evaluate(saturationCell) *
+                                        permys[cell_idx];
+                                    cellPhasePermDiag[2] = Kroz[int(satnums[cell_idx])-1].evaluate(saturationCell) *
+                                        permzs[cell_idx];
+                                }
+                            }
+                        }
+                        phasePermValues[cell_idx] = cellPhasePerm;
+                        phasePermValuesDiag[cell_idx] = cellPhasePermDiag;
+                        maxPhasePerm = max(maxPhasePerm, cellPhasePerm);
+                        maxPhasePerm = max(maxPhasePerm, *max_element(cellPhasePermDiag.begin(),
+                                                                      cellPhasePermDiag.end()));
+                    }
+
+                    // Now we can determine the smallest permitted permeability we can calculate for
+                    // We have both a fixed bottom limit, as well as a possible higher limit determined
+                    // by a maximum allowable permeability.
+                    double minPhasePerm = max(maxPhasePerm/maxPermContrast, minPerm);
+
+                    // Now remodel the phase permeabilities obeying minPhasePerm.
+                    Matrix cellperm = zeroMatrix;
+                    for (unsigned int i = 0; i < ecl_idx.size(); ++i) {
+                        unsigned int cell_idx = ecl_idx[i];
+                        zero(cellperm);
                         if (! anisotropic_input) {
-                            double cellRelPerm;
-                            if (phase == waterPhaseIndex) {
-                                cellRelPerm = Krw[int(satnums[cell_idx])-1].evaluate(saturationCell);
-                            }
-                            else { // if (phase == oilPhaseIndex) {
-                                cellRelPerm = Kro[int(satnums[cell_idx])-1].evaluate(saturationCell);
-                            }
-                            cellPhasePerm = cellRelPerm * permxs[cell_idx];
+                            double cellPhasePerm = max(minPhasePerm, phasePermValues[cell_idx]);
+                            double kval = max(minPhasePerm, cellPhasePerm);
+                            cellperm(0,0) = kval;
+                            cellperm(1,1) = kval;
+                            cellperm(2,2) = kval;
                         }
-                        else { //anisotropic
-                            if (phase == waterPhaseIndex) {
-                                cellPhasePermDiag[0] = Krwx[int(satnums[cell_idx])-1].evaluate(saturationCell) *
-                                    permxs[cell_idx];
-                                cellPhasePermDiag[1] = Krwy[int(satnums[cell_idx])-1].evaluate(saturationCell) *
-                                    permys[cell_idx];
-                                cellPhasePermDiag[2] = Krwz[int(satnums[cell_idx])-1].evaluate(saturationCell) *
-                                    permzs[cell_idx];
-                            }
-                            else { // oil
-                                cellPhasePermDiag[0] = Krox[int(satnums[cell_idx])-1].evaluate(saturationCell) *
-                                    permxs[cell_idx];
-                                cellPhasePermDiag[1] = Kroy[int(satnums[cell_idx])-1].evaluate(saturationCell) *
-                                    permys[cell_idx];
-                                cellPhasePermDiag[2] = Kroz[int(satnums[cell_idx])-1].evaluate(saturationCell) *
-                                    permzs[cell_idx];
-                            }
+                        else { // anisotropic_input
+                            // Truncate values lower than minPhasePerm upwards.
+                            phasePermValuesDiag[cell_idx][0] = max(minPhasePerm, phasePermValuesDiag[cell_idx][0]);
+                            phasePermValuesDiag[cell_idx][1] = max(minPhasePerm, phasePermValuesDiag[cell_idx][1]);
+                            phasePermValuesDiag[cell_idx][2] = max(minPhasePerm, phasePermValuesDiag[cell_idx][2]);
+                            cellperm(0,0) = phasePermValuesDiag[cell_idx][0];
+                            cellperm(1,1) = phasePermValuesDiag[cell_idx][1];
+                            cellperm(2,2) = phasePermValuesDiag[cell_idx][2];
                         }
+                        upscaler.setPermeability(i, cellperm);
                     }
-                    phasePermValues[cell_idx] = cellPhasePerm;
-                    phasePermValuesDiag[cell_idx] = cellPhasePermDiag;
-                    maxPhasePerm = max(maxPhasePerm, cellPhasePerm);
-                    maxPhasePerm = max(maxPhasePerm, *max_element(cellPhasePermDiag.begin(),
-                                                                  cellPhasePermDiag.end()));
-                }
+                    Matrix phasePermTensor = upscaler.upscaleSinglePhase();
 
-                // Now we can determine the smallest permitted permeability we can calculate for
-                // We have both a fixed bottom limit, as well as a possible higher limit determined
-                // by a maximum allowable permeability.
-                double minPhasePerm = max(maxPhasePerm/maxPermContrast, minPerm);
-
-                // Now remodel the phase permeabilities obeying minPhasePerm.
-                Matrix cellperm = zeroMatrix;
-                for (unsigned int i = 0; i < ecl_idx.size(); ++i) {
-                    unsigned int cell_idx = ecl_idx[i];
-                    zero(cellperm);
-                    if (! anisotropic_input) {
-                        double cellPhasePerm = max(minPhasePerm, phasePermValues[cell_idx]);
-                        double kval = max(minPhasePerm, cellPhasePerm);
-                        cellperm(0,0) = kval;
-                        cellperm(1,1) = kval;
-                        cellperm(2,2) = kval;
-                    }
-                    else { // anisotropic_input
-                        // Truncate values lower than minPhasePerm upwards.
-                        phasePermValuesDiag[cell_idx][0] = max(minPhasePerm, phasePermValuesDiag[cell_idx][0]);
-                        phasePermValuesDiag[cell_idx][1] = max(minPhasePerm, phasePermValuesDiag[cell_idx][1]);
-                        phasePermValuesDiag[cell_idx][2] = max(minPhasePerm, phasePermValuesDiag[cell_idx][2]);
-                        cellperm(0,0) = phasePermValuesDiag[cell_idx][0];
-                        cellperm(1,1) = phasePermValuesDiag[cell_idx][1];
-                        cellperm(2,2) = phasePermValuesDiag[cell_idx][2];
-                    }
-                    upscaler.setPermeability(i, cellperm);
-                }
-                Matrix phasePermTensor = upscaler.upscaleSinglePhase();
-
-                // Here we recalculate the upscaled water saturation,
-                // although it is already known when we asked for the
-                // fracflowratio point to compute for. Nonetheless, we
-                // recalculate here to avoid any minor roundoff-error and
-                // interpolation error (this means that the saturation
-                // points are not perfectly uniformly distributed)
-                //cout << waterVolumeLF/poreVolume;
-                WaterSaturation[pointidx] =  waterVolumeLF/poreVolume;
+                    // Here we recalculate the upscaled water saturation,
+                    // although it is already known when we asked for the
+                    // fracflowratio point to compute for. Nonetheless, we
+                    // recalculate here to avoid any minor roundoff-error and
+                    // interpolation error (this means that the saturation
+                    // points are not perfectly uniformly distributed)
+                    //cout << waterVolumeLF/poreVolume;
+                    WaterSaturation[pointidx] =  waterVolumeLF/poreVolume;
 
 #ifdef HAVE_MPI
-                cout << "Rank " << mpi_rank << ": " << endl;;
+                    cout << "Rank " << mpi_rank << ": " << endl;;
 #endif
-                cout << fracFlowRatioTestvalue << "\t" << WaterSaturation[pointidx];
-                // Store and print phase-perm-result
-                for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) {
-                    PhasePerm[phase][pointidx][voigtIdx] = ::Opm::getVoigtValue(phasePermTensor,voigtIdx);
-                    cout << "\t" << ::Opm::getVoigtValue(phasePermTensor,voigtIdx);
+                    cout << fracFlowRatioTestvalue << "\t" << WaterSaturation[pointidx];
+                    // Store and print phase-perm-result
+                    for (int voigtIdx=0; voigtIdx < tensorElementCount; ++voigtIdx) {
+                        PhasePerm[phase][pointidx][voigtIdx] = ::Opm::getVoigtValue(phasePermTensor,voigtIdx);
+                        cout << "\t" << ::Opm::getVoigtValue(phasePermTensor,voigtIdx);
+                    }
+                    cout << endl;
                 }
-                cout << endl;
-            }
-        }  // end loop over saturation points
-    } // end phase loop
+            }  // end loop over saturation points
+        } // end phase loop
+    });
     clock_t finish_upscale_wallclock = clock();
     timeused_upscale_wallclock = (double(finish_upscale_wallclock)-double(start_upscale_wallclock))/CLOCKS_PER_SEC;
     //double timeused_upscale_total = timeused_upscale_wallclock;
@@ -1709,7 +1644,17 @@ try
 
    return EXIT_SUCCESS;
 }
+catch (const Opm::CollectiveFailure&) {
+    // All ranks agreed that something failed and the details have been
+    // reported already.  Return normally so that every rank reaches
+    // MPI_Finalize() together.
+    return EXIT_FAILURE;
+}
 catch (const std::exception &e) {
     std::cerr << "Program threw an exception: " << e.what() << "\n";
+
+    // Reached only if the failure was not handled collectively, i.e., if
+    // other ranks might be waiting for this one.
+    Opm::abortParallelRun(EXIT_FAILURE);
     return EXIT_FAILURE;
 }

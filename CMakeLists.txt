@@ -58,6 +58,31 @@ endmacro()
 macro(opm-upscaling_tests_hook)
   # setup extra tests (using helper binaries)
   include(compareUpscaling.cmake)
+
+  # The collective failure handling is only interesting with more than one
+  # rank.  The serial version of this test is registered automatically.
+  # Only register the parallel version if the system can run 4 ranks.
+  if(MPI_FOUND AND MPIEXEC_EXECUTABLE AND MPIEXEC_MAX_NUMPROCS
+      AND NOT MPIEXEC_MAX_NUMPROCS LESS 4)
+    add_test(NAME test_collectivecheck_np4
+      COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4
+              ${MPIEXEC_PREFLAGS} $<TARGET_FILE:test_collectivecheck> ${MPIEXEC_POSTFLAGS})
+    set_tests_properties(test_collectivecheck_np4 PROPERTIES
+      PROCESSORS 4
+      TIMEOUT 60)
+
+    # A rank that fails outside of collectiveCheck() must take down the
+    # other ranks as well.  The run is expected to fail, but it must not
+    # hang (time out).
+    add_test(NAME test_collectivecheck_abort_np4
+      COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4
+              ${MPIEXEC_PREFLAGS} $<TARGET_FILE:test_collectivecheck> ${MPIEXEC_POSTFLAGS}
+              --run_test=Abort_On_Unilateral_Failure -- --abort-test)
+    set_tests_properties(test_collectivecheck_abort_np4 PROPERTIES
+      PROCESSORS 4
+      TIMEOUT 60
+      WILL_FAIL TRUE)
+  endif()
 endmacro()
 
 macro(opm-upscaling_targets_hook)
