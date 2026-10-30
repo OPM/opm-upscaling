@@ -24,7 +24,7 @@ option(INSTALL_BENCHMARKS "Install benchmark applications?" OFF)
 
 macro(opm-upscaling_language_hook)
   include(FortranCInterface)
-  fortrancinterface_header(${PROJECT_BINARY_DIR}/FCMacros.h MACRO_NAMESPACE FC_)
+  fortrancinterface_header(${PROJECT_BINARY_DIR}/generated/include/FCMacros.h MACRO_NAMESPACE FC_)
 endmacro()
 
 macro(opm-upscaling_prereqs_hook)
@@ -94,6 +94,7 @@ macro(opm-upscaling_targets_hook)
     include(EmbedCases.cmake)
     opm_pack_stone(upscale_relperm_benchmark)
     opm_pack_case(upscale_relperm_benchmark benchmark20)
+    target_include_directories(upscale_relperm_benchmark PRIVATE "${PROJECT_BINARY_DIR}")
     target_link_libraries(upscale_relperm_benchmark PRIVATE Boost::iostreams)
 
     if(INSTALL_BENCHMARKS)
