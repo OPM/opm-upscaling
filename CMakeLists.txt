@@ -24,7 +24,7 @@ option(INSTALL_BENCHMARKS "Install benchmark applications?" OFF)
 
 macro(opm-upscaling_language_hook)
   include(FortranCInterface)
-  fortrancinterface_header(${PROJECT_BINARY_DIR}/FCMacros.h MACRO_NAMESPACE FC_)
+  fortrancinterface_header(${PROJECT_BINARY_DIR}/generated/include/FCMacros.h MACRO_NAMESPACE FC_)
 endmacro()
 
 macro(opm-upscaling_prereqs_hook)
