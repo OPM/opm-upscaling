@@ -279,7 +279,7 @@ namespace Opm
 
             specGridKw.addRecord(std::move(specGridRecord));
 
-            subDeck.addKeyword(std::move(specGridKw));
+            subDeck.addKeyword(std::move(specGridKw), subDeckSection_);
             addDoubleKeyword_(subDeck, this->parser_.getKeyword("COORD"), /*dimension=*/"Length", new_COORD_);
             addDoubleKeyword_(subDeck, this->parser_.getKeyword("ZCORN"), /*dimension=*/"Length", new_ZCORN_);
             addIntKeyword_(subDeck, this->parser_.getKeyword("ACTNUM"), new_ACTNUM_);
@@ -347,6 +347,9 @@ namespace Opm
         int new_dims_[3];
         std::vector<int> new_to_old_cell_;
 
+        // The sub-deck has no section headers; add all its keywords to GRID.
+        static constexpr auto subDeckSection_ = Opm::Ecl::SectionType::GRID;
+
 
         void addDoubleKeyword_(Deck& subDeck,
                                const ParserKeyword& keyword,
@@ -367,7 +370,7 @@ namespace Opm
 
             dataRecord.addItem(std::move(dataItem));
             dataKw.addRecord(std::move(dataRecord));
-            subDeck.addKeyword(std::move(dataKw));
+            subDeck.addKeyword(std::move(dataKw), subDeckSection_);
         }
 
         void addIntKeyword_(Deck& subDeck,
@@ -387,7 +390,7 @@ namespace Opm
 
             dataRecord.addItem(std::move(dataItem));
             dataKw.addRecord(std::move(dataRecord));
-            subDeck.addKeyword(std::move(dataKw));
+            subDeck.addKeyword(std::move(dataKw), subDeckSection_);
         }
 
         template <typename T>
