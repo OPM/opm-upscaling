@@ -39,9 +39,9 @@ macro(opm-upscaling_prereqs_hook)
       Boost::date_time
       BLAS::BLAS
       LAPACK::LAPACK
-      dunecommon
-      dunegeometry
-      dunegrid
+      Dune::Common
+      Dune::Geometry
+      Dune::Grid
       Dune::ISTL
   )
   if(MPI_FOUND)
