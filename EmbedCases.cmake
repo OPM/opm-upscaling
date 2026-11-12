@@ -6,7 +6,7 @@ macro (opm_pack_file case_dir case_name suffix in_ext out_ext)
   # get no change if we build in-source
   set (rel_file "${case_dir}/${case_name}${suffix}")
   set (input_file "${PROJECT_SOURCE_DIR}/${rel_file}${in_ext}")
-  set (output_file "${PROJECT_BINARY_DIR}/${rel_file}${out_ext}")
+  set (output_file "${PROJECT_BINARY_DIR}/generated/${rel_file}${out_ext}")
 
   # make sure that the output directory exists
   get_filename_component (output_dir "${output_file}" PATH)
