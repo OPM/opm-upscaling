@@ -94,6 +94,7 @@ macro(opm-upscaling_targets_hook)
     include(EmbedCases.cmake)
     opm_pack_stone(upscale_relperm_benchmark)
     opm_pack_case(upscale_relperm_benchmark benchmark20)
+    target_include_directories(upscale_relperm_benchmark PRIVATE "${PROJECT_BINARY_DIR}")
     target_link_libraries(upscale_relperm_benchmark PRIVATE Boost::iostreams)
 
     if(INSTALL_BENCHMARKS)
